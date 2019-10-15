@@ -5,23 +5,116 @@
       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
       crossorigin="anonymous"></script>
     <script src="app.js"></script>
+    <style>
+      #content {
+          width: 650px;
+          margin-left: auto;
+          margin-right: auto;
+      }
+      #content h2 {
+          text-align: center;
+      }
+      #content .logo {
+          text-align: center;
+      }
+      #content .logo img {
+          max-width: 100%;
+      }
+      .center {
+          text-align: center;
+      }
+      .cond-lagless,
+      .cond-dandori,
+      .cond-renove {
+          display: none;
+      }
+    </style>
   </head>
   <body>
     <div id="error" style="display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: #ccc; padding-top: 30%; text-align: center;"></div>
-    サービス名: <span class="service"></span> <br />
-    パターン: <span class="pattern"></span> <br />
-    <div class="patterns pattern-20-31-1">
-      <div>2019年10月20日締め分, 2019年10月31日（木）支払い,2019年10月28日（月）期限</div>
-      <div style="color: #888;">2019年11月20日締め分, 2019年11月29日（金）支払い,2019年11月26日（火）期限</div>
-      <div style="color: #888;">2019年12月20日締め分, 2019年12月30日（月）支払い,2019年12月24日（火）期限</div>
+    <div id="content">
+      <div class="logo cond-lagless"><img src="images/lagless.png"></div>
+      <div class="logo cond-dandori"><img src="images/dandori.png"></div>
+      <div class="logo cond-renove"><img src="images/renove.png"></div>
+      
+      <span class="service">ラグレス</span>は、<br />
+      元請けに請求したお金を、<br />
+      予定よりも先に受け取れるサービスです。 <br />
+      （※注：借り入れではありません。） <br />
+      <br />
+      入金や支払いの波があって、資金繰りが悪くなりそう… <br />
+      という時にお申込みいただけましたら、<br />
+      <span class="service">ラグレス</span>が工務店様に代わって早期支払いたします！<br />
+      <br />
+      <br />
+      ■早期支払サービスを利用した場合のみ、費用がかかります。<br />
+      <br />
+      ■早期支払の対象は、締日時点における請求金額の全額（税込）となります。請求金額の一部のみを早期支払することはできません。<br />
+      <br />
+      ■書類提出など面倒な手続きは不要です。元請け会社の与信でご利用いただけるサービスです。<br />
+      <br />
+      ■法人でも個人事業主でも、ご利用いただけます。<br />
+      <br />
+      <a href="#" class="link" target="_blank">さらに詳しくはこちら＞＞＞</a>
+      <br />
+      <!--
+      <img src="https://static.wixstatic.com/media/79d85c_7a17080b4453407f98d8543e54efa656~mv2.png/v1/fill/w_791,h_573,al_c,q_85/%E3%82%AD%E3%83%A3%E3%83%97%E3%83%81%E3%83%A3_PNG.webp" style="width: 100%;" />
+      <br />
+      -->
+      <br />
+      ■ご利用手数料■<br />
+      <br />
+      早期支払手数料<span class="cost">0.00％</span> + 振込手数料250円(税別) <br />
+      <br />
+      ■年間回数制限■<br />
+      <br />
+      <span class="limit">年12回</span> <br />
+      
+      <br />
+      ■スケジュール■<br />
+      <br />
+      <div class="patterns pattern-20-31-1">
+        <div>2019年10月20日締め分, 2019年10月31日（木）支払い,2019年10月28日（月）期限</div>
+        <div style="color: #888;">2019年11月20日締め分, 2019年11月29日（金）支払い,2019年11月26日（火）期限</div>
+        <div style="color: #888;">2019年12月20日締め分, 2019年12月30日（月）支払い,2019年12月24日（火）期限</div>
+      </div>
+      <div class="patterns pattern-31-10-2">
+        <div>2019年10月末日締め分, 2019年11月11日（月）支払い,2019年11月4日（月）期限</div>
+        <div style="color: #888;">2019年11月末日締め分, 2019年12月10日（火）支払い,2019年12月3日（火）期限</div>
+        <div style="color: #888;">2019年12月末日締め分, 2020年1月10日（金）支払い,2020年1月5日（日）期限</div>
+      </div>
+      
+      <br />
+      <small>
+        ※注意事項 <br />
+        ■申込内容と工務店様の承諾内容 （消費税、控除項目等）に相違がある場合は、工務店様の取り扱い方法に従って手続き致します。協力会社様には確認のご連絡は致しませんので、予めご了承ください。 <br />
+        <br />
+        ■当社が工務店様毎に設定している予算枠を超過した場合、早期支払ができない場合がございますのでお早めにお申込みください。尚、予算枠等に関するご質問にはお答え致しかねますので、予めご了承ください。<br />
+        <br />
+        ■予算枠超過により申込の債権が買取対象とならなかった場合は、買取できない旨をメールにて通知致します。<br />
+        <br />
+        ■天災、通信インフラの故障及びその他の事象により実行日が遅れる可能性がございます。このような場合も、協力会社様は早期支払いの申込みを取り消すことはできませんので予めご了承ください。<br />
+        <br />
+        ■早期支払後に、支払明細をメールにて通知致します。<br />
+      </small>
+
+      <h2>■​お申込みはこちら■</h2>
+      <div class="center">
+        <a href="" class="form_1">初めてのご利用</a>
+        <a href="" class="form_2">2回目以降</a>
+      </div>
+      <br />
+
+      <div class="center">
+        ご相談はこちら <br />
+        【<span class="service">ラグレス</span>事務局】 <br />
+        運営会社：インベストデザイン株式会社 <br />
+        メール：<a href="" class="mail">@invest-d.com</a> <br />
+        電話：0120-516-818 <br />
+        電話時間 ：10：00～17：00 <br />
+        定休日：土・日・祝 <br />
+      </div>
     </div>
-    <div class="patterns pattern-31-10-2">
-      <div>2019年10月末日締め分, 2019年11月11日（月）支払い,2019年11月4日（月）期限</div>
-      <div style="color: #888;">2019年11月末日締め分, 2019年12月10日（火）支払い,2019年12月3日（火）期限</div>
-      <div style="color: #888;">2019年12月末日締め分, 2020年1月10日（金）支払い,2020年1月5日（日）期限</div>
-    </div>
-    手数料: <span class="cost"></span> <br />
-    回数制限: <span class="limit"></span> <br />
-    申込みフォーム: <span class="link">https://...</span> <br />
+    
   </body>
 </html>
