@@ -30,11 +30,11 @@ const pattern_fields = [
 
 // 20パターン*12ヶ月 = 240くらいを想定
 const fetch_pattern = fetch("https://investdesign.cybozu.com/k/v1/records.json?"+querystring.stringify({
-    app: 95,
+    app: parseInt(process.env['KINTONE_PATTERN_APP_ID']),
     fields: pattern_fields,
     query: 'deadline >= TODAY() and deadline <= FROM_TODAY(12, MONTHS) order by deadline asc limit 500',
 }), {
-    headers: { 'X-Cybozu-API-Token': '6Nfwr2ySlXxDBzFG8EV3u3nsHVgdr8tjLluN5JW3' },
+    headers: { 'X-Cybozu-API-Token': process.env['KINTONE_PATTERN_TOKEN'] },
 })
 .then(res => {
     if(res.status == 200) {
@@ -61,8 +61,8 @@ const fields = [
     'closing', 'deadline', 'early', 'original', 'lag', 'effect'
 ].join(',');
 
-const fetch_service = fetch("https://investdesign.cybozu.com/k/v1/records.json?app="+process.env['KINTONE_APP_ID']+"&fields="+fields, {
-    headers: { 'X-Cybozu-API-Token': process.env['KINTONE_TOKEN'] },
+const fetch_service = fetch("https://investdesign.cybozu.com/k/v1/records.json?app="+process.env['KINTONE_BUILDER_APP_ID']+"&fields="+fields, {
+    headers: { 'X-Cybozu-API-Token': process.env['KINTONE_BUILDER_TOKEN'] },
 })
 .then(res => {
     if(res.status == 200) {
