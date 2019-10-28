@@ -34,6 +34,9 @@
           background-image: url(images/schedule.png);
           background-repeat: no-repeat;
           position: relative;
+          margin-left: auto;
+          margin-right: auto;
+          margin-top: 32px;
       }
       #schedule > span { position: absolute; font-size: 16px; white-space: nowrap; width: 100px; text-align: center; }
       #schedule .service-message-1 { top: 165px; left: 110px; color: #D32C25; text-align: center; width: 300px; }
@@ -50,6 +53,12 @@
       thead th { color: #fff; background-color: #666; line-height: 30px; }
       tbody td { padding: 8px; line-height: 50px; }
       tbody td.focus { background-color: #fcc; }
+      button.act { background-color: #f00; color: #fff; border-radius: 4px; width: 260px; height: 44px; font-size: 20px; font-weight: bold; cursor: pointer; }
+      button.act:hover { background-color: #fcc; }
+      #float_act { position: fixed; top: 400px; right: 40px; width: 200px; box-shadow: 0px 0px 6px 3px #666; padding: 0px; padding-top: 24px; background-color: #fff; }
+      #float_act div { font-weight: bold; text-align: center; margin-bottom: 20px; }
+      #float_act a { text-decoration: none; }
+      #float_act button.act { width: 160px; display: block; margin-bottom: 20px; margin-left: auto; margin-right: auto; }
     </style>
   </head>
   <body>
@@ -79,8 +88,6 @@
       <br />
       ■法人でも個人事業主でも、ご利用いただけます。<br />
       <br />
-      <a href="#" class="link" target="_blank">さらに詳しくはこちら＞＞＞</a>
-      <br />
       <div id="schedule">
         <span class="service-message-1"><span class="service"></span>なら...</span>
         <span class="service-message-2"><span class="service"></span>利用のスケジュール</span>
@@ -96,16 +103,13 @@
       <br />
       <br />
       ■ご利用手数料■<br />
-      <br />
       早期支払手数料<span class="cost">0.00％</span> + 振込手数料250円(税別) <br />
       <br />
       ■年間回数制限■<br />
-      <br />
       <span class="limit">年12回</span> <br />
       
       <br />
       ■スケジュール■<br />
-      <br />
       <table>
         <thead><tr><th>対象債権</th><th>早期支払日</th><th>申込期限</th></tr></thead>
         <tbody><tr><td><span class="schedule_closing"></span>締め分</td><td class="focus"><span class="schedule_early"></span></td><td><span class="schedule_deadline"></span></td></tr></tbody>
@@ -127,13 +131,21 @@
 
       <h2>■​お申込みはこちら■</h2>
       <div class="center">
-        <a href="" class="form_1">初めてのご利用</a>
-        <a href="" class="form_2">2回目以降</a>
+        <a href="" class="form_1"><button class="act">初めてのご利用</button></a>
+        <a href="" class="form_2"><button class="act">2回目以降</button></a>
       </div>
       <br />
 
-      <div class="center">
-        ご相談はこちら <br />
+      <br />
+      <div style="text-align: center; font-size: 20px;">
+        さらに詳しくはこちら <br />
+        <a href="#" class="link" target="_blank">...</a>
+      </div>
+      <br />
+      <br />
+    
+      <div class="center" style="border: 1px solid #000; max-width: 500px; margin-left: auto; margin-right: auto; padding: 24px;">
+        <div style="text-align: left;">ご相談はこちら</div>
         【<span class="service">ラグレス</span>事務局】 <br />
         運営会社：インベストデザイン株式会社 <br />
         メール：<a href="" class="mail">@invest-d.com</a> <br />
@@ -141,6 +153,12 @@
         電話時間 ：10：00～17：00 <br />
         定休日：土・日・祝 <br />
       </div>
+    </div>
+
+    <div id="float_act">
+      <div>お申し込みはこちら</div>
+      <a href="" class="form_1"><button class="act"><img src="images/beginner.png" style="height: 24px; height: -12px; position: relative; top: 5px; right: 3px;">初回</button></a>
+      <a href="" class="form_2"><button class="act">2回目以降</button></a>
     </div>
     
   </body>
