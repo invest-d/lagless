@@ -79,7 +79,10 @@ var show = function(client, param) {
     $('.cond-'+mode).show();
     $('.form_1').attr('href', client.form_1);
     $('.form_2').attr('href', client.form_2);
-    $('.link').attr('href', client.link).text(client.link);
+    if(client.link) {
+        $('.link').attr('href', client.link).text(client.link);
+        $('.link').parents('div').show();
+    }
     $('.mail').text(client.mail).attr('href', 'mailto:'+client.mail);
     
     $('.closing').text(client.closing);
