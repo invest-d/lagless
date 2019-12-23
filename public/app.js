@@ -95,7 +95,7 @@ var show = function(client, param) {
 
     var now = new Date();
     var schedule = client.schedule.find(function(s) {
-        return now.getTime() <= (new Date(s.deadline)).getTime();
+        return now.getTime() <= (new Date(s.deadline+' 23:59:59')).getTime();
     });
     if(schedule) {
         $('.schedule_closing').text(format_date(schedule.closing));
