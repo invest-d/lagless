@@ -58,7 +58,7 @@ const fetch_pattern = function() {
 };
 
 const fields = [
-    'id', 'service', 'pattern', 'cost', 'limit',
+    'id', 'service', 'pattern', 'cost', 'transfer_fee', 'limit',
     'form_1', 'form_2', 'link', 'mail',
     'closing', 'deadline', 'early', 'original', 'lag', 'effect'
 ].join(',');
