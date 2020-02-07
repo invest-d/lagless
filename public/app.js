@@ -10,6 +10,7 @@ $(function() {
     if(location.protocol == 'file:') {
         show({
             "cost": "3.85%",
+            "transfer_fee": "100円(税抜)",
             "original": "翌月末",
             "mail": "d-p@invest-d.com",
             "form_2": "https://form.run/@dandolipayment-1-2",
@@ -75,6 +76,7 @@ var show = function(client, param) {
     var mode = { 'ラグレス': 'lagless', 'ダンドリペイメント': 'dandori', 'リノベ不動産Payment': 'renove' }[client.service];
     
     $('.cost').text(client.cost);
+    $('.transfer_fee').text(client.transfer_fee);
     $('.limit').text(client.limit);
     $('.cond-'+mode).show();
     $('.form_1').attr('href', client.form_1);
