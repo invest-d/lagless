@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+        integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous" />
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+        integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous" />
+  <title>申込フォーム</title>
+</head>
+<body>
+  <div class="col-sm-3">
+    
+  </div>
+  <div class="col-sm-6">
+    <h1>申込フォーム</h1>
+  <p>早期支払いをご希望の方は、お手元に運転免許証をご用意いただいた上で<br>
+    下記のフォームよりお申込みください。</p>
+  <p>申込みフォームの入力でお困りの際は、下記連絡先までお気軽にお電話ください。</p>
+  <p>運営：インベストデザイン株式会社<br>
+    （各種ペイメントサービスの事務局を担っております）<br>
+    電話番号 ： 0120-516-818 <br>
+    受付時間 ： 10：00～17：00 <br>
+    定休日 ： 土・日・祝</p>
+  <form class="pure-form pure-form-stacked">
+      <h2>■ お客さま情報 ■</h2>
+      <div class="form-group">
+        <label class="control-label">貴社名（個人事業主の場合は屋号名）</label>
+        <!-- <div class="has-error"> -->
+          <input class="form-control" type="text"/>
+          <!-- <div class="text-danger">正しく入力して下さい</div> -->
+        <!-- </div> -->
+      </div>
+
+      <div class="form-group">
+        <label class="control-label">請求先企業名（発注者名）</label>
+          <input class="form-control" type="text"/>
+      </div>
+
+      <div class="form-group">
+        <label class="control-label">請求書の締日（早期支払対象となる締日）</label>
+          <input class="form-control" type="text"/>
+      </div>
+
+      <div class="form-group">
+        <label class="control-label">貴社住所（本店所在地）</label>
+
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label class="control-label">郵便番号</label>
+                <input class="form-control" type="text"/>
+            </div>
+          </div>
+
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label class="control-label">都道府県</label>
+                <input class="form-control" type="text"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label">市区町村・番地</label>
+            <input class="form-control" type="text"/>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label">建物名・部屋番号</label>
+            <input class="form-control" type="text"/>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label">代表者名</label>
+            <input class="form-control" type="text"/>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label">メールアドレス</label>
+            <input class="form-control" type="text"/>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label">電話番号</label>
+            <input class="form-control" type="text"/>
+        </div>
+
+        <h2>■ 対象債権内容（件名・税込金額）■</h2>
+        <p>※早期支払をご希望の請求書データをご添付ください。<br>
+          　携帯で撮った請求書の写真でも構いません。</p>
+        <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。
+          　（運営：インベストデザイン株式会社　03-6261-6818）</p>
+        <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。
+          　（運営：インベストデザイン株式会社　03-6261-6818）</p>
+        <p>※【該当の方のみ】
+          協力会費のお支払が必要な場合は、各発注企業さまの取扱い方法に従い手続きいたします（請求書の合計金額から協力会費を差引かせていただきます）</p>
+
+        <div class="form-group">
+          <label class="control-label">請求書データの添付</label>
+            <input class="form-control" type="text"/>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label">対象債権合計金額（税込）</label>
+            <input class="form-control" type="text"/>
+        </div>
+
+        <h2>■ お客さま口座情報 ■</h2>
+        <p>支払い口座情報をご記入ください。<br>
+          （個人事業主様は代表者名の口座をご指定下さい)</p>
+
+          <div class="row">
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label class="control-label">金融機関コード</label>
+                  <input class="form-control" type="text"/>
+              </div>
+            </div>
+  
+            <div class="col-sm-8">
+              <div class="form-group">
+                <label class="control-label">金融機関名</label>
+                  <input class="form-control" type="text"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label class="control-label">支店コード</label>
+                  <input class="form-control" type="text"/>
+              </div>
+            </div>
+  
+            <div class="col-sm-8">
+              <div class="form-group">
+                <label class="control-label">支店名</label>
+                  <input class="form-control" type="text"/>
+              </div>
+            </div>
+          </div>
+
+        <div class="form-group">
+          <label class="control-label">預金種目</label>
+          <div class="radio">
+            <label><input type="radio" name="radio">普通</label>
+            <label><input type="radio" name="radio">当座</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label">口座番号</label>
+            <input class="form-control" type="text"/>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label">口座名義（カナ）</label>
+            <input class="form-control" type="text"/>
+        </div>
+
+
+        <h2>■ 本人確認書類 ■</h2>
+
+        <div class="form-group">
+          <label class="control-label">運転免許証（表面）</label>
+            <input class="form-control" type="text"/>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label">運転免許証（裏面）</label>
+            <input class="form-control" type="text"/>
+        </div>
+
+        <p><a href="">利用規約</a></p>
+
+        <div class="form-group">
+          <label class="control-label">規約に同意する</label>
+          <div class="checkbox">
+            <label><input type="checkbox" name="checkbox">同意する</label>
+          </div>
+        </div>
+
+        <p>本ご利用申込フォームでの申込みは、申込みを希望する法人の代表者または申込みを希望する個人事業者の事業主が申込したものとみなします。</p>
+
+        <button class="btn btn-default">送信</button>
+
+      </div>
+      
+  </form>
+  </div>
+  
+</body>
+</html>
