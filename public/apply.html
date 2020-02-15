@@ -3,196 +3,387 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet"
-        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
-        integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous" />
-  <link rel="stylesheet"
-        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
-        integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous" />
   <title>申込フォーム</title>
+
+  <!-- BootStrap -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+  <!-- 郵便番号から住所自動入力 -->
+  <script src="https://ajaxzip3.github.io/ajaxzip3.js" charset="UTF-8"></script>
 </head>
-<body>
-  <div class="col-sm-3">
-    
-  </div>
-  <div class="col-sm-6">
-    <h1>申込フォーム</h1>
-  <p>早期支払いをご希望の方は、お手元に運転免許証をご用意いただいた上で<br>
-    下記のフォームよりお申込みください。</p>
-  <p>申込みフォームの入力でお困りの際は、下記連絡先までお気軽にお電話ください。</p>
-  <p>運営：インベストデザイン株式会社<br>
-    （各種ペイメントサービスの事務局を担っております）<br>
-    電話番号 ： 0120-516-818 <br>
-    受付時間 ： 10：00～17：00 <br>
-    定休日 ： 土・日・祝</p>
-  <form class="pure-form pure-form-stacked">
-      <h2>■ お客さま情報 ■</h2>
-      <div class="form-group">
-        <label class="control-label">貴社名（個人事業主の場合は屋号名）</label>
-        <!-- <div class="has-error"> -->
-          <input class="form-control" type="text"/>
-          <!-- <div class="text-danger">正しく入力して下さい</div> -->
-        <!-- </div> -->
+<body class="font-weight-light">
+  <!-- container -->
+  <div class="container" style="width: 640px;">
+
+    <!-- form -->
+    <form class="needs-validation" novalidate>
+
+      <h2>申込フォーム</h2>
+
+      <p>早期支払いをご希望の方は、お手元に運転免許証をご用意いただいた上で<br>
+        下記のフォームよりお申込みください。</p>
+
+      <p>申込みフォームの入力でお困りの際は、下記連絡先までお気軽にお電話ください。</p>
+
+      <p>運営：インベストデザイン株式会社<br>
+        （各種ペイメントサービスの事務局を担っております）<br>
+        電話番号 ： 0120-516-818 <br>
+        受付時間 ： 10：00～17：00 <br>
+        定休日 ： 土・日・祝</p>
+
+
+      <div class="row mt-6 mx-auto">
+        <h3>■ お客さま情報 ■</h3>
       </div>
 
-      <div class="form-group">
-        <label class="control-label">請求先企業名（発注者名）</label>
-          <input class="form-control" type="text"/>
+
+      <!-- 貴社名 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="company">貴社名（個人事業主の場合は屋号名） <span class="badge btn-danger">必須</span></label>
+          <input type="text" name="company" id="company" class="form-control" required/>
+
+        </div>
       </div>
+      <!-- /貴社名 -->
 
-      <div class="form-group">
-        <label class="control-label">請求書の締日（早期支払対象となる締日）</label>
-          <input class="form-control" type="text"/>
+
+      <!-- 請求先企業名 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="billingCompany">請求先企業名（発注者名） <span class="badge btn-danger">必須</span></label>
+          <input type="text" name="billingCompany" id="billingCompany" class="form-control" required/>
+        </div>
       </div>
+      <!-- /請求先企業名 -->
 
-      <div class="form-group">
-        <label class="control-label">貴社住所（本店所在地）</label>
 
-        <div class="row">
-          <div class="col-sm-6">
-            <div class="form-group">
-              <label class="control-label">郵便番号</label>
-                <input class="form-control" type="text"/>
-            </div>
+      <!-- 請求書の締日 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="closingDay">請求書の締日（早期支払対象となる締日） <span class="badge btn-danger">必須</span></label>
+          <input type="text" name="closingDay" id="closingDay" class="form-control" required/>
+        </div>
+      </div>
+      <!-- /請求書の締日 -->
+
+
+      <label class="control-label mt-4">貴社住所（本店所在地）</label>
+
+
+      <div class="form-row">
+
+        <!-- 郵便番号 -->
+        <div class="col-sm-6">
+          <div class="form-group">
+            <label for="postalCode">郵便番号 <span class="badge btn-danger">必須</span></label>
+            <input type="text" name="postalCode" id="postalCode" maxlength="8" class="form-control" onkeyup="AjaxZip3.zip2addr(this,'','prefecture','address');" required/>
           </div>
+        </div>
+        <!-- /郵便番号 -->
 
-          <div class="col-sm-6">
-            <div class="form-group">
-              <label class="control-label">都道府県</label>
-                <input class="form-control" type="text"/>
-            </div>
+        <!-- 都道府県 -->
+        <div class="col-sm-6">
+          <div class="form-group">
+            <label for="prefecture">都道府県 <span class="badge btn-danger">必須</span></label>
+            <select type="text" name="prefecture" id="prefecture" class="form-control" required>
+              <option value="">選択してください</option>
+              <optgroup label="北海道・東北">
+                <option value="北海道">北海道</option>
+                <option value="青森県">青森県</option>
+                <option value="秋田県">秋田県</option>
+                <option value="岩手県">岩手県</option>
+                <option value="山形県">山形県</option>
+                <option value="宮城県">宮城県</option>
+                <option value="福島県">福島県</option>
+              </optgroup>
+              <optgroup label="甲信越・北陸">
+                <option value="山梨県">山梨県</option>
+                <option value="長野県">長野県</option>
+                <option value="新潟県">新潟県</option>
+                <option value="富山県">富山県</option>
+                <option value="石川県">石川県</option>
+                <option value="福井県">福井県</option>
+              </optgroup>
+              <optgroup label="関東">
+                <option value="茨城県">茨城県</option>
+                <option value="栃木県">栃木県</option>
+                <option value="群馬県">群馬県</option>
+                <option value="埼玉県">埼玉県</option>
+                <option value="千葉県">千葉県</option>
+                <option value="東京都">東京都</option>
+                <option value="神奈川県">神奈川県</option>
+              </optgroup>
+              <optgroup label="東海">
+                <option value="愛知県">愛知県</option>
+                <option value="静岡県">静岡県</option>
+                <option value="岐阜県">岐阜県</option>
+                <option value="三重県">三重県</option>
+              </optgroup>
+              <optgroup label="関西">
+                <option value="大阪府">大阪府</option>
+                <option value="兵庫県">兵庫県</option>
+                <option value="京都府">京都府</option>
+                <option value="滋賀県">滋賀県</option>
+                <option value="奈良県">奈良県</option>
+                <option value="和歌山県">和歌山県</option>
+              </optgroup>
+              <optgroup label="中国">
+                <option value="岡山県">岡山県</option>
+                <option value="広島県">広島県</option>
+                <option value="鳥取県">鳥取県</option>
+                <option value="島根県">島根県</option>
+                <option value="山口県">山口県</option>
+              </optgroup>
+              <optgroup label="四国">
+                <option value="徳島県">徳島県</option>
+                <option value="香川県">香川県</option>
+                <option value="愛媛県">愛媛県</option>
+                <option value="高知県">高知県</option>
+              </optgroup>
+              <optgroup label="九州・沖縄">
+                <option value="福岡県">福岡県</option>
+                <option value="佐賀県">佐賀県</option>
+                <option value="長崎県">長崎県</option>
+                <option value="熊本県">熊本県</option>
+                <option value="大分県">大分県</option>
+                <option value="宮崎県">宮崎県</option>
+                <option value="鹿児島県">鹿児島県</option>
+                <option value="沖縄県">沖縄県</option>
+              </optgroup>
+            </select>
           </div>
         </div>
+        <!-- /都道府県 -->
 
-        <div class="form-group">
-          <label class="control-label">市区町村・番地</label>
-            <input class="form-control" type="text"/>
+      </div>
+
+
+      <!-- 住所 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="address">住所 <span class="badge btn-danger">必須</span></label>
+          <input type="text" name="address" id="address" class="form-control" required/>
         </div>
+      </div>
+      <!-- /住所 -->
 
-        <div class="form-group">
-          <label class="control-label">建物名・部屋番号</label>
-            <input class="form-control" type="text"/>
+
+      <!-- 番地・建物名・部屋番号 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="streetAddress">番地・建物名・部屋番号 <span class="badge btn-danger">必須</span></label>
+          <input type="text" name="streetAddress" id="streetAddress" class="form-control" required/>
         </div>
+      </div>
+      <!-- /番地・建物名・部屋番号 -->
 
-        <div class="form-group">
-          <label class="control-label">代表者名</label>
-            <input class="form-control" type="text"/>
+
+      <!-- 代表者名 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="representative">代表者名 <span class="badge btn-danger">必須</span></label>
+          <input type="text" name="representative" id="representative" class="form-control" required/>
         </div>
+      </div>
+      <!-- /代表者名 -->
 
-        <div class="form-group">
-          <label class="control-label">メールアドレス</label>
-            <input class="form-control" type="text"/>
+
+      <!-- メールアドレス -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="mail">メールアドレス <span class="badge btn-danger">必須</span></label>
+          <input type="email" name="mail" id="mail" class="form-control" pattern="[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" required/>
         </div>
+      </div>
+      <!-- /メールアドレス -->
 
-        <div class="form-group">
-          <label class="control-label">電話番号</label>
-            <input class="form-control" type="text"/>
+
+      <!-- 電話番号 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="phone">電話番号 <span class="badge btn-danger">必須</span></label>
+          <input type="tel" name="phone" id="phone" class="form-control" pattern="^\d{11}$|^\d{3,4}-\d{3,4}-\d{4}$" required/>
         </div>
+      </div>
+      <!-- /電話番号 -->
 
+
+      <div class="row mt-6 mx-auto">
         <h2>■ 対象債権内容（件名・税込金額）■</h2>
         <p>※早期支払をご希望の請求書データをご添付ください。<br>
           　携帯で撮った請求書の写真でも構いません。</p>
-        <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。
+        <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。<br>
           　（運営：インベストデザイン株式会社　03-6261-6818）</p>
-        <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。
+        <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。<br>
           　（運営：インベストデザイン株式会社　03-6261-6818）</p>
-        <p>※【該当の方のみ】
+        <p>※【該当の方のみ】<br>
           協力会費のお支払が必要な場合は、各発注企業さまの取り扱い方法に従い手続きいたします（請求書の合計金額から協力会費を差し引かせていただきます）</p>
+      </div>
 
-        <div class="form-group">
-          <label class="control-label">請求書データの添付</label>
-            <input class="form-control" type="text"/>
+
+      <!-- 請求書データの添付 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="invoice">請求書データの添付 <span class="badge btn-danger">必須</span></label>
+          <input type="file" name="invoice" id="invoice" class="form-control-file" required/>
         </div>
+      </div>
+      <!-- /請求書データの添付 -->
 
-        <div class="form-group">
-          <label class="control-label">対象債権合計金額（税込）</label>
-            <input class="form-control" type="text"/>
+
+      <!-- 対象債権合計金額 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="totalReceivables">対象債権合計金額（税込） <span class="badge btn-danger">必須</span></label>
+          <input type="text" name="totalReceivables" id="totalReceivables" class="form-control" required/>
         </div>
+      </div>
+      <!-- /対象債権合計金額 -->
 
+
+      <div class="row mt-6 mx-auto">
         <h2>■ お客さま口座情報 ■</h2>
         <p>支払い口座情報をご記入ください。<br>
           （個人事業主様は代表者名の口座をご指定下さい)</p>
+      </div>
 
-          <div class="row">
-            <div class="col-sm-4">
-              <div class="form-group">
-                <label class="control-label">金融機関コード</label>
-                  <input class="form-control" type="text"/>
-              </div>
-            </div>
-  
-            <div class="col-sm-8">
-              <div class="form-group">
-                <label class="control-label">金融機関名</label>
-                  <input class="form-control" type="text"/>
-              </div>
-            </div>
+
+      <!-- 金融機関 -->
+      <div class="row">
+
+        <!-- 金融機関コード -->
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label for="bankCode">金融機関コード（4桁） <span class="badge btn-danger">必須</span></label>
+            <input type="text" name="bankCode" id="bankCode" class="form-control" required/>
           </div>
+        </div>
+        <!-- /金融機関コード -->
 
-          <div class="row">
-            <div class="col-sm-4">
-              <div class="form-group">
-                <label class="control-label">支店コード</label>
-                  <input class="form-control" type="text"/>
-              </div>
-            </div>
-  
-            <div class="col-sm-8">
-              <div class="form-group">
-                <label class="control-label">支店名</label>
-                  <input class="form-control" type="text"/>
-              </div>
-            </div>
+        <!-- 金融機関名 -->
+        <div class="col-sm-8">
+          <div class="form-group">
+            <label for="bankName">金融機関名 <span class="badge btn-danger">必須</span></label>
+            <input type="text" name="bankName" id="bankName" class="form-control" required/>
           </div>
+        </div>
 
+      </div>
+      <!-- /金融機関 -->
+
+
+      <!-- 支店 -->
+      <div class="row">
+
+        <!-- 支店コード -->
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label for="branchCode">支店コード（4桁） <span class="badge btn-danger">必須</span></label>
+            <input type="text" name="branchCode" id="branchCode" class="form-control" required/>
+          </div>
+        </div>
+        <!-- /支店コード -->
+
+        <!-- 支店名 -->
+        <div class="col-sm-8">
+          <div class="form-group">
+            <label for="branchName">支店名 <span class="badge btn-danger">必須</span></label>
+            <input type="text" name="branchName" id="branchName" class="form-control" required/>
+          </div>
+        </div>
+        <!-- /支店名 -->
+
+      </div>
+      <!-- /支店 -->
+
+      
+      <!-- 預金種目 -->
+      <div class="form-row mt-4 mx-auto">
         <div class="form-group">
-          <label class="control-label">預金種目</label>
+          <label for="deposit">預金種目 <span class="badge btn-danger">必須</span></label>
           <div class="radio">
             <label><input type="radio" name="radio">普通</label>
             <label><input type="radio" name="radio">当座</label>
           </div>
         </div>
+      </div>
+      <!-- /預金種目 -->
 
-        <div class="form-group">
-          <label class="control-label">口座番号</label>
-            <input class="form-control" type="text"/>
+
+      <!-- 口座番号 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="accountNumber">口座番号 <span class="badge btn-danger">必須</span></label>
+          <input type="text" name="accountNumber" id="accountNumber" class="form-control" required/>
         </div>
+      </div>
+      <!-- /口座番号 -->
 
-        <div class="form-group">
-          <label class="control-label">口座名義（カナ）</label>
-            <input class="form-control" type="text"/>
+
+      <!-- 口座名義 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="accountName">口座名義（カナ） <span class="badge btn-danger">必須</span></label>
+          <input type="text" name="accountName" id="accountName" class="form-control" required/>
         </div>
+      </div>
+      <!-- /口座名義 -->
 
 
+      <div class="row mt-6 mx-auto">
         <h2>■ 本人確認書類 ■</h2>
+      </div>
 
-        <div class="form-group">
-          <label class="control-label">運転免許証（表面）</label>
-            <input class="form-control" type="text"/>
+
+      <!-- 運転免許証表 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="driverLicenseFront">運転免許証（表面） <span class="badge btn-danger">必須</span></label>
+          <input type="text" name="driverLicenseFront" id="driverLicenseFront" class="form-control" required/>
         </div>
+      </div>
+      <!-- /運転免許証表 -->
 
-        <div class="form-group">
-          <label class="control-label">運転免許証（裏面）</label>
-            <input class="form-control" type="text"/>
+
+      <!-- 運転免許証裏 -->
+      <div class="form-row mt-4">
+        <div class="col-12">
+          <label for="driverLicenseBack">運転免許証（裏面） <span class="badge btn-danger">必須</span></label>
+          <input type="text" name="driverLicenseBack" id="driverLicenseBack" class="form-control" required/>
         </div>
+      </div>
+      <!-- /運転免許証裏 -->
 
-        <p><a href="">利用規約</a></p>
 
+      <p><a href="https://invest-design.wixsite.com/mysite-1">利用規約</a></p>
+
+
+      <!-- 利用規約に同意する -->
+      <div class="form-row mt-4 mx-auto">
         <div class="form-group">
-          <label class="control-label">規約に同意する</label>
+          <label for="agree">規約に同意する</label>
           <div class="checkbox">
-            <label><input type="checkbox" name="checkbox">同意する</label>
+            <label><input type="checkbox" name="agree" id="agree" required>同意する</label>
           </div>
         </div>
-
-        <p>本ご利用申込フォームでの申込みは、申込みを希望する法人の代表者または申込みを希望する個人事業者の事業主が申込したものとみなします。</p>
-
-        <button class="btn btn-default">送信</button>
-
       </div>
+      <!-- /利用規約に同意する -->
+
+
+      <p>本ご利用申込フォームでの申込みは、申込みを希望する法人の代表者または申込みを希望する個人事業者の事業主が申込したものとみなします。</p>
+
       
-  </form>
+      <button class="btn btn-default">送信</button>
+
+
+    </form>
+    <!-- /form -->
+
+
   </div>
-  
+  <!-- /container -->
+
+
 </body>
 </html>
