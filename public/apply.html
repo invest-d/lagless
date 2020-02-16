@@ -309,7 +309,7 @@
         <div class="col-sm-4">
           <div class="form-group">
             <label for="bankCode">金融機関コード（4桁） <span class="badge btn-danger">必須</span></label>
-            <input type="text" name="bankCode" id="bankCode" class="form-control" required/>
+            <input type="text" name="bankCode" id="bankCode" maxlength="4" class="form-control" required/>
           </div>
         </div>
         <!-- /金融機関コード -->
@@ -332,8 +332,8 @@
         <!-- 支店コード -->
         <div class="col-sm-4">
           <div class="form-group">
-            <label for="branchCode">支店コード（4桁） <span class="badge btn-danger">必須</span></label>
-            <input type="text" name="branchCode" id="branchCode" class="form-control" required/>
+            <label for="branchCode">支店コード（3桁） <span class="badge btn-danger">必須</span></label>
+            <input type="text" name="branchCode" id="branchCodbranchCodee" maxlength="3" class="form-control" required/>
           </div>
         </div>
         <!-- /支店コード -->
