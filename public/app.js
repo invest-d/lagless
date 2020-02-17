@@ -42,9 +42,9 @@ $(function() {
                     "early": "2019-11-30"
                 },
                 {
-                    "closing": "2019-12-20",
-                    "deadline": "2019-12-22",
-                    "early": "2019-12-31"
+                    "closing": "2020-12-20",
+                    "deadline": "2020-12-22",
+                    "early": "2020-12-31"
                 }
             ]
         }, param);
@@ -96,8 +96,11 @@ var show = function(client, param) {
     $('.effect').text(client.effect);
 
     var now = new Date();
+    now = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var schedule = client.schedule.find(function(s) {
-        return now.getTime() <= (new Date(s.deadline+' 23:59:59')).getTime();
+        var ymd = s.deadline.split(/\D/);
+        var t = new Date(ymd[0], parseInt(ymd[1])-1, ymd[2]);
+        return now.getTime() <= t.getTime();
     });
     if(schedule) {
         $('.schedule_closing').text(format_date(schedule.closing));
