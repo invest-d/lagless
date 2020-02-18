@@ -135,7 +135,7 @@ exports.send_apply = functions.https.onRequest((req, res) => {
     } else {
         //reqの中身を整形してkintone用にする
         var sendObj = {};
-        sendObj.app = req.body["app"];
+        sendObj.app = 159;
 
         var record = {};
         var company = {"value": req.body["company"]};
@@ -237,13 +237,9 @@ exports.send_apply = functions.https.onRequest((req, res) => {
                 //仮で送信したものをオウム返しにレスポンスする
                 res.status(200).send(sendObj);
             } else {
-                // console.log('meta_record is ' + meta_record);
-                // console.log('response is ' + response);
-                // console.log('response is ' + response);
-                // console.log('busboy is ' + busboy);
                 console.log('sendObj is ' + sendObj);
                 console.log('req.body is ' + req.body);
-                res.status(200).send(sendObj);
+                res.status(response.statusCode).send('レコードの登録に失敗しました');
             }
         });
     }

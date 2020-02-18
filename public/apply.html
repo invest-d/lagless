@@ -427,10 +427,6 @@
       <p>本ご利用申込フォームでの申込みは、申込みを希望する法人の代表者または申込みを希望する個人事業者の事業主が申込したものとみなします。</p>
 
 
-      <!-- アプリの識別番号 -->
-      <input type="hidden" name="app" id="app" class="form-control" value="159" required/>
-
-
       <div class="form-group">
         <!-- <button type="button" id="send" class="btn btn-outline-primary">送信</button> -->
         <button type="submit" id="send" class="btn btn-outline-primary">送信</button>
@@ -484,62 +480,5 @@
         });
     });
   </script>
-
-  <!-- 送信前にデータを加工する -->
-  <!-- <script>
-    $('#form_id').submit(function(){
-      console.log('hello');
-      // kintone専用のjson形式に変換してから送信する
-      var sendObj = {};
-        sendObj.app = document.getElementById("app").value;
-
-        var record = {};
-        var company = {"value": document.getElementById("company").value};
-        record.company = company;
-
-        var billingCompany = {"value": document.getElementById("billingCompany").value};
-        record.billingCompany = billingCompany;
-
-        sendObj.record = record;
-
-        SendRequest(sendObj);
-
-      //バリデーションチェックの結果submitしない場合、return falseすることでsubmitを中止することができる。
-      return false;
-    });
-  </script> -->
-  <!-- /送信 -->
-
-  <!-- 送信ボタンを押したとき、フォームデータをFirebase Functionsに送信する -->
-  <!-- <script language="javascript" type="text/javascript">
-    document.getElementById("send").onclick = function () {
-      console.log('hello 2');
-      // kintone専用のjson形式に変換してから送信する
-      var sendObj = {};
-        sendObj.app = document.getElementById("app").value;
-
-        var record = {};
-        var company = {"value": document.getElementById("company").value};
-        record.company = company;
-
-        var billingCompany = {"value": document.getElementById("billingCompany").value};
-        record.billingCompany = billingCompany;
-
-        sendObj.record = record;
-
-        SendRequest(sendObj);
-
-      //バリデーションチェックの結果submitしない場合、return falseすることでsubmitを中止することができる。
-      return false;
-    };
-
-    function SendRequest(body) {
-      var url = 'https://us-central1-lagless.cloudfunctions.net/send_apply';
-      var request = new XMLHttpRequest();
-
-      request.open('POST', url);
-      request.send(body);
-    }
-  </script> -->
 </body>
 </html>
