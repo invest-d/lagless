@@ -235,7 +235,7 @@ exports.send_apply = functions.https.onRequest((req, res) => {
             if (!error && response.statusCode == 200) {
                 //成功
                 //仮で送信したものをオウム返しにレスポンスする
-                res.status(200).send(sendObj);
+                res.status(200).send('登録成功です。' + sendObj);
             } else {
                 console.log('sendObj is ' + sendObj);
                 console.log('req.body is ' + req.body);
