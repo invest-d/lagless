@@ -125,3 +125,126 @@ exports.helloWorld = functions.https.onRequest(async (req, res) => {
     
     console.log('completed.');
 });
+
+//申込みフォームから送信されたデータをfirebaseで受け取り、kintoneに送信する
+exports.send_apply = functions.https.onRequest((req, res) => {
+    if (req.method != 'POST') {
+        //POST以外を受け取ったときはとりあえずエラーにしとく
+        res.status(405).send('Method Not Allowed');
+        return;
+    } else {
+        //reqの中身を整形してkintone用にする
+        var sendObj = {};
+        sendObj.app = req.body["app"];
+
+        var record = {};
+        var company = {"value": req.body["company"]};
+        record.company = company;
+
+        var billingCompany = {"value": req.body["billingCompany"]};
+        record.billingCompany = billingCompany;
+
+        var closingDay = {"value": req.body["closingDay"]};
+        record.closingDay = closingDay;
+
+        var postalCode = {"value": req.body["postalCode"]};
+        record.postalCode = postalCode;
+
+        var prefecture = {"value": req.body["prefecture"]};
+        record.prefecture = prefecture;
+
+        var address = {"value": req.body["address"]};
+        record.address = address;
+
+        var streetAddress = {"value": req.body["streetAddress"]};
+        record.streetAddress = streetAddress;
+
+        var representative = {"value": req.body["representative"]};
+        record.representative = representative;
+
+        var mail = {"value": req.body["mail"]};
+        record.mail = mail;
+
+        var phone = {"value": req.body["phone"]};
+        record.phone = phone;
+
+        // var invoice = {"value": req.body["invoice"]};
+        // record.invoice = invoice;
+
+        var totalReceivables = {"value": req.body["totalReceivables"]};
+        record.totalReceivables = totalReceivables;
+
+        var bankCode = {"value": req.body["bankCode"]};
+        record.bankCode = bankCode;
+
+        var bankName = {"value": req.body["bankName"]};
+        record.bankName = bankName;
+
+        var branchCode = {"value": req.body["branchCode"]};
+        record.branchCode = branchCode;
+
+        var branchName = {"value": req.body["branchName"]};
+        record.branchName = branchName;
+
+        // var deposit = {"value": req.body["deposit"]};
+        // record.deposit = deposit;
+
+        var accountNumber = {"value": req.body["accountNumber"]};
+        record.accountNumber = accountNumber;
+
+        var accountName = {"value": req.body["accountName"]};
+        record.accountName = accountName;
+
+        // var driverLicenseFront = {"value": req.body["driverLicenseFront"]};
+        // record.driverLicenseFront = driverLicenseFront;
+
+        // var driverLicenseBack = {"value": req.body["driverLicenseBack"]};
+        // record.driverLicenseBack = driverLicenseBack;
+
+        //利用規約に同意するチェックボックスはレコードに載せる必要はない
+
+        sendObj.record = record;
+
+        //POSTリクエストの中身をkintoneに転送
+        var request = require('request');
+
+        /* kintone用のパラメータ*/
+        var DOMAIN = 'investdesign.cybozu.com';
+        var APP_ID = 159;   //アプリID
+        var API_TOKEN = 'pa86BnNWWoILZZ5uttq5hHcoPGPoRta662fa8DAO';
+
+        var BASE_URL = 'https://investdesign.cybozu.com/k/v1/record.json';
+        var BASIC = 'Basic ' + API_TOKEN;
+
+        var headers = {
+            'Host': 'investdesign.cybozu.com:159',
+            'X-Cybozu-API-Token': API_TOKEN,
+            'Authorization': BASIC,
+            'Content-Type': 'application/json',
+        };
+
+        var options_postrecord = {
+            url: BASE_URL,
+            method: 'POST',
+            headers: headers,
+            'Content-Type': 'application/json',
+            json: sendObj
+        };
+
+        request(options_postrecord, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                //成功
+                //仮で送信したものをオウム返しにレスポンスする
+                res.status(200).send(sendObj);
+            } else {
+                // console.log('meta_record is ' + meta_record);
+                // console.log('response is ' + response);
+                // console.log('response is ' + response);
+                // console.log('busboy is ' + busboy);
+                console.log('sendObj is ' + sendObj);
+                console.log('req.body is ' + req.body);
+                res.status(200).send(sendObj);
+            }
+        });
+    }
+});
