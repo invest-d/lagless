@@ -121,22 +121,29 @@
         function getCsvContent(target_records, target_date) {
             const csvFormat = (col => `"${col}"`);
 
-            var requester_code = ' '.repeat(10);
-            var requester_name = ('ﾗｸﾞﾚｽ' + ' '.repeat(40)).slice(0, 40);
             // target_dateは'YYYY-MM-DD'の書式を想定
-            // yyは2桁の和暦年指定なので実装した……けど総合振込だと必要なかった
-            // var gengou_formatted_date = new Intl.DateTimeFormat('ja-JP-u-ca-japanese').format(new Date(target_date));
-            // var gengou_year = gengou_formatted_date.split('/')[0];
-            // var gengou_year_num = gengou_year.replace(/[^0-9]/g, '');
-            // var yy = ('0' + gengou_year_num).slice(-2);
             var mm = target_date.split('-')[1];
             var dd = target_date.split('-')[2];
-            var smbc_bank_code = '0033';
-            var smbc_bank_name = ('ﾐﾂｲｽﾐﾄﾓｷﾞﾝｺｳ' + ' '.repeat(15)).slice(0, 15);
-            var branch_code_from = '999'; // 振込元口座の支店コード
-            var branch_name_from = ' '.repeat(15); // 振込元口座の支店コード
+
+            // インベストデザイン（カによる振込
+            var requester_code   = '2648852000';
+            var requester_name   = ('ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ' + ' '.repeat(40)).slice(0, 40);
+            var smbc_bank_code   = '0009';
+            var smbc_bank_name   = ('ﾐﾂｲｽﾐﾄﾓｷﾞﾝｺｳ' + ' '.repeat(15)).slice(0, 15);
+            var branch_code_from = '219'; // 振込元口座の支店コード
+            var branch_name_from = 'ｶﾝﾀﾞ' + ' '.repeat(15); // 振込元口座の支店コード
             var ordinary_deposit = '1';
-            var account_number_from = '1234567';
+            var account_number_from = '3391195';
+
+            // ラグレス合同会社による振込
+            // var requester_code   = '3648579000';
+            // var requester_name   = ('ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ' + ' '.repeat(40)).slice(0, 40);
+            // var smbc_bank_code   = '0009';
+            // var smbc_bank_name   = ('ﾐﾂｲｽﾐﾄﾓｷﾞﾝｺｳ' + ' '.repeat(15)).slice(0, 15);
+            // var branch_code_from = '219'; // 振込元口座の支店コード
+            // var branch_name_from = 'ｶﾝﾀﾞ' + ' '.repeat(15); // 振込元口座の支店コード
+            // var ordinary_deposit = '1';
+            // var account_number_from = '3409134';
 
             var content = [];
 
