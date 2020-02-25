@@ -126,48 +126,68 @@
             var dd = target_date.split('-')[2];
 
             // インベストデザイン（カによる振込
-            var requester_code   = '2648852000';
-            var requester_name   = ('ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ' + ' '.repeat(40)).slice(0, 40);
-            var smbc_bank_code   = '0009';
-            var smbc_bank_name   = ('ﾐﾂｲｽﾐﾄﾓｷﾞﾝｺｳ' + ' '.repeat(15)).slice(0, 15);
-            var branch_code_from = '219'; // 振込元口座の支店コード
-            var branch_name_from = 'ｶﾝﾀﾞ' + ' '.repeat(15); // 振込元口座の支店コード
-            var ordinary_deposit = '1';
-            var account_number_from = '3391195';
+            var requester_code_invest      = '2648852000';
+            var requester_name_invest      = ('ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ' + ' '.repeat(40)).slice(0, 40);
+            var smbc_bank_code_invest      = '0009';
+            var smbc_bank_name_invest      = ('ﾐﾂｲｽﾐﾄﾓｷﾞﾝｺｳ' + ' '.repeat(15)).slice(0, 15);
+            var branch_code_from_invest    = '219'; // 振込元口座の支店コード
+            var branch_name_from_invest    = 'ｶﾝﾀﾞ' + ' '.repeat(15); // 振込元口座の支店コード
+            var ordinary_deposit_invest    = '1';
+            var account_number_from_invest = '3391195';
 
             // ラグレス合同会社による振込
-            // var requester_code   = '3648579000';
-            // var requester_name   = ('ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ' + ' '.repeat(40)).slice(0, 40);
-            // var smbc_bank_code   = '0009';
-            // var smbc_bank_name   = ('ﾐﾂｲｽﾐﾄﾓｷﾞﾝｺｳ' + ' '.repeat(15)).slice(0, 15);
-            // var branch_code_from = '219'; // 振込元口座の支店コード
-            // var branch_name_from = 'ｶﾝﾀﾞ' + ' '.repeat(15); // 振込元口座の支店コード
-            // var ordinary_deposit = '1';
-            // var account_number_from = '3409134';
+            var requester_code_lagless      = '3648579000';
+            var requester_name_lagless      = ('ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ' + ' '.repeat(40)).slice(0, 40);
+            var smbc_bank_code_lagless      = '0009';
+            var smbc_bank_name_lagless      = ('ﾐﾂｲｽﾐﾄﾓｷﾞﾝｺｳ' + ' '.repeat(15)).slice(0, 15);
+            var branch_code_from_lagless    = '219'; // 振込元口座の支店コード
+            var branch_name_from_lagless    = 'ｶﾝﾀﾞ' + ' '.repeat(15); // 振込元口座の支店コード
+            var ordinary_deposit_lagless    = '1';
+            var account_number_from_lagless = '3409134';
 
-            var content = [];
+            var content_invest = [];
+            var content_lagless = [];
 
             // ヘッダーを取得
-            var header = [
+            var header_invest = [
                 '1',
                 '21',
                 '0',
-                requester_code,
-                requester_name,
+                requester_code_invest,
+                requester_name_invest,
                 mm + dd,
-                smbc_bank_code,
-                smbc_bank_name,
-                branch_code_from,
-                branch_name_from,
-                ordinary_deposit,
-                account_number_from
+                smbc_bank_code_invest,
+                smbc_bank_name_invest,
+                branch_code_from_invest,
+                branch_name_from_invest,
+                ordinary_deposit_invest,
+                account_number_from_invest
             ];
-            content.push(header.map(csvFormat).join(','));
+            content_invest.push(header_invest.map(csvFormat).join(','));
 
+            var header_lagless = [
+                '1',
+                '21',
+                '0',
+                requester_code_lagless,
+                requester_name_lagless,
+                mm + dd,
+                smbc_bank_code_lagless,
+                smbc_bank_name_lagless,
+                branch_code_from_lagless,
+                branch_name_from_lagless,
+                ordinary_deposit_lagless,
+                account_number_from_lagless
+            ];
+            content_lagless.push(header_lagless.map(csvFormat).join(','));
+
+            var total_amount_of_money_invest = 0;
+            var record_num_invest = 0;
+            var total_amount_of_money_lagless = 0;
+            var record_num_lagless = 0;
             // レコード一覧から条件に合うレコードのみを取得
-            var total_amount_of_money = 0;
-            var record_num = 0;
             for (var i = 0; i < target_records.length; i++) {
+                console.log(target_records[i]['paymentDate']['value']);
                 if (target_records[i]['paymentDate']['value'] === target_date) {
                     var bank_code_to = target_records[i]['bankCode']['value'];
                     var bank_name_to = ' '.repeat(15);
@@ -179,7 +199,6 @@
                     var account_number_to = target_records[i]['accountNumber']['value'];
                     var account_name_to = (zenkakuToHankaku(target_records[i]['accountName']['value']) + ' '.repeat(30)).slice(0, 30);
                     var amount_of_money = target_records[i]['totalReceivables']['value'];
-                    total_amount_of_money += Number(amount_of_money);
 
                     //CSVファイルにkintone上記で取得したデータを記入していく
                     var add_record = [
@@ -198,43 +217,76 @@
                         ' ',
                         ''
                     ]
-                    content.push(add_record.map(csvFormat).join(','));
-                    record_num++;
+
+
+                    // 支払元口座によって場合分け
+                    if (target_records[i]['paymentAccount']['value'] === 'ID') {
+                        content_invest.push(add_record.map(csvFormat).join(','));
+                        total_amount_of_money_invest += Number(amount_of_money);
+                        record_num_invest++;
+                    } else {
+                        content_lagless.push(add_record.map(csvFormat).join(','));
+                        total_amount_of_money_lagless += Number(amount_of_money);
+                        record_num_lagless++;
+                    }
                 }
             }
 
             // トレーラーレコードを取得
-            var trailer = [
+            var trailer_invest = [
                 '8',
-                record_num,
-                total_amount_of_money
+                record_num_invest,
+                total_amount_of_money_invest
             ]
-            content.push(trailer.map(csvFormat).join(','));
+            content_invest.push(trailer_invest.map(csvFormat).join(','));
+
+            var trailer_lagless = [
+                '8',
+                record_num_lagless,
+                total_amount_of_money_lagless
+            ]
+            content_lagless.push(trailer_lagless.map(csvFormat).join(','));
 
             // エンドレコードを取得
             var end = [
                 '9'
             ]
-            content.push(end.map(csvFormat).join(','));
+            content_invest.push(end.map(csvFormat).join(','));
+            content_lagless.push(end.map(csvFormat).join(','));
 
-            return content.join(new_line);
             var new_line = '\r\n';
+            // 返り値は要素数2の配列。1つの振込元が1つの要素に対応。振込先が存在しなくても要素数は2固定。
+            var ret = [];
+            ret.push(content_invest.join(new_line));
+            ret.push(content_lagless.join(new_line));
+            return ret;
         }
 
-        // CSVをファイルとしてローカルにダウンロードする
+        // CSVをファイルとしてローカルにダウンロードする。振込元口座別にCSVファイルを作成。
         function downloadFile(csv, target_date) {
-            var filename = '支払日' + target_date + 'ぶんの振込データ' + getTimeStamp() + '.csv';
+            console.log(csv);
+            for (var i = 0; i < csv.length; i++) {
+                // 変数csvから、振込元の口座がどちらかを取得する
+                var requester_code = csv[i].split(',')[3];
+                var account_from = '';
+                if (requester_code.match('2648852000')) {
+                    account_from = 'ID';
+                } else {
+                    account_from = 'LAGLESS';
+                }
+                var filename = '支払日' + target_date + 'ぶんの振込データ（振込元：' + account_from + '）.csv';
 
-            //SJISに変換する
-            const unicodeList = [];
-            for (let i = 0; i < csv.length; i += 1) {
-                unicodeList.push(csv.charCodeAt(i));
+                //SJISに変換する
+                const unicodeList = [];
+                for (let char_index = 0; char_index < csv[i].length; char_index += 1) {
+                    unicodeList.push(csv[i].charCodeAt(char_index));
+                }
+                const shiftJisCodeList = Encoding.convert(unicodeList, 'sjis', 'unicode');
+                const uInt8List = new Uint8Array(shiftJisCodeList);
+                const writeData = new Blob([uInt8List], { type: 'text/csv' });
+
+                saveAs(writeData, filename);
             }
-            const shiftJisCodeList = Encoding.convert(unicodeList, 'sjis', 'unicode');
-            const uInt8List = new Uint8Array(shiftJisCodeList);
-            const writeData = new Blob([uInt8List], { type: 'text/csv' });
-
-            saveAs(writeData, filename);
         }
 
         // ファイル名に付与するタイムスタンプを取得する
