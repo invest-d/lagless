@@ -188,7 +188,7 @@
                         amount_of_money,
                         '0',
                         '',
-                        '',
+                        ' ',
                         ''
                     ]
                     content.push(add_record.map(csvFormat).join(','));
