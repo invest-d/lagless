@@ -217,8 +217,8 @@
             ]
             content.push(end.map(csvFormat).join(','));
 
-            var new_line = '\n';
             return content.join(new_line);
+            var new_line = '\r\n';
         }
 
         // CSVをファイルとしてローカルにダウンロードする
