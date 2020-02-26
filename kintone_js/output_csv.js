@@ -133,7 +133,7 @@
             var smbc_bank_code_invest      = '0009';
             var smbc_bank_name_invest      = ('ﾐﾂｲｽﾐﾄﾓｷﾞﾝｺｳ' + ' '.repeat(15)).slice(0, 15);
             var branch_code_from_invest    = '219'; // 振込元口座の支店コード
-            var branch_name_from_invest    = 'ｶﾝﾀﾞ' + ' '.repeat(15); // 振込元口座の支店コード
+            var branch_name_from_invest    = ('ｶﾝﾀﾞ' + ' '.repeat(15)).slice(0, 15); // 振込元口座の支店コード
             var ordinary_deposit_invest    = '1';
             var account_number_from_invest = '3391195';
 
@@ -143,7 +143,7 @@
             var smbc_bank_code_lagless      = '0009';
             var smbc_bank_name_lagless      = ('ﾐﾂｲｽﾐﾄﾓｷﾞﾝｺｳ' + ' '.repeat(15)).slice(0, 15);
             var branch_code_from_lagless    = '219'; // 振込元口座の支店コード
-            var branch_name_from_lagless    = 'ｶﾝﾀﾞ' + ' '.repeat(15); // 振込元口座の支店コード
+            var branch_name_from_lagless    = ('ｶﾝﾀﾞ' + ' '.repeat(15)).slice(0, 15); // 振込元口座の支店コード
             var ordinary_deposit_lagless    = '1';
             var account_number_from_lagless = '3409134';
 
