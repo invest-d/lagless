@@ -292,21 +292,7 @@
             }
         }
 
-        // ファイル名に付与するタイムスタンプを取得する
-        function getTimeStamp() {
-            var d = new Date();
-            var YYYY = d.getFullYear();
-            var MM = (d.getMonth() + 1);
-            var DD = d.getDate();
-            var hh = d.getHours();
-            var mm = d.getMinutes();
-            if (MM < 10) { MM = '0' + MM; }
-            if (DD < 10) { DD = '0' + DD; }
-            if (hh < 10) { hh = '0' + hh; }
-            else if (mm < 10) { mm = '0' + mm; }
-            String();
-            return '' + YYYY + MM + DD + hh + mm;
-        }
+        
 
         // 関数定義 ここまで
 
