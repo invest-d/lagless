@@ -131,9 +131,9 @@
             var requester_code_invest      = '2648852000';
             var requester_name_invest      = ('ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ' + ' '.repeat(40)).slice(0, 40);
             var smbc_bank_code_invest      = '0009';
-            var smbc_bank_name_invest      = ('ﾐﾂｲｽﾐﾄﾓｷﾞﾝｺｳ' + ' '.repeat(15)).slice(0, 15);
+            var smbc_bank_name_invest      = adjustLength(window.ginkoLib.getBankKana(smbc_bank_code_invest), 15);
             var branch_code_from_invest    = '219'; // 振込元口座の支店コード
-            var branch_name_from_invest    = ('ｶﾝﾀﾞ' + ' '.repeat(15)).slice(0, 15); // 振込元口座の支店コード
+            var branch_name_from_invest    = adjustLength(window.ginkoLib.getBankKana(smbc_bank_code_invest, branch_code_from_invest), 15);
             var ordinary_deposit_invest    = '1';
             var account_number_from_invest = '3391195';
 
@@ -141,9 +141,9 @@
             var requester_code_lagless      = '3648579000';
             var requester_name_lagless      = ('ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ' + ' '.repeat(40)).slice(0, 40);
             var smbc_bank_code_lagless      = '0009';
-            var smbc_bank_name_lagless      = ('ﾐﾂｲｽﾐﾄﾓｷﾞﾝｺｳ' + ' '.repeat(15)).slice(0, 15);
+            var smbc_bank_name_lagless      = adjustLength(window.ginkoLib.getBankKana(smbc_bank_code_lagless), 15);
             var branch_code_from_lagless    = '219'; // 振込元口座の支店コード
-            var branch_name_from_lagless    = ('ｶﾝﾀﾞ' + ' '.repeat(15)).slice(0, 15); // 振込元口座の支店コード
+            var branch_name_from_lagless    = adjustLength(window.ginkoLib.getBankKana(smbc_bank_code_lagless, branch_code_from_lagless), 15);
             var ordinary_deposit_lagless    = '1';
             var account_number_from_lagless = '3409134';
 
@@ -192,12 +192,14 @@
                 console.log(target_records[i]['paymentDate']['value']);
                 if (target_records[i]['paymentDate']['value'] === target_date) {
                     var bank_code_to = target_records[i]['bankCode']['value'];
-                    var bank_name_to = ' '.repeat(15);
+                    var bank_name_kana = window.ginkoLib.getBankKana(bank_code_to);
+                    var bank_name_to = adjustLength(bank_name_kana, 15);
                     var branch_code_to = target_records[i]['branchCode']['value'];
-                    var branch_name_to = ' '.repeat(15);
+                    var branch_name_kana = window.ginkoLib.getBankKana(bank_code_to, branch_code_to);
+                    var branch_name_to = adjustLength(branch_name_kana, 15);
                     var deposit_to = (target_records[i]['deposit']['value'] === '普通')
-                    ? '1'
-                    : '2';
+                        ? '1'
+                        : '2';
                     var account_number_to = target_records[i]['accountNumber']['value'];
                     var account_name_to = (zenkakuToHankaku(target_records[i]['accountName']['value']) + ' '.repeat(30)).slice(0, 30);
                     var amount_of_money = target_records[i]['totalReceivables']['value'];
@@ -292,7 +294,37 @@
             }
         }
 
-        
+        // 全角文字を2、半角文字を1として文字数を計算する
+        function getBytes(str) {
+            // 半角カタカナを、半角文字の代表としてアルファベットKに置換
+            str = str.replace(/[｡-ﾟ]/g, 'K');
+            var hex = '';
+            for (var i = 0; i < str.length; i++) {
+                // 16進数の文字コードに変換することで、半角英数文字は半角2文字に、全角文字は半角4文字に変換
+                hex += str.charCodeAt(i).toString(16);
+            }
+            // 2文字になった半角と4文字になった全角の文字列のlengthを2で割ることで文字数を算出
+            return hex.length / 2;
+        }
+
+        // 全角文字を2、半角文字を1として、元の文字列の右に指定文字数まで半角空白を追加する。元々指定文字数より多かったら右から削る。
+        function adjustLength(str, num) {
+            var str_byte_length = getBytes(str);
+            var trimmed = str;
+
+            if (num - str_byte_length > 0) {
+                for (var i = 0; i < num - str_byte_length; i++) {
+                    trimmed += ' ';
+                }
+            }
+            else {
+                while (getBytes(trimmed) > num) {
+                    trimmed = trimmed.slice(0, -1);
+                }
+            }
+
+            return trimmed;
+        }
 
         // 関数定義 ここまで
 
