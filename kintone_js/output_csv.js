@@ -202,7 +202,7 @@
                         : '2';
                     var account_number_to = target_records[i]['accountNumber']['value'];
                     var account_name_to = (zenkakuToHankaku(target_records[i]['accountName']['value']) + ' '.repeat(30)).slice(0, 30);
-                    var amount_of_money = target_records[i]['totalReceivables']['value'];
+                    var amount_of_money = target_records[i]['transferAmount']['value'];
 
                     //CSVファイルにkintone上記で取得したデータを記入していく
                     var add_record = [
@@ -222,7 +222,6 @@
                         ' ',
                         ''
                     ]
-
 
                     // 支払元口座によって場合分け
                     if (target_records[i]['paymentAccount']['value'] === 'ID') {
