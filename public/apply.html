@@ -8,51 +8,41 @@
   <!-- BootStrap -->
   <link
     rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.0.0/flatly/bootstrap.min.css">
-
-  <link
-    rel="stylesheet"
     href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
     integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
     crossorigin="anonymous">
+  <script
+    src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script
+    src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"></script>
 
-  <!-- BootStrap DateTimePicker -->
+  <!-- Tempus Dominus DateTimePicker -->
   <script
-    src="https://code.jquery.com/jquery-3.4.1.min.js"
-    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"
+    integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ="
     crossorigin="anonymous"></script>
   <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"
-    type="text/javascript"></script>
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-    crossorigin="anonymous"></script>
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/locale/ja.js"
+    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js"
     integrity="sha256-AdQN98MVZs44Eq2yTwtoKufhnU+uZ7v2kXnD5vqzZVo="
     crossorigin="anonymous"></script>
   <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/js/all.min.js"
-    integrity="sha256-MAgcygDRahs+F/Nk5Vz387whB4kSK9NXlDN3w58LLq0="
-    crossorigin="anonymous"></script>
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/js/tempusdominus-bootstrap-4.min.js"
-    integrity="sha256-z0oKYg6xiLq3yJGsp/LsY9XykbweQlHl42jHv2XTBz4="
-    crossorigin="anonymous"></script>
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"
-    integrity="sha256-5YmaxAwMjIpMrVlK84Y/+NjCpKnFYa8bWWBbUHSBGfU="
-    crossorigin="anonymous"></script>
+    type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/js/tempusdominus-bootstrap-4.min.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/css/tempusdominus-bootstrap-4.min.css" />
+  <!-- /BootStrap -->
+
   <!-- CSS -->
   <style type="text/css">
-      .datepicker-days th.dow:first-child,
-      .datepicker-days td:first-child {
-          color: #f00;
-      }
-      .datepicker-days th.dow:last-child,
-      .datepicker-days td:last-child {
-          color: #00f;
     @media (min-width: 800px) {
       .container {
         max-width: 750px;
@@ -154,15 +144,17 @@
 
 
       <!-- 請求書の締日 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <div class="input-group date" id="closingDay">
-            <label for="closingDay">請求書の締日（早期支払対象となる締日） <span class="badge btn-danger">必須</span></label>
-            <input type="text" class="form-control" name="closingDay" onclick="$('#closingDay').datetimepicker();$('#closingDay').datetimepicker('show');" required/>
-            <span class="input-group-append input-group-addon">
-              <span class="input-group-text"><i class="fa fa-calendar"></i></span>
-            </span>
-          </div>
+      <div class="form-group">
+        <label for="closingDay">請求書の締日（早期支払対象となる締日）</label>
+        <span class="badge btn-danger">必須</span>
+        <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
+          <input type="text" class="form-control datetimepicker-input pattern-required"
+          name="closingDay" id="closingDay" required
+          data-toggle="datetimepicker" data-target="#closingDay" placeholder="YYYY-MM-DD"
+          maxlength="10" pattern="\d{4}-\d{2}-\d{2}">
+          <span class="fas fa-check valid-status-icon valid-input"></span>
+          <span class="fas fa-times valid-status-icon invalid-input"></span>
+          <div class="invalid-feedback">YYYY-MM-DDの正しい形式で入力してください。</div>
         </div>
       </div>
       <!-- /請求書の締日 -->
@@ -576,43 +568,17 @@
   </div>
   <!-- /container -->
 
-  <!-- DatePickerをカスタマイズする -->
   <script type="text/javascript">
-    $(function () {
-        $('#closingDay').datetimepicker({
-            dayViewHeaderFormat: 'YYYY年 M月',
 
-            icons: {
-              time: 'fa fa-clock-o',
-              date: 'fa fa-calendar',
-              up: 'fa fa-arrow-up',
-              down: 'fa fa-arrow-down',
-              previous: 'fa fa-chevron-left',
-              next: 'fa fa-chevron-right',
-              today: 'fa fa-calendar-check-o',
-              clear: 'fa fa-delete',
-              close: 'fa fa-times'
-            },
+  // 日付入力欄でカレンダーからの入力を可能にする
+  $(function() {
+    $('#closingDay').datetimepicker({
+      format: 'YYYY-MM-DD',
+      locale: 'ja',
+      dayViewHeaderFormat: 'YYYY年 MMM',
+    });
+  });
 
-            tooltips: {
-                close: '閉じる',
-                selectMonth: '月を選択',
-                prevMonth: '前月',
-                nextMonth: '次月',
-                selectYear: '年を選択',
-                prevYear: '前年',
-                nextYear: '次年',
-                selectTime: '時間を選択',
-                selectDate: '日付を選択',
-                prevDecade: '前期間',
-                nextDecade: '次期間',
-                selectDecade: '期間を選択',
-                prevCentury: '前世紀',
-                nextCentury: '次世紀'
-            },
-            format: 'YYYY-MM-DD',
-            locale: 'ja',
-            showClose: true
   // コントロール未入力のまま次に行こうとしたら警告を出す
   $(function() {
     $('.no-blank').blur(function() {
