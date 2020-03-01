@@ -41,11 +41,46 @@
     href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/css/tempusdominus-bootstrap-4.min.css" />
   <!-- /BootStrap -->
 
+  <!-- 銀行をサジェスト表示 -->
+  <script src="https://zipaddr.github.io/bankautob.js" charset="UTF-8"></script>
+  <!-- /銀行をサジェスト表示 -->
+
   <!-- CSS -->
   <style type="text/css">
     @media (min-width: 800px) {
       .container {
         max-width: 750px;
+      }
+    }
+
+    #bnkauto {
+      position: absolute;
+      font-family:'ヒラギノ角ゴ Pro W3','Hiragino Kaku Gothic Pro','メイリオ',Meiryo,'ＭＳ Ｐゴシック',sans-serif;
+      background: #009999;
+      font-weight: normal;
+      padding: 5px 8px !important;
+      border-radius: 8px;
+      z-index: 999999;
+    }
+
+    @media only screen {
+      /* PC */
+      .bnk_line {         /* 行部分 */
+        color: #ffffcc;
+      }
+      #bnk_count {        /* Hit件数 */
+        color: #ffffcc;
+        white-space: nowrap;
+      }
+      #bnk_close a {
+        color: #333333;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      #bnk_footer a {
+        color: #333333;
+        text-decoration: none;
+        white-space: nowrap;
       }
     }
 
@@ -87,10 +122,6 @@
     integrity="sha256-MAgcygDRahs+F/Nk5Vz387whB4kSK9NXlDN3w58LLq0="
     crossorigin="anonymous"></script>
   <!-- /Font Awesome -->
-
-  <!-- 銀行をサジェスト表示 -->
-  <script src="https://zipaddr.github.io/bankautob.js" charset="UTF-8"></script>
-  <!-- /銀行をサジェスト表示 -->
 </head>
 <body class="font-weight-light py-5">
   <!-- container -->
