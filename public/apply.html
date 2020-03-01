@@ -87,6 +87,10 @@
     integrity="sha256-MAgcygDRahs+F/Nk5Vz387whB4kSK9NXlDN3w58LLq0="
     crossorigin="anonymous"></script>
   <!-- /Font Awesome -->
+
+  <!-- 銀行をサジェスト表示 -->
+  <script src="https://zipaddr.github.io/bankautob.js" charset="UTF-8"></script>
+  <!-- /銀行をサジェスト表示 -->
 </head>
 <body class="font-weight-light py-5">
   <!-- container -->
@@ -386,10 +390,10 @@
         <!-- 金融機関コード -->
         <div class="col-md-4">
           <div class="form-group">
-            <label for="bankCode">金融機関コード(4桁)</label>
+            <label for="bank_code">金融機関コード(4桁)</label>
             <span class="badge btn-danger">必須</span>
             <input type="text" class="form-control pattern-required"
-              name="bankCode" id="bankCode" required
+              name="bankCode" id="bank_code" required
               maxlength="4" pattern="\d{4}"/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
             <span class="fas fa-times valid-status-icon invalid-input"></span>
@@ -401,10 +405,10 @@
         <!-- 金融機関名 -->
         <div class="col-md-8">
           <div class="form-group">
-            <label for="bankName">金融機関名</label>
+            <label for="bank_name">金融機関名</label>
             <span class="badge btn-danger">必須</span>
             <input type="text" class="form-control no-blank"
-              name="bankName" id="bankName" required/>
+              name="bankName" id="bank_name" required/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
             <span class="fas fa-times valid-status-icon invalid-input"></span>
             <div class="invalid-feedback">入力してください</div>
@@ -422,10 +426,10 @@
         <!-- 支店コード -->
         <div class="col-md-4">
           <div class="form-group">
-            <label for="branchCode">支店コード（3桁）</label>
+            <label for="branch_code">支店コード（3桁）</label>
             <span class="badge btn-danger">必須</span>
             <input type="text" class="form-control pattern-required"
-              name="branchCode" id="branchCodbranchCodee" required
+              name="branchCode" id="branch_code" required
               maxlength="3" pattern="\d{3}"/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
             <span class="fas fa-times valid-status-icon invalid-input"></span>
@@ -437,10 +441,10 @@
         <!-- 支店名 -->
         <div class="col-md-8">
           <div class="form-group">
-            <label for="branchName">支店名</label>
+            <label for="branch_name">支店名</label>
             <span class="badge btn-danger">必須</span>
             <input type="text" class="form-control no-blank"
-              name="branchName" id="branchName" required/>
+              name="branchName" id="branch_name" required/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
             <span class="fas fa-times valid-status-icon invalid-input"></span>
             <div class="invalid-feedback">入力してください</div>
