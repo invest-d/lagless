@@ -423,7 +423,7 @@
           <div class="form-group">
             <label for="bank_code">金融機関コード(4桁)</label>
             <span class="badge btn-danger">必須</span>
-            <input type="text" class="form-control pattern-required"
+            <input type="text" class="form-control"
               name="bankCode" id="bank_code" required
               maxlength="4" pattern="\d{4}"/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
@@ -438,7 +438,7 @@
           <div class="form-group">
             <label for="bank_name">金融機関名</label>
             <span class="badge btn-danger">必須</span>
-            <input type="text" class="form-control no-blank"
+            <input type="text" class="form-control"
               name="bankName" id="bank_name" required/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
             <span class="fas fa-times valid-status-icon invalid-input"></span>
@@ -459,7 +459,7 @@
           <div class="form-group">
             <label for="branch_code">支店コード（3桁）</label>
             <span class="badge btn-danger">必須</span>
-            <input type="text" class="form-control pattern-required"
+            <input type="text" class="form-control"
               name="branchCode" id="branch_code" required
               maxlength="3" pattern="\d{3}"/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
@@ -474,7 +474,7 @@
           <div class="form-group">
             <label for="branch_name">支店名</label>
             <span class="badge btn-danger">必須</span>
-            <input type="text" class="form-control no-blank"
+            <input type="text" class="form-control"
               name="branchName" id="branch_name" required/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
             <span class="fas fa-times valid-status-icon invalid-input"></span>
@@ -616,7 +616,10 @@
 
   // コントロール未入力のまま次に行こうとしたら警告を出す
   $(function() {
-    $('.no-blank').blur(function() {
+    $('.no-blank').blur(blank_validate);
+  });
+
+  function blank_validate() {
       if ($(this).val()) {
         $(this).removeClass(
           'border border-danger',
@@ -650,11 +653,63 @@
           'display': 'block',
         });
       }
+    }
+
+  $(function() {
+    $('.pattern-required').blur(pattern_validate);
+  });
+
+  function pattern_validate() {
+      var pattern = new RegExp($(this).attr('pattern'));
+      if (pattern.test($(this).val())) {
+        $(this).css({
+          'border': '1px solid #28a745',
+        });
+        $(this).nextAll('.valid-input').css({
+          'display': 'block',
+        });
+        $(this).nextAll('.invalid-input').css({
+          'display': 'none',
+        });
+        $(this).nextAll('.invalid-feedback').css({
+          'display': 'none',
+        });
+      } else {
+        $(this).css({
+          'border': '1px solid #dc3545',
+        });
+        $(this).nextAll('.valid-input').css({
+          'display': 'none',
+        });
+        $(this).nextAll('.invalid-input').css({
+          'display': 'block',
+        });
+        $(this).nextAll('.invalid-feedback').css({
+          'display': 'block',
+        });
+      }
+    }
+
+  // ライブラリから銀行情報を入力したときに正しくバリデーションがかからないので、預金種目をクリックした時にチェックする
+  $(function() {
+    $('input[name=deposit]').on('click', function() {
+      $('input[name=bankCode]').addClass('pattern-required');
+      $('input[name=bankName]').addClass('no-blank');
+      $('input[name=branchCode]').addClass('pattern-required');
+      $('input[name=branchName]').addClass('no-blank');
+      $('input[name=bankCode]').blur(pattern_validate);
+      $('input[name=bankCode]').blur();
+      $('input[name=bankName]').blur(blank_validate);
+      $('input[name=bankName]').blur();
+      $('input[name=branchCode]').blur(pattern_validate);
+      $('input[name=branchCode]').blur();
+      $('input[name=branchName]').blur(blank_validate);
+      $('input[name=branchName]').blur();
     });
   });
 
   $(function() {
-    $('.pattern-required').blur(function() {
+    $('.bank-info').blur(function() {
       var pattern = new RegExp($(this).attr('pattern'));
       if (pattern.test($(this).val())) {
         $(this).css({
