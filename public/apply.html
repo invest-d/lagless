@@ -44,6 +44,7 @@
     src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"
     integrity="sha256-5YmaxAwMjIpMrVlK84Y/+NjCpKnFYa8bWWBbUHSBGfU="
     crossorigin="anonymous"></script>
+  <!-- CSS -->
   <style type="text/css">
       .datepicker-days th.dow:first-child,
       .datepicker-days td:first-child {
@@ -53,18 +54,53 @@
       .datepicker-days td:last-child {
           color: #00f;
       }
+
+    .valid-status-icon {
+      float: right;
+      margin-right: 15px;
+      margin-top: -27px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .valid-status-icon-file {
+      float: right;
+      margin-right: 15px;
+      margin-top: -32px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .valid-input {
+      display: none;
+      color: #28a745;
+    }
+
+    .invalid-input {
+      display: none;
+      color: #dc3545;
+    }
   </style>
+  <!-- /CSS -->
 
   <!-- 郵便番号から住所自動入力 -->
   <script src="https://ajaxzip3.github.io/ajaxzip3.js" charset="UTF-8"></script>
   <!-- /郵便番号から住所自動入力 -->
+
+  <!-- Font Awesome -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/js/all.min.js"
+    integrity="sha256-MAgcygDRahs+F/Nk5Vz387whB4kSK9NXlDN3w58LLq0="
+    crossorigin="anonymous"></script>
+  <!-- /Font Awesome -->
 </head>
 <body class="font-weight-light py-5">
   <!-- container -->
   <div class="container row mx-auto ">
 
     <!-- form -->
-    <form action="https://us-central1-lagless.cloudfunctions.net/send_apply" method="POST" id="form_id" class="needs-validation" novalidate>
+    <form action="https://us-central1-lagless.cloudfunctions.net/send_apply"
+      method="POST" id="form_id">
 
       <div class="form-group">
         <h2>お申込みフォーム</h2>
@@ -88,22 +124,27 @@
 
 
       <!-- 貴社名 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="company">貴社名（個人事業主の場合は屋号名） <span class="badge btn-danger">必須</span></label>
-          <input type="text" name="company" id="company" class="form-control" required/>
-
-        </div>
+      <div class="form-group">
+        <label for="company">貴社名（個人事業主の場合は屋号名）</label>
+        <span class="badge badge-danger">必須</span>
+        <input type="text" class="form-control no-blank"
+          name="company" id="company" required>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">入力してください。</div>
       </div>
       <!-- /貴社名 -->
 
 
       <!-- 請求先企業名 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="billingCompany">請求先企業名（発注者名） <span class="badge btn-danger">必須</span></label>
-          <input type="text" name="billingCompany" id="billingCompany" class="form-control" required/>
-        </div>
+      <div class="form-group">
+        <label for="billingCompany">請求先企業名（発注者名）</label>
+        <span class="badge btn-danger">必須</span>
+        <input type="text" class="form-control no-blank"
+          name="billingCompany" id="billingCompany" required/>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">入力してください。</div>
       </div>
       <!-- /請求先企業名 -->
 
@@ -123,148 +164,182 @@
       <!-- /請求書の締日 -->
 
 
-      <label class="control-label mt-4">貴社住所（本店所在地）</label>
+      <div class="form-group mb-1">
+        <label for="">貴社住所（本店所在地）</label>
 
+        <!-- 郵便番号と都道府県を横並び -->
+        <div class="form-row">
 
-      <div class="form-row">
-
-        <!-- 郵便番号 -->
-        <div class="col-sm-6">
-          <div class="form-group">
-            <label for="postalCode">郵便番号 <span class="badge btn-danger">必須</span></label>
-            <input type="text" name="postalCode" id="postalCode" maxlength="8" class="form-control" onkeyup="AjaxZip3.zip2addr(this,'','prefecture','address');" required/>
+          <!-- 郵便番号 -->
+          <div class="col-md-6">
+            <div class="form-group mb-1">
+              <label for="postalCode">郵便番号</label>
+              <span class="badge btn-danger">必須</span>
+              <!-- 郵便番号からの住所自動入力はハイフンがあっても無くても両方対応している -->
+              <input type="text" class="form-control pattern-required"
+                name="postalCode" id="postalCode" required
+                maxlength="8" pattern="^[0-9]{3}-?[0-9]{4}$"
+                onkeyup="AjaxZip3.zip2addr(this,'','prefecture','address');"/>
+              <span class="fas fa-check valid-status-icon valid-input"></span>
+              <span class="fas fa-times valid-status-icon invalid-input"></span>
+              <div class="invalid-feedback">7桁の数字で入力してください。</div>
+            </div>
           </div>
-        </div>
-        <!-- /郵便番号 -->
+          <!-- /郵便番号 -->
 
-        <!-- 都道府県 -->
-        <div class="col-sm-6">
-          <div class="form-group">
-            <label for="prefecture">都道府県 <span class="badge btn-danger">必須</span></label>
-            <select type="text" name="prefecture" id="prefecture" class="form-control" required>
-              <option value="">選択してください</option>
-              <optgroup label="北海道・東北">
-                <option value="北海道">北海道</option>
-                <option value="青森県">青森県</option>
-                <option value="秋田県">秋田県</option>
-                <option value="岩手県">岩手県</option>
-                <option value="山形県">山形県</option>
-                <option value="宮城県">宮城県</option>
-                <option value="福島県">福島県</option>
-              </optgroup>
-              <optgroup label="甲信越・北陸">
-                <option value="山梨県">山梨県</option>
-                <option value="長野県">長野県</option>
-                <option value="新潟県">新潟県</option>
-                <option value="富山県">富山県</option>
-                <option value="石川県">石川県</option>
-                <option value="福井県">福井県</option>
-              </optgroup>
-              <optgroup label="関東">
-                <option value="茨城県">茨城県</option>
-                <option value="栃木県">栃木県</option>
-                <option value="群馬県">群馬県</option>
-                <option value="埼玉県">埼玉県</option>
-                <option value="千葉県">千葉県</option>
-                <option value="東京都">東京都</option>
-                <option value="神奈川県">神奈川県</option>
-              </optgroup>
-              <optgroup label="東海">
-                <option value="愛知県">愛知県</option>
-                <option value="静岡県">静岡県</option>
-                <option value="岐阜県">岐阜県</option>
-                <option value="三重県">三重県</option>
-              </optgroup>
-              <optgroup label="関西">
-                <option value="大阪府">大阪府</option>
-                <option value="兵庫県">兵庫県</option>
-                <option value="京都府">京都府</option>
-                <option value="滋賀県">滋賀県</option>
-                <option value="奈良県">奈良県</option>
-                <option value="和歌山県">和歌山県</option>
-              </optgroup>
-              <optgroup label="中国">
-                <option value="岡山県">岡山県</option>
-                <option value="広島県">広島県</option>
-                <option value="鳥取県">鳥取県</option>
-                <option value="島根県">島根県</option>
-                <option value="山口県">山口県</option>
-              </optgroup>
-              <optgroup label="四国">
-                <option value="徳島県">徳島県</option>
-                <option value="香川県">香川県</option>
-                <option value="愛媛県">愛媛県</option>
-                <option value="高知県">高知県</option>
-              </optgroup>
-              <optgroup label="九州・沖縄">
-                <option value="福岡県">福岡県</option>
-                <option value="佐賀県">佐賀県</option>
-                <option value="長崎県">長崎県</option>
-                <option value="熊本県">熊本県</option>
-                <option value="大分県">大分県</option>
-                <option value="宮崎県">宮崎県</option>
-                <option value="鹿児島県">鹿児島県</option>
-                <option value="沖縄県">沖縄県</option>
-              </optgroup>
-            </select>
+          <!-- 都道府県 -->
+          <div class="col-md-6 mb-1">
+            <div class="form-group mb-1">
+              <label for="prefecture">都道府県</label>
+              <span class="badge btn-danger">必須</span>
+              <select type="text" class="form-control no-blank"
+                name="prefecture" id="prefecture" required>
+                <option value="">選択してください</option>
+                <optgroup label="北海道・東北">
+                  <option value="北海道">北海道</option>
+                  <option value="青森県">青森県</option>
+                  <option value="秋田県">秋田県</option>
+                  <option value="岩手県">岩手県</option>
+                  <option value="山形県">山形県</option>
+                  <option value="宮城県">宮城県</option>
+                  <option value="福島県">福島県</option>
+                </optgroup>
+                <optgroup label="甲信越・北陸">
+                  <option value="山梨県">山梨県</option>
+                  <option value="長野県">長野県</option>
+                  <option value="新潟県">新潟県</option>
+                  <option value="富山県">富山県</option>
+                  <option value="石川県">石川県</option>
+                  <option value="福井県">福井県</option>
+                </optgroup>
+                <optgroup label="関東">
+                  <option value="茨城県">茨城県</option>
+                  <option value="栃木県">栃木県</option>
+                  <option value="群馬県">群馬県</option>
+                  <option value="埼玉県">埼玉県</option>
+                  <option value="千葉県">千葉県</option>
+                  <option value="東京都">東京都</option>
+                  <option value="神奈川県">神奈川県</option>
+                </optgroup>
+                <optgroup label="東海">
+                  <option value="愛知県">愛知県</option>
+                  <option value="静岡県">静岡県</option>
+                  <option value="岐阜県">岐阜県</option>
+                  <option value="三重県">三重県</option>
+                </optgroup>
+                <optgroup label="関西">
+                  <option value="大阪府">大阪府</option>
+                  <option value="兵庫県">兵庫県</option>
+                  <option value="京都府">京都府</option>
+                  <option value="滋賀県">滋賀県</option>
+                  <option value="奈良県">奈良県</option>
+                  <option value="和歌山県">和歌山県</option>
+                </optgroup>
+                <optgroup label="中国">
+                  <option value="岡山県">岡山県</option>
+                  <option value="広島県">広島県</option>
+                  <option value="鳥取県">鳥取県</option>
+                  <option value="島根県">島根県</option>
+                  <option value="山口県">山口県</option>
+                </optgroup>
+                <optgroup label="四国">
+                  <option value="徳島県">徳島県</option>
+                  <option value="香川県">香川県</option>
+                  <option value="愛媛県">愛媛県</option>
+                  <option value="高知県">高知県</option>
+                </optgroup>
+                <optgroup label="九州・沖縄">
+                  <option value="福岡県">福岡県</option>
+                  <option value="佐賀県">佐賀県</option>
+                  <option value="長崎県">長崎県</option>
+                  <option value="熊本県">熊本県</option>
+                  <option value="大分県">大分県</option>
+                  <option value="宮崎県">宮崎県</option>
+                  <option value="鹿児島県">鹿児島県</option>
+                  <option value="沖縄県">沖縄県</option>
+                </optgroup>
+              </select>
+              <span class="fas fa-check valid-status-icon valid-input"></span>
+              <span class="fas fa-times valid-status-icon invalid-input"></span>
+              <div class="invalid-feedback">選択してください。</div>
+            </div>
           </div>
+          <!-- /都道府県 -->
+
         </div>
-        <!-- /都道府県 -->
+        <!-- /郵便番号と都道府県を横並び -->
 
       </div>
 
 
       <!-- 住所 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="address">住所 <span class="badge btn-danger">必須</span></label>
-          <input type="text" name="address" id="address" class="form-control" required/>
-        </div>
+      <div class="form-group">
+        <label for="address">住所</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <input type="text" class="form-control no-blank"
+          name="address" id="address" required />
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">入力してください</div>
       </div>
       <!-- /住所 -->
 
 
       <!-- 番地・建物名・部屋番号 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="streetAddress">番地・建物名・部屋番号 <span class="badge btn-danger">必須</span></label>
-          <input type="text" name="streetAddress" id="streetAddress" class="form-control" required/>
-        </div>
+      <div class="form-group">
+        <label for="streetAddress">番地・建物名・部屋番号</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <input type="text" class="form-control no-blank"
+          name="streetAddress" id="streetAddress" required />
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">入力してください</div>
       </div>
       <!-- /番地・建物名・部屋番号 -->
 
 
       <!-- 代表者名 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="representative">代表者名 <span class="badge btn-danger">必須</span></label>
-          <input type="text" name="representative" id="representative" class="form-control" required/>
-        </div>
+      <div class="form-group">
+        <label for="representative">代表者名</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <input type="text" class="form-control no-blank"
+          name="representative" id="representative" required />
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">入力してください</div>
       </div>
       <!-- /代表者名 -->
 
 
       <!-- メールアドレス -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="mail">メールアドレス <span class="badge btn-danger">必須</span></label>
-          <input type="email" name="mail" id="mail" class="form-control" pattern="[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" required/>
-        </div>
+      <div class="form-group">
+        <label for="mail">メールアドレス</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <input type="email" class="form-control pattern-required"
+          name="mail" id="mail" required
+          pattern="[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">正しく入力してください</div>
       </div>
       <!-- /メールアドレス -->
 
 
       <!-- 電話番号 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="phone">電話番号 <span class="badge btn-danger">必須</span></label>
-          <input type="tel" name="phone" id="phone" class="form-control" pattern="^\d{11}$|^\d{3,4}-\d{3,4}-\d{4}$" required/>
-        </div>
+      <div class="form-group">
+        <label for="phone">電話番号</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <input type="tel" class="form-control pattern-required"
+          name="phone" id="phone" required
+          pattern="^\d{11}$|^\d{3,4}-\d{3,4}-\d{4}$" />
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">正しく入力してください</div>
       </div>
       <!-- /電話番号 -->
 
 
-      <div class="row mt-6 mx-auto">
+      <div class="form-group pt-5">
         <h2>■ 対象債権内容（件名・税込金額）■</h2>
         <p>※早期支払をご希望の請求書データをご添付ください。<br>
           　携帯で撮った請求書の写真でも構いません。</p>
@@ -276,26 +351,33 @@
 
 
       <!-- 請求書データの添付 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="invoice">請求書データの添付 <span class="badge btn-danger">必須</span></label>
-          <input type="file" name="invoice" id="invoice" class="form-control-file" required/>
-        </div>
+      <div class="form-group">
+        <label for="invoice">請求書データの添付</label>
+        <span class="badge btn-danger">必須</span>
+        <input type="file" class="form-control-file p-2 border rounded no-blank"
+          name="invoice" id="invoice" required/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
       </div>
       <!-- /請求書データの添付 -->
 
 
       <!-- 対象債権合計金額 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="totalReceivables">対象債権合計金額（税込） <span class="badge btn-danger">必須</span></label>
-          <input type="text" name="totalReceivables" id="totalReceivables" class="form-control" required/>
-        </div>
+      <div class="form-group">
+        <label for="totalReceivables">対象債権合計金額（税込）</label>
+        <span class="badge btn-danger">必須</span>
+        <input type="text" class="form-control pattern-required"
+          name="totalReceivables" id="totalReceivables" required
+          pattern="\d+"/>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">数字のみ入力してください</div>
       </div>
       <!-- /対象債権合計金額 -->
 
 
-      <div class="row mt-6 mx-auto">
+      <div class="form-group pt-5">
         <h2>■ お客さま口座情報 ■</h2>
         <p>支払い口座情報をご記入ください。<br>
           （個人事業主様は代表者名の口座をご指定下さい)</p>
@@ -303,46 +385,69 @@
 
 
       <!-- 金融機関 -->
-      <div class="row">
+      <div class="form-row">
 
         <!-- 金融機関コード -->
-        <div class="col-sm-4">
+        <div class="col-md-4">
           <div class="form-group">
-            <label for="bankCode">金融機関コード（4桁） <span class="badge btn-danger">必須</span></label>
-            <input type="text" name="bankCode" id="bankCode" maxlength="4" class="form-control" required/>
+            <label for="bankCode">金融機関コード(4桁)</label>
+            <span class="badge btn-danger">必須</span>
+            <input type="text" class="form-control pattern-required"
+              name="bankCode" id="bankCode" required
+              maxlength="4" pattern="\d{4}"/>
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">数字4桁で入力してください</div>
           </div>
         </div>
         <!-- /金融機関コード -->
 
         <!-- 金融機関名 -->
-        <div class="col-sm-8">
+        <div class="col-md-8">
           <div class="form-group">
-            <label for="bankName">金融機関名 <span class="badge btn-danger">必須</span></label>
-            <input type="text" name="bankName" id="bankName" class="form-control" required/>
+            <label for="bankName">金融機関名</label>
+            <span class="badge btn-danger">必須</span>
+            <input type="text" class="form-control no-blank"
+              name="bankName" id="bankName" required/>
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">入力してください</div>
           </div>
         </div>
+        <!-- /金融機関名 -->
 
       </div>
       <!-- /金融機関 -->
 
 
       <!-- 支店 -->
-      <div class="row">
+      <div class="form-row">
 
         <!-- 支店コード -->
-        <div class="col-sm-4">
+        <div class="col-md-4">
           <div class="form-group">
-            <label for="branchCode">支店コード（3桁） <span class="badge btn-danger">必須</span></label>
-            <input type="text" name="branchCode" id="branchCodbranchCodee" maxlength="3" class="form-control" required/>
+            <label for="branchCode">支店コード（3桁）</label>
+            <span class="badge btn-danger">必須</span>
+            <input type="text" class="form-control pattern-required"
+              name="branchCode" id="branchCodbranchCodee" required
+              maxlength="3" pattern="\d{3}"/>
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">数字3桁で入力してください</div>
           </div>
         </div>
         <!-- /支店コード -->
 
         <!-- 支店名 -->
-        <div class="col-sm-8">
+        <div class="col-md-8">
           <div class="form-group">
-            <label for="branchName">支店名 <span class="badge btn-danger">必須</span></label>
-            <input type="text" name="branchName" id="branchName" class="form-control" required/>
+            <label for="branchName">支店名</label>
+            <span class="badge btn-danger">必須</span>
+            <input type="text" class="form-control no-blank"
+              name="branchName" id="branchName" required/>
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">入力してください</div>
           </div>
         </div>
         <!-- /支店名 -->
@@ -350,14 +455,22 @@
       </div>
       <!-- /支店 -->
 
-      
+
       <!-- 預金種目 -->
-      <div class="form-row mt-4 mx-auto">
-        <div class="form-group">
-          <label for="deposit">預金種目 <span class="badge btn-danger">必須</span></label>
-          <div class="radio">
-            <label><input type="radio" value="ordinary">普通</label>
-            <label><input type="radio" value="current">当座</label>
+      <div class="form-group pt-2 mb-1">
+        <label>預金種目</label><span class="badge btn-danger">必須</span>
+      </div>
+      <div class="form-inline mb-4">
+        <div class="p-2 border rounded col-md-6">
+          <div class="custom-control custom-radio custom-control-inline py-1">
+            <input type="radio" class="custom-control-input no-blank" name="deposit" id="deposit-ordinary" value="ordinary" required>
+            <label class="custom-control-label pr-4" for="deposit-ordinary">普通</label>
+          </div>
+        </div>
+        <div class="p-2 border rounded col-md-6">
+          <div class="custom-control custom-radio custom-control-inline py-1">
+            <input type="radio" class="custom-control-input no-blank" name="deposit" id="deposit-current" value="current" required>
+            <label class="custom-control-label" for="deposit-current">当座</label>
           </div>
         </div>
       </div>
@@ -365,46 +478,60 @@
 
 
       <!-- 口座番号 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="accountNumber">口座番号 <span class="badge btn-danger">必須</span></label>
-          <input type="text" name="accountNumber" id="accountNumber" class="form-control" required/>
-        </div>
+      <div class="form-group">
+        <label for="accountNumber">口座番号</label>
+        <span class="badge btn-danger">必須</span>
+        <input type="text" class="form-control pattern-required"
+          name="accountNumber" id="accountNumber" required
+          maxlength="7" pattern="\d+"/>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">数字のみ入力してください</div>
       </div>
       <!-- /口座番号 -->
 
 
       <!-- 口座名義 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="accountName">口座名義（カナ） <span class="badge btn-danger">必須</span></label>
-          <input type="text" name="accountName" id="accountName" class="form-control" required/>
-        </div>
+      <div class="form-group">
+        <label for="accountName">口座名義（カナ）</label>
+        <span class="badge btn-danger">必須</span>
+        <input type="text" class="form-control pattern-required"
+          name="accountName" id="accountName" required
+          pattern="^[ア-ンＡ-Ｚ０-９ー（）「」／．，￥ー　]+$"/>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">全角カタカナで入力してください</div>
       </div>
       <!-- /口座名義 -->
 
 
-      <div class="row mt-6 mx-auto">
+      <div class="form-group pt-5">
         <h2>■ 本人確認書類 ■</h2>
       </div>
 
 
       <!-- 運転免許証表 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="driverLicenseFront">運転免許証（表面） <span class="badge btn-danger">必須</span></label>
-          <input type="file" name="driverLicenseFront" id="driverLicenseFront" class="form-control-file" required/>
-        </div>
+      <div class="form-group">
+        <label for="driverLicenseFront">運転免許証（表面）</label>
+        <span class="badge btn-danger">必須</span>
+        <input type="file" class="form-control-file p-2 border rounded no-blank"
+          name="driverLicenseFront" id="driverLicenseFront" required/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
       </div>
       <!-- /運転免許証表 -->
 
 
       <!-- 運転免許証裏 -->
-      <div class="form-row mt-4">
-        <div class="col-12">
-          <label for="driverLicenseBack">運転免許証（裏面） <span class="badge btn-danger">必須</span></label>
-          <input type="file" name="driverLicenseBack" id="driverLicenseBack" class="form-control-file" required/>
-        </div>
+      <div class="form-group">
+        <label for="driverLicenseBack">運転免許証（裏面）</label>
+        <span class="badge btn-danger">必須</span>
+        <input type="file" class="form-control-file p-2 border rounded no-blank"
+          name="driverLicenseBack" id="driverLicenseBack" required/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
       </div>
       <!-- /運転免許証裏 -->
 
@@ -413,12 +540,10 @@
 
 
       <!-- 利用規約に同意する -->
-      <div class="form-row mt-4 mx-auto">
-        <div class="form-group">
-          <label for="agree">規約に同意する</label>
-          <div class="checkbox">
-            <label><input type="checkbox" name="agree" id="agree" required>同意する</label>
-          </div>
+      <div class="form-group p-2 border rounded">
+        <div class="custom-control custom-checkbox">
+          <input type="checkbox" class="custom-control-input no-blank" name="agree" id="agree" required />
+          <label for="agree" class="custom-control-label">規約に同意する</label>
         </div>
       </div>
       <!-- /利用規約に同意する -->
@@ -428,8 +553,8 @@
 
 
       <div class="form-group">
-        <!-- <button type="button" id="send" class="btn btn-outline-primary">送信</button> -->
-        <button type="submit" id="send" class="btn btn-outline-primary">送信</button>
+        <button type="submit" class="btn btn-secondary btn-lg btn-block"
+          id="send">送信</button>
       </div>
 
 
@@ -477,8 +602,100 @@
             format: 'YYYY-MM-DD',
             locale: 'ja',
             showClose: true
+  // コントロール未入力のまま次に行こうとしたら警告を出す
+  $(function() {
+    $('.no-blank').blur(function() {
+      if ($(this).val()) {
+        $(this).removeClass(
+          'border border-danger',
+        );
+        $(this).addClass(
+          'border border-success',
+        );
+        $(this).nextAll('.valid-input').css({
+          'display': 'block',
         });
+        $(this).nextAll('.invalid-input').css({
+          'display': 'none',
+        });
+        $(this).nextAll('.invalid-feedback').css({
+          'display': 'none',
+        });
+      } else {
+        $(this).removeClass(
+          'border border-success',
+        );
+        $(this).addClass(
+          'border border-danger',
+        );
+        $(this).nextAll('.valid-input').css({
+          'display': 'none',
+        });
+        $(this).nextAll('.invalid-input').css({
+          'display': 'block',
+        });
+        $(this).nextAll('.invalid-feedback').css({
+          'display': 'block',
+        });
+      }
     });
+  });
+
+  $(function() {
+    $('.pattern-required').blur(function() {
+      var pattern = new RegExp($(this).attr('pattern'));
+      if (pattern.test($(this).val())) {
+        $(this).css({
+          'border': '1px solid #28a745',
+        });
+        $(this).nextAll('.valid-input').css({
+          'display': 'block',
+        });
+        $(this).nextAll('.invalid-input').css({
+          'display': 'none',
+        });
+        $(this).nextAll('.invalid-feedback').css({
+          'display': 'none',
+        });
+      } else {
+        $(this).css({
+          'border': '1px solid #dc3545',
+        });
+        $(this).nextAll('.valid-input').css({
+          'display': 'none',
+        });
+        $(this).nextAll('.invalid-input').css({
+          'display': 'block',
+        });
+        $(this).nextAll('.invalid-feedback').css({
+          'display': 'block',
+        });
+      }
+    });
+  });
+
+  // 規約に同意するチェックがオンのときだけいい感じの色にする
+  $(function () {
+    $('#agree').on('change', function(){
+      if ($(this).is(':checked')) {
+        $('#send').removeClass('btn-secondary');
+        $('#send').addClass('btn-primary');
+      } else {
+        $('#send').removeClass('btn-primarybtn-secondary');
+        $('#send').addClass('btn-secondary');
+      }
+    });
+  });
+
+  // 規約に同意するチェックをしていない場合に送信をタップしたらアラートを出す
+  $(function () {
+    $('#form_id').submit(function() {
+      if (!($('#agree').is(':checked'))) {
+        alert('お申込みするには「規約に同意する」にチェックしてください。');
+        return false;
+      }
+    });
+  });
   </script>
 </body>
 </html>
