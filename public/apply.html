@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>申込フォーム</title>
+  <title>お申込フォーム</title>
 
   <!-- BootStrap -->
   <link
@@ -59,28 +59,30 @@
   <script src="https://ajaxzip3.github.io/ajaxzip3.js" charset="UTF-8"></script>
   <!-- /郵便番号から住所自動入力 -->
 </head>
-<body class="font-weight-light">
+<body class="font-weight-light py-5">
   <!-- container -->
-  <div class="container" style="width: 640px;">
+  <div class="container row mx-auto ">
 
     <!-- form -->
     <form action="https://us-central1-lagless.cloudfunctions.net/send_apply" method="POST" id="form_id" class="needs-validation" novalidate>
 
-      <h2>申込フォーム</h2>
+      <div class="form-group">
+        <h2>お申込みフォーム</h2>
 
-      <p>早期支払いをご希望の方は、お手元に運転免許証をご用意いただいた上で<br>
-        下記のフォームよりお申込みください。</p>
+        <p>早期支払いをご希望の方は、お手元に運転免許証をご用意いただいた上で<br>
+          下記のフォームよりお申込みください。</p>
 
-      <p>申込みフォームの入力でお困りの際は、下記連絡先までお気軽にお電話ください。</p>
+        <p>お申込みフォームの入力でお困りの際は、下記連絡先までお気軽にお電話ください。</p>
 
-      <p>運営：インベストデザイン株式会社<br>
-        （各種ペイメントサービスの事務局を担っております）<br>
-        電話番号 ： 0120-516-818 <br>
-        受付時間 ： 10：00～17：00 <br>
-        定休日 ： 土・日・祝</p>
+        <p>運営：インベストデザイン株式会社<br>
+          （各種ペイメントサービスの事務局を担っております）<br>
+          電話番号 ： <a href="tel:0120-516-818">０１２０－５１６－８１８</a> <br>
+          受付時間 ： 10：00～17：00 <br>
+          定休日 ： 土・日・祝</p>
+      </div>
 
 
-      <div class="row mt-6 mx-auto">
+      <div class="form-group pt-5">
         <h3>■ お客さま情報 ■</h3>
       </div>
 
@@ -267,9 +269,7 @@
         <p>※早期支払をご希望の請求書データをご添付ください。<br>
           　携帯で撮った請求書の写真でも構いません。</p>
         <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。<br>
-          　（運営：インベストデザイン株式会社　03-6261-6818）</p>
-        <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。<br>
-          　（運営：インベストデザイン株式会社　03-6261-6818）</p>
+          　（運営：インベストデザイン株式会社　<a href="tel:03-6261-6818">０３－６２６１－６８１８</a>）</p>
         <p>※【該当の方のみ】<br>
           協力会費のお支払が必要な場合は、各発注企業さまの取り扱い方法に従い手続きいたします（請求書の合計金額から協力会費を差し引かせていただきます）</p>
       </div>
