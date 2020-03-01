@@ -53,7 +53,11 @@
       .datepicker-days th.dow:last-child,
       .datepicker-days td:last-child {
           color: #00f;
+    @media (min-width: 800px) {
+      .container {
+        max-width: 750px;
       }
+    }
 
     .valid-status-icon {
       float: right;
@@ -536,7 +540,12 @@
       <!-- /運転免許証裏 -->
 
 
-      <p><a href="https://invest-design.wixsite.com/mysite-1">利用規約</a></p>
+      <!-- 利用規約へのリンク -->
+      <div class="form-group pt-5">
+        <button type="button" class="btn btn-primary btn-lg btn-block"
+          onclick="window.open('https://invest-design.wixsite.com/mysite-1', '_blank')">利用規約</button>
+      </div>
+      <!-- /利用規約へのリンク -->
 
 
       <!-- 利用規約に同意する -->
@@ -549,7 +558,9 @@
       <!-- /利用規約に同意する -->
 
 
-      <p>本ご利用申込フォームでの申込みは、申込みを希望する法人の代表者または申込みを希望する個人事業者の事業主が申込したものとみなします。</p>
+      <div class="form-group pt-3">
+        <p>本フォームでのお申込みは、お申込みを希望する法人の代表者または個人事業者の事業主がお申込みしたものとみなします。</p>
+      </div>
 
 
       <div class="form-group">
