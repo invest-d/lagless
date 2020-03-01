@@ -96,7 +96,7 @@ exports.helloWorld = functions.https.onRequest(async (req, res) => {
         res.status(200).send('unexpected method');
         return;
     }
-    
+
     let ids = [ ];
     console.log('fetch from kintone...');
     const json = await Promise.all([ fetch_pattern(), fetch_service() ])
@@ -115,14 +115,14 @@ exports.helloWorld = functions.https.onRequest(async (req, res) => {
         }
         return JSON.stringify(service, true, "  ");
     });
-    
+
     const bucket = admin.storage().bucket();
     const file = bucket.file('data.json');
     await file.save(json);
     await file.setMetadata({ contentType: 'application/json' });
     res.set('Content-Type', 'application/json');
     res.status(200).send(JSON.stringify({ success: true, service_ids: ids }));
-    
+
     console.log('completed.');
 });
 
@@ -233,9 +233,9 @@ exports.send_apply = functions.https.onRequest((req, res) => {
 
         request(options_postrecord, function (error, response, body) {
             if (!error && response.statusCode == 200) {
-                //成功
-                //仮で送信したものをオウム返しにレスポンスする
-                res.status(200).send('登録成功です。' + sendObj);
+                // 成功
+                // 完了画面に遷移
+                res.status(200).redirect('https://lagless-dev.netlify.com/apply_complete.html');
             } else {
                 console.log('sendObj is ' + sendObj);
                 console.log('req.body is ' + req.body);
