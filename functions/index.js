@@ -215,8 +215,8 @@ exports.send_apply = functions.https.onRequest((req, res) => {
         var DOMAIN = 'investdesign.cybozu.com';
         var APP_ID = 159;   //アプリID
         // LAGLESSアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
-        var API_LAGLESS = 'pa86BnNWWoILZZ5uttq5hHcoPGPoRta662fa8DAO';
-        var API_KOMUTEN = 'QP2mNfxB3hTO9h8oPH9dVRGLkdMCNHj6OKUn2ua5';
+        var API_LAGLESS = functions.config().tokens.form_apply.lagless;
+        var API_KOMUTEN = functions.config().tokens.form_apply.komuten;
         var API_TOKEN = API_LAGLESS + ',' + API_KOMUTEN;
 
         var BASE_URL = 'https://investdesign.cybozu.com/k/v1/record.json';
@@ -243,9 +243,10 @@ exports.send_apply = functions.https.onRequest((req, res) => {
                 // 完了画面に遷移
                 res.status(200).redirect('https://lagless-dev.netlify.com/apply_complete.html');
             } else {
-                console.log('sendObj is ' + sendObj);
-                console.log('req.body is ' + req.body);
-                res.status(response.statusCode).send('レコードの登録に失敗しました' + JSON.stringify(body) + JSON.stringify(response));
+                console.log('response is ' + JSON.stringify(response));
+                console.log('sendObj is ' + JSON.stringify(sendObj));
+                console.log('req.body is ' + JSON.stringify(req.body));
+                res.status(response.statusCode).send('レコードの登録に失敗しました');
             }
         });
     }
