@@ -201,6 +201,9 @@ exports.send_apply = functions.https.onRequest((req, res) => {
         // var driverLicenseBack = {"value": req.body["driverLicenseBack"]};
         // record.driverLicenseBack = driverLicenseBack;
 
+        var constructionShopId = {"value": req.body["constructionShopId"]};
+        record.constructionShopId = constructionShopId;
+
         //利用規約に同意するチェックボックスはレコードに載せる必要はない
 
         sendObj.record = record;
@@ -211,7 +214,10 @@ exports.send_apply = functions.https.onRequest((req, res) => {
         /* kintone用のパラメータ*/
         var DOMAIN = 'investdesign.cybozu.com';
         var APP_ID = 159;   //アプリID
-        var API_TOKEN = 'pa86BnNWWoILZZ5uttq5hHcoPGPoRta662fa8DAO';
+        // LAGLESSアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
+        var API_LAGLESS = 'pa86BnNWWoILZZ5uttq5hHcoPGPoRta662fa8DAO';
+        var API_KOMUTEN = 'QP2mNfxB3hTO9h8oPH9dVRGLkdMCNHj6OKUn2ua5';
+        var API_TOKEN = API_LAGLESS + ',' + API_KOMUTEN;
 
         var BASE_URL = 'https://investdesign.cybozu.com/k/v1/record.json';
         var BASIC = 'Basic ' + API_TOKEN;
@@ -239,7 +245,7 @@ exports.send_apply = functions.https.onRequest((req, res) => {
             } else {
                 console.log('sendObj is ' + sendObj);
                 console.log('req.body is ' + req.body);
-                res.status(response.statusCode).send('レコードの登録に失敗しました');
+                res.status(response.statusCode).send('レコードの登録に失敗しました' + JSON.stringify(body) + JSON.stringify(response));
             }
         });
     }
