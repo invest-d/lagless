@@ -173,7 +173,7 @@
       <!-- 請求先企業名 -->
       <div class="form-group">
         <label for="billingCompany">請求先企業名（発注者名）</label>
-        <span class="badge btn-danger">必須</span>
+        <span class="badge badge-danger">必須</span>
         <input type="text" class="form-control no-blank"
           name="billingCompany" id="billingCompany" required/>
         <span class="fas fa-check valid-status-icon valid-input"></span>
@@ -184,9 +184,9 @@
 
 
       <!-- 請求書の締日 -->
-      <div class="form-group">
+      <div class="form-group" id="closingDayGroup">
         <label for="closingDay">請求書の締日（早期支払対象となる締日）</label>
-        <span class="badge btn-danger">必須</span>
+        <span class="badge badge-danger">必須</span>
         <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
           <input type="text" class="form-control datetimepicker-input pattern-required"
           name="closingDay" id="closingDay" required
@@ -200,7 +200,14 @@
       <!-- /請求書の締日 -->
 
 
-      <div class="form-group mb-1">
+      <!-- 2回目以降で表示するキャプション -->
+      <div class="form-group mb-2 mt-5" id="second_caption" style="display: none;">
+        <p>※以下の項目は、前回申込時から変更がある場合にのみ入力してください。</p>
+      </div>
+      <!-- /2回目以降で表示するキャプション -->
+
+
+      <div class="form-group mb-1" name="arbitrary_second">
         <label for="">貴社住所（本店所在地）</label>
 
         <!-- 郵便番号と都道府県を横並び -->
@@ -210,7 +217,7 @@
           <div class="col-md-6">
             <div class="form-group mb-1">
               <label for="postalCode">郵便番号</label>
-              <span class="badge btn-danger">必須</span>
+              <span class="badge badge-danger">必須</span>
               <!-- 郵便番号からの住所自動入力はハイフンがあっても無くても両方対応している -->
               <input type="text" class="form-control pattern-required"
                 name="postalCode" id="postalCode" required
@@ -227,7 +234,7 @@
           <div class="col-md-6 mb-1">
             <div class="form-group mb-1">
               <label for="prefecture">都道府県</label>
-              <span class="badge btn-danger">必須</span>
+              <span class="badge badge-danger">必須</span>
               <select type="text" class="form-control no-blank"
                 name="prefecture" id="prefecture" required>
                 <option value="">選択してください</option>
@@ -309,7 +316,7 @@
 
 
       <!-- 住所 -->
-      <div class="form-group">
+      <div class="form-group" name="arbitrary_second">
         <label for="address">住所</label>
         <span class="badge badge-default badge-danger">必須</span>
         <input type="text" class="form-control no-blank"
@@ -322,7 +329,7 @@
 
 
       <!-- 番地・建物名・部屋番号 -->
-      <div class="form-group">
+      <div class="form-group" name="arbitrary_second">
         <label for="streetAddress">番地・建物名・部屋番号</label>
         <span class="badge badge-default badge-danger">必須</span>
         <input type="text" class="form-control no-blank"
@@ -335,7 +342,7 @@
 
 
       <!-- 代表者名 -->
-      <div class="form-group">
+      <div class="form-group" name="arbitrary_second">
         <label for="representative">代表者名</label>
         <span class="badge badge-default badge-danger">必須</span>
         <input type="text" class="form-control no-blank"
@@ -348,7 +355,7 @@
 
 
       <!-- メールアドレス -->
-      <div class="form-group">
+      <div class="form-group" name="arbitrary_second">
         <label for="mail">メールアドレス</label>
         <span class="badge badge-default badge-danger">必須</span>
         <input type="email" class="form-control pattern-required"
@@ -362,7 +369,7 @@
 
 
       <!-- 電話番号 -->
-      <div class="form-group">
+      <div class="form-group" id="phoneGroup">
         <label for="phone">電話番号</label>
         <span class="badge badge-default badge-danger">必須</span>
         <input type="tel" class="form-control pattern-required"
@@ -389,7 +396,7 @@
       <!-- 請求書データの添付 -->
       <div class="form-group">
         <label for="invoice">請求書データの添付</label>
-        <span class="badge btn-danger">必須</span>
+        <span class="badge badge-danger">必須</span>
         <input type="file" class="form-control-file p-2 border rounded no-blank"
           name="invoice" id="invoice" required/>
         <span class="fas fa-check valid-status-icon-file valid-input"></span>
@@ -402,7 +409,7 @@
       <!-- 対象債権合計金額 -->
       <div class="form-group">
         <label for="totalReceivables">対象債権合計金額（税込）</label>
-        <span class="badge btn-danger">必須</span>
+        <span class="badge badge-danger">必須</span>
         <input type="text" class="form-control pattern-required"
           name="totalReceivables" id="totalReceivables" required
           pattern="\d+"/>
@@ -427,7 +434,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="bank_code">金融機関コード(4桁)</label>
-            <span class="badge btn-danger">必須</span>
+            <span class="badge badge-danger">必須</span>
             <input type="text" class="form-control"
               name="bankCode" id="bank_code" required
               maxlength="4" pattern="\d{4}"/>
@@ -442,7 +449,7 @@
         <div class="col-md-8">
           <div class="form-group">
             <label for="bank_name">金融機関名</label>
-            <span class="badge btn-danger">必須</span>
+            <span class="badge badge-danger">必須</span>
             <input type="text" class="form-control"
               name="bankName" id="bank_name" required/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
@@ -463,7 +470,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="branch_code">支店コード（3桁）</label>
-            <span class="badge btn-danger">必須</span>
+            <span class="badge badge-danger">必須</span>
             <input type="text" class="form-control"
               name="branchCode" id="branch_code" required
               maxlength="3" pattern="\d{3}"/>
@@ -478,7 +485,7 @@
         <div class="col-md-8">
           <div class="form-group">
             <label for="branch_name">支店名</label>
-            <span class="badge btn-danger">必須</span>
+            <span class="badge badge-danger">必須</span>
             <input type="text" class="form-control"
               name="branchName" id="branch_name" required/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
@@ -494,7 +501,7 @@
 
       <!-- 預金種目 -->
       <div class="form-group pt-2 mb-1" name="only_first">
-        <label>預金種目</label><span class="badge btn-danger">必須</span>
+        <label>預金種目</label><span class="badge badge-danger">必須</span>
       </div>
       <div class="form-inline mb-4" name="only_first">
         <div class="p-2 border rounded col-md-6">
@@ -516,7 +523,7 @@
       <!-- 口座番号 -->
       <div class="form-group" name="only_first">
         <label for="accountNumber">口座番号</label>
-        <span class="badge btn-danger">必須</span>
+        <span class="badge badge-danger">必須</span>
         <input type="text" class="form-control pattern-required"
           name="accountNumber" id="accountNumber" required
           maxlength="7" pattern="\d+"/>
@@ -530,7 +537,7 @@
       <!-- 口座名義 -->
       <div class="form-group" name="only_first">
         <label for="accountName">口座名義（カナ）</label>
-        <span class="badge btn-danger">必須</span>
+        <span class="badge badge-danger">必須</span>
         <input type="text" class="form-control pattern-required"
           name="accountName" id="accountName" required
           pattern="^[ア-ンＡ-Ｚ０-９ー（）「」／．，￥ー　]+$"/>
@@ -549,7 +556,7 @@
       <!-- 運転免許証表 -->
       <div class="form-group" name="only_first">
         <label for="driverLicenseFront">運転免許証（表面）</label>
-        <span class="badge btn-danger">必須</span>
+        <span class="badge badge-danger">必須</span>
         <input type="file" class="form-control-file p-2 border rounded no-blank"
           name="driverLicenseFront" id="driverLicenseFront" required/>
         <span class="fas fa-check valid-status-icon-file valid-input"></span>
@@ -562,7 +569,7 @@
       <!-- 運転免許証裏 -->
       <div class="form-group" name="only_first">
         <label for="driverLicenseBack">運転免許証（裏面）</label>
-        <span class="badge btn-danger">必須</span>
+        <span class="badge badge-danger">必須</span>
         <input type="file" class="form-control-file p-2 border rounded no-blank"
           name="driverLicenseBack" id="driverLicenseBack" required/>
         <span class="fas fa-check valid-status-icon-file valid-input"></span>
@@ -629,9 +636,14 @@
     if (val === 'existing') {
       // 2回目以降の申込みフォーム
       // 初回のみ必須入力の項目を非表示にする
-      console.log('second user');
       var only_first_elems = $('*[name=only_first]');
       hideElement(only_first_elems);
+      // 2回目以降は任意入力になる項目を設定する
+      arbitrariseInput();
+      // 2回目以降で表示するキャプションを設定
+      $('#second_caption').css('display', 'block');
+      // 電話番号の入力欄を住所よりも上に持ってくる
+      $('#closingDayGroup').after($('#phoneGroup'));
     } else {
       // 初回申込みフォーム
       // 特に変更する必要はない
@@ -656,6 +668,22 @@
   function hideElement(element) {
     cancelValidation(element);
     element.css('display', 'none');
+  }
+
+  // 必須入力項目を任意入力に変更する
+  function arbitrariseInput() {
+    $('div[name=arbitrary_second]').each(function() {
+      // 必須のラベルを任意に変更
+      $(this).find('span' + '.badge').removeClass('badge-danger');
+      $(this).find('span' + '.badge').addClass('badge-secondary');
+      $(this).find('span' + '.badge').html('任意');
+
+      // ブランクのまま送信は許すが、入力するなら入力可能パターンはチェックする
+      $(this).find('input').removeClass('no-blank');
+      $(this).find('select').removeClass('no-blank');
+      $(this).find('input').removeAttr('required');
+      $(this).find('select').removeAttr('required');
+    });
   }
 
   function cancelValidation(element) {
