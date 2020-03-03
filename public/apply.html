@@ -9,6 +9,9 @@
   <!-- 初回パラメータ：&user=new もしくはパラメータなし -->
   <!-- 2回目以降パラメータ :&user=existing -->
 
+  <!-- URLパラメータの商品名によってフォームの見た目を変更する -->
+  <!-- &product=[lagless|dandori|renova] パラメータ指定無しの場合はlaglessとして扱う -->
+
   <!-- BootStrap -->
   <link
     rel="stylesheet"
@@ -114,6 +117,9 @@
       color: #dc3545;
     }
   </style>
+
+  <!-- URLによって変更するCSS -->
+  <link rel="stylesheet" type="text/css" href="./styles/form_lagless.css" id="product-css">
   <!-- /CSS -->
 
   <!-- 郵便番号から住所自動入力 -->
@@ -127,13 +133,24 @@
     crossorigin="anonymous"></script>
   <!-- /Font Awesome -->
 </head>
-<body class="font-weight-light py-5">
+<body class="font-weight-light py-2">
+
+
   <!-- container -->
-  <div class="container row mx-auto ">
+  <div class="container mx-auto">
+
 
     <!-- form -->
     <form action="https://us-central1-lagless.cloudfunctions.net/send_apply"
-      method="POST" id="form_id">
+    method="POST" id="form_id">
+
+
+      <!-- header -->
+      <div class="form-group">
+        <div class="col-12 mb--md-4 mx-auto" id="header-logo"></div>
+      </div>
+      <!-- /header -->
+
 
       <div class="form-group">
         <h2>お申込みフォーム</h2>
@@ -620,6 +637,22 @@
   <!-- /container -->
 
   <script type="text/javascript">
+
+  // URLの商品名によってフォームの見た目を変更する
+  $(function() {
+    var product_name = getUrlParam('product');
+    var css_path = './styles/form_lagless.css';
+    switch (product_name) {
+      case 'dandori':
+        css_path = './styles/form_dandori.css';
+        break;
+      case 'renova':
+        css_path = './styles/form_renova.css';
+        break;
+      // それ以外はlaglessとする
+    }
+    document.getElementById("product-css").href = css_path;
+  });
 
   // URLの工務店IDパラメータを引き継ぐ
   $(function() {
