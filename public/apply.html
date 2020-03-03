@@ -219,7 +219,7 @@
               <label for="postalCode">郵便番号</label>
               <span class="badge badge-danger">必須</span>
               <!-- 郵便番号からの住所自動入力はハイフンがあっても無くても両方対応している -->
-              <input type="text" class="form-control pattern-required"
+              <input type="text" class="form-control pattern-required-on-modified"
                 name="postalCode" id="postalCode" required
                 maxlength="8" pattern="^[0-9]{3}-?[0-9]{4}$"
                 onkeyup="AjaxZip3.zip2addr(this,'','prefecture','address');"/>
@@ -358,7 +358,7 @@
       <div class="form-group" name="arbitrary_second">
         <label for="mail">メールアドレス</label>
         <span class="badge badge-default badge-danger">必須</span>
-        <input type="email" class="form-control pattern-required"
+        <input type="email" class="form-control pattern-required-on-modified"
           name="mail" id="mail" required
           pattern="[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
         <span class="fas fa-check valid-status-icon valid-input"></span>
@@ -703,6 +703,16 @@
   // コントロール未入力のまま次に行こうとしたら警告を出す
   $(function() {
     $('.no-blank').blur(blank_validate);
+    $('.pattern-required').blur(function () {pattern_validate($(this));});
+
+    // 下記クラスのバリデーションは、次のようになる
+    // 1. 初回フォームであれば無条件でblur時にパターンマッチのvalidate
+    // 2-1. 2回目以降フォームであればblur時にブランクならOK判定
+    // 2-2. 2回目以降フォームであればblur時に非ブランクならパターンマッチのvalidate
+    var applying_user = getUrlParam('user');
+    $('.pattern-required-on-modified').blur(function() {
+      pattern_validate($(this), applying_user == 'existing');
+    });
   });
 
   function blank_validate() {
@@ -741,36 +751,38 @@
       }
     }
 
-  $(function() {
-    $('.pattern-required').blur(pattern_validate);
-  });
+  function pattern_validate(obj, blank_allowed) {
+      var pattern = new RegExp(obj.attr('pattern'));
 
-  function pattern_validate() {
-      var pattern = new RegExp($(this).attr('pattern'));
-      if (pattern.test($(this).val())) {
-        $(this).css({
+      var input_is_valid = pattern.test(obj.val());
+      var input_is_blank = (obj.val() == '');
+      if (input_is_valid
+          || (blank_allowed && input_is_blank)) {
+        // 有効な入力
+        obj.css({
           'border': '1px solid #28a745',
         });
-        $(this).nextAll('.valid-input').css({
+        obj.nextAll('.valid-input').css({
           'display': 'block',
         });
-        $(this).nextAll('.invalid-input').css({
+        obj.nextAll('.invalid-input').css({
           'display': 'none',
         });
-        $(this).nextAll('.invalid-feedback').css({
+        obj.nextAll('.invalid-feedback').css({
           'display': 'none',
         });
       } else {
-        $(this).css({
+        // 無効な入力
+        obj.css({
           'border': '1px solid #dc3545',
         });
-        $(this).nextAll('.valid-input').css({
+        obj.nextAll('.valid-input').css({
           'display': 'none',
         });
-        $(this).nextAll('.invalid-input').css({
+        obj.nextAll('.invalid-input').css({
           'display': 'block',
         });
-        $(this).nextAll('.invalid-feedback').css({
+        obj.nextAll('.invalid-feedback').css({
           'display': 'block',
         });
       }
@@ -783,11 +795,11 @@
       $('input[name=bankName]').addClass('no-blank');
       $('input[name=branchCode]').addClass('pattern-required');
       $('input[name=branchName]').addClass('no-blank');
-      $('input[name=bankCode]').blur(pattern_validate);
+      $('input[name=bankCode]').blur(function () {pattern_validate($(this));});
       $('input[name=bankCode]').blur();
       $('input[name=bankName]').blur(blank_validate);
       $('input[name=bankName]').blur();
-      $('input[name=branchCode]').blur(pattern_validate);
+      $('input[name=branchCode]').blur(function () {pattern_validate($(this));});
       $('input[name=branchCode]').blur();
       $('input[name=branchName]').blur(blank_validate);
       $('input[name=branchName]').blur();
