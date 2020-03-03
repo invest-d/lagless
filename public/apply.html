@@ -374,10 +374,10 @@
         <span class="badge badge-default badge-danger">必須</span>
         <input type="tel" class="form-control pattern-required"
           name="phone" id="phone" required
-          pattern="^\d{10}$|^\d{2,4}-\d{3,4}-\d{4}$" />
+          pattern="^[0-9]{10}$|^[0-9]{2,4}-[0-9]{3,4}-[0-9]{4}$" />
         <span class="fas fa-check valid-status-icon valid-input"></span>
         <span class="fas fa-times valid-status-icon invalid-input"></span>
-        <div class="invalid-feedback">正しく入力してください</div>
+        <div class="invalid-feedback">半角で正しく入力してください</div>
       </div>
       <!-- /電話番号 -->
 
