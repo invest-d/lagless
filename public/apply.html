@@ -163,7 +163,7 @@
 
         <p>運営：インベストデザイン株式会社<br>
           （各種ペイメントサービスの事務局を担っております）<br>
-          電話番号 ： <a href="tel:0120-516-818">０１２０－５１６－８１８</a> <br>
+          電話番号 ： <a href="tel:0120-516-818">0120-516-818</a> <br>
           受付時間 ： 10：00～17：00 <br>
           定休日 ： 土・日・祝</p>
       </div>
@@ -207,11 +207,11 @@
         <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
           <input type="text" class="form-control datetimepicker-input pattern-required"
           name="closingDay" id="closingDay" required
-          data-toggle="datetimepicker" data-target="#closingDay" placeholder="YYYY-MM-DD"
+          data-toggle="datetimepicker" data-target="#closingDay" placeholder=""
           maxlength="10" pattern="\d{4}-\d{2}-\d{2}">
           <span class="fas fa-check valid-status-icon valid-input"></span>
           <span class="fas fa-times valid-status-icon invalid-input"></span>
-          <div class="invalid-feedback">YYYY-MM-DDの正しい形式で入力してください。</div>
+          <div class="invalid-feedback">年-月-日の正しい形式で入力してください。</div>
         </div>
       </div>
       <!-- /請求書の締日 -->
@@ -404,7 +404,7 @@
         <p>※早期支払をご希望の請求書データをご添付ください。<br>
           　携帯で撮った請求書の写真でも構いません。</p>
         <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。<br>
-          　（運営：インベストデザイン株式会社　<a href="tel:03-6261-6818">０３－６２６１－６８１８</a>）</p>
+          　（運営：インベストデザイン株式会社　<a href="tel:03-6261-6818">03-6261-6818</a>）</p>
         <p>※【該当の方のみ】<br>
           協力会費のお支払が必要な場合は、各発注企業さまの取り扱い方法に従い手続きいたします（請求書の合計金額から協力会費を差し引かせていただきます）</p>
       </div>
@@ -597,15 +597,15 @@
 
 
       <!-- 利用規約へのリンク -->
-      <div class="form-group pt-5">
-        <button type="button" class="btn btn-primary btn-lg btn-block"
+      <div class="form-group col-6 mx-auto pt-5">
+        <button type="button" class="btn btn-secondary btn-lg btn-block"
           onclick="window.open('https://invest-design.wixsite.com/mysite-1', '_blank')">利用規約</button>
       </div>
       <!-- /利用規約へのリンク -->
 
 
       <!-- 利用規約に同意する -->
-      <div class="form-group p-2 border rounded">
+      <div class="form-group p-2 col-6 mx-auto border rounded">
         <div class="custom-control custom-checkbox">
           <input type="checkbox" class="custom-control-input no-blank" name="agree" id="agree" required />
           <label for="agree" class="custom-control-label">規約に同意する</label>
@@ -624,7 +624,7 @@
 
 
       <div class="form-group">
-        <button type="submit" class="btn btn-secondary btn-lg btn-block"
+        <button type="submit" class="btn btn-primary btn-lg btn-block"
           id="send">送信</button>
       </div>
 
@@ -868,19 +868,6 @@
         $(this).nextAll('.invalid-feedback').css({
           'display': 'block',
         });
-      }
-    });
-  });
-
-  // 規約に同意するチェックがオンのときだけいい感じの色にする
-  $(function () {
-    $('#agree').on('change', function(){
-      if ($(this).is(':checked')) {
-        $('#send').removeClass('btn-secondary');
-        $('#send').addClass('btn-primary');
-      } else {
-        $('#send').removeClass('btn-primarybtn-secondary');
-        $('#send').addClass('btn-secondary');
       }
     });
   });
