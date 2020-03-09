@@ -171,8 +171,8 @@ exports.send_apply = functions.https.onRequest((req, res) => {
         // var invoice = {"value": req.body["invoice"]};
         // record.invoice = invoice;
 
-        var totalReceivables = {"value": req.body["totalReceivables"]};
-        record.totalReceivables = totalReceivables;
+        var applicationAmount = {"value": req.body["applicationAmount"]};
+        record.applicationAmount = applicationAmount;
 
         var bankCode = {"value": req.body["bankCode"]};
         record.bankCode = bankCode;
