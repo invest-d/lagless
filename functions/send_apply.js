@@ -29,7 +29,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         console.log(UPLOAD_REQUIRED + 'uploads will be executed.');
 
         const busboy = new Busboy({ headers: req.headers });
-        const allowMimeTypes = ['application/pdf'];
+        const allowMimeTypes = ['application/pdf', 'image/jpeg', 'image/png'];
         var busboy_result = new Promise((resolve, reject) => {
             busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
                 // 未入力（application/octet-stream）はスルー
@@ -38,12 +38,13 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                     file.resume();
                 }
                 else if (!allowMimeTypes.includes(mimetype.toLocaleLowerCase())) {
-                    res.status(200).send("pdfファイルのみ送信できます。");
+                    res.status(200).send("pdf, jpg, pngファイルのみ送信できます。");
                     resolve();
                     return;
                 } else {
                     const form = new FormData();
-                    form.append('file', file, `${fieldname}.pdf`);
+                    var ext = String(mimetype).split('/')[1];
+                    form.append('file', file, `${fieldname}.${ext}`);
                     var headers = Object.assign(form.getHeaders(), {
                         'X-Cybozu-API-Token': 'mENAJTSO5KWYIGZhtudKom64B98CUqVZLqwGKEMe'
                     });
