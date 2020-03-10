@@ -377,13 +377,13 @@
         <div class="form-inline mb-2" name="arbitrary_second">
           <div class="p-1 border rounded col-md-6">
             <div class="custom-control custom-radio custom-control-inline py-1">
-              <input type="radio" class="custom-control-input" name="emal-fax-input" id="input-email" value="email" checked>
+              <input type="radio" class="custom-control-input" name="email-fax-input" id="input-email" value="email" checked>
               <label class="custom-control-label pr-4" for="input-email">メールアドレスを入力</label>
             </div>
           </div>
           <div class="p-1 border rounded col-md-6">
             <div class="custom-control custom-radio custom-control-inline py-1">
-              <input type="radio" class="custom-control-input" name="emal-fax-input" id="input-fax" value="fax">
+              <input type="radio" class="custom-control-input" name="email-fax-input" id="input-fax" value="fax">
               <label class="custom-control-label" for="input-fax">FAX番号を入力</label>
             </div>
           </div>
@@ -914,7 +914,7 @@
 
   // メールアドレスかFAX番号か、ラジオをチェックした方だけ入力が有効になる
   $(function () {
-    $('input[name="emal-fax-input"]:radio').change(function() {
+    $('input[name="email-fax-input"]:radio').change(function() {
       var radioval = $(this).val();
       var user_type = getUrlParam('user');
       // required属性は2回目以降のフォームでは必要ないので付けない

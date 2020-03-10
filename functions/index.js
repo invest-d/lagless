@@ -162,11 +162,18 @@ exports.send_apply = functions.https.onRequest((req, res) => {
         var representative = {"value": req.body["representative"]};
         record.representative = representative;
 
-        var mail = {"value": req.body["mail"]};
-        record.mail = mail;
-
-        var fax = {"value": req.body["fax"]};
-        record.fax = fax;
+        // メールアドレスもしくはFAXのいずれかを必須入力。
+        // どちらか入力してくれた方を採用する。
+        if (String(req.body["email-fax-input"]) === "email") {
+            var mail = {"value": req.body["mail"]};
+            record.mail = mail;
+        } else {
+            // FAXを入力してくれた場合も【メールアドレスとして】登録。
+            // メールアドレスを使ってFAX送信が可能になるサービスを利用。
+            var fax = req.body["fax"];
+            var mail = {"value": `lagless+fax-${fax}@invest-d.com`};
+            record.mail = mail;
+        }
 
         var phone = {"value": req.body["phone"]};
         record.phone = phone;
