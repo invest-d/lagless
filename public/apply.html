@@ -371,18 +371,58 @@
       <!-- /代表者名 -->
 
 
-      <!-- メールアドレス -->
+      <!-- メールアドレスとFAX番号を横並び -->
       <div class="form-group" name="arbitrary_second">
-        <label for="mail">メールアドレス</label>
-        <span class="badge badge-default badge-danger">必須</span>
-        <input type="email" class="form-control pattern-required-on-modified"
-          name="mail" id="mail" required
-          pattern="[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
-        <span class="fas fa-check valid-status-icon valid-input"></span>
-        <span class="fas fa-times valid-status-icon invalid-input"></span>
-        <div class="invalid-feedback">正しく入力してください</div>
+        <span class="badge badge-default badge-danger">メールアドレス・FAX番号いずれか必須</span>
+        <div class="form-inline mb-2" name="arbitrary_second">
+          <div class="p-1 border rounded col-md-6">
+            <div class="custom-control custom-radio custom-control-inline py-1">
+              <input type="radio" class="custom-control-input" name="emal-fax-input" id="input-email" value="email" checked>
+              <label class="custom-control-label pr-4" for="input-email">メールアドレスを入力</label>
+            </div>
+          </div>
+          <div class="p-1 border rounded col-md-6">
+            <div class="custom-control custom-radio custom-control-inline py-1">
+              <input type="radio" class="custom-control-input" name="emal-fax-input" id="input-fax" value="fax">
+              <label class="custom-control-label" for="input-fax">FAX番号を入力</label>
+            </div>
+          </div>
+        </div>
       </div>
-      <!-- /メールアドレス -->
+
+
+      <div class="form-row mb-3">
+
+        <!-- メールアドレス -->
+        <div class="col-md-6">
+          <div class="form-group mb-1" name="arbitrary_second">
+            <label for="mail">メールアドレス</label>
+            <input type="email" class="form-control"
+              name="mail" id="mail" required
+              pattern="[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">正しく入力してください</div>
+          </div>
+        </div>
+        <!-- /メールアドレス -->
+
+
+        <!-- FAX -->
+        <div class="col-md-6">
+          <div class="form-group mb-1" name="arbitrary_second">
+            <label for="fax">FAX番号</label>
+            <input type="phone" class="form-control"
+              name="fax" id="fax" disabled
+              pattern="^[0-9]{10,12}$|^[0-9]{2,4}-[0-9]{2,4}-[0-9]{4}$|[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">正しく入力してください</div>
+          </div>
+        </div>
+        <!-- FAX -->
+
+      </div>
 
 
       <!-- 電話番号 -->
@@ -391,7 +431,7 @@
         <span class="badge badge-default badge-danger">必須</span>
         <input type="tel" class="form-control pattern-required"
           name="phone" id="phone" required
-          pattern="^[0-9]{10,12}$|^[0-9]{2,4}-[0-9]{3,4}-[0-9]{4}$" />
+          pattern="^[0-9]{10,12}$|^[0-9]{2,4}-[0-9]{2,4}-[0-9]{4}$" />
         <span class="fas fa-check valid-status-icon valid-input"></span>
         <span class="fas fa-times valid-status-icon invalid-input"></span>
         <div class="invalid-feedback">半角で正しく入力してください</div>
@@ -868,6 +908,31 @@
         $(this).nextAll('.invalid-feedback').css({
           'display': 'block',
         });
+      }
+    });
+  });
+
+  // メールアドレスかFAX番号か、ラジオをチェックした方だけ入力が有効になる
+  $(function () {
+    $('input[name="emal-fax-input"]:radio').change(function() {
+      var radioval = $(this).val();
+      var user_type = getUrlParam('user');
+      // required属性は2回目以降のフォームでは必要ないので付けない
+      if(radioval == "email"){
+          $('#mail').prop('disabled', false);
+          console.log(user_type);
+          if (user_type !== 'existing') {$('#mail').attr('required', true);}
+
+          $('#fax').val("");
+          $('#fax').prop('required', false);
+          $('#fax').prop('disabled', true);
+      }else{
+          $('#fax').prop('disabled', false);
+          if (user_type !== 'existing') {$('#fax').attr('required', true);}
+
+          $('#mail').val("");
+          $('#mail').prop('required', false);
+          $('#mail').prop('disabled', true);
       }
     });
   });

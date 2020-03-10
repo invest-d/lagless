@@ -165,6 +165,9 @@ exports.send_apply = functions.https.onRequest((req, res) => {
         var mail = {"value": req.body["mail"]};
         record.mail = mail;
 
+        var fax = {"value": req.body["fax"]};
+        record.fax = fax;
+
         var phone = {"value": req.body["phone"]};
         record.phone = phone;
 
