@@ -16,49 +16,67 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         var record = {};
         var file_key_result = [];
 
+        // 送信元のフォームのURLからuserパラメータを受け取り、ファイルアップロードがいくつあるかを確認する。
+        var user_query = String(req.headers.referer.match(/user=.+?($|&)/)[0]);
+        var user_type = (user_query)
+            ? user_query.replace('&', '').split('=')[1]
+            : 'new';
+        console.log('user type is ' + user_type);
+        // 2回目のフォームの場合、アップロードするファイルは請求書データのみなので1
+        var UPLOAD_REQUIRED = (user_type === "existing")
+            ? 1
+            : 3;
+        console.log(UPLOAD_REQUIRED + 'uploads will be executed.');
+
         const busboy = new Busboy({ headers: req.headers });
         const allowMimeTypes = ['application/pdf'];
         var busboy_result = new Promise((resolve, reject) => {
             busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-                if (!allowMimeTypes.includes(mimetype.toLocaleLowerCase())) {
-                    res.status(200).send("disallow mimetype.");
+                // 未入力（application/octet-stream）はスルー
+                console.log(mimetype);
+                if (mimetype == 'application/octet-stream') {
+                    file.resume();
+                }
+                else if (!allowMimeTypes.includes(mimetype.toLocaleLowerCase())) {
+                    res.status(200).send("pdfファイルのみ送信できます。");
                     resolve();
                     return;
-                }
+                } else {
+                    const form = new FormData();
+                    form.append('file', file, `${fieldname}.pdf`);
+                    var headers = Object.assign(form.getHeaders(), {
+                        'X-Cybozu-API-Token': 'mENAJTSO5KWYIGZhtudKom64B98CUqVZLqwGKEMe'
+                    });
+                    axios.post('https://investdesign.cybozu.com/k/v1/file.json', form, { headers })
+                    .then(result => {
+                        if(result.data) {
+                            if(result.data.fileKey) {
+                                // res.status(200).send("OK");
+                                file_key_result.push({[fieldname]: {"value": [{"fileKey": result.data.fileKey}]}});
 
-                const form = new FormData();
-                form.append('file', file, `${fieldname}.pdf`);
-                var headers = Object.assign(form.getHeaders(), {
-                    'X-Cybozu-API-Token': 'mENAJTSO5KWYIGZhtudKom64B98CUqVZLqwGKEMe'
-                });
-                axios.post('https://investdesign.cybozu.com/k/v1/file.json', form, { headers })
-                .then(result => {
-                    if(result.data) {
-                        if(result.data.fileKey) {
-                            // res.status(200).send("OK");
-                            file_key_result.push({[fieldname]: {"value": [{"fileKey": result.data.fileKey}]}});
-
-                            // アップロードすべきファイル数は3つなので、それが全て終わるまでresolveしない
-                            if (file_key_result.length == 3) {
-                                file_key_result.forEach(result => {
-                                    record = Object.assign(record, result);
-                                });
-                                resolve(record);
+                                // アップロードすべきファイルが全て終わるまでresolveしない
+                                if (file_key_result.length == UPLOAD_REQUIRED) {
+                                    console.log('upload completed.');
+                                    file_key_result.forEach(result => {
+                                        record = Object.assign(record, result);
+                                    });
+                                    resolve(record);
+                                }
+                            } else {
+                                res.status(500).send(result.data);
+                                resolve();
                             }
                         } else {
-                            res.status(500).send(result.data);
+                            res.status(500).send("Unexpected.");
                             resolve();
                         }
-                    } else {
-                        res.status(500).send("Unexpected.");
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        res.status(500).send(err.response);
                         resolve();
-                    }
-                })
-                .catch(err => {
-                    console.log(err);
-                    res.status(500).send(err.response);
-                    resolve();
-                });
+                    });
+                }
             });
             busboy.on('field', (fieldname, val, fieldnameTruncated, valTruncated) => {
                 record = Object.assign(record, {[fieldname]: {"value": val}});
@@ -69,6 +87,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         });
 
         busboy_result.then(function (record) {
+            console.log(req.rawBody);
             console.log(JSON.stringify(record));
 
 
@@ -84,15 +103,17 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             }
 
 
-            // 預金種目を日本語に変換
-            var deposit_type = record.deposit.value;
-            var ja_deposit_type = "";
-            if (deposit_type == "ordinary") {
-                ja_deposit_type = "普通";
-            } else {
-                ja_deposit_type = "当座";
+            // 預金種目を日本語に変換(初回申込みのみ)
+            if (user_type !== "existing") {
+                var deposit_type = record.deposit.value;
+                var ja_deposit_type = "";
+                if (deposit_type == "ordinary") {
+                    ja_deposit_type = "普通";
+                } else {
+                    ja_deposit_type = "当座";
+                }
+                record = Object.assign(record, {"deposit": {"value": ja_deposit_type}});
             }
-            record = Object.assign(record, {"deposit": {"value": ja_deposit_type}});
 
 
             // 不要な要素を削除
