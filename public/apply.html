@@ -778,7 +778,7 @@
     $('.no-blank').blur(blank_validate);
     $('.pattern-required').blur(function () {pattern_validate($(this));});
 
-    // 下記クラスのバリデーションは、次のようになる
+    // 下記クラス.pattern-required-on-modifiedのバリデーションは、次のようになる
     // 1. 初回フォームであれば無条件でblur時にパターンマッチのvalidate
     // 2-1. 2回目以降フォームであればblur時にブランクならOK判定
     // 2-2. 2回目以降フォームであればblur時に非ブランクならパターンマッチのvalidate
@@ -915,21 +915,29 @@
   // メールアドレスかFAX番号か、ラジオをチェックした方だけ入力が有効になる
   $(function () {
     $('input[name="email-fax-input"]:radio').change(function() {
-      var radioval = $(this).val();
-      if(radioval == "email"){
+      var selected = $(this).val();
+      if(selected == "email"){
           $('#mail').prop('disabled', false);
-          $('#mail').attr('required', true);
+          $('#mail').prop('required', true);
 
           $('#fax').val("");
           $('#fax').prop('required', false);
           $('#fax').prop('disabled', true);
+          $('#fax').attr('style', 'none');
+          $('#fax').nextAll('.invalid-input').css({'display': 'none'});
+          $('#fax').nextAll('.valid-input').css({'display': 'none'});
+          $('#fax').nextAll('.invalid-feedback').css({'display': 'none'});
       }else{
           $('#fax').prop('disabled', false);
-          $('#fax').attr('required', true);
+          $('#fax').prop('required', true);
 
           $('#mail').val("");
           $('#mail').prop('required', false);
           $('#mail').prop('disabled', true);
+          $('#mail').attr('style', 'none');
+          $('#mail').nextAll('.invalid-input').css({'display': 'none'});
+          $('#mail').nextAll('.valid-input').css({'display': 'none'});
+          $('#mail').nextAll('.invalid-feedback').css({'display': 'none'});
       }
     });
   });
