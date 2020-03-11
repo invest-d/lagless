@@ -18,9 +18,11 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
 
         // 送信元のフォームのURLからuserパラメータを受け取り、ファイルアップロードがいくつあるかを確認する。
         var user_query = String(req.headers.referer.match(/user=.+?($|&)/));
-        var user_type = (user_query != null)
-            ? user_query[0].replace('&', '').split('=')[1]
-            : 'new';
+        console.log('user_query is ' + String(user_query));
+        var user_type = 'new';
+        if (user_query) {
+            user_type = user_query[0].replace('&', '').split('=')[1];
+        }
         console.log('user type is ' + user_type);
         // 2回目のフォームの場合、アップロードするファイルは請求書データのみなので1
         var UPLOAD_REQUIRED = (user_type === "existing")
@@ -40,7 +42,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                 else if (!allowMimeTypes.includes(mimetype.toLocaleLowerCase())) {
                     console.error('unexpected mimetype.');
                     console.error(mimetype);
-                    res.status(406).send("pdf, jpg, pngファイルのみ送信できます。");
+                    res.status(406).redirect(req.headers.referer);
                     resolve();
                     return;
                 } else {
@@ -70,18 +72,18 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                                 }
                             } else {
                                 console.error(result.data);
-                                res.status(500).send('upload failed');
+                                res.status(500).redirect(req.headers.referer);
                                 resolve();
                             }
                         } else {
                             console.error(result);
-                            res.status(500).send("Unexpected.");
+                            res.status(500).redirect(req.headers.referer);
                             resolve();
                         }
                     })
                     .catch(err => {
-                        console.error(err);
-                        res.status(500).send(err.response);
+                        console.error(err.response);
+                        res.status(500).redirect(req.headers.referer);
                         resolve();
                     });
                 }
@@ -168,7 +170,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                     console.error('response is ' + JSON.stringify(response));
                     console.error('sendObj is ' + JSON.stringify(sendObj));
                     console.error('req.body is ' + JSON.stringify(req.body));
-                    res.status(response.statusCode).send('レコードの登録に失敗しました');
+                    res.status(response.statusCode).redirect(req.headers.referer);
                 }
             });
         });
