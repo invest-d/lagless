@@ -32,18 +32,21 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         const allowMimeTypes = ['application/pdf', 'image/jpeg', 'image/png'];
         var busboy_result = new Promise((resolve, reject) => {
             busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-                // 未入力（application/octet-stream）はスルー
-                console.log(mimetype);
                 if (mimetype == 'application/octet-stream') {
+                    // 添付ファイルが未入力の場合（application/octet-stream）はスルー
+                    // 未入力はそもそもフォームでバリデーションをかけているが、2回目以降のフォームの場合は運転免許証画像の欄が未入力のまま送信されてくる。スルーでよい。
                     file.resume();
                 }
                 else if (!allowMimeTypes.includes(mimetype.toLocaleLowerCase())) {
-                    res.status(200).send("pdf, jpg, pngファイルのみ送信できます。");
+                    console.error('unexpected mimetype.');
+                    console.error(mimetype);
+                    res.status(406).send("pdf, jpg, pngファイルのみ送信できます。");
                     resolve();
                     return;
                 } else {
                     const form = new FormData();
                     var ext = String(mimetype).split('/')[1];
+
                     form.append('file', file, `${fieldname}.${ext}`);
                     var headers = Object.assign(form.getHeaders(), {
                         'X-Cybozu-API-Token': 'mENAJTSO5KWYIGZhtudKom64B98CUqVZLqwGKEMe'
@@ -53,10 +56,12 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                         if(result.data) {
                             if(result.data.fileKey) {
                                 // res.status(200).send("OK");
+                                // kintoneにアップロードしたファイルのファイルキーを配列に保持
                                 file_key_result.push({[fieldname]: {"value": [{"fileKey": result.data.fileKey}]}});
 
                                 // アップロードすべきファイルが全て終わるまでresolveしない
                                 if (file_key_result.length == UPLOAD_REQUIRED) {
+                                    // すべてのアップロードが終わったら、それぞれのフィールドオブジェクトをrecordにマージしてからようやくresolveする。
                                     console.log('upload completed.');
                                     file_key_result.forEach(result => {
                                         record = Object.assign(record, result);
@@ -64,16 +69,18 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                                     resolve(record);
                                 }
                             } else {
-                                res.status(500).send(result.data);
+                                console.error(result.data);
+                                res.status(500).send('upload failed');
                                 resolve();
                             }
                         } else {
+                            console.error(result);
                             res.status(500).send("Unexpected.");
                             resolve();
                         }
                     })
                     .catch(err => {
-                        console.log(err);
+                        console.error(err);
                         res.status(500).send(err.response);
                         resolve();
                     });
@@ -158,9 +165,9 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                     // 完了画面に遷移
                     res.status(200).redirect('https://lagless-dev.netlify.com/apply_complete.html');
                 } else {
-                    console.log('response is ' + JSON.stringify(response));
-                    console.log('sendObj is ' + JSON.stringify(sendObj));
-                    console.log('req.body is ' + JSON.stringify(req.body));
+                    console.error('response is ' + JSON.stringify(response));
+                    console.error('sendObj is ' + JSON.stringify(sendObj));
+                    console.error('req.body is ' + JSON.stringify(req.body));
                     res.status(response.statusCode).send('レコードの登録に失敗しました');
                 }
             });
