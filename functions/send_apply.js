@@ -17,9 +17,9 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         var file_key_result = [];
 
         // 送信元のフォームのURLからuserパラメータを受け取り、ファイルアップロードがいくつあるかを確認する。
-        var user_query = String(req.headers.referer.match(/user=.+?($|&)/)[0]);
-        var user_type = (user_query)
-            ? user_query.replace('&', '').split('=')[1]
+        var user_query = String(req.headers.referer.match(/user=.+?($|&)/));
+        var user_type = (user_query != null)
+            ? user_query[0].replace('&', '').split('=')[1]
             : 'new';
         console.log('user type is ' + user_type);
         // 2回目のフォームの場合、アップロードするファイルは請求書データのみなので1
