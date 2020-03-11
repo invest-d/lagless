@@ -187,34 +187,72 @@
       <!-- /貴社名 -->
 
 
-      <!-- 請求先企業名 -->
-      <div class="form-group">
-        <label for="billingCompany">請求先企業名（発注者名）</label>
-        <span class="badge badge-danger">必須</span>
-        <input type="text" class="form-control no-blank"
-          name="billingCompany" id="billingCompany" required/>
+      <!-- 電話番号 -->
+      <div class="form-group" id="phoneGroup">
+        <label for="phone">電話番号</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <input type="tel" class="form-control pattern-required"
+          name="phone" id="phone" required
+          pattern="^[0-9]{10,12}$|^[0-9]{2,4}-[0-9]{2,4}-[0-9]{4}$" />
         <span class="fas fa-check valid-status-icon valid-input"></span>
         <span class="fas fa-times valid-status-icon invalid-input"></span>
-        <div class="invalid-feedback">入力してください。</div>
+        <div class="invalid-feedback">半角で正しく入力してください</div>
       </div>
-      <!-- /請求先企業名 -->
+      <!-- /電話番号 -->
 
 
-      <!-- 請求書の締日 -->
-      <div class="form-group" id="closingDayGroup">
-        <label for="closingDay">請求書の締日（早期支払対象となる締日）</label>
-        <span class="badge badge-danger">必須</span>
-        <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
-          <input type="text" class="form-control datetimepicker-input pattern-required"
-          name="closingDay" id="closingDay" required
-          data-toggle="datetimepicker" data-target="#closingDay" placeholder=""
-          maxlength="10" pattern="\d{4}-\d{2}-\d{2}">
-          <span class="fas fa-check valid-status-icon valid-input"></span>
-          <span class="fas fa-times valid-status-icon invalid-input"></span>
-          <div class="invalid-feedback">年-月-日の正しい形式で入力してください。</div>
+      <!-- メールアドレスとFAX番号を横並び -->
+      <span class="badge badge-default badge-danger">メールアドレス・FAX番号いずれか必須</span>
+      <div class="form-group">
+        <div class="form-inline">
+          <div class="p-1 border rounded col-md-6">
+            <div class="custom-control custom-radio custom-control-inline py-1">
+              <input type="radio" class="custom-control-input" name="email-fax-input" id="input-email" value="email" checked>
+              <label class="custom-control-label pr-4" for="input-email">メールアドレスを入力</label>
+            </div>
+          </div>
+          <div class="p-1 border rounded col-md-6">
+            <div class="custom-control custom-radio custom-control-inline py-1">
+              <input type="radio" class="custom-control-input" name="email-fax-input" id="input-fax" value="fax">
+              <label class="custom-control-label" for="input-fax">FAX番号を入力</label>
+            </div>
+          </div>
         </div>
       </div>
-      <!-- /請求書の締日 -->
+
+
+      <div class="form-row mb-3">
+
+        <!-- メールアドレス -->
+        <div class="col-md-6">
+          <div class="form-group mb-1">
+            <label for="mail">メールアドレス</label>
+            <input type="email" class="form-control pattern-required"
+              name="mail" id="mail" required
+              pattern="[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">正しく入力してください</div>
+          </div>
+        </div>
+        <!-- /メールアドレス -->
+
+
+        <!-- FAX -->
+        <div class="col-md-6">
+          <div class="form-group mb-1">
+            <label for="fax">FAX番号</label>
+            <input type="phone" class="form-control pattern-required"
+              name="fax" id="fax" disabled
+              pattern="^[0-9]{10,12}$|^[0-9]{2,4}-[0-9]{2,4}-[0-9]{4}$|[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">正しく入力してください</div>
+          </div>
+        </div>
+        <!-- FAX -->
+
+      </div>
 
 
       <!-- 2回目以降で表示するキャプション -->
@@ -371,84 +409,46 @@
       <!-- /代表者名 -->
 
 
-      <!-- メールアドレスとFAX番号を横並び -->
-      <div class="form-group" name="arbitrary_second">
-        <span class="badge badge-default badge-danger">メールアドレス・FAX番号いずれか必須</span>
-        <div class="form-inline mb-2" name="arbitrary_second">
-          <div class="p-1 border rounded col-md-6">
-            <div class="custom-control custom-radio custom-control-inline py-1">
-              <input type="radio" class="custom-control-input" name="email-fax-input" id="input-email" value="email" checked>
-              <label class="custom-control-label pr-4" for="input-email">メールアドレスを入力</label>
-            </div>
-          </div>
-          <div class="p-1 border rounded col-md-6">
-            <div class="custom-control custom-radio custom-control-inline py-1">
-              <input type="radio" class="custom-control-input" name="email-fax-input" id="input-fax" value="fax">
-              <label class="custom-control-label" for="input-fax">FAX番号を入力</label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      <div class="form-row mb-3">
-
-        <!-- メールアドレス -->
-        <div class="col-md-6">
-          <div class="form-group mb-1" name="arbitrary_second">
-            <label for="mail">メールアドレス</label>
-            <input type="email" class="form-control"
-              name="mail" id="mail" required
-              pattern="[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
-            <span class="fas fa-check valid-status-icon valid-input"></span>
-            <span class="fas fa-times valid-status-icon invalid-input"></span>
-            <div class="invalid-feedback">正しく入力してください</div>
-          </div>
-        </div>
-        <!-- /メールアドレス -->
-
-
-        <!-- FAX -->
-        <div class="col-md-6">
-          <div class="form-group mb-1" name="arbitrary_second">
-            <label for="fax">FAX番号</label>
-            <input type="phone" class="form-control"
-              name="fax" id="fax" disabled
-              pattern="^[0-9]{10,12}$|^[0-9]{2,4}-[0-9]{2,4}-[0-9]{4}$|[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
-            <span class="fas fa-check valid-status-icon valid-input"></span>
-            <span class="fas fa-times valid-status-icon invalid-input"></span>
-            <div class="invalid-feedback">正しく入力してください</div>
-          </div>
-        </div>
-        <!-- FAX -->
-
-      </div>
-
-
-      <!-- 電話番号 -->
-      <div class="form-group" id="phoneGroup">
-        <label for="phone">電話番号</label>
-        <span class="badge badge-default badge-danger">必須</span>
-        <input type="tel" class="form-control pattern-required"
-          name="phone" id="phone" required
-          pattern="^[0-9]{10,12}$|^[0-9]{2,4}-[0-9]{2,4}-[0-9]{4}$" />
-        <span class="fas fa-check valid-status-icon valid-input"></span>
-        <span class="fas fa-times valid-status-icon invalid-input"></span>
-        <div class="invalid-feedback">半角で正しく入力してください</div>
-      </div>
-      <!-- /電話番号 -->
-
-
       <div class="form-group pt-5">
         <h2>■ 対象債権内容（件名・税込金額）■</h2>
         <p>※早期支払をご希望の請求書データをご添付ください。<br>
           　携帯で撮った請求書の写真でも構いません。<br>
-          　請求書が複数枚に渡る場合は、一つのファイルにまとめて頂きますようお願い致します。</p>
+          　請求書が複数枚に渡る場合は、一つのファイルにまとめて頂きますようお願いいたします。</p>
         <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。<br>
           　（運営：インベストデザイン株式会社　<a href="tel:0120-516-818">0120-516-818</a>）</p>
         <p>※【該当の方のみ】<br>
           協力会費のお支払が必要な場合は、各発注企業さまの取り扱い方法に従い手続きいたします（請求書の合計金額から協力会費を差し引かせていただきます）</p>
       </div>
+
+
+      <!-- 請求先企業名 -->
+      <div class="form-group">
+        <label for="billingCompany">請求先企業名（発注者名）</label>
+        <span class="badge badge-danger">必須</span>
+        <input type="text" class="form-control no-blank"
+          name="billingCompany" id="billingCompany" required/>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">入力してください。</div>
+      </div>
+      <!-- /請求先企業名 -->
+
+
+      <!-- 請求書の締日 -->
+      <div class="form-group" id="closingDayGroup">
+        <label for="closingDay">請求書の締日（早期支払対象となる締日）</label>
+        <span class="badge badge-danger">必須</span>
+        <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
+          <input type="text" class="form-control datetimepicker-input pattern-required"
+          name="closingDay" id="closingDay" required
+          data-toggle="datetimepicker" data-target="#closingDay" placeholder=""
+          maxlength="10" pattern="\d{4}-\d{2}-\d{2}">
+          <span class="fas fa-check valid-status-icon valid-input"></span>
+          <span class="fas fa-times valid-status-icon invalid-input"></span>
+          <div class="invalid-feedback">年-月-日の正しい形式で入力してください。</div>
+        </div>
+      </div>
+      <!-- /請求書の締日 -->
 
 
       <!-- 請求書データの添付 -->
@@ -716,8 +716,6 @@
       arbitrariseInput();
       // 2回目以降で表示するキャプションを設定
       $('#second_caption').css('display', 'block');
-      // 電話番号の入力欄を住所よりも上に持ってくる
-      $('#closingDayGroup').after($('#phoneGroup'));
     } else {
       // 初回申込みフォーム
       // 特に変更する必要はない
@@ -917,19 +915,16 @@
   $(function () {
     $('input[name="email-fax-input"]:radio').change(function() {
       var radioval = $(this).val();
-      var user_type = getUrlParam('user');
-      // required属性は2回目以降のフォームでは必要ないので付けない
       if(radioval == "email"){
           $('#mail').prop('disabled', false);
-          console.log(user_type);
-          if (user_type !== 'existing') {$('#mail').attr('required', true);}
+          $('#mail').attr('required', true);
 
           $('#fax').val("");
           $('#fax').prop('required', false);
           $('#fax').prop('disabled', true);
       }else{
           $('#fax').prop('disabled', false);
-          if (user_type !== 'existing') {$('#fax').attr('required', true);}
+          $('#fax').attr('required', true);
 
           $('#mail').val("");
           $('#mail').prop('required', false);
