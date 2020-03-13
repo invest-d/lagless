@@ -17,10 +17,11 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         var file_key_result = [];
 
         // 送信元のフォームのURLからuserパラメータを受け取り、ファイルアップロードがいくつあるかを確認する。
-        var user_query = String(req.headers.referer.match(/user=.+?($|&)/));
-        console.log('user_query is ' + String(user_query));
+        var user_query = req.headers.referer.match(/user=.+?($|&)/);
+        console.log('user_query is');
+        console.log(user_query);
         var user_type = 'new';
-        if (user_query) {
+        if (user_query.length > 0) {
             user_type = user_query[0].replace('&', '').split('=')[1];
         }
         console.log('user type is ' + user_type);
