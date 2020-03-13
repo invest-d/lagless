@@ -5,6 +5,7 @@ const FormData = require('form-data');
 const axios = require('axios');
 
 exports.send_apply = functions.https.onRequest(async (req, res) => {
+    res.set('Access-Control-Allow-Origin', 'https://lagless-dev.netlify.com');
     console.log('フォーム送信開始');
     if (req.method != 'POST') {
         //POST以外を受け取ったときはとりあえずエラーにしとく
@@ -165,8 +166,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             request(options_postrecord, function (error, response, body) {
                 if (!error && response.statusCode == 200) {
                     // 成功
-                    // 完了画面に遷移
-                    res.status(200).redirect('https://lagless-dev.netlify.com/apply_complete.html');
+                    res.status(200).send('https://lagless-dev.netlify.com/apply_complete.html');
                 } else {
                     console.error('response is ' + JSON.stringify(response));
                     console.error('sendObj is ' + JSON.stringify(sendObj));

@@ -19,9 +19,14 @@
     integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
     crossorigin="anonymous">
   <script
+    src="https://code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+    crossorigin="anonymous"></script>
+  <!-- Bootstrapで推奨されている下記のslim版ではajaxが動かないため、上記の通常版jqueryを使う -->
+  <!-- <script
     src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
     integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
-    crossorigin="anonymous"></script>
+    crossorigin="anonymous"></script> -->
   <script
     src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
     integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
@@ -949,6 +954,45 @@
         alert('お申込みするには「規約に同意する」にチェックしてください。');
         return false;
       }
+    });
+  });
+
+  // 送信ボタンをクリックしたときの挙動
+  $(function(){
+    $("#send").click(function(event){
+      // formのデフォルトのsubmit挙動を止めて、独自にsubmit挙動を実装
+      event.preventDefault();
+
+      $("#send").html("送信中...");
+      $("#send").prop("disabled", true);
+
+      // 現状はfirebase側でデータの加工もしてるけど、firebaseはkintoneに入れる役割だけを担う方がいいかも？
+      // データの加工はフォーム側で送信前に行うようにするという案
+      var formData = new FormData($('#form_id')[0]);
+      $.ajax({
+        type: "POST",
+        enctype: 'multipart/form-data',
+        url: "https://us-central1-lagless.cloudfunctions.net/send_apply",
+        dataType: "text",
+        data: formData,
+        cache: false,
+        processData: false,
+        contentType: false
+      })
+      .done(function(data) {
+        // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
+        console.log(data);
+        $("#send").html("送信");
+        $("#send").prop("disabled", false);
+        window.location.href = String(data);
+      })
+      .fail(function(data) {
+        // 失敗時はアラートを出すだけで遷移しない。フォームの入力内容もそのまま
+        console.log(data);
+        $("#send").html("送信");
+        $("#send").prop("disabled", false);
+        alert('登録に失敗しました。');
+      });
     });
   });
   </script>
