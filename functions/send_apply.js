@@ -21,7 +21,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         console.log('user_query is');
         console.log(user_query);
         var user_type = 'new';
-        if (user_query.length > 0) {
+        if (user_query !== null && user_query.length > 0) {
             user_type = user_query[0].replace('&', '').split('=')[1];
         }
         console.log('user type is ' + user_type);
