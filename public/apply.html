@@ -963,6 +963,10 @@
       // formのデフォルトのsubmit挙動を止めて、独自にsubmit挙動を実装
       event.preventDefault();
 
+      if(!this.form.reportValidity()) {
+        return;
+      };
+
       $("#send").html("送信中...");
       $("#send").prop("disabled", true);
 
