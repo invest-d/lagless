@@ -55,7 +55,7 @@ function get_applies_count() {
     let body_cursor = {
         "app": 159,
         "fields": ["ルックアップ"],
-        "query": `${get_payment_date_query()} order by レコード番号 asc`
+        "query": `${get_state_query()} and ${get_payment_date_query()} order by レコード番号 asc`
     };
 
     return get_all_record_num(APPLY_TABLE_REQUEST_HEADER_POST, body_cursor);
@@ -105,7 +105,7 @@ function get_kyoryoku_id_array(total_count, app_id) {
 
         while (offset < total_count) {
             var params = `?app=${app_id}&query=`
-                + encodeURIComponent(get_payment_date_query() + ` order by レコード番号 asc limit ${request_records} offset ${offset}`)
+                + encodeURIComponent(get_state_query() + ' and ' + get_payment_date_query() + ` order by レコード番号 asc limit ${request_records} offset ${offset}`)
                 + '&fields[0]=' + encodeURIComponent('ルックアップ');
             let url_params = 'https://investdesign.cybozu.com/k/v1/records.json' + params;
 
@@ -235,4 +235,9 @@ function get_payment_date_query() {
     target_date.setHours(0, 0, 0, 0);
     var a_year_ago_today = dateformat(target_date, 'yyyy-mm-dd') + 'T' + dateformat(target_date, 'HH:MM:ss') + '+0900';
     return `paymentDate >= \"${a_year_ago_today}\"`
+}
+
+function get_state_query() {
+    // 状態が実行完了のレコードのみ取得
+    return "状態 in (\"実行完了\")";
 }
