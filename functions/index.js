@@ -96,7 +96,7 @@ exports.helloWorld = functions.https.onRequest(async (req, res) => {
         res.status(200).send('unexpected method');
         return;
     }
-    
+
     let ids = [ ];
     console.log('fetch from kintone...');
     const json = await Promise.all([ fetch_pattern(), fetch_service() ])
@@ -115,13 +115,15 @@ exports.helloWorld = functions.https.onRequest(async (req, res) => {
         }
         return JSON.stringify(service, true, "  ");
     });
-    
+
     const bucket = admin.storage().bucket();
     const file = bucket.file('data.json');
     await file.save(json);
     await file.setMetadata({ contentType: 'application/json' });
     res.set('Content-Type', 'application/json');
     res.status(200).send(JSON.stringify({ success: true, service_ids: ids }));
-    
+
     console.log('completed.');
 });
+
+exports.count_application = require('./count_application').count_application;
