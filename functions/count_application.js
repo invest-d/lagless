@@ -2,23 +2,29 @@ const functions = require('firebase-functions');
 const axios = require('axios');
 const dateformat = require('dateformat');
 
+const APP_ID_APPLY = "159";
+const API_TOKEN_APPLY = "0cHzTCRQCAmDOvdl6Rvx36MjoMVjHpnIoghszkC3";
+
 const APPLY_TABLE_REQUEST_HEADER_GET = {
-    "Host": "investdesign.cybozu.com:159",
-    "X-Cybozu-API-Token": "0cHzTCRQCAmDOvdl6Rvx36MjoMVjHpnIoghszkC3",
-    "Authorization": "Basic 0cHzTCRQCAmDOvdl6Rvx36MjoMVjHpnIoghszkC3"
+    "Host": "investdesign.cybozu.com:" + APP_ID_APPLY,
+    "X-Cybozu-API-Token": API_TOKEN_APPLY,
+    "Authorization": "Basic " + API_TOKEN_APPLY
 };
 
 const APPLY_TABLE_REQUEST_HEADER_POST = {
-    "Host": "investdesign.cybozu.com:159",
-    "X-Cybozu-API-Token": "0cHzTCRQCAmDOvdl6Rvx36MjoMVjHpnIoghszkC3",
-    "Authorization": "Basic 0cHzTCRQCAmDOvdl6Rvx36MjoMVjHpnIoghszkC3",
+    "Host": "investdesign.cybozu.com:" + APP_ID_APPLY,
+    "X-Cybozu-API-Token": API_TOKEN_APPLY,
+    "Authorization": "Basic " + API_TOKEN_APPLY,
     "Content-Type": "application/json"
 };
 
+const APP_ID_KYORYOKU = "88";
+const API_TOKEN_KYORYOKU = "UIRiUQyq7cz4MsY7bYXNTTsWi55qJqbZnlPzkJCe";
+
 const KYORYOKU_MASTER_REQUEST_HEADER = {
-    "Host": "investdesign.cybozu.com:88",
-    "X-Cybozu-API-Token": "UIRiUQyq7cz4MsY7bYXNTTsWi55qJqbZnlPzkJCe",
-    "Authorization": "Basic UIRiUQyq7cz4MsY7bYXNTTsWi55qJqbZnlPzkJCe",
+    "Host": "investdesign.cybozu.com:" + APP_ID_KYORYOKU,
+    "X-Cybozu-API-Token": API_TOKEN_KYORYOKU,
+    "Authorization": "Basic " + API_TOKEN_KYORYOKU,
     "Content-Type": "application/json"
 };
 
@@ -29,7 +35,7 @@ exports.count_application = functions.https.onRequest(async (req, res) => {
     get_applies_count()
     .then(record_count => {
         console.log('found ' + record_count + ' records.');
-        return get_kyoryoku_id_array(record_count, 159);
+        return get_kyoryoku_id_array(record_count, APP_ID_APPLY);
     })
     .then((kyoryoku_id_array) => {
         console.log('協力会社IDの一覧を取得完了');
@@ -53,7 +59,7 @@ function get_applies_count() {
     console.log('フォームからの申込みレコードを取得する');
 
     let body_cursor = {
-        "app": 159,
+        "app": APP_ID_APPLY,
         "fields": ["ルックアップ"],
         "query": `${get_state_query()} and ${get_payment_date_query()} order by レコード番号 asc`
     };
@@ -181,48 +187,163 @@ function count_by_kyoryoku_id(kyoryoku_id_array) {
 
 function update_kyoryoku_master(kyoryoku_id_count) {
     return new Promise((resolve) => {
-        console.log('カウント結果をもとに協力会社マスタを更新する');
-        // 一度に更新できるレコード数は100件まで
+        var update_process = new Promise((rslv) => {
+            console.log('カウント結果をもとに協力会社マスタを更新する');
+            // 一度に更新できるレコード数は100件まで
+
+            var url_records = 'https://investdesign.cybozu.com/k/v1/records.json';
+            var body_records = {
+                "app": APP_ID_KYORYOKU,
+                "records": []
+            };
+
+            // 重複禁止フィールドをキーにしているのでレコード番号は不要
+            Object.keys(kyoryoku_id_count).map((kyoryoku_id) => {
+                body_records.records.push(
+                    {
+                        "updateKey": {
+                            "field": "支払企業No_",
+                            "value": kyoryoku_id
+                        },
+                        "record": {
+                            "numberOfApplication": {
+                                "value": kyoryoku_id_count[kyoryoku_id]
+                            }
+                        }
+                    }
+                );
+            });
+
+            axios({
+                method: "PUT",
+                url: url_records,
+                headers: KYORYOKU_MASTER_REQUEST_HEADER,
+                data: body_records
+            })
+            .then((response) => {
+                var update_records_num = (response.data.records.length)
+                    ? response.data.records.length
+                    : 0;
+                rslv(update_records_num);
+            })
+            .catch(err => {
+                console.log(err);
+                res.status(500).send(err.response.data);
+                rslv();
+            });
+        });
+
+        var not_zero_update_count = 0;
+        update_process.then((update_count) => {
+            // 申込み回数がゼロ回になった協力会社を更新する。
+            // ゼロ回になった協力会社 とは：
+            //   先ほどのupdate処理に含まれていない協力会社である
+            //   かつ 申込回数が1回以上になっている
+            not_zero_update_count = update_count;
+
+            var updated_ids = [];
+            console.log('更新済みIDの一覧');
+            Object.keys(kyoryoku_id_count).map((kyoryoku_id) => {
+                updated_ids.push(kyoryoku_id);
+            });
+            console.log(updated_ids);
+            return get_zero_target_ids(updated_ids);
+        })
+        .then((zero_target_ids) => {
+            console.log('ゼロ回に更新すべき協力会社IDの一覧を取得完了');
+            console.log(zero_target_ids);
+            return update_to_zero_count(zero_target_ids);
+        })
+        .then((zero_updated_count) => {
+            resolve(Number(not_zero_update_count) + Number(zero_updated_count));
+        });
+    });
+}
+
+function get_zero_target_ids(updated_ids) {
+    return new Promise((resolve) => {
+        console.log('協力会社マスタから、updated_ids以外で申込み回数が1回以上の協力会社IDを取得する');
+
+        // in条件に使用する文字列を取得する。 '("1", "87", "48", ...)'
+        var updated_ids_format = '(';
+        // ループ操作の最後を知る必要があるのでmapはやめとく
+        for (var index = 0; index < updated_ids.length; index++) {
+            var elem = '\"' + String(updated_ids[index]) + '\"';
+            if (index !== updated_ids.length -1) {
+                // 最後の要素でない場合はカンマを追加
+                elem += ', ';
+            }
+            updated_ids_format += elem;
+        }
+        // 最後に閉じカッコ
+        updated_ids_format += ')';
+
+        var request_body = {
+            'app': APP_ID_KYORYOKU,
+            'fields': ['支払企業No_'],
+            'query': 'numberOfApplication > 0 and 支払企業No_ not in ' + updated_ids_format
+        };
 
         var url_records = 'https://investdesign.cybozu.com/k/v1/records.json';
-        var body_records = {
-            "app": 88,
+
+        axios({
+            method: "GET",
+            url: url_records,
+            headers: KYORYOKU_MASTER_REQUEST_HEADER,
+            data: request_body
+        })
+        .then((response) => {
+            resolve(response.data);
+        });
+    })
+}
+
+function update_to_zero_count(zero_target_ids) {
+    return new Promise((resolve) => {
+        console.log('ゼロ回更新対象');
+        console.log(zero_target_ids);
+        var request_body = {
+            "app": APP_ID_KYORYOKU,
             "records": []
         };
 
-        // 重複禁止フィールドをキーにしているのでレコード番号は不要
-        Object.keys(kyoryoku_id_count).map((kyoryoku_id) => {
-            body_records.records.push(
+        zero_target_ids.records.map((kyoryoku_id_obj) => {
+            request_body.records.push(
                 {
                     "updateKey": {
-                        "field": "協力会社ID",
-                        "value": kyoryoku_id
+                        "field": "支払企業No_",
+                        "value": kyoryoku_id_obj["支払企業No_"]["value"]
                     },
                     "record": {
                         "numberOfApplication": {
-                            "value": kyoryoku_id_count[kyoryoku_id]
+                            "value": 0
                         }
                     }
                 }
             );
         });
 
+        var url_records = 'https://investdesign.cybozu.com/k/v1/records.json';
+
         axios({
             method: "PUT",
             url: url_records,
             headers: KYORYOKU_MASTER_REQUEST_HEADER,
-            data: body_records
+            data: request_body
         })
         .then((response) => {
-            var update_records_num = (response.data.records.length)
-                ? response.data.records.length
-                : 0;
-            resolve(update_records_num);
+            if(response.data.records[0] !== null) {
+                console.log(response.data.records);
+                resolve(response.data.records.length);
+            } else {
+                alert('レコードの更新に失敗しました');
+                console.log(response);
+                resolve(null);
+            }
         })
         .catch(err => {
             console.log(err);
             res.status(500).send(err.response.data);
-            resolve();
         });
     });
 }
