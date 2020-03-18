@@ -500,7 +500,7 @@
             <label for="bank_code">金融機関コード(4桁)</label>
             <span class="badge badge-danger">必須</span>
             <input type="text" class="form-control"
-              name="bankCode" id="bank_code" required
+              name="bankCode_Form" id="bank_code" required
               maxlength="4" pattern="\d{4}"/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
             <span class="fas fa-times valid-status-icon invalid-input"></span>
@@ -515,7 +515,7 @@
             <label for="bank_name">金融機関名</label>
             <span class="badge badge-danger">必須</span>
             <input type="text" class="form-control"
-              name="bankName" id="bank_name" required/>
+              name="bankName_Form" id="bank_name" required/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
             <span class="fas fa-times valid-status-icon invalid-input"></span>
             <div class="invalid-feedback">入力してください</div>
@@ -536,7 +536,7 @@
             <label for="branch_code">支店コード（3桁）</label>
             <span class="badge badge-danger">必須</span>
             <input type="text" class="form-control"
-              name="branchCode" id="branch_code" required
+              name="branchCode_Form" id="branch_code" required
               maxlength="3" pattern="\d{3}"/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
             <span class="fas fa-times valid-status-icon invalid-input"></span>
@@ -551,7 +551,7 @@
             <label for="branch_name">支店名</label>
             <span class="badge badge-danger">必須</span>
             <input type="text" class="form-control"
-              name="branchName" id="branch_name" required/>
+              name="branchName_Form" id="branch_name" required/>
             <span class="fas fa-check valid-status-icon valid-input"></span>
             <span class="fas fa-times valid-status-icon invalid-input"></span>
             <div class="invalid-feedback">入力してください</div>
@@ -570,13 +570,13 @@
       <div class="form-inline mb-4" name="only_first">
         <div class="p-2 border rounded col-md-6">
           <div class="custom-control custom-radio custom-control-inline py-1">
-            <input type="radio" class="custom-control-input no-blank" name="deposit" id="deposit-ordinary" value="ordinary" required>
+            <input type="radio" class="custom-control-input no-blank" name="deposit_Form" id="deposit-ordinary" value="ordinary" required>
             <label class="custom-control-label pr-4" for="deposit-ordinary">普通</label>
           </div>
         </div>
         <div class="p-2 border rounded col-md-6">
           <div class="custom-control custom-radio custom-control-inline py-1">
-            <input type="radio" class="custom-control-input no-blank" name="deposit" id="deposit-current" value="current" required>
+            <input type="radio" class="custom-control-input no-blank" name="deposit_Form" id="deposit-current" value="current" required>
             <label class="custom-control-label" for="deposit-current">当座</label>
           </div>
         </div>
@@ -586,10 +586,10 @@
 
       <!-- 口座番号 -->
       <div class="form-group" name="only_first">
-        <label for="accountNumber">口座番号</label>
+        <label for="accountNumber_Form">口座番号</label>
         <span class="badge badge-danger">必須</span>
         <input type="text" class="form-control pattern-required"
-          name="accountNumber" id="accountNumber" required
+          name="accountNumber_Form" id="accountNumber_Form" required
           maxlength="7" pattern="[0-9]+"/>
         <span class="fas fa-check valid-status-icon valid-input"></span>
         <span class="fas fa-times valid-status-icon invalid-input"></span>
@@ -600,10 +600,10 @@
 
       <!-- 口座名義 -->
       <div class="form-group" name="only_first">
-        <label for="accountName">口座名義（カナ）</label>
+        <label for="accountName_Form">口座名義（カナ）</label>
         <span class="badge badge-danger">必須</span>
         <input type="text" class="form-control pattern-required"
-          name="accountName" id="accountName" required
+          name="accountName_Form" id="accountName_Form" required
           pattern="^[ア-ンＡ-Ｚ０-９ー（）「」／．，￥ー　]+$"/>
         <span class="fas fa-check valid-status-icon valid-input"></span>
         <span class="fas fa-times valid-status-icon invalid-input"></span>
@@ -868,19 +868,19 @@
 
   // ライブラリから銀行情報を入力したときに正しくバリデーションがかからないので、預金種目をクリックした時にチェックする
   $(function() {
-    $('input[name=deposit]').on('click', function() {
-      $('input[name=bankCode]').addClass('pattern-required');
-      $('input[name=bankName]').addClass('no-blank');
-      $('input[name=branchCode]').addClass('pattern-required');
-      $('input[name=branchName]').addClass('no-blank');
-      $('input[name=bankCode]').blur(function () {pattern_validate($(this));});
-      $('input[name=bankCode]').blur();
-      $('input[name=bankName]').blur(blank_validate);
-      $('input[name=bankName]').blur();
-      $('input[name=branchCode]').blur(function () {pattern_validate($(this));});
-      $('input[name=branchCode]').blur();
-      $('input[name=branchName]').blur(blank_validate);
-      $('input[name=branchName]').blur();
+    $('input[name=deposit_Form]').on('click', function() {
+      $('input[name=bankCode_Form]').addClass('pattern-required');
+      $('input[name=bankName_Form]').addClass('no-blank');
+      $('input[name=branchCode_Form]').addClass('pattern-required');
+      $('input[name=branchName_Form]').addClass('no-blank');
+      $('input[name=bankCode_Form]').blur(function () {pattern_validate($(this));});
+      $('input[name=bankCode_Form]').blur();
+      $('input[name=bankName_Form]').blur(blank_validate);
+      $('input[name=bankName_Form]').blur();
+      $('input[name=branchCode_Form]').blur(function () {pattern_validate($(this));});
+      $('input[name=branchCode_Form]').blur();
+      $('input[name=branchName_Form]').blur(blank_validate);
+      $('input[name=branchName_Form]').blur();
     });
   });
 
