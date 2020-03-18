@@ -5,7 +5,7 @@ const FormData = require('form-data');
 const axios = require('axios');
 
 exports.send_apply = functions.https.onRequest(async (req, res) => {
-    res.set('Access-Control-Allow-Origin', 'https://lagless-dev.netlify.com');
+    res.set('Access-Control-Allow-Origin', process.env.allow_origin_form_domain);
     console.log('フォーム送信開始');
     if (req.method != 'POST') {
         //POST以外を受け取ったときはとりあえずエラーにしとく
@@ -13,7 +13,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         return;
     } else {
         var sendObj = {};
-        sendObj.app = 159;
+        sendObj.app = process.env.app_id_apply;
         var record = {};
         var file_key_result = [];
 
@@ -53,7 +53,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
 
                     form.append('file', file, `${fieldname}.${ext}`);
                     var headers = Object.assign(form.getHeaders(), {
-                        'X-Cybozu-API-Token': 'mENAJTSO5KWYIGZhtudKom64B98CUqVZLqwGKEMe'
+                        'X-Cybozu-API-Token': process.env.api_token_apply_files
                     });
                     axios.post('https://investdesign.cybozu.com/k/v1/file.json', form, { headers })
                     .then(result => {
@@ -141,15 +141,15 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             var request = require('request');
 
             // LAGLESSアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
-            var API_LAGLESS = functions.config().tokens.form_apply.lagless;
-            var API_KOMUTEN = functions.config().tokens.form_apply.komuten;
-            var API_TOKEN = API_LAGLESS + ',' + API_KOMUTEN;
+            var API_APPLY = process.env.api_token_apply;
+            var API_KOMUTEN = process.env.api_token_komuten;
+            var API_TOKEN = API_APPLY + ',' + API_KOMUTEN;
 
             var BASE_URL = 'https://investdesign.cybozu.com/k/v1/record.json';
             var BASIC = 'Basic ' + API_TOKEN;
 
             var headers = {
-                'Host': 'investdesign.cybozu.com:159',
+                'Host': 'investdesign.cybozu.com:' + process.env.app_id_apply,
                 'X-Cybozu-API-Token': API_TOKEN,
                 'Authorization': BASIC,
                 'Content-Type': 'application/json',
@@ -166,7 +166,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             request(options_postrecord, function (error, response, body) {
                 if (!error && response.statusCode == 200) {
                     // 成功
-                    res.status(200).send('https://lagless-dev.netlify.com/apply_complete.html');
+                    res.status(200).send(process.env.apply_success_page_url);
                 } else {
                     console.error('response is ' + JSON.stringify(response));
                     console.error('sendObj is ' + JSON.stringify(sendObj));
