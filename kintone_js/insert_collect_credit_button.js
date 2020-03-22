@@ -3,7 +3,10 @@
     申込みアプリ(159)のレコードを、工務店と締日ごとに金額をまとめ、回収アプリ(160)に新規レコードとして挿入する。
 
     申込みアプリでの対象レコードは、下記の全ての条件を満たすもの。
-    状態が「支払予定明細送付済」
+        状態が「支払予定明細送付済」 かつ 回収IDが未入力
+
+    回収アプリに新規レコードとして追加したあと、
+    申込みレコードの回収IDフィールドに回収アプリ側のレコード番号を入力する。
 */
 
 (function () {
@@ -12,6 +15,7 @@
     const KINTONE_GET_MAX_SIZE = 500;
 
     const APP_ID_APPLY = 159;
+    const recordId_APPLY = 'レコード番号';
     const statusField_APPLY = '状態';
     const statusCodeReady_APPLY = '支払予定明細送付済'
     const constructionShopId_APPLY = 'constructionShopId';
@@ -22,6 +26,7 @@
     const collectId_APPLY = 'collectId';
 
     const APP_ID_COLLECT = 160;
+    const recordId_COLLECT = 'レコード番号';
     const constructionShopId_COLLECT = 'constructionShopId';
     const closingDate_COLLECT = 'closingDate';
     const deadline_COLLECT = 'deadline';
@@ -30,7 +35,7 @@
     const scheduledCollectableAmount_COLLECT = 'scheduledCollectableAmount';
 
     const APP_ID_KOMUTEN = 96;
-    const komutenId_KOMUTEN = 'id';
+    const constructionShopId_KOMUTEN = 'id';
     const originalPaymentDate_KOMUTEN = 'original';
 
     kintone.events.on('app.record.index.show', function(event) {
@@ -61,30 +66,47 @@
             return;
         }
 
+        var applies = [];
+
         // 対象となるレコードを申込みアプリからとりあえず全件取得
-        getReadyCollectRecords()
+        getAppliesReadyForCollect()
         .then((insert_targets_array) => {
             if (insert_targets_array.length <= 0) {
                 throw new Error('状態が 支払予定明細送付済 かつ\n回収IDが 未入力 のレコードは存在しませんでした。\n回収アプリのレコードを作り直したい場合は、\n回収アプリのレコード詳細画面から\n「回収レコード削除」ボタンを押してください。');
             }
 
+            // 取得した申込みレコードはあとで使うので保持しておく
+            applies = applies.concat(insert_targets_array);
+
             // 取得したレコードを元に、回収アプリにレコードを追加する。
             return insertCollectRecords(insert_targets_array);
         })
-        .then((inserted_count) => {
-            console.log('process completed.');
-            console.log(inserted_count);
-            if (!inserted_count > 0) {
+        .then((inserted_ids) => {
+            console.log('insert completed.');
+            console.log(inserted_ids);
+            if (!inserted_ids.length > 0) {
                 throw new Error('レコード追加に失敗しました。');
             }
 
-            alert(`${inserted_count}件 のレコード追加に成功しました。`);
+            // 回収アプリのレコード番号を、申込みレコードに紐付ける
+            return assignCollectIdsToApplies(applies, inserted_ids);
+        })
+        .then((updated_apply_records) => {
+            console.log('update completed.');
+            console.log(updated_apply_records);
+            if (!updated_apply_records.length > 0) {
+                throw new Error('申込みレコードと回収レコードの紐付けに失敗しました。');
+            }
+
+            alert(`${updated_apply_records.length}件 の申込みレコードを回収アプリに登録しました。`);
+            alert('ページを更新します。');
+            window.location.reload();
         }, (err) => {
             alert(err.message);
         });
     }
 
-    function getReadyCollectRecords() {
+    function getAppliesReadyForCollect() {
         return new kintone.Promise((resolve, reject) => {
             new kintone.Promise((rslv) => {
                 console.log('申込みアプリの中で支払予定明細送付済 かつ 回収IDが未入力のレコードを全て取得する。');
@@ -92,6 +114,7 @@
                 var request_body = {
                     'app': APP_ID_APPLY,
                     'fields': [
+                        recordId_APPLY,
                         constructionShopId_APPLY,
                         closingDay_APPLY,
                         applicant_APPLY,
@@ -169,7 +192,7 @@
             new kintone.Promise(async (rslv) => {
                 var cursor_body = {
                     'app': APP_ID_KOMUTEN,
-                    'fields': [komutenId_KOMUTEN, originalPaymentDate_KOMUTEN],
+                    'fields': [constructionShopId_KOMUTEN, originalPaymentDate_KOMUTEN],
                     'query': 'order by レコード番号 asc',
                     'size': KINTONE_GET_MAX_SIZE
                 }
@@ -190,7 +213,7 @@
 
                 var rslv_obj = {};
                 komuten_records.map((komuten_record) => {
-                    rslv_obj[komuten_record[komutenId_KOMUTEN]['value']] = komuten_record[originalPaymentDate_KOMUTEN]['value'];
+                    rslv_obj[komuten_record[constructionShopId_KOMUTEN]['value']] = komuten_record[originalPaymentDate_KOMUTEN]['value'];
                 });
 
                 rslv(rslv_obj);
@@ -273,5 +296,64 @@
         }
 
         return [deadline.getFullYear(), deadline.getMonth()+1, deadline.getDate()].join('-');
+    }
+
+    function assignCollectIdsToApplies(applies, inserted_ids) {
+        return new kintone.Promise((resolve, reject) => {
+            new kintone.Promise((rslv) => {
+                console.log('申込みレコードに回収レコードのレコード番号を振る');
+
+                // 先ほど回収アプリに挿入したレコードのidを使って、そのまま回収アプリからGET。取得上限の500件は超えない想定
+                var in_query = '(\"' + inserted_ids.join('\",\"') + '\")';
+                var request_body = {
+                    'app': APP_ID_COLLECT,
+                    'fields': [recordId_COLLECT, constructionShopId_COLLECT, closingDate_COLLECT],
+                    'query': `${recordId_COLLECT} in ${in_query}`
+                };
+                kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body
+                , (resp) => {
+                    rslv(resp.records);
+                }, (err) => {
+                    console.log(err);
+                    reject(err);
+                });
+            })
+            .then((collect_records) => {
+                var put_records = []
+
+                // 工務店IDと締日が同じ申込みレコードの回収IDフィールドに、回収レコードのレコード番号をセット
+                collect_records.map((collect_record) => {
+                    console.log('collect_record is');
+                    applies.map((apply_record) => {
+                        console.log(collect_record);
+                        var same_constructionShopId = (apply_record[constructionShopId_APPLY]['value'] === collect_record[constructionShopId_COLLECT]['value']);
+                        var same_closingDay = (apply_record[closingDay_APPLY]['value'] === collect_record[closingDate_COLLECT]['value']);
+
+                        if (same_constructionShopId && same_closingDay) {
+                            put_records.push({
+                                'id': apply_record[recordId_APPLY]['value'],
+                                'record': {
+                                    [collectId_APPLY]: {'value': collect_record[recordId_COLLECT]['value']}
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // レコード更新
+                var request_body = {
+                    'app': APP_ID_APPLY,
+                    'records': put_records
+                }
+
+                kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
+                , (resp) => {
+                    resolve(resp.records);
+                }, (err) => {
+                    console.log(err);
+                    reject(err);
+                });
+            })
+        })
     }
 })();
