@@ -41,8 +41,8 @@ const creditFacility_KOMUTEN = 'creditFacility';
 })();
 
 function need_update_counts() {
-    // 一旦は常にボタンを表示する
-    return true;
+    // 現状は常にボタンを表示する。増殖バグだけ防止
+    return document.getElementById('copyCredit') === null;
 }
 
 function getCopyCreditButton() {
