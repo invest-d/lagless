@@ -61,19 +61,17 @@ function clickCopyCredit() {
         return;
     }
 
-    // 審査が毎月行われていることを信じ、審査完了日が先月中のレコードのみ取得。
-    getJudgeRecordsInLastMonth()
+    // 審査内容が最新のレコードを取得。判定基準は審査完了日フィールド。
+    getLatestJudgeRecords()
     .then((update_targets_array) => {
         if (update_targets_array.length <= 0) {
-            throw new Error('新たに審査された企業はありませんでした。\nどの工務店の付与与信枠も更新されていません。');
+            throw new Error('与信枠が入力済みの企業はありませんでした。\nどの工務店の付与与信枠も更新されていません。');
         }
-        // 1カ月以内に複数回審査する可能性は想定しない。
-        // 取引企業Noと与信枠が1:1対応になっているパターンのみ想定。
-        // 1カ月以内に審査が行われていない場合、工務店マスタの付与与信枠は更新されない。
+
         return updateKomutenCredits(update_targets_array);
     })
     .then((updated_count) => {
-        alert(`更新が完了しました。\n更新されたのは ${updated_count}件 です。\n1ヵ月以内に審査が行われていない企業は更新されていません。`);
+        alert(`更新が完了しました。\n更新されたのは ${updated_count}件 です。`);
         alert('ページを更新します');
         location.reload();
     }, (err) => {
@@ -81,22 +79,71 @@ function clickCopyCredit() {
     });
 }
 
-function getJudgeRecordsInLastMonth() {
+function getLatestJudgeRecords() {
     return new kintone.Promise((resolve, reject) => {
-        console.log('審査アプリの中で審査完了日が先月中～今日までのレコードをすべて取得する。');
+        new kintone.Promise((rslv) => {
+            console.log('審査アプリの中で審査完了日が最新のレコードを取引企業Noごとにすべて取得する。');
 
-        var request_body = {
-            'app': APP_ID_JUDGE,
-            'fields': [customerCode_JUDGE, creditAmount_JUDGE],
-            'query': `(${judgedDay_JUDGE} = LAST_MONTH() or ${judgedDay_JUDGE} = THIS_MONTH()) and ${creditAmount_JUDGE} > 0`
-        };
+            // 全件取得してから、取引企業Noごとの最新レコードを抜き出す
+            var request_body = {
+                'app': APP_ID_JUDGE,
+                'fields': [customerCode_JUDGE, creditAmount_JUDGE, judgedDay_JUDGE],
+                'query': `${creditAmount_JUDGE} > 0`,
+                'size': KINTONE_GET_MAX_SIZE
+            };
 
-        kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body, (resp) => {
-            resolve(resp.records);
-        }, (err) => {
-            reject(err);
+            kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'POST', request_body, (resp) => {
+                rslv(resp.id);
+            }, (err) => {
+                reject(err);
+            });
+        })
+        .then((cursor_id) => {
+            return new kintone.Promise(async (resolve) => {
+                var request_body = {
+                    'id': cursor_id
+                };
+
+                var records = [];
+
+                var remaining = true;
+                do {
+                    var resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', request_body);
+                    records = records.concat(resp.records);
+                    remaining = resp.next;
+                } while (remaining);
+
+                resolve(records);
+            });
+        })
+        .then((all_judge_records) => {
+            // それぞれの取引企業Noについて、審査完了日が最新のものだけを抽出する
+            var key_pair = {};
+
+            // key_pairに、取引企業Noごとに最新の審査完了日を持つレコードを保持しておく。
+            all_judge_records.map((judge_record) => {
+                var customer_code = judge_record[customerCode_JUDGE]['value'];
+                var judge_day = judge_record[judgedDay_JUDGE]['value'];
+
+                // 保持している審査完了日よりも新しいものを発見したら、それを新しく保持
+                if (!(customer_code in key_pair)) {
+                    key_pair[customer_code] = judge_record;
+                }
+                else if (getComparableDate(judge_day) > getComparableDate(key_pair[customer_code][judgedDay_JUDGE]['value'])) {
+                    key_pair[customer_code] = judge_record;
+                }
+            });
+
+            // 最後にkey_pairを配列にして返す
+            resolve(Object.values(key_pair));
         });
     });
+}
+
+function getComparableDate(kintone_formatted_date) {
+    var date_info = String(kintone_formatted_date).split('-');
+    var date = new Date(Number(date_info[0]), Number(date_info[1]), Number(date_info[2]));
+    return date.getTime();
 }
 
 function updateKomutenCredits(update_targets_array) {
@@ -165,7 +212,7 @@ function updateKomutenCredits(update_targets_array) {
 
             if (!put_records.length > 0) {
                 console.log('update targets are ' + update_targets_array);
-                reject('工務店マスタの中で、1カ月以内に審査が行われた企業はありませんでした。\nどの工務店の付与与信枠も更新されていません。');
+                reject('工務店マスタの中で、審査が行われている企業はありませんでした。\nどの工務店の付与与信枠も更新されていません。');
             }
 
             var request_body = {
