@@ -21,7 +21,7 @@
     const constructionShopId_APPLY = 'constructionShopId';
     const closingDay_APPLY = 'closingDay';
     const applicant_APPLY = '支払先正式名称';
-    const applicationAmount_APPLY = 'applicationAmount';
+    const totalReceivables_APPLY = 'totalReceivables';
     const paymentDate_APPLY = 'paymentDate';
     const collectId_APPLY = 'collectId';
 
@@ -118,7 +118,7 @@
                         constructionShopId_APPLY,
                         closingDay_APPLY,
                         applicant_APPLY,
-                        applicationAmount_APPLY,
+                        totalReceivables_APPLY,
                         paymentDate_APPLY
                     ],
                     'query': `${statusField_APPLY} in (\"${statusCodeReady_APPLY}\") and ${collectId_APPLY} = \"\" order by レコード番号 asc`,
@@ -158,7 +158,7 @@
         return new kintone.Promise((resolve, reject) => {
             console.log('回収アプリにレコード挿入できる形にデータを加工する。');
 
-            // 渡されてくるのは {constructionShopId: {…}, 支払先正式名称: {…}, applicationAmount: {…}, closingDay: {…}, paymentDate: {…}} のオブジェクトの配列
+            // 渡されてくるのは {constructionShopId: {…}, 支払先正式名称: {…}, totalReceivables: {…}, closingDay: {…}, paymentDate: {…}} のオブジェクトの配列
             // 各keyに対応するフィールド値へのアクセスは、array[0].constructionShopId.valueのようにする。
 
             // まず工務店IDと締日だけ全て抜き出す
@@ -249,7 +249,7 @@
 
                     // 抽出した中から申込金額を合計
                     var totalAmount = target_records.reduce((total, record_obj) => {
-                        return total + Number(record_obj[applicationAmount_APPLY]['value']);
+                        return total + Number(record_obj[totalReceivables_APPLY]['value']);
                     }, 0);
 
                     new_record[scheduledCollectableAmount_COLLECT] = {'value': totalAmount};
