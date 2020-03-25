@@ -16,6 +16,7 @@
     const unpaidAmount_COLLECT = 'scheduledCollectableAmount';
     const statusField_COLLECT = 'collectStatus';
     const statusAlreadyPaid_COLLECT = '回収済み';
+    const statusRejected_COLLECT = 'クラウドサイン却下・再作成待ち';
 
     kintone.events.on('app.record.index.show', function(event) {
         if (need_display_button()) {
@@ -24,7 +25,7 @@
         }
     });
 
-    function need_display_button() {``
+    function need_display_button() {
         // 一旦は常にボタンを表示する。増殖バグだけ防止
         return document.getElementById('getCollectable') === null;
     }
@@ -64,7 +65,7 @@
 
             alert(`${updated_count}つ の工務店の未回収金額を更新しました。`);
             alert('ページを更新します。');
-            window.location.reload();
+            // window.location.reload();
         }, (err) => {
             alert(err.message);
         });
@@ -72,7 +73,7 @@
 
     function getUnpaidRecords() {
         return new kintone.Promise((resolve, reject) => {
-            console.log('回収アプリの中でステータスが回収済み以外の全てのレコードを取得する');
+            console.log('回収アプリの中でステータスが回収済み・却下以外の全てのレコードを取得する');
 
             var request_body = {
                 'app': APP_ID_COLLECT,
@@ -80,10 +81,11 @@
                     constructionShopId_COLLECT,
                     unpaidAmount_COLLECT
                 ],
-                'query': `${statusField_COLLECT} not in (\"${statusAlreadyPaid_COLLECT}\") order by レコード番号 asc`
+                'query': `${statusField_COLLECT} not in (\"${statusAlreadyPaid_COLLECT}\", \"${statusRejected_COLLECT}\") order by レコード番号 asc`
             };
 
             kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body, (resp) => {
+                console.log(resp.records);
                 resolve(resp.records);
             }, (err) => {
                 console.log(err);
