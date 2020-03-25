@@ -65,7 +65,7 @@
 
             alert(`${updated_count}つ の工務店の未回収金額を更新しました。`);
             alert('ページを更新します。');
-            // window.location.reload();
+            window.location.reload();
         }, (err) => {
             alert(err.message);
         });
