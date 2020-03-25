@@ -88,7 +88,7 @@ function getLatestJudgeRecords() {
             var request_body = {
                 'app': APP_ID_JUDGE,
                 'fields': [customerCode_JUDGE, creditAmount_JUDGE, judgedDay_JUDGE],
-                'query': `${creditAmount_JUDGE} > 0`,
+                'query': `${creditAmount_JUDGE} >= 0`, // ヤバい取引企業は与信枠ゼロにして対応することもある
                 'size': KINTONE_GET_MAX_SIZE
             };
 
