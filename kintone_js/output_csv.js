@@ -191,10 +191,10 @@
             for (var i = 0; i < target_records.length; i++) {
                 console.log(target_records[i]['paymentDate']['value']);
                 if (target_records[i]['paymentDate']['value'] === target_date) {
-                    var bank_code_to = target_records[i]['bankCode']['value'];
+                    var bank_code_to = ('0000' + target_records[i]['bankCode']['value']).slice(-4);
                     var bank_name_kana = window.ginkoLib.getBankKana(bank_code_to);
                     var bank_name_to = adjustLength(bank_name_kana, 15);
-                    var branch_code_to = target_records[i]['branchCode']['value'];
+                    var branch_code_to = ('000' + target_records[i]['branchCode']['value']).slice(-3);
                     var branch_name_kana = window.ginkoLib.getBankKana(bank_code_to, branch_code_to);
                     var branch_name_to = adjustLength(branch_name_kana, 15);
                     var deposit_to = (target_records[i]['deposit']['value'] === '普通')
