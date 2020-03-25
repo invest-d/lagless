@@ -70,15 +70,8 @@
         .then((invoice_objects) => {
             return generateInvoices(invoice_objects);
         })
-        // .then((completed_count) => {
-        //     alert(`振込依頼書の作成が完了しました。\n ${completed_count}件 の振込依頼書をダウンロードしました。`);
-        //     alert('ページを更新します');
-        //     location.reload();
-        // })
-        // test then
-        .then((result) => {
-            console.log('test result is');
-            console.log(result);
+        .then((completed_count) => {
+            alert(`振込依頼書の作成が完了しました。\n ${completed_count}件 の振込依頼書をダウンロードしました。`);
         })
         .catch((err) => {
             console.log(err);
