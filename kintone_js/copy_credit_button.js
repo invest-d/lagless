@@ -32,6 +32,8 @@
     const recordNo_KOMUTEN = 'レコード番号';
     const customerCode_KOMUTEN = 'customerCode';
     const creditFacility_KOMUTEN = 'creditFacility';
+    const fieldGetCreditNextTime_KOMUTEN = 'getCreditFacility';
+    const statusGetCredit_KOMUTEN = '次回、与信枠を取得する';
 
     kintone.events.on('app.record.index.show', function(event) {
         if (need_update_counts()) {
@@ -151,10 +153,12 @@
             var get_komuten_info = new kintone.Promise((rslv, rjct) => {
                 console.log('工務店マスタからレコードIDと取引企業Noの一覧を取得する');
                 // カーソルを作成
+                // 付与与信枠を取得したくない工務店は除外する
                 var komuten_cursor = new kintone.Promise((resolve_post_cursor) => {
                     var post_cursor_body = {
                         'app': APP_ID_KOMUTEN,
                         'fields': [recordNo_KOMUTEN, customerCode_KOMUTEN],
+                        'query': `${fieldGetCreditNextTime_KOMUTEN} in (\"${statusGetCredit_KOMUTEN}\")`,
                         'size': KINTONE_GET_MAX_SIZE
                     };
 
