@@ -16,7 +16,14 @@
     "use strict";
 
     const APP_ID_APPLY = 159;
+    const fieldRecordNo_APPLY = 'レコード番号';
+    const fieldKyoryokuId_APPLY = 'ルックアップ';
+    const fieldStatus_APPLY = '状態';
+    const statusPaid_APPLY = '実行完了';
+
     const APP_ID_KYORYOKU = 88;
+    const fieldKyoryokuId_KYORYOKU = '支払企業No_';
+    const fieldNumberOfApplication_KYORYOKU = 'numberOfApplication';
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
@@ -65,9 +72,9 @@
     // ボタンクリック時の処理を定義
     function clickCountApplies() {
         get_applies_count()
-        .then(record_count => {
+        .then((record_count) => {
             console.log('found ' + record_count + ' records.');
-            return get_kyoryoku_id_array(record_count, APP_ID_APPLY);
+            return get_kyoryoku_id_array(record_count);
         })
         .then((kyoryoku_id_array) => {
             console.log('協力会社IDの一覧を取得完了');
@@ -92,8 +99,8 @@
 
         let body_cursor = {
             "app": APP_ID_APPLY,
-            "fields": ["ルックアップ"],
-            "query": `${get_state_query()} and ${get_payment_date_query()} order by レコード番号 asc`
+            "fields": [fieldKyoryokuId_APPLY],
+            "query": `${get_state_query()} and ${get_payment_date_query()} order by ${fieldRecordNo_APPLY} asc`
         };
 
         return new kintone.Promise((resolve, reject) => {
@@ -107,7 +114,7 @@
         });
     }
 
-    function get_kyoryoku_id_array(total_count, app_id) {
+    function get_kyoryoku_id_array(total_count) {
         return new Promise((resolve) => {
             console.log('条件に合致するすべての協力会社IDを取得');
             // 一度に取得可能なレコード件数が500件なので、500件ずつ取得していく
@@ -157,8 +164,8 @@
         return new kintone.Promise((resolve, reject) => {
             var request_body = {
                 'app': APP_ID_APPLY,
-                'fields': ['ルックアップ'],
-                'query': `${get_state_query()} and ${get_payment_date_query()} order by レコード番号 asc limit ${request_records} offset ${offset}`
+                'fields': [fieldKyoryokuId_APPLY],
+                'query': `${get_state_query()} and ${get_payment_date_query()} order by ${fieldRecordNo_APPLY} asc limit ${request_records} offset ${offset}`
             };
             console.log(request_body);
 
@@ -185,7 +192,7 @@
             // まずvalueだけ抜き出す
             var values = [];
             kyoryoku_id_array.map((field) => {
-                values.push(field["ルックアップ"]["value"]);
+                values.push(field[fieldKyoryokuId_APPLY]["value"]);
             })
 
             // それぞれカウント
@@ -219,11 +226,11 @@
                     request_body.records.push(
                         {
                             "updateKey": {
-                                "field": "支払企業No_",
+                                "field": fieldKyoryokuId_KYORYOKU,
                                 "value": kyoryoku_id
                             },
                             "record": {
-                                "numberOfApplication": {
+                                fieldNumberOfApplication_KYORYOKU: {
                                     "value": kyoryoku_id_count[kyoryoku_id]
                                 }
                             }
@@ -250,7 +257,7 @@
 
             var not_zero_update_count = 0;
             update_process.then((update_count) => {
-                // 申込み回数がゼロ回になった協力会社を更新する。
+                // 申込み回数が1回以上からゼロ回になった協力会社を更新する。
                 // ゼロ回になった協力会社 とは：
                 //   先ほどのupdate処理に含まれていない協力会社である
                 //   かつ 申込回数が1回以上になっている
@@ -295,8 +302,8 @@
 
             var request_body = {
                 'app': APP_ID_KYORYOKU,
-                'fields': ['支払企業No_'],
-                'query': 'numberOfApplication > 0 and 支払企業No_ not in ' + updated_ids_format
+                'fields': [fieldKyoryokuId_KYORYOKU],
+                'query': `${fieldNumberOfApplication_KYORYOKU} > 0 and ${fieldKyoryokuId_KYORYOKU} not in ` + updated_ids_format
             };
 
             kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body, (resp) => {
@@ -318,11 +325,11 @@
                 request_body.records.push(
                     {
                         "updateKey": {
-                            "field": "支払企業No_",
-                            "value": kyoryoku_id_obj["支払企業No_"]["value"]
+                            "field": fieldKyoryokuId_KYORYOKU,
+                            "value": kyoryoku_id_obj[fieldKyoryokuId_KYORYOKU]["value"]
                         },
                         "record": {
-                            "numberOfApplication": {
+                            fieldNumberOfApplication_KYORYOKU: {
                                 "value": 0
                             }
                         }
@@ -350,7 +357,7 @@
 
     function get_state_query() {
         // 状態が実行完了のレコードのみ取得
-        return "状態 in (\"実行完了\")";
+        return `${fieldStatus_APPLY}} in (\"${statusPaid_APPLY}\")`;
     }
 
     function get_payment_date_query() {
