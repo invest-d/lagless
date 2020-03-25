@@ -15,6 +15,8 @@
 (function (){
     "use strict";
 
+    const KINTONE_GET_MAX_SIZE = 500;
+
     const APP_ID_APPLY = 159;
     const fieldRecordNo_APPLY = 'レコード番号';
     const fieldKyoryokuId_APPLY = 'ルックアップ';
@@ -71,116 +73,59 @@
 
     // ボタンクリック時の処理を定義
     function clickCountApplies() {
-        get_applies_count()
-        .then((record_count) => {
-            console.log('found ' + record_count + ' records.');
-            return get_kyoryoku_id_array(record_count);
-        })
+        get_applies_last_year()
         .then((kyoryoku_id_array) => {
-            console.log('協力会社IDの一覧を取得完了');
-            console.log(kyoryoku_id_array);
-            if (typeof(kyoryoku_id_array.length) !== undefined) {
-                console.log(kyoryoku_id_array.length);
-            }
             return count_by_kyoryoku_id(kyoryoku_id_array);
         })
         .then((kyoryoku_id_count) => {
-            console.log(kyoryoku_id_count);
             return update_kyoryoku_master(kyoryoku_id_count);
         })
         .then((update_records_num) => {
             console.log(update_records_num + ' records updated.');
             alert('申込み回数の更新を完了しました。');
+            alert('ページを更新します。');
+            window.location.reload();
         });
     }
 
-    function get_applies_count() {
-        console.log('フォームからの申込みレコードを取得する');
-
-        let body_cursor = {
-            "app": APP_ID_APPLY,
-            "fields": [fieldKyoryokuId_APPLY],
-            "query": `${get_state_query()} and ${get_payment_date_query()} order by ${fieldRecordNo_APPLY} asc`
-        };
-
+    function get_applies_last_year() {
         return new kintone.Promise((resolve, reject) => {
-            kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'POST', body_cursor
-            , (resp) => {
-                resolve(resp.totalCount);
-            }, (err) => {
-                console.log(err);
-                reject(err);
+            new kintone.Promise((rslv) => {
+                console.log('直近1年間に実行完了している申込レコードを全て取得する');
+                console.log('カーソル作成');
+
+                let request_body = {
+                    "app": APP_ID_APPLY,
+                    "fields": [fieldKyoryokuId_APPLY],
+                    "query": `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${get_query_paid_in_last_year()} order by ${fieldRecordNo_APPLY} asc`,
+                    "size": KINTONE_GET_MAX_SIZE
+                };
+
+                kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'POST', request_body
+                , (resp) => {
+                    rslv(resp.id);
+                }, (err) => {
+                    console.log(err);
+                    reject(err);
+                })
             })
-        });
-    }
+            .then(async (cursor_id) => {
+                console.log('カーソル取得');
+                var request_body = {
+                    'id': cursor_id
+                };
 
-    function get_kyoryoku_id_array(total_count) {
-        return new Promise((resolve) => {
-            console.log('条件に合致するすべての協力会社IDを取得');
-            // 一度に取得可能なレコード件数が500件なので、500件ずつ取得していく
-            var kyoryoku_id_array = [];
-            var offset = 0;
-            var request_records = (total_count <= 500) //全件数が500件以内であれば、その全件数に合わせる
-                ? total_count
-                : 500;
-            var remaining = total_count;
-            var promises = [];
+                var kyoryoku_records = [];
+                var records_remaining = true;
+                do {
+                    var resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', request_body);
+                    kyoryoku_records = kyoryoku_records.concat(resp.records);
+                    records_remaining = resp.next;
+                } while (records_remaining);
 
-            var safety = 0;
-            while (offset < total_count) {
-                // 即時関数
-                (function() {
-                    var loop_promise = get_field_array(request_records, offset)
-                        .then((field_array) => {
-                            return new Promise((resolve) => {
-                                kyoryoku_id_array = kyoryoku_id_array.concat(field_array);
-                                resolve();
-                            });
-                        });
-                    promises.push(loop_promise);
-                })();
-
-                remaining = Number(remaining) - Number(request_records);
-                offset += Number(request_records);
-                if (remaining < 500) {
-                    request_records = remaining;
-                }
-
-                safety++;
-
-                if (safety > 10) {
-                    console.log('break while loop.');
-                    break;
-                }
-            }
-
-            Promise.all(promises).then(((arr) => {
-                resolve(kyoryoku_id_array);
-            }));
-        });
-    }
-
-    function get_field_array(request_records, offset) {
-        return new kintone.Promise((resolve, reject) => {
-            var request_body = {
-                'app': APP_ID_APPLY,
-                'fields': [fieldKyoryokuId_APPLY],
-                'query': `${get_state_query()} and ${get_payment_date_query()} order by ${fieldRecordNo_APPLY} asc limit ${request_records} offset ${offset}`
-            };
-            console.log(request_body);
-
-            kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body
-            , (resp) => {
-                if(resp.records[0] !== null) {
-                    console.log(resp.records);
-                    resolve(resp.records);
-                } else {
-                    alert('レコードの取得に失敗しました');
-                    console.log(resp);
-                }
-            }, (err) => {
-                alert('レコードの取得に失敗しました')
-                console.log(err);
+                resolve(kyoryoku_records);
+            })
+            .catch((err)=> {
                 reject(err);
             });
         });
@@ -188,6 +133,7 @@
 
     function count_by_kyoryoku_id(kyoryoku_id_array) {
         return new Promise((resolve) => {
+            console.log('協力会社IDごとに回数をカウントする');
             // 想定する引数の値：[{"ルックアップ": {"type": "hoge", "value": "foo"}}, ...]
             // まずvalueだけ抜き出す
             var values = [];
@@ -355,12 +301,7 @@
         });
     }
 
-    function get_state_query() {
-        // 状態が実行完了のレコードのみ取得
-        return `${fieldStatus_APPLY}} in (\"${statusPaid_APPLY}\")`;
-    }
-
-    function get_payment_date_query() {
+    function get_query_paid_in_last_year() {
         // クエリに使う日付書式は"更新日時 > \"2012-02-03T09:00:00+0900\""で、ダブルクォートのエスケープが必要
         var target_date = new Date();
         target_date.setFullYear(target_date.getFullYear() - 1);
