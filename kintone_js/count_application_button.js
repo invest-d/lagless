@@ -19,15 +19,15 @@
     const APP_ID_KYORYOKU = 88;
 
     kintone.events.on('app.record.index.show', function(event) {
-        if (need_update_counts()) {
+        if (needShowButton()) {
             var button = getCountAppliesButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
 
-    function need_update_counts() {
+    function needShowButton() {
         // 当初はボタンの表示が必要なタイミングでのみ表示する予定だったが、常に表示するように仕様変更
-        return true;
+        return document.getElementById('countApplies') === null;
 
         // 更新が必要なタイミングかどうかを判定する。下記の条件を満たすと更新すべきタイミング。
         //     実行完了 かつ 支払日が1年を超えて過去 かつ 申し込み回数に算入中 のレコードがある場合（現在表示中の回数より多いので、減らすよう更新すべき）
