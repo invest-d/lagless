@@ -131,9 +131,9 @@
             var requester_code_invest      = '2648852000';
             var requester_name_invest      = ('ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ' + ' '.repeat(40)).slice(0, 40);
             var smbc_bank_code_invest      = '0009';
-            var smbc_bank_name_invest      = adjustLength(window.ginkoLib.getBankKana(smbc_bank_code_invest), 15);
+            var smbc_bank_name_invest      = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_invest]['kana']), 15);
             var branch_code_from_invest    = '219'; // 振込元口座の支店コード
-            var branch_name_from_invest    = adjustLength(window.ginkoLib.getBankKana(smbc_bank_code_invest, branch_code_from_invest), 15);
+            var branch_name_from_invest    = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_invest]['branches'][branch_code_from_invest]['kana']), 15);
             var ordinary_deposit_invest    = '1';
             var account_number_from_invest = '3391195';
 
@@ -141,9 +141,9 @@
             var requester_code_lagless      = '3648579000';
             var requester_name_lagless      = ('ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ' + ' '.repeat(40)).slice(0, 40);
             var smbc_bank_code_lagless      = '0009';
-            var smbc_bank_name_lagless      = adjustLength(window.ginkoLib.getBankKana(smbc_bank_code_lagless), 15);
+            var smbc_bank_name_lagless      = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_lagless]['kana']), 15);
             var branch_code_from_lagless    = '219'; // 振込元口座の支店コード
-            var branch_name_from_lagless    = adjustLength(window.ginkoLib.getBankKana(smbc_bank_code_lagless, branch_code_from_lagless), 15);
+            var branch_name_from_lagless    = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_lagless]['branches'][branch_code_from_lagless]['kana']), 15);
             var ordinary_deposit_lagless    = '1';
             var account_number_from_lagless = '3409134';
 
@@ -192,10 +192,10 @@
                 console.log(target_records[i]['paymentDate']['value']);
                 if (target_records[i]['paymentDate']['value'] === target_date) {
                     var bank_code_to = ('0000' + target_records[i]['bankCode']['value']).slice(-4);
-                    var bank_name_kana = window.ginkoLib.getBankKana(bank_code_to);
+                    var bank_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['kana']);
                     var bank_name_to = adjustLength(bank_name_kana, 15);
                     var branch_code_to = ('000' + target_records[i]['branchCode']['value']).slice(-3);
-                    var branch_name_kana = window.ginkoLib.getBankKana(bank_code_to, branch_code_to);
+                    var branch_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['branches'][branch_code_to]['kana']);
                     var branch_name_to = adjustLength(branch_name_kana, 15);
                     var deposit_to = (target_records[i]['deposit']['value'] === '普通')
                         ? '1'
