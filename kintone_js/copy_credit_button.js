@@ -65,12 +65,12 @@
 
         // 審査内容が最新のレコードを取得。判定基準は審査完了日フィールド。
         getLatestJudgeRecords()
-        .then((update_targets_array) => {
-            if (update_targets_array.length <= 0) {
+        .then((latest_judge_records) => {
+            if (latest_judge_records.length <= 0) {
                 throw new Error('与信枠が入力済みの企業はありませんでした。\nどの工務店の付与与信枠も更新されていません。');
             }
 
-            return updateKomutenCredits(update_targets_array);
+            return updateKomutenCredits(latest_judge_records);
         })
         .then((updated_count) => {
             alert(`更新が完了しました。\n更新されたのは ${updated_count}件 です。`);
@@ -148,7 +148,7 @@
         return date.getTime();
     }
 
-    function updateKomutenCredits(update_targets_array) {
+    function updateKomutenCredits(latest_judge_records) {
         return new kintone.Promise((resolve, reject) => {
             var get_komuten_info = new kintone.Promise((rslv, rjct) => {
                 console.log('工務店マスタからレコードIDと取引企業Noの一覧を取得する');
@@ -190,19 +190,25 @@
 
             var process_record_ids = get_komuten_info.then((komuten_info) => {
                 return new kintone.Promise((rslv) => {
-                    // 工務店情報と審査情報を組み合わせて、付与与信枠と工務店マスタのレコードIDを関連付ける。
+                    // 工務店情報と審査情報を取引企業管理Noをキーにして組み合わせて、付与与信枠と工務店マスタのレコードIDを関連付ける。
                     let put_records = [];
-                    update_targets_array.map((judge) => {
-                        var customer_code = judge[customerCode_JUDGE]['value'];
-                        let put_obj = {};
+
+                    latest_judge_records.forEach((judge) => {
+                        var judge_customer_code = judge[customerCode_JUDGE]['value'];
+
                         // 審査アプリの取引企業Noを工務店マスタの中から探す
-                        komuten_info.map((komuten) => {
-                            if (komuten[customerCode_KOMUTEN]['value'] === customer_code) {
+                        // 一つの審査結果を複数の工務店IDにセットすることも想定（複数の工務店IDを持つ代表は匠和美建）
+                        var pushed_komuten_record_no = [];
+                        komuten_info.forEach((komuten) => {
+                            if ((komuten[customerCode_KOMUTEN]['value'] === judge_customer_code)
+                            && !(pushed_komuten_record_no.indexOf(komuten[recordNo_KOMUTEN]['value']) >= 0)) {
+                                let put_obj = {};
                                 put_obj['id'] = komuten[recordNo_KOMUTEN]['value'];
                                 put_obj['record'] = {};
                                 put_obj['record'][creditFacility_KOMUTEN] = {};
                                 put_obj['record'][creditFacility_KOMUTEN]['value'] = judge[creditAmount_JUDGE]['value'];
                                 put_records.push(put_obj);
+                                pushed_komuten_record_no.push(komuten[recordNo_KOMUTEN]['value']);
                             }
                         });
                     });
@@ -215,7 +221,8 @@
                 console.log('審査アプリから取得した付与与信枠を工務店アプリのレコードに転記する');
 
                 if (!put_records.length > 0) {
-                    console.log('update targets are ' + update_targets_array);
+                    console.log('update targets are ');
+                    console.log(latest_judge_records);
                     reject('工務店マスタの中で、審査が行われている企業はありませんでした。\nどの工務店の付与与信枠も更新されていません。');
                 }
 
@@ -223,6 +230,8 @@
                     'app': APP_ID_KOMUTEN,
                     'records': put_records
                 };
+
+                console.log(request_body);
 
                 kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body, (resp) => {
                     resolve(resp.records.length);
