@@ -26,47 +26,45 @@
         importEncodingLibrary();
 
         // 日付入力欄をレコード一覧の上部に設置
-        var input = getInputPaymentDay();
+        let input = getInputPaymentDay();
         kintone.app.getHeaderMenuSpaceElement().appendChild(input);
 
         // 出力ボタンを設置
-        var button = getButtonOutputCsv();
+        let button = getButtonOutputCsv();
         kintone.app.getHeaderMenuSpaceElement().appendChild(button);
     });
 
     // CSV作成時に使うライブラリを読み込む
     function importEncodingLibrary() {
-        var head = document.getElementsByTagName('head');
-
-        var script_encoding = document.createElement('script');
+        let script_encoding = document.createElement('script');
         script_encoding.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/1.0.30/encoding.min.js');
         script_encoding.setAttribute('type', 'text/javascript');
         document.head.appendChild(script_encoding);
 
-        var script_filesaver = document.createElement('script');
+        let script_filesaver = document.createElement('script');
         script_filesaver.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.3/FileSaver.min.js');
         script_filesaver.setAttribute('type', 'text/javascript');
         document.head.appendChild(script_filesaver);
     }
 
-    var target_date_id = 'paymentDay';
+    let target_date_id = 'paymentDay';
     // 日付入力欄を生成
     function getInputPaymentDay() {
-        var paymentDay = document.createElement('input');
+        let paymentDay = document.createElement('input');
         paymentDay.id = target_date_id;
         paymentDay.setAttribute('type', 'text');
-        var today_date = new Date();
-        var year = today_date.getFullYear();
-        var month = ('0' + (today_date.getMonth() + 1)).slice(-2);
-        var day = ('0' + today_date.getDate()).slice(-2);
-        var today = year + '-' + month + '-' + day;
+        let today_date = new Date();
+        let year = today_date.getFullYear();
+        let month = ('0' + (today_date.getMonth() + 1)).slice(-2);
+        let day = ('0' + today_date.getDate()).slice(-2);
+        let today = year + '-' + month + '-' + day;
         paymentDay.setAttribute('value', today);
         return paymentDay;
     }
 
     // CSV出力ボタンを生成
     function getButtonOutputCsv() {
-        var outputCsv = document.createElement('button');
+        let outputCsv = document.createElement('button');
         outputCsv.id = 'outputCsv';
         outputCsv.innerText = 'SMBC向け振込データをダウンロードする';
         outputCsv.addEventListener('click', clickOutputCsv);
@@ -76,9 +74,9 @@
     // CSV出力ボタンクリック時の処理を定義
     function clickOutputCsv() {
         // https://www.alloneslife-0to1work.jp/all/kintone_csv
-        var target_records = event.records;
-        var target_date = document.getElementById(target_date_id).value;
-        var csv_content = getCsvContent(target_records, target_date);
+        let target_records = event.records;
+        let target_date = document.getElementById(target_date_id).value;
+        let csv_content = getCsvContent(target_records, target_date);
         downloadFile(csv_content, target_date);
         console.log('Download completed.');
     }
@@ -133,34 +131,34 @@
         const csvFormat = (col => `"${col}"`);
 
         // target_dateは'YYYY-MM-DD'の書式を想定
-        var mm = target_date.split('-')[1];
-        var dd = target_date.split('-')[2];
+        let mm = target_date.split('-')[1];
+        let dd = target_date.split('-')[2];
 
         // インベストデザイン（カによる振込
-        var requester_code_invest      = '2648852000';
-        var requester_name_invest      = ('ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ' + ' '.repeat(40)).slice(0, 40);
-        var smbc_bank_code_invest      = '0009';
-        var smbc_bank_name_invest      = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_invest]['kana']), 15);
-        var branch_code_from_invest    = '219'; // 振込元口座の支店コード
-        var branch_name_from_invest    = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_invest]['branches'][branch_code_from_invest]['kana']), 15);
-        var ordinary_deposit_invest    = '1';
-        var account_number_from_invest = '3391195';
+        let requester_code_invest      = '2648852000';
+        let requester_name_invest      = ('ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ' + ' '.repeat(40)).slice(0, 40);
+        let smbc_bank_code_invest      = '0009';
+        let smbc_bank_name_invest      = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_invest]['kana']), 15);
+        let branch_code_from_invest    = '219'; // 振込元口座の支店コード
+        let branch_name_from_invest    = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_invest]['branches'][branch_code_from_invest]['kana']), 15);
+        let ordinary_deposit_invest    = '1';
+        let account_number_from_invest = '3391195';
 
         // ラグレス合同会社による振込
-        var requester_code_lagless      = '3648579000';
-        var requester_name_lagless      = ('ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ' + ' '.repeat(40)).slice(0, 40);
-        var smbc_bank_code_lagless      = '0009';
-        var smbc_bank_name_lagless      = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_lagless]['kana']), 15);
-        var branch_code_from_lagless    = '219'; // 振込元口座の支店コード
-        var branch_name_from_lagless    = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_lagless]['branches'][branch_code_from_lagless]['kana']), 15);
-        var ordinary_deposit_lagless    = '1';
-        var account_number_from_lagless = '3409134';
+        let requester_code_lagless      = '3648579000';
+        let requester_name_lagless      = ('ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ' + ' '.repeat(40)).slice(0, 40);
+        let smbc_bank_code_lagless      = '0009';
+        let smbc_bank_name_lagless      = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_lagless]['kana']), 15);
+        let branch_code_from_lagless    = '219'; // 振込元口座の支店コード
+        let branch_name_from_lagless    = adjustLength(zenkakuToHankaku(bank_info[smbc_bank_code_lagless]['branches'][branch_code_from_lagless]['kana']), 15);
+        let ordinary_deposit_lagless    = '1';
+        let account_number_from_lagless = '3409134';
 
-        var content_invest = [];
-        var content_lagless = [];
+        let content_invest = [];
+        let content_lagless = [];
 
         // ヘッダーを取得
-        var header_invest = [
+        let header_invest = [
             '1',
             '21',
             '0',
@@ -176,7 +174,7 @@
         ];
         content_invest.push(header_invest.map(csvFormat).join(','));
 
-        var header_lagless = [
+        let header_lagless = [
             '1',
             '21',
             '0',
@@ -192,29 +190,29 @@
         ];
         content_lagless.push(header_lagless.map(csvFormat).join(','));
 
-        var total_amount_of_money_invest = 0;
-        var record_num_invest = 0;
-        var total_amount_of_money_lagless = 0;
-        var record_num_lagless = 0;
+        let total_amount_of_money_invest = 0;
+        let record_num_invest = 0;
+        let total_amount_of_money_lagless = 0;
+        let record_num_lagless = 0;
         // レコード一覧から条件に合うレコードのみを取得
-        for (var i = 0; i < target_records.length; i++) {
+        for (let i = 0; i < target_records.length; i++) {
             console.log(target_records[i]['paymentDate']['value']);
             if (target_records[i]['paymentDate']['value'] === target_date) {
-                var bank_code_to = ('0000' + target_records[i]['bankCode']['value']).slice(-4);
-                var bank_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['kana']);
-                var bank_name_to = adjustLength(bank_name_kana, 15);
-                var branch_code_to = ('000' + target_records[i]['branchCode']['value']).slice(-3);
-                var branch_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['branches'][branch_code_to]['kana']);
-                var branch_name_to = adjustLength(branch_name_kana, 15);
-                var deposit_to = (target_records[i]['deposit']['value'] === '普通')
+                let bank_code_to = ('0000' + target_records[i]['bankCode']['value']).slice(-4);
+                let bank_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['kana']);
+                let bank_name_to = adjustLength(bank_name_kana, 15);
+                let branch_code_to = ('000' + target_records[i]['branchCode']['value']).slice(-3);
+                let branch_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['branches'][branch_code_to]['kana']);
+                let branch_name_to = adjustLength(branch_name_kana, 15);
+                let deposit_to = (target_records[i]['deposit']['value'] === '普通')
                     ? '1'
                     : '2';
-                var account_number_to = target_records[i]['accountNumber']['value'];
-                var account_name_to = (zenkakuToHankaku(target_records[i]['accountName']['value']) + ' '.repeat(30)).slice(0, 30);
-                var amount_of_money = target_records[i]['transferAmount']['value'];
+                let account_number_to = target_records[i]['accountNumber']['value'];
+                let account_name_to = (zenkakuToHankaku(target_records[i]['accountName']['value']) + ' '.repeat(30)).slice(0, 30);
+                let amount_of_money = target_records[i]['transferAmount']['value'];
 
                 //CSVファイルにkintone上記で取得したデータを記入していく
-                var add_record = [
+                let add_record = [
                     '2',
                     bank_code_to,
                     bank_name_to,
@@ -246,14 +244,14 @@
         }
 
         // トレーラーレコードを取得
-        var trailer_invest = [
+        let trailer_invest = [
             '8',
             record_num_invest,
             total_amount_of_money_invest
         ]
         content_invest.push(trailer_invest.map(csvFormat).join(','));
 
-        var trailer_lagless = [
+        let trailer_lagless = [
             '8',
             record_num_lagless,
             total_amount_of_money_lagless
@@ -261,15 +259,15 @@
         content_lagless.push(trailer_lagless.map(csvFormat).join(','));
 
         // エンドレコードを取得
-        var end = [
+        let end = [
             '9'
         ]
         content_invest.push(end.map(csvFormat).join(','));
         content_lagless.push(end.map(csvFormat).join(','));
 
-        var new_line = '\r\n';
+        let new_line = '\r\n';
         // 返り値は要素数2の配列。1つの振込元が1つの要素に対応。振込先が存在しなくても要素数は2固定。
-        var ret = [];
+        let ret = [];
         ret.push(content_invest.join(new_line));
         ret.push(content_lagless.join(new_line));
         return ret;
@@ -278,16 +276,16 @@
     // CSVをファイルとしてローカルにダウンロードする。振込元口座別にCSVファイルを作成。
     function downloadFile(csv, target_date) {
         console.log(csv);
-        for (var i = 0; i < csv.length; i++) {
+        for (let i = 0; i < csv.length; i++) {
             // 変数csvから、振込元の口座がどちらかを取得する
-            var requester_code = csv[i].split(',')[3];
-            var account_from = '';
+            let requester_code = csv[i].split(',')[3];
+            let account_from = '';
             if (requester_code.match('2648852000')) {
                 account_from = 'ID';
             } else {
                 account_from = 'LAGLESS';
             }
-            var filename = '支払日' + target_date + 'ぶんの振込データ（振込元：' + account_from + '）.csv';
+            let filename = '支払日' + target_date + 'ぶんの振込データ（振込元：' + account_from + '）.csv';
 
             //SJISに変換する
             const unicodeList = [];
@@ -306,8 +304,8 @@
     function getBytes(str) {
         // 半角カタカナを、半角文字の代表としてアルファベットKに置換
         str = str.replace(/[｡-ﾟ]/g, 'K');
-        var hex = '';
-        for (var i = 0; i < str.length; i++) {
+        let hex = '';
+        for (let i = 0; i < str.length; i++) {
             // 16進数の文字コードに変換することで、半角英数文字は半角2文字に、全角文字は半角4文字に変換
             hex += str.charCodeAt(i).toString(16);
         }
@@ -317,11 +315,11 @@
 
     // 全角文字を2、半角文字を1として、元の文字列の右に指定文字数まで半角空白を追加する。元々指定文字数より多かったら右から削る。
     function adjustLength(str, num) {
-        var str_byte_length = getBytes(str);
-        var trimmed = str;
+        let str_byte_length = getBytes(str);
+        let trimmed = str;
 
         if (num - str_byte_length > 0) {
-            for (var i = 0; i < num - str_byte_length; i++) {
+            for (let i = 0; i < num - str_byte_length; i++) {
                 trimmed += ' ';
             }
         }
