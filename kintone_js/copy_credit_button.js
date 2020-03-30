@@ -6,14 +6,14 @@
         審査Ver2.0側：取引企業管理No_審査対象企業（＝取引企業管理.レコード番号）
         工務店マスタ側：customerCode（＝取引企業管理.レコード番号）
 
-        つまり、二つのアプリがどちらも参照している取引企業Noによって対応付ける。
+        つまり、二つのアプリがどちらも参照している取引企業管理のレコード番号によって対応付ける。
 
     審査アプリの転記対象フィールドコード
         付与与信枠_決定金額_標準と高額
 
     取得条件
         同一企業に対して複数回の審査が存在することを想定。（毎月審査を更新の予定）
-        同一の取引企業管理No.のレコードをまとめた中で、
+        同一の取引企業管理Noのレコードをまとめた中で、
         審査完了日が最も新しいレコードを採用する。
 */
 
@@ -36,13 +36,13 @@
     const statusGetCredit_KOMUTEN = '次回、与信枠を取得する';
 
     kintone.events.on('app.record.index.show', function(event) {
-        if (need_update_counts()) {
+        if (needShowButton()) {
             let button = getCopyCreditButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
 
-    function need_update_counts() {
+    function needShowButton() {
         // 現状は常にボタンを表示する。増殖バグだけ防止
         return document.getElementById('copyCredit') === null;
     }
@@ -90,7 +90,7 @@
                 let request_body = {
                     'app': APP_ID_JUDGE,
                     'fields': [customerCode_JUDGE, creditAmount_JUDGE, judgedDay_JUDGE],
-                    'query': `${creditAmount_JUDGE} >= 0`, // ヤバい取引企業は与信枠ゼロにして対応することもある
+                    'query': `${creditAmount_JUDGE} >= 0`, // ヤバい取引企業は与信枠ゼロにして対応することもあるので、ゼロ円のレコードも取得
                     'size': KINTONE_GET_MAX_SIZE
                 };
 
@@ -142,6 +142,7 @@
         });
     }
 
+    // YYYY-MM-DDの書式のままでは日付の比較ができないので、比較可能な値に変換する
     function getComparableDate(kintone_formatted_date) {
         let date_info = String(kintone_formatted_date).split('-');
         let date = new Date(Number(date_info[0]), Number(date_info[1]), Number(date_info[2]));
