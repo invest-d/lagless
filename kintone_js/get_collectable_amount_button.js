@@ -19,19 +19,19 @@
     const statusRejected_COLLECT = 'クラウドサイン却下・再作成待ち';
 
     kintone.events.on('app.record.index.show', function(event) {
-        if (need_display_button()) {
-            var button = getGetCollectableAmountButton();
+        if (needShowButton()) {
+            let button = getGetCollectableAmountButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
 
-    function need_display_button() {
+    function needShowButton() {
         // 一旦は常にボタンを表示する。増殖バグだけ防止
         return document.getElementById('getCollectable') === null;
     }
 
     function getGetCollectableAmountButton() {
-        var getCollectable = document.createElement('button');
+        let getCollectable = document.createElement('button');
         getCollectable.id = 'getCollectable';
         getCollectable.innerText = '各工務店の未回収金額を更新';
         getCollectable.addEventListener('click', clickGetCollectableAmount);
@@ -40,7 +40,7 @@
 
     // ボタンクリック時の処理を定義
     function clickGetCollectableAmount() {
-        var clicked_ok = confirm('回収アプリの未回収金額を合計して取得します。');
+        let clicked_ok = confirm('回収アプリの未回収金額を合計して取得します。');
         if (!clicked_ok) {
             alert('処理は中断されました。');
             return;
@@ -75,7 +75,7 @@
         return new kintone.Promise((resolve, reject) => {
             console.log('回収アプリの中でステータスが回収済み・却下以外の全てのレコードを取得する');
 
-            var request_body = {
+            let request_body = {
                 'app': APP_ID_COLLECT,
                 'fields': [
                     constructionShopId_COLLECT,
@@ -99,7 +99,7 @@
             console.log('工務店IDごとに未回収金額を合計する。');
 
             // 工務店IDだけの配列を作って重複削除する
-            var komuten_ids = [];
+            let komuten_ids = [];
             unpaid_records.filter((unpaid_record) => {
                 komuten_ids.push(unpaid_record[constructionShopId_COLLECT]['value']);
             });
@@ -109,9 +109,9 @@
             });
 
             // 各工務店IDごとに金額を合計する
-            var sum_result = [];
+            let sum_result = [];
             komuten_ids.map((komuten_id) => {
-                var unpaid_total = 0;
+                let unpaid_total = 0;
                 unpaid_records.map((unpaid_record) => {
                     if (unpaid_record[constructionShopId_COLLECT]['value'] === komuten_id) {
                         unpaid_total += Number(unpaid_record[unpaidAmount_COLLECT]['value']);
@@ -133,7 +133,7 @@
             console.log('計算結果を工務店マスタにUPDATEする');
 
             // 計算結果をPUTメソッド用に加工する
-            var put_records = [];
+            let put_records = [];
             sum_result.map((sum) => {
                 put_records.push(
                     {
@@ -151,7 +151,7 @@
             });
 
             // UPDATE
-            var request_body = {
+            let request_body = {
                 'app': APP_ID_KOMUTEN,
                 'records': put_records
             };

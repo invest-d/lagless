@@ -18,20 +18,20 @@
 
     kintone.events.on('app.record.detail.show', function(event) {
         if (needShowButton()) {
-            var button = getRejectCollectRecordButton(event);
+            let button = getRejectCollectRecordButton(event);
             kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
 
     function needShowButton() {
         // 増殖バグ防止
-        var not_displayed = document.getElementById('getCollectable') === null;
+        let not_displayed = document.getElementById('getCollectable') === null;
 
         return not_displayed;
     }
 
     function getRejectCollectRecordButton(event) {
-        var getRejectCollect = document.createElement('button');
+        let getRejectCollect = document.createElement('button');
         getRejectCollect.id = 'rejectCollect';
         getRejectCollect.innerText = 'クラウドサイン再送信用にレコードを削除する';
         getRejectCollect.addEventListener('click', clickRejectCollectRecord.bind(null, event));
@@ -41,13 +41,13 @@
     // ボタンクリック時の処理を定義
     function clickRejectCollectRecord(event) {
         // 却下されたレコードでない場合は動作させない
-        var rejected = (event.record[fieldStatus_COLLECT]['value'] === statusRejected_COLLECT);
+        let rejected = (event.record[fieldStatus_COLLECT]['value'] === statusRejected_COLLECT);
         if (!rejected) {
             alert('削除するには、このレコードの状態を一度却下にして保存してからもう一度操作してください。');
             return;
         }
 
-        var clicked_ok = confirm('申込レコードと回収レコードの結びつきを解除し、\n回収レコードを削除しますか？');
+        let clicked_ok = confirm('申込レコードと回収レコードの結びつきを解除し、\n回収レコードを削除しますか？');
         if (!clicked_ok) {
             alert('処理は中断されました。');
             return;
@@ -79,7 +79,7 @@
         return new kintone.Promise((resolve, reject) => {
             console.log('表示中の回収レコードの明細にあたる申込レコードを全て取得する');
 
-            var request_body = {
+            let request_body = {
                 'app': APP_ID_APPLY,
                 'fields': [fieldRecordNo_APPLY],
                 'query': `${fieldCollectId_APPLY} = ${collect_record_no}`
@@ -97,7 +97,7 @@
         return new kintone.Promise((resolve, reject) => {
             console.log('クラウドサインの明細にあたるレコードの回収IDをブランクに戻す');
 
-            var update_records = [];
+            let update_records = [];
             detail_ids.forEach((detail) => {
                 update_records.push({
                     'id': detail[fieldRecordNo_APPLY]['value'],
@@ -109,7 +109,7 @@
                 });
             });
 
-            var request_body = {
+            let request_body = {
                 'app': APP_ID_APPLY,
                 records: update_records
             };
@@ -126,7 +126,7 @@
         return new kintone.Promise((resolve, reject) => {
             console.log('回収アプリから、今開いているレコードを削除する');
 
-            var request_body = {
+            let request_body = {
                 'app': APP_ID_COLLECT,
                 'ids': [record_id]
             };
