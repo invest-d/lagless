@@ -169,12 +169,10 @@
 
                 if ((komuten_id in key_pair) && (key_pair[komuten_id] === deadline)) {
                     // 工務店IDと支払期限が同一のレコードが複数あった場合はdetailsを結合してcollectableAmountを合計
-                    console.log(combined_invoices);
                     let dpl_invoice = combined_invoices.filter((combined) => {
                         return (combined[fieldConstructionShopId_COLLECT]['value'] === komuten_id
                         && combined[fieldDeadline_COLLECT]['value'] === deadline);
                     })[0];
-                    console.log(dpl_invoice);
 
                     dpl_invoice['details'] = dpl_invoice['details'].concat(obj['details']);
                     dpl_invoice[fieldCollectableAmount_COLLECT]['value'] = Number(dpl_invoice[fieldCollectableAmount_COLLECT]['value']) + Number(obj[fieldCollectableAmount_COLLECT]['value']);
@@ -278,7 +276,7 @@
 Mail:${mail}
 TEL:0120-516-818`);
 
-        // なんとなく空行でつなぐ
+        // 空行でつないで一つの文書にする
         console.log(lines.join('\r\n'));
         return lines.join('\r\n');
     }
