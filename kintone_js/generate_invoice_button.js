@@ -190,9 +190,9 @@
                 let bom  = new Uint8Array([0xEF, 0xBB, 0xBF]);
                 let blob = new Blob([bom, invoice_text], {"type": "text/plain"});
 
-                // 作成した振込依頼書のダウンロードリンクを設置
+                // 作成した振込依頼書をテキスト形式でダウンロード
                 let file_name = invoice_obj[fieldConstructionShopName_COLLECT]['value'] + '様向け' + invoice_obj[fieldDeadline_COLLECT]['value'] + '回収振込依頼書';
-                setDownloadLink(blob, file_name);
+                downloadInvoice(blob, file_name);
 
                 // 振込依頼書の作成に成功したらカウントアップ
                 generated_count++;
@@ -287,7 +287,7 @@ TEL:0120-516-818`);
         return String(Number(date[0])) + '年' + String(Number(date[1])) + '月' + String(Number(date[2])) + '日';
     }
 
-    function setDownloadLink(blob, file_name) {
+    function downloadInvoice(blob, file_name) {
         let download_link = document.createElement('a');
         download_link.download = file_name + '.txt';
         download_link.href = (window.URL || window.webkitURL).createObjectURL(blob);
