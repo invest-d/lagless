@@ -687,8 +687,8 @@
 
   // URLの商品名によってフォームの見た目を変更する
   $(function() {
-    var product_name = getUrlParam('product');
-    var css_path = './styles/form_lagless.css';
+    let product_name = getUrlParam('product');
+    let css_path = './styles/form_lagless.css';
     switch (product_name) {
       case 'dandori':
         css_path = './styles/form_dandori.css';
@@ -703,20 +703,20 @@
 
   // URLの工務店IDパラメータを引き継ぐ
   $(function() {
-    var id_key = 'c';
-    var id_val = getUrlParam(id_key);
+    let id_key = 'c';
+    let id_val = getUrlParam(id_key);
 
     document.getElementById('constructionShopId').value = id_val;
   });
 
   // URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする
   $(function() {
-    var key = 'user';
-    var val = getUrlParam(key);
+    let key = 'user';
+    let val = getUrlParam(key);
     if (val === 'existing') {
       // 2回目以降の申込みフォーム
       // 初回のみ必須入力の項目を非表示にする
-      var only_first_elems = $('*[name=only_first]');
+      let only_first_elems = $('*[name=only_first]');
       hideElement(only_first_elems);
       // 2回目以降は任意入力になる項目を設定する
       arbitrariseInput();
@@ -730,11 +730,11 @@
 
   // URLから指定したパラメータを取得する
   function getUrlParam(param_name) {
-    var query = window.location.search.substring(1);
-    var vars = query.split("&");
-    var target_val = '';
-    for (var i = 0; i < vars.length; i++) {
-      var pair = vars[i].split("=");
+    let query = window.location.search.substring(1);
+    let vars = query.split("&");
+    let target_val = '';
+    for (let i = 0; i < vars.length; i++) {
+      let pair = vars[i].split("=");
       if(pair[0] == param_name) {
         target_val = pair[1];
       }
@@ -787,7 +787,7 @@
     // 1. 初回フォームであれば無条件でblur時にパターンマッチのvalidate
     // 2-1. 2回目以降フォームであればblur時にブランクならOK判定
     // 2-2. 2回目以降フォームであればblur時に非ブランクならパターンマッチのvalidate
-    var applying_user = getUrlParam('user');
+    let applying_user = getUrlParam('user');
     $('.pattern-required-on-modified').blur(function() {
       pattern_validate($(this), applying_user == 'existing');
     });
@@ -830,10 +830,10 @@
     }
 
   function pattern_validate(obj, blank_allowed) {
-      var pattern = new RegExp(obj.attr('pattern'));
+      let pattern = new RegExp(obj.attr('pattern'));
 
-      var input_is_valid = pattern.test(obj.val());
-      var input_is_blank = (obj.val() == '');
+      let input_is_valid = pattern.test(obj.val());
+      let input_is_blank = (obj.val() == '');
       if (input_is_valid
           || (blank_allowed && input_is_blank)) {
         // 有効な入力
@@ -886,7 +886,7 @@
 
   $(function() {
     $('.bank-info').blur(function() {
-      var pattern = new RegExp($(this).attr('pattern'));
+      let pattern = new RegExp($(this).attr('pattern'));
       if (pattern.test($(this).val())) {
         $(this).css({
           'border': '1px solid #28a745',
@@ -920,7 +920,7 @@
   // メールアドレスかFAX番号か、ラジオをチェックした方だけ入力が有効になる
   $(function () {
     $('input[name="email-fax-input"]:radio').change(function() {
-      var selected = $(this).val();
+      let selected = $(this).val();
       if(selected == "email"){
           $('#mail').prop('disabled', false);
           $('#mail').prop('required', true);
@@ -972,7 +972,7 @@
 
       // 現状はfirebase側でデータの加工もしてるけど、firebaseはkintoneに入れる役割だけを担う方がいいかも？
       // データの加工はフォーム側で送信前に行うようにするという案
-      var formData = new FormData($('#form_id')[0]);
+      let formData = new FormData($('#form_id')[0]);
       $.ajax({
         type: "POST",
         enctype: 'multipart/form-data',
