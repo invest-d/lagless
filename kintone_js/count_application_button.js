@@ -29,7 +29,7 @@
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
-            var button = getCountAppliesButton();
+            let button = getCountAppliesButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -37,34 +37,10 @@
     function needShowButton() {
         // 当初はボタンの表示が必要なタイミングでのみ表示する予定だったが、常に表示するように仕様変更
         return document.getElementById('countApplies') === null;
-
-        // 更新が必要なタイミングかどうかを判定する。下記の条件を満たすと更新すべきタイミング。
-        //     実行完了 かつ 支払日が1年を超えて過去 かつ 申し込み回数に算入中 のレコードがある場合（現在表示中の回数より多いので、減らすよう更新すべき）
-        //     もしくは
-        //     実行完了 かつ 支払日が1年以内 かつ 申し込み回数に算入中でない のレコードが存在する場合（現在表示中の回数より少ないので、増やすよう更新すべき）
-        // return (is_showing_too_many_count() || is_showing_too_few_count())
     }
 
-    // function is_showing_too_many_count() {
-    //     // 一度に取得可能なレコード数は500件だが、取得件数は少ないことを想定
-    //     // 条件を満たすレコードが存在するかどうかだけを判定する
-    //     var request_body = {
-    //         'app': APP_ID_APPLY,
-    //         'query': `状態 in ("実行完了") and paymentDate < ${get_today_query_format()} and counted in ("申込み回数に算入中")`,
-    //         'totalCount': true
-    //     }
-
-    //     kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body, (resp) => {
-    //         if (typeof(resp.totalCount) === Number) {
-    //             return resp.totalCount
-    //         } else {
-    //             return 0;
-    //         }
-    //     })
-    // }
-
     function getCountAppliesButton() {
-        var countApplies = document.createElement('button');
+        let countApplies = document.createElement('button');
         countApplies.id = 'countApplies';
         countApplies.innerText = '直近一年間の申込み回数を更新';
         countApplies.addEventListener('click', clickCountApplies);
@@ -111,14 +87,14 @@
             })
             .then(async (cursor_id) => {
                 console.log('カーソル取得');
-                var request_body = {
+                let request_body = {
                     'id': cursor_id
                 };
 
-                var kyoryoku_records = [];
-                var records_remaining = true;
+                let kyoryoku_records = [];
+                let records_remaining = true;
                 do {
-                    var resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', request_body);
+                    let resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', request_body);
                     kyoryoku_records = kyoryoku_records.concat(resp.records);
                     records_remaining = resp.next;
                 } while (records_remaining);
@@ -136,15 +112,15 @@
             console.log('協力会社IDごとに回数をカウントする');
             // 想定する引数の値：[{"ルックアップ": {"type": "hoge", "value": "foo"}}, ...]
             // まずvalueだけ抜き出す
-            var values = [];
+            let values = [];
             kyoryoku_id_array.map((field) => {
                 values.push(field[fieldKyoryokuId_APPLY]["value"]);
             })
 
             // それぞれカウント
-            var counts = {};
-            for(var i = 0; i < values.length; i++) {
-                var key = values[i];
+            let counts = {};
+            for(let i = 0; i < values.length; i++) {
+                let key = values[i];
                 counts[key] = (counts[key])
                     ? counts[key] + 1
                     : 1;
@@ -158,11 +134,11 @@
 
     function update_kyoryoku_master(kyoryoku_id_count) {
         return new kintone.Promise((resolve) => {
-            var update_process = new kintone.Promise((rslv) => {
+            let update_process = new kintone.Promise((rslv) => {
                 console.log('カウント結果をもとに協力会社マスタを更新する');
                 // 一度に更新できるレコード数は100件まで
 
-                var request_body = {
+                let request_body = {
                     "app": APP_ID_KYORYOKU,
                     "records": []
                 };
@@ -201,7 +177,7 @@
                 });
             });
 
-            var not_zero_update_count = 0;
+            let not_zero_update_count = 0;
             update_process.then((update_count) => {
                 // 申込み回数が1回以上からゼロ回になった協力会社を更新する。
                 // ゼロ回になった協力会社 とは：
@@ -209,7 +185,7 @@
                 //   かつ 申込回数が1回以上になっている
                 not_zero_update_count = update_count;
 
-                var updated_ids = [];
+                let updated_ids = [];
                 console.log('更新済みIDの一覧');
                 Object.keys(kyoryoku_id_count).map((kyoryoku_id) => {
                     updated_ids.push(kyoryoku_id);
@@ -233,10 +209,10 @@
             console.log('協力会社マスタから、updated_ids以外で申込み回数が1回以上の協力会社IDを取得する');
 
             // in条件に使用する文字列を取得する。 '("1", "87", "48", ...)'
-            var updated_ids_format = '(';
+            let updated_ids_format = '(';
             // ループ操作の最後を知る必要があるのでmapはやめとく
-            for (var index = 0; index < updated_ids.length; index++) {
-                var elem = '\"' + String(updated_ids[index]) + '\"';
+            for (let index = 0; index < updated_ids.length; index++) {
+                let elem = '\"' + String(updated_ids[index]) + '\"';
                 if (index !== updated_ids.length -1) {
                     // 最後の要素でない場合はカンマを追加
                     elem += ', ';
@@ -246,7 +222,7 @@
             // 最後に閉じカッコ
             updated_ids_format += ')';
 
-            var request_body = {
+            let request_body = {
                 'app': APP_ID_KYORYOKU,
                 'fields': [fieldKyoryokuId_KYORYOKU],
                 'query': `${fieldNumberOfApplication_KYORYOKU} > 0 and ${fieldKyoryokuId_KYORYOKU} not in ` + updated_ids_format
@@ -262,7 +238,7 @@
         return new kintone.Promise((resolve) => {
             console.log('ゼロ回更新対象');
             console.log(zero_target_ids);
-            var request_body = {
+            let request_body = {
                 "app": APP_ID_KYORYOKU,
                 "records": []
             };
@@ -303,17 +279,17 @@
 
     function get_query_paid_in_last_year() {
         // クエリに使う日付書式は"更新日時 > \"2012-02-03T09:00:00+0900\""で、ダブルクォートのエスケープが必要
-        var target_date = new Date();
+        let target_date = new Date();
         target_date.setFullYear(target_date.getFullYear() - 1);
         target_date.setHours(0, 0, 0, 0);
-        var a_year_ago_today = String(target_date.getFullYear())
+        let a_year_ago_today = String(target_date.getFullYear())
             + "-" + ("0" + String(target_date.getMonth() + 1)).slice(-2)
             + "-" + ("0" + String(target_date.getDate())).slice(-2)
             + "T"
             + ("0" + String(target_date.getHours())).slice(-2)
             + ":" + ("0" + String(target_date.getMinutes())).slice(-2)
             + ":" + ("0" + String(target_date.getSeconds())).slice(-2)
-            + "+0900"; //タイムゾーンは妥協
+            + "+0900"; //タイムゾーン
         return `paymentDate >= \"${a_year_ago_today}\"`
     }
 
