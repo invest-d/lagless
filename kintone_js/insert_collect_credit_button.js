@@ -15,28 +15,28 @@
     const KINTONE_GET_MAX_SIZE = 500;
 
     const APP_ID_APPLY = 159;
-    const recordId_APPLY = 'レコード番号';
-    const statusField_APPLY = '状態';
-    const statusCodeReady_APPLY = '支払予定明細送付済'
-    const constructionShopId_APPLY = 'constructionShopId';
-    const closingDay_APPLY = 'closingDay';
-    const applicant_APPLY = '支払先正式名称';
-    const totalReceivables_APPLY = 'totalReceivables';
-    const paymentDate_APPLY = 'paymentDate';
-    const collectId_APPLY = 'collectId';
+    const fieldRecordId_APPLY = 'レコード番号';
+    const fieldStatus_APPLY = '状態';
+    const statusReady_APPLY = '支払予定明細送付済'
+    const fieldConstructionShopId_APPLY = 'constructionShopId';
+    const fieldClosingDay_APPLY = 'closingDay';
+    const fieldApplicant_APPLY = '支払先正式名称';
+    const fieldTotalReceivables_APPLY = 'totalReceivables';
+    const fieldPaymentDate_APPLY = 'paymentDate';
+    const fieldCollectId_APPLY = 'collectId';
 
     const APP_ID_COLLECT = 160;
-    const recordId_COLLECT = 'レコード番号';
-    const constructionShopId_COLLECT = 'constructionShopId';
-    const closingDate_COLLECT = 'closingDate';
-    const deadline_COLLECT = 'deadline';
-    const statusField_COLLECT = 'collectStatus';
+    const fieldRecordId_COLLECT = 'レコード番号';
+    const fieldConstructionShopId_COLLECT = 'constructionShopId';
+    const fieldClosingDate_COLLECT = 'closingDate';
+    const fieldDeadline_COLLECT = 'deadline';
+    const fieldStatus_COLLECT = 'collectStatus';
     const statusDefault_COLLECT = 'クラウドサイン送信待ち';
-    const scheduledCollectableAmount_COLLECT = 'scheduledCollectableAmount';
+    const fieldScheduledCollectableAmount_COLLECT = 'scheduledCollectableAmount';
 
     const APP_ID_KOMUTEN = 96;
-    const constructionShopId_KOMUTEN = 'id';
-    const originalPaymentDate_KOMUTEN = 'original';
+    const fieldConstructionShopId_KOMUTEN = 'id';
+    const fieldOriginalPaymentDate_KOMUTEN = 'original';
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
@@ -68,7 +68,7 @@
 
         let applies = [];
 
-        // 対象となるレコードを申込みアプリからとりあえず全件取得
+        // 対象となるレコードを申込みアプリから全件取得
         getAppliesReadyForCollect()
         .then((insert_targets_array) => {
             if (insert_targets_array.length <= 0) {
@@ -84,9 +84,6 @@
         .then((inserted_ids) => {
             console.log('insert completed.');
             console.log(inserted_ids);
-            if (!inserted_ids.length > 0) {
-                throw new Error('レコード追加に失敗しました。');
-            }
 
             // 回収アプリのレコード番号を、申込みレコードに紐付ける
             return assignCollectIdsToApplies(applies, inserted_ids);
@@ -94,9 +91,6 @@
         .then((updated_apply_records) => {
             console.log('update completed.');
             console.log(updated_apply_records);
-            if (!updated_apply_records.length > 0) {
-                throw new Error('申込みレコードと回収レコードの紐付けに失敗しました。');
-            }
 
             alert(`${updated_apply_records.length}件 の申込みレコードを回収アプリに登録しました。`);
             alert('ページを更新します。');
@@ -114,14 +108,14 @@
                 let request_body = {
                     'app': APP_ID_APPLY,
                     'fields': [
-                        recordId_APPLY,
-                        constructionShopId_APPLY,
-                        closingDay_APPLY,
-                        applicant_APPLY,
-                        totalReceivables_APPLY,
-                        paymentDate_APPLY
+                        fieldRecordId_APPLY,
+                        fieldConstructionShopId_APPLY,
+                        fieldClosingDay_APPLY,
+                        fieldApplicant_APPLY,
+                        fieldTotalReceivables_APPLY,
+                        fieldPaymentDate_APPLY
                     ],
-                    'query': `${statusField_APPLY} in (\"${statusCodeReady_APPLY}\") and ${collectId_APPLY} = \"\" order by レコード番号 asc`,
+                    'query': `${fieldStatus_APPLY} in (\"${statusReady_APPLY}\") and ${fieldCollectId_APPLY} = \"\" order by レコード番号 asc`,
                     'size': KINTONE_GET_MAX_SIZE
                 };
 
@@ -163,10 +157,10 @@
 
             // まず工務店IDと締日だけ全て抜き出す
             let key_pairs = [];
-            insert_targets_array.map((obj) => {
+            insert_targets_array.forEach((obj) => {
                 key_pairs.push({
-                    [constructionShopId_APPLY]: obj[constructionShopId_APPLY]['value'],
-                    [closingDay_APPLY]: obj[closingDay_APPLY]['value']
+                    [fieldConstructionShopId_APPLY]: obj[fieldConstructionShopId_APPLY]['value'],
+                    [fieldClosingDay_APPLY]: obj[fieldClosingDay_APPLY]['value']
                 });
             });
 
@@ -175,8 +169,8 @@
             // 今回はオブジェクトの配列なので、インデックスを探す上でindexOfが使えない代わりにfindIndexを使っている。
             let not_duplicated_key_pairs = key_pairs.filter((key_pair1, key_pairs_index, self_arr) => {
                 let target_index = self_arr.findIndex(((key_pair2) => {
-                    let same_constructionShopId = (key_pair1[constructionShopId_APPLY] === key_pair2[constructionShopId_APPLY]);
-                    let same_closingDay = (key_pair1[closingDay_APPLY] === key_pair2[closingDay_APPLY]);
+                    let same_constructionShopId = (key_pair1[fieldConstructionShopId_APPLY] === key_pair2[fieldConstructionShopId_APPLY]);
+                    let same_closingDay = (key_pair1[fieldClosingDay_APPLY] === key_pair2[fieldClosingDay_APPLY]);
 
                     return (same_constructionShopId && same_closingDay)
                 }));
@@ -192,7 +186,7 @@
             new kintone.Promise(async (rslv) => {
                 let cursor_body = {
                     'app': APP_ID_KOMUTEN,
-                    'fields': [constructionShopId_KOMUTEN, originalPaymentDate_KOMUTEN],
+                    'fields': [fieldConstructionShopId_KOMUTEN, fieldOriginalPaymentDate_KOMUTEN],
                     'query': 'order by レコード番号 asc',
                     'size': KINTONE_GET_MAX_SIZE
                 }
@@ -212,8 +206,8 @@
                 } while (record_remaining);
 
                 let rslv_obj = {};
-                komuten_records.map((komuten_record) => {
-                    rslv_obj[komuten_record[constructionShopId_KOMUTEN]['value']] = komuten_record[originalPaymentDate_KOMUTEN]['value'];
+                komuten_records.forEach((komuten_record) => {
+                    rslv_obj[komuten_record[fieldConstructionShopId_KOMUTEN]['value']] = komuten_record[fieldOriginalPaymentDate_KOMUTEN]['value'];
                 });
 
                 rslv(rslv_obj);
@@ -225,34 +219,40 @@
                     'records': []
                 };
 
-                not_duplicated_key_pairs.map((key_pair) => {
+                not_duplicated_key_pairs.forEach((key_pair) => {
                     let new_record = {};
-                    new_record[constructionShopId_COLLECT] = {};
-                    new_record[constructionShopId_COLLECT]['value'] = key_pair[constructionShopId_APPLY];
+                    new_record[fieldConstructionShopId_COLLECT] = {
+                        'value': key_pair[fieldConstructionShopId_APPLY]
+                    };
 
-                    new_record[closingDate_COLLECT] = {};
-                    new_record[closingDate_COLLECT]['value'] = key_pair[closingDay_APPLY];
+                    new_record[fieldClosingDate_COLLECT] = {
+                        'value': key_pair[fieldClosingDay_APPLY]
+                    };
 
                     // 工務店マスタの入力内容から回収期限を計算。
-                    let original_payment_date_str = komuten_info[String(key_pair[constructionShopId_APPLY])];
-                    new_record[deadline_COLLECT] = {};
-                    new_record[deadline_COLLECT]['value'] = getDeadline(key_pair[closingDay_APPLY], original_payment_date_str);
+                    let original_payment_date_str = komuten_info[String(key_pair[fieldConstructionShopId_APPLY])];
+                    new_record[fieldDeadline_COLLECT] = {
+                        'value': getDeadline(key_pair[fieldClosingDay_APPLY], original_payment_date_str)
+                    };
 
-                    new_record[statusField_COLLECT] = {};
-                    new_record[statusField_COLLECT]['value'] = statusDefault_COLLECT;
+                    new_record[fieldStatus_COLLECT] = {
+                        'value': statusDefault_COLLECT
+                    };
 
                     // 工務店IDと締日が同じ申込みレコードを抽出
                     let target_records = insert_targets_array.filter((obj) => {
-                        return (obj[constructionShopId_APPLY]['value'] === new_record[constructionShopId_COLLECT]['value']
-                        && obj[closingDay_APPLY]['value'] === new_record[closingDate_COLLECT]['value']);
+                        return (obj[fieldConstructionShopId_APPLY]['value'] === new_record[fieldConstructionShopId_COLLECT]['value']
+                        && obj[fieldClosingDay_APPLY]['value'] === new_record[fieldClosingDate_COLLECT]['value']);
                     });
 
                     // 抽出した中から申込金額を合計
                     let totalAmount = target_records.reduce((total, record_obj) => {
-                        return total + Number(record_obj[totalReceivables_APPLY]['value']);
+                        return total + Number(record_obj[fieldTotalReceivables_APPLY]['value']);
                     }, 0);
 
-                    new_record[scheduledCollectableAmount_COLLECT] = {'value': totalAmount};
+                    new_record[fieldScheduledCollectableAmount_COLLECT] = {
+                        'value': totalAmount
+                    };
 
                     request_body.records.push(new_record);
                 });
@@ -271,16 +271,18 @@
         });
     }
 
+    // YYYY-MM-DDの日付書式と'翌月15日'などの文字列から、締め日をYYYY-MM-DDにして返す
     function getDeadline(closingDay, original_payment_date_str) {
+        // YYYY-MM-DDをDate型に変換
         let splitted = closingDay.split('-');
         let closing = new Date(Number(splitted[0]), Number(splitted[1])-1, Number(splitted[2]));
 
-        // 工務店マスタの通常の支払日の入力書式は 翌(々|)月(末|\d{1,2}日) となる
+        // 工務店マスタの通常の支払日の入力書式は 翌(々|)月(末|\d{1,2}日) となる。
         // '翌'の数と'々'の数を合計して、何ヶ月後か判定する
         let months_later = (original_payment_date_str.match(/翌/g) || []).length + (original_payment_date_str.match(/々/g) || []).length;
 
-        // 年をまたいだ場合、Yearも計算される
-        // 第二引数にはデフォルトでgetDate()の値が渡される。その時、30日までしかない月なのに31日の値が入ってきたりすると月が進んでしまうので、1を渡しておく。
+        // 第二引数にはデフォルトでgetDate()の値が渡される。その時、30日までしかない月なのにgetDate()の返り値で31日の値が入ってきたりすると月が進んでしまうので、1を渡しておく。
+        // この計算で年をまたいだ場合は、Yearも加算される。
         let deadline = closing;
         deadline.setMonth(deadline.getMonth() + Number(months_later), 1);
 
@@ -307,8 +309,8 @@
                 let in_query = '(\"' + inserted_ids.join('\",\"') + '\")';
                 let request_body = {
                     'app': APP_ID_COLLECT,
-                    'fields': [recordId_COLLECT, constructionShopId_COLLECT, closingDate_COLLECT],
-                    'query': `${recordId_COLLECT} in ${in_query}`
+                    'fields': [fieldRecordId_COLLECT, fieldConstructionShopId_COLLECT, fieldClosingDate_COLLECT],
+                    'query': `${fieldRecordId_COLLECT} in ${in_query}`
                 };
                 kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body
                 , (resp) => {
@@ -322,18 +324,17 @@
                 let put_records = []
 
                 // 工務店IDと締日が同じ申込みレコードの回収IDフィールドに、回収レコードのレコード番号をセット
-                collect_records.map((collect_record) => {
-                    console.log('collect_record is');
-                    applies.map((apply_record) => {
+                collect_records.forEach((collect_record) => {
+                    applies.forEach((apply_record) => {
                         console.log(collect_record);
-                        let same_constructionShopId = (apply_record[constructionShopId_APPLY]['value'] === collect_record[constructionShopId_COLLECT]['value']);
-                        let same_closingDay = (apply_record[closingDay_APPLY]['value'] === collect_record[closingDate_COLLECT]['value']);
+                        let same_constructionShopId = (apply_record[fieldConstructionShopId_APPLY]['value'] === collect_record[fieldConstructionShopId_COLLECT]['value']);
+                        let same_closingDay = (apply_record[fieldClosingDay_APPLY]['value'] === collect_record[fieldClosingDate_COLLECT]['value']);
 
                         if (same_constructionShopId && same_closingDay) {
                             put_records.push({
-                                'id': apply_record[recordId_APPLY]['value'],
+                                'id': apply_record[fieldRecordId_APPLY]['value'],
                                 'record': {
-                                    [collectId_APPLY]: {'value': collect_record[recordId_COLLECT]['value']}
+                                    [fieldCollectId_APPLY]: {'value': collect_record[fieldRecordId_COLLECT]['value']}
                                 }
                             });
                         }
@@ -353,7 +354,7 @@
                     console.log(err);
                     reject(err);
                 });
-            })
-        })
+            });
+        });
     }
 })();
