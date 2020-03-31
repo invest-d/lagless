@@ -49,25 +49,38 @@
         }
 
         // 対象となるレコードを回収アプリから全件取得
+        let updated_count = 0;
         getUnpaidRecords()
         .then((unpaid_records) => {
+            console.log('unpaid records');
             console.log(unpaid_records);
 
             // 取引企業Noごとに未回収金額を合計
             return sumUnpaidAmountByCustomer(unpaid_records);
         })
         .then((sum_result) => {
+            console.log('sum result');
             console.log(sum_result);
 
             // 工務店マスタに未回収金額をPUT
             return updateKomutenTotalUnpaidAmount(sum_result)
         })
-        .then((updated_count) => {
-            console.log(updated_count);
+        .then((updated_ids) => {
+            console.log('unpaid updated record ids');
+            console.log(updated_ids);
+            updated_count += updated_ids.length;
 
-            alert(`${updated_count}つ の工務店の未回収金額を更新しました。`);
+            // 未回収金額がゼロになった工務店レコードを更新
+            return updateKomutenUnpaidZero(updated_ids);
+        })
+        .then((updated) => {
+            console.log('zero updated record ids');
+            console.log(updated);
+            updated_count += updated.length;
+
+            alert(`${updated_count}件 の工務店の未回収金額を更新しました。`);
             alert('ページを更新します。');
-            // window.location.reload();
+            window.location.reload();
         }, (err) => {
             alert(err.message);
         });
@@ -191,10 +204,67 @@
             };
             kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
             , (resp) => {
-                resolve(resp.records.length);
+                let updated_ids = [];
+                resp.records.forEach((record) => {
+                    updated_ids.push(record['id']);
+                })
+                resolve(updated_ids);
             }, (err) => {
                 console.log(err);
                 reject(err);
+            });
+        });
+    }
+
+    function updateKomutenUnpaidZero(updated_record_ids) {
+        return new kintone.Promise((resolve, reject) => {
+            console.log('未回収金額がゼロになった工務店の金額をゼロに更新する');
+
+            // updated_idsに含まれていないのに、未回収金額が1円以上の工務店IDを取得。
+            let in_query = '(\"' + updated_record_ids.join('\",\"') + '\")';
+            let request_body = {
+                'app': APP_ID_KOMUTEN,
+                'fields': [fieldConstructionShopId_KOMUTEN],
+                'query': `$id not in ${in_query} and ${fieldUnpaidAmount_KOMUTEN} > 0`
+            };
+
+            new kintone.Promise((rslv) => {
+                kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body
+                , (resp) => {
+                    rslv(resp.records);
+                }, (err) => {
+                    console.log(err);
+                    reject(err);
+                })
+            })
+            .then((komuten_records) => {
+                let records = [];
+                komuten_records.forEach((record) => {
+                    records.push({
+                        'updateKey': {
+                            'field': fieldConstructionShopId_KOMUTEN,
+                            'value': record[fieldConstructionShopId_KOMUTEN]['value']
+                        },
+                        'record': {
+                            [fieldUnpaidAmount_KOMUTEN]: {
+                                'value': 0
+                            }
+                        }
+                    })
+                });
+
+                let request_body = {
+                    'app': APP_ID_KOMUTEN,
+                    'records': records
+                };
+
+                kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
+                , (resp) => {
+                    resolve(resp.records);
+                }, (err) => {
+                    console.log(err);
+                    reject(err);
+                });
             });
         });
     }
