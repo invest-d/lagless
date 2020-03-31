@@ -225,23 +225,12 @@
             console.log('協力会社マスタから、updated_ids以外で申込み回数が1回以上の協力会社IDを取得する');
 
             // in条件に使用する文字列を取得する。 '("1", "87", "48", ...)'
-            let updated_ids_format = '(';
-            // ループ操作の最後を知る必要があるのでmapはやめとく
-            for (let index = 0; index < updated_ids.length; index++) {
-                let elem = '\"' + String(updated_ids[index]) + '\"';
-                if (index !== updated_ids.length -1) {
-                    // 最後の要素でない場合はカンマを追加
-                    elem += ', ';
-                }
-                updated_ids_format += elem;
-            }
-            // 最後に閉じカッコ
-            updated_ids_format += ')';
+            let in_query = '(\"' + updated_ids.join('\",\"') + '\")';
 
             let request_body = {
                 'app': APP_ID_KYORYOKU,
                 'fields': [fieldKyoryokuId_KYORYOKU],
-                'query': `${fieldNumberOfApplication_KYORYOKU} > 0 and ${fieldKyoryokuId_KYORYOKU} not in ` + updated_ids_format
+                'query': `${fieldNumberOfApplication_KYORYOKU} > 0 and ${fieldKyoryokuId_KYORYOKU} not in ${in_query}`
             };
 
             kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body, (resp) => {
@@ -251,7 +240,7 @@
     }
 
     function update_to_zero_count(zero_target_ids) {
-        return new kintone.Promise((resolve) => {
+        return new kintone.Promise((resolve, reject) => {
             let request_body = {
                 "app": APP_ID_KYORYOKU,
                 "records": []
@@ -275,14 +264,7 @@
 
             kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
             , (resp) => {
-                if(resp.records[0] !== null) {
-                    console.log(resp.records);
-                    resolve(resp.records.length);
-                } else {
-                    alert('レコードの更新に失敗しました');
-                    console.log(resp);
-                    resolve(null);
-                }
+                resolve(resp.records.length);
             }, (err) => {
                 alert('レコードの更新に失敗しました')
                 console.log(err);
