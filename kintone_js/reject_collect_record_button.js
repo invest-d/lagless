@@ -57,7 +57,7 @@
         .then((detail_ids) => {
             return deleteCollectIdField(detail_ids);
         })
-        .then((updated_count) => {
+        .then(() => {
             return deleteCollectRecord(event.record[fieldRecordNo_COLLECT]['value']);
         })
         .then((result) => {
@@ -115,7 +115,7 @@
             };
 
             kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body, (resp) => {
-                resolve(resp.records.length);
+                resolve();
             }, (err) => {
                 reject(err);
             });
