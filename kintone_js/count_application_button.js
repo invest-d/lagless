@@ -53,12 +53,12 @@
         .then((kyoryoku_id_array) => {
             return count_by_kyoryoku_id(kyoryoku_id_array);
         })
-        .then((kyoryoku_id_count) => {
-            return update_kyoryoku_master(kyoryoku_id_count);
+        .then((counted_by_kyoryoku_id) => {
+            return update_kyoryoku_master(counted_by_kyoryoku_id);
         })
         .then((update_records_num) => {
             console.log(update_records_num + ' records updated.');
-            alert('申込み回数の更新を完了しました。');
+            alert(update_records_num + '件 の協力会社の申込み回数を更新しました。');
             alert('ページを更新します。');
             window.location.reload();
         });
@@ -70,6 +70,7 @@
                 console.log('直近1年間に実行完了している申込レコードを全て取得する');
                 console.log('カーソル作成');
 
+                // 過去1年間のレコードを取得するため、件数が多くなることを想定
                 let request_body = {
                     "app": APP_ID_APPLY,
                     "fields": [fieldKyoryokuId_APPLY],
@@ -113,7 +114,7 @@
             // 想定する引数の値：[{"ルックアップ": {"type": "hoge", "value": "foo"}}, ...]
             // まずvalueだけ抜き出す
             let values = [];
-            kyoryoku_id_array.map((field) => {
+            kyoryoku_id_array.forEach((field) => {
                 values.push(field[fieldKyoryokuId_APPLY]["value"]);
             })
 
@@ -132,20 +133,16 @@
         })
     }
 
-    function update_kyoryoku_master(kyoryoku_id_count) {
+    function update_kyoryoku_master(counted_by_kyoryoku_id) {
         return new kintone.Promise((resolve) => {
             let update_process = new kintone.Promise((rslv) => {
                 console.log('カウント結果をもとに協力会社マスタを更新する');
-                // 一度に更新できるレコード数は100件まで
 
-                let request_body = {
-                    "app": APP_ID_KYORYOKU,
-                    "records": []
-                };
+                let put_records = [];
 
                 // 重複禁止フィールドをキーにしているのでレコード番号は不要
-                Object.keys(kyoryoku_id_count).map((kyoryoku_id) => {
-                    request_body.records.push(
+                Object.keys(counted_by_kyoryoku_id).forEach((kyoryoku_id) => {
+                    put_records.push(
                         {
                             "updateKey": {
                                 "field": fieldKyoryokuId_KYORYOKU,
@@ -153,41 +150,55 @@
                             },
                             "record": {
                                 fieldNumberOfApplication_KYORYOKU: {
-                                    "value": kyoryoku_id_count[kyoryoku_id]
+                                    "value": counted_by_kyoryoku_id[kyoryoku_id]
                                 }
                             }
                         }
                     );
                 });
 
-                kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
-                , (resp) => {
-                    if(resp.records[0] !== null) {
-                        console.log(resp.records);
-                        rslv(resp.records.length);
-                    } else {
-                        alert('レコードの更新に失敗しました');
-                        console.log(resp);
-                        rslv(null);
-                    }
-                }, (err) => {
-                    alert('レコードの更新に失敗しました')
-                    console.log(err);
-                    reject(err);
+                // 一度に更新できるレコード数は100件までなので、put_recordsを100件ごとに分割する
+                let divided_records = array_chunk(put_records, 100);
+                let promises = [];
+                divided_records.forEach((records) => {
+                    let put_promise = new kintone.Promise((put_resolve) => {
+                        let request_body = {
+                            "app": APP_ID_KYORYOKU,
+                            "records": records
+                        };
+
+                        kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
+                        , (resp) => {
+                            put_resolve(resp.records.length);
+                        });
+                    });
+                    promises.push(put_promise);
+                });
+
+                kintone.Promise.all(promises).then((put_results) => {
+                    let updated_count = 0;
+                    put_results.forEach((result) => {
+                        updated_count += Number(result);
+                    });
+
+                    rslv(updated_count);
                 });
             });
 
-            let not_zero_update_count = 0;
-            update_process.then((update_count) => {
-                // 申込み回数が1回以上からゼロ回になった協力会社を更新する。
+            // 最後の「XX件更新しました」メッセージに使う変数
+            let not_zero_updated_count = 0;
+
+            update_process.then((updated_count) => {
+                console.log('updated count is ' + String(updated_count));
+                not_zero_updated_count = updated_count;
+
+                // 前回の処理以降、申込み回数が1回以上からゼロ回になった協力会社を更新する。
                 // ゼロ回になった協力会社 とは：
                 //   先ほどのupdate処理に含まれていない協力会社である
                 //   かつ 申込回数が1回以上になっている
-                not_zero_update_count = update_count;
-
                 let updated_ids = [];
                 console.log('更新済みIDの一覧');
-                Object.keys(kyoryoku_id_count).map((kyoryoku_id) => {
+                Object.keys(counted_by_kyoryoku_id).forEach((kyoryoku_id) => {
                     updated_ids.push(kyoryoku_id);
                 });
                 console.log(updated_ids);
@@ -199,9 +210,14 @@
                 return update_to_zero_count(zero_target_ids);
             })
             .then((zero_updated_count) => {
-                resolve(Number(not_zero_update_count) + Number(zero_updated_count));
+                resolve(Number(not_zero_updated_count) + Number(zero_updated_count));
             });
         });
+    }
+
+    // ...arrayを分割して二次元配列にして返す。二次元配列内の各配列の要素数はsizeで指定した数になる。最後の配列の要素数はあまり。
+    function array_chunk([...array], size = 1) {
+        return array.reduce((acc, value, index) => index % size ? acc : [...acc, array.slice(index, index + size)], []);
     }
 
     function get_zero_target_ids(updated_ids) {
@@ -236,14 +252,12 @@
 
     function update_to_zero_count(zero_target_ids) {
         return new kintone.Promise((resolve) => {
-            console.log('ゼロ回更新対象');
-            console.log(zero_target_ids);
             let request_body = {
                 "app": APP_ID_KYORYOKU,
                 "records": []
             };
 
-            zero_target_ids.records.map((kyoryoku_id_obj) => {
+            zero_target_ids.records.forEach((kyoryoku_id_obj) => {
                 request_body.records.push(
                     {
                         "updateKey": {
@@ -251,7 +265,7 @@
                             "value": kyoryoku_id_obj[fieldKyoryokuId_KYORYOKU]["value"]
                         },
                         "record": {
-                            fieldNumberOfApplication_KYORYOKU: {
+                            [fieldNumberOfApplication_KYORYOKU]: {
                                 "value": 0
                             }
                         }
@@ -292,5 +306,4 @@
             + "+0900"; //タイムゾーン
         return `paymentDate >= \"${a_year_ago_today}\"`
     }
-
 })();
