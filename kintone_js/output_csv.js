@@ -19,7 +19,7 @@
     // レコード一覧を表示後にCSV出力ボタンを描画する
     kintone.events.on('app.record.index.show', function(event) {
         // コントロールの重複作成防止チェック
-        if (document.getElementById('outputCsvButton') !== null) {
+        if (document.getElementById('outputCsv') !== null) {
             return;
         }
 
