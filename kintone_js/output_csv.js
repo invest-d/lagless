@@ -59,6 +59,7 @@
         let day = ('0' + today_date.getDate()).slice(-2);
         let today = year + '-' + month + '-' + day;
         paymentDay.setAttribute('value', today);
+        paymentDay.setAttribute('style', `width: ${today.length * 0.8}rem;`);
         return paymentDay;
     }
 
