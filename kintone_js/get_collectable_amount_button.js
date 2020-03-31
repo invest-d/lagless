@@ -151,7 +151,6 @@
                 });
                 resolve(sum_result);
             });
-
         });
     }
 
@@ -171,15 +170,14 @@
             , (resp) => {
                 resolve(resp.records);
             });
-        })
+        });
     }
 
     function updateKomutenTotalUnpaidAmount(sum_result) {
         return new kintone.Promise((resolve, reject) => {
             console.log('計算結果を工務店マスタにPUTする');
 
-            // PUTするには一意のキーを指定する必要があるが、sum_resultは一意のキー（工務店ID）を持っていない。
-            // 従って工務店IDを持たせたput_recordsを別途生成する。
+            // PUT用にオブジェクトを生成
             let put_records = [];
             sum_result.forEach((sum) => {
                 put_records.push(
