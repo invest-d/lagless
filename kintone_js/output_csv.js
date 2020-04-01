@@ -30,7 +30,7 @@
         kintone.app.getHeaderMenuSpaceElement().appendChild(input);
 
         // 出力ボタンを設置
-        let button = getButtonOutputCsv();
+        let button = getButtonOutputCsv(event);
         kintone.app.getHeaderMenuSpaceElement().appendChild(button);
     });
 
@@ -64,17 +64,16 @@
     }
 
     // CSV出力ボタンを生成
-    function getButtonOutputCsv() {
+    function getButtonOutputCsv(event) {
         let outputCsv = document.createElement('button');
         outputCsv.id = 'outputCsv';
         outputCsv.innerText = 'SMBC向け振込データをダウンロードする';
-        outputCsv.addEventListener('click', clickOutputCsv);
+        outputCsv.addEventListener('click', clickOutputCsv.bind(null, event));
         return outputCsv;
     }
 
     // CSV出力ボタンクリック時の処理を定義
-    function clickOutputCsv() {
-        // https://www.alloneslife-0to1work.jp/all/kintone_csv
+    function clickOutputCsv(event) {
         let target_records = event.records;
         let target_date = document.getElementById(target_date_id).value;
         let csv_content = getCsvContent(target_records, target_date);
