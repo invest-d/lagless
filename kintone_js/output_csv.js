@@ -84,10 +84,6 @@
 
         importEncodingLibrary();
 
-        // 日付入力欄をレコード一覧の上部に設置
-        let input = getInputPaymentDate();
-        kintone.app.getHeaderMenuSpaceElement().appendChild(input);
-
         // 出力ボタンを設置
         let button = getButtonOutputCsv();
         kintone.app.getHeaderMenuSpaceElement().appendChild(button);
@@ -106,25 +102,6 @@
         document.head.appendChild(script_filesaver);
     }
 
-    let target_date_id = 'paymentDate';
-    function getInputPaymentDate() {
-        let payment_date = document.createElement('input');
-        payment_date.id = target_date_id;
-        payment_date.setAttribute('type', 'text');
-
-        // 今日の日付をデフォルトセット
-        let today_date = new Date();
-        let year = today_date.getFullYear();
-        let month = ('0' + (today_date.getMonth() + 1)).slice(-2);
-        let day = ('0' + today_date.getDate()).slice(-2);
-        let today = year + '-' + month + '-' + day;
-        payment_date.setAttribute('value', today);
-
-        // デフォルトだと幅が広すぎるので適当に調整
-        payment_date.setAttribute('style', 'width: 8rem;');
-        return payment_date;
-    }
-
     function getButtonOutputCsv() {
         let outputCsv = document.createElement('button');
         outputCsv.id = 'outputCsv';
@@ -135,15 +112,30 @@
 
     // CSV出力ボタンクリック時の処理を定義
     function clickOutputCsv() {
+        // 処理を続行するかどうか聞く
+        let do_download = confirm('振込用のcsvデータをダウンロードします。よろしいですか？\n\n※このあとに支払日の指定と、\n未出力のものだけ出力 OR 出力済みも含めて全て出力 のどちらかを選択できます。');
+        if (!do_download) {
+            alert('処理は中断されました。');
+            return;
+        }
+
+        let payment_date = prompt('YYYY-MM-DDの形式で支払日を入力してください。\n例：2020-01-01');
+        let pattern = /^\d{4}-\d{2}-\d{2}$/;
+        if (!pattern.test(payment_date)) {
+            alert('入力形式が正しくありませんでした。\n入力した値：' + payment_date);
+            return;
+        }
+
+        let only_undownloaded = confirm('未出力の振込データだけを出力しますか？\nOK：未出力のみを出力し、出力済みのものは出力しない\nキャンセル：未出力のものも、未出力のものも、全て出力する');
+
         let requester_accounts = [
             'ID',
             'LAGLESS'
         ];
 
-        let payment_date = document.getElementById(target_date_id).value;
         let csv_promises = [];
         requester_accounts.forEach((account) => {
-            let csv_promise = getKintoneRecords(account, payment_date)
+            let csv_promise = getKintoneRecords(account, payment_date, only_undownloaded)
             .then((target_applies) => {
                 console.log('target_applies: '  + account);
                 console.log(target_applies);
@@ -177,8 +169,17 @@
         });
     }
 
-    function getKintoneRecords(account, target_date) {
+    function getKintoneRecords(account, target_date, only_undownloaded) {
         console.log('申込レコード一覧から、CSVファイルへの出力対象レコードを取得する。対象口座：' + account);
+
+        let in_query = '';
+        if (only_undownloaded) {
+            in_query = `(\"${statusReady_APPLY}\")`;
+        }
+        else {
+            in_query = `(\"${statusReady_APPLY}\", \"${statusDone_APPLY}\")`;
+        }
+
         let request_body = {
             'app': APP_ID_APPLY,
             'fields': [
@@ -190,7 +191,7 @@
                 fieldAccountName_APPLY,
                 fieldTransferAmount_APPLY
             ],
-            'query': `${fieldStatus_APPLY} in (\"${statusReady_APPLY}\")
+            'query': `${fieldStatus_APPLY} in ${in_query}
                     and ${fieldPaymentDate_APPLY} = \"${target_date}\"
                     and ${fieldPaymentAccount_APPLY} = \"${account}\"`
         }
