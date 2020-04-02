@@ -8,12 +8,14 @@
     全銀形式に整形した上でCSVファイルに書き出し、ローカルに保存する。
         - 支払日フィールドの値が、テキストボックスで指定した日付に一致する
         - 状態フィールドの値が、振込データ作成待ちに一致する
+    保存後、出力したデータの状態フィールドを振込データ出力済みに更新する。
 */
 
 (function() {
     "use strict";
 
     const APP_ID_APPLY = 159;
+    const fieldRecordId_APPLY       = 'レコード番号';
     const fieldBankCode_APPLY       = 'bankCode';
     const fieldBranchCode_APPLY     = 'branchCode';
     const fieldDepositType_APPLY    = 'deposit';
@@ -22,6 +24,7 @@
     const fieldTransferAmount_APPLY = 'transferAmount';
     const fieldStatus_APPLY         = '状態';
     const statusReady_APPLY         = '振込前確認完了';
+    const statusDone_APPLY          = '振込データ出力済';
     const fieldPaymentDate_APPLY    = 'paymentDate';
     const fieldPaymentAccount_APPLY = 'paymentAccount';
 
@@ -155,6 +158,8 @@
 
                 let file_name = '支払日' + payment_date + 'ぶんの振込データ（振込元：' + account + '）.csv';
                 downloadFile(csv_data, file_name);
+
+                return updateToDone(target_applies);
             })
             .catch((rejected) => {
                 alert(rejected);
@@ -167,6 +172,8 @@
         kintone.Promise.all(csv_promises)
         .then(() => {
             alert('振込データのダウンロードを完了しました。');
+            alert('ページを更新します。');
+            window.location.reload();
         });
     }
 
@@ -175,6 +182,7 @@
         let request_body = {
             'app': APP_ID_APPLY,
             'fields': [
+                fieldRecordId_APPLY,
                 fieldBankCode_APPLY,
                 fieldBranchCode_APPLY,
                 fieldDepositType_APPLY,
@@ -323,6 +331,33 @@
 
         // 保存
         saveAs(write_data, file_name);
+    }
+
+    function updateToDone(kintone_records) {
+        console.log('出力を終えたレコードの状態を出力済みに更新する');
+
+        let request_body = {
+            'app': APP_ID_APPLY,
+            'records': kintone_records.map((record) => {
+                return {
+                    'id': record[fieldRecordId_APPLY]['value'],
+                    'record': {
+                        [fieldStatus_APPLY]: {
+                            'value': statusDone_APPLY
+                        }
+                    }
+                };
+            })
+        };
+
+        return new kintone.Promise((resolve, reject) => {
+            kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
+            , (resp) => {
+                resolve();
+            }, (err) => {
+                reject(err);
+            });
+        });
     }
 
     // 全角カナを半角カナに変換する。全角カナ以外の入力はそのまま返す。
