@@ -1,16 +1,19 @@
-rem kintoneã‚ÅSMBCŒü‚¯Užƒf[ƒ^‚ðì¬‚·‚éÛ‚É•K—v‚È‹âsî•ñ‚ðXV‚·‚éB
-rem ƒIƒŠƒWƒiƒ‹‚ÌƒR[ƒh‚Ínpm install‚µ‚ÄŽg‚¤‚à‚Ì‚È‚Ì‚ÅAkintone‚Ìjs‚É–„‚ßž‚ñ‚ÅŽg‚¦‚é‚æ‚¤‚É“à—e‚ðˆê•”‘‚«Š·‚¦‚é
+rem kintoneï¿½ï¿½ï¿½SMBCï¿½ï¿½ï¿½ï¿½ï¿½Uï¿½ï¿½ï¿½fï¿½[ï¿½^ï¿½ï¿½ï¿½ì¬ï¿½ï¿½ï¿½ï¿½Û‚É•Kï¿½vï¿½È‹ï¿½sï¿½ï¿½ï¿½ï¿½ï¿½Xï¿½Vï¿½ï¿½ï¿½ï¿½B
+rem ï¿½Iï¿½ï¿½ï¿½Wï¿½iï¿½ï¿½ï¿½ÌƒRï¿½[ï¿½hï¿½ï¿½npm installï¿½ï¿½ï¿½ÄŽgï¿½ï¿½ï¿½ï¿½ï¿½Ì‚È‚Ì‚ÅAkintoneï¿½ï¿½jsï¿½É–ï¿½ï¿½ßï¿½ï¿½ï¿½ÅŽgï¿½ï¿½ï¿½ï¿½æ‚¤ï¿½É“ï¿½ï¿½eï¿½ï¿½ï¿½ê•”ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 @echo off
+if exist bank_info_raw.js del bank_info_raw.js
 chcp 65001
 bitsadmin /transfer download_banks https://raw.githubusercontent.com/zengin-code/zengin-js/master/lib/zengin-data.js %CD%\bank_info_raw.js
 
 if exist bank_info.js del bank_info.js
 
-rem module.exports=‚Å‚ÌéŒ¾‚ðconst•Ï”‚Å‚ÌéŒ¾‚É•Ï‚¦‚ÄAƒIƒuƒWƒFƒNƒg‚Æ‚µ‚ÄŽg‚¦‚é‚æ‚¤‚É‚·‚é
+rem module.exports=ï¿½Å‚ÌéŒ¾ï¿½ï¿½constï¿½Ïï¿½ï¿½Å‚ÌéŒ¾ï¿½É•Ï‚ï¿½ï¿½ÄAï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½gï¿½Æ‚ï¿½ï¿½ÄŽgï¿½ï¿½ï¿½ï¿½æ‚¤ï¿½É‚ï¿½ï¿½ï¿½
 setlocal ENABLEDELAYEDEXPANSION
 for /f "delims=" %%a in (bank_info_raw.js) do (
     set line=%%a
     echo !line:module.exports=const bank_info! >> bank_info.js
 )
 endlocal
+
+if exist bank_info_raw.js del bank_info_raw.js
