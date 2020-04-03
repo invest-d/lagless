@@ -1,0 +1,3 @@
+Copyright (c) 2015 Sho Kusano
+Released under the MIT license
+https://github.com/zengin-code/zengin-js/blob/master/LICENSE.txt
