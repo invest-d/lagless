@@ -82,7 +82,7 @@
         importEncodingLibrary();
 
         // 出力ボタンを設置
-        let button = getButtonOutputCsv();
+        const button = getButtonOutputCsv();
         kintone.app.getHeaderMenuSpaceElement().appendChild(button);
     });
 
@@ -109,29 +109,29 @@
 
     // CSV出力ボタンクリック時の処理を定義
     function clickOutputCsv() {
-        let do_download = confirm('振込用のcsvデータをダウンロードします。よろしいですか？\n\n※このあとに支払日の指定と、\n未出力のものだけ出力 OR 出力済みも含めて全て出力 のどちらかを選択できます。');
+        const do_download = confirm('振込用のcsvデータをダウンロードします。よろしいですか？\n\n※このあとに支払日の指定と、\n未出力のものだけ出力 OR 出力済みも含めて全て出力 のどちらかを選択できます。');
         if (!do_download) {
             alert('処理は中断されました。');
             return;
         }
 
-        let payment_date = prompt('YYYY-MM-DDの形式で支払日を入力してください。\n例：2020-01-01');
-        let pattern = /^\d{4}-\d{2}-\d{2}$/;
+        const payment_date = prompt('YYYY-MM-DDの形式で支払日を入力してください。\n例：2020-01-01');
+        const pattern = /^\d{4}-\d{2}-\d{2}$/;
         if (!pattern.test(payment_date)) {
             alert('入力形式が正しくありませんでした。\n入力した値：' + payment_date);
             return;
         }
 
-        let only_undownloaded = confirm('未出力の振込データだけを出力しますか？\nOK：未出力のみを出力し、出力済みのものは出力しない\nキャンセル：未出力のものも、未出力のものも、全て出力する');
+        const only_undownloaded = confirm('未出力の振込データだけを出力しますか？\nOK：未出力のみを出力し、出力済みのものは出力しない\nキャンセル：未出力のものも、未出力のものも、全て出力する');
 
-        let requester_accounts = [
+        const requester_accounts = [
             'ID',
             'LAGLESS'
         ];
 
         let csv_promises = [];
         requester_accounts.forEach((account) => {
-            let csv_promise = getKintoneRecords(account, payment_date, only_undownloaded)
+            const csv_promise = getKintoneRecords(account, payment_date, only_undownloaded)
             .then((target_applies) => {
                 console.log('target_applies: '  + account);
                 console.log(target_applies);
@@ -142,9 +142,9 @@
                     });
                 }
 
-                let csv_data = generateCsvData(account, target_applies, payment_date);
+                const csv_data = generateCsvData(account, target_applies, payment_date);
 
-                let file_name = '支払日' + payment_date + 'ぶんの振込データ（振込元：' + account + '）.csv';
+                const file_name = '支払日' + payment_date + 'ぶんの振込データ（振込元：' + account + '）.csv';
                 downloadFile(csv_data, file_name);
 
                 return updateToDone(target_applies);
@@ -168,15 +168,11 @@
     function getKintoneRecords(account, target_date, only_undownloaded) {
         console.log('申込レコード一覧から、CSVファイルへの出力対象レコードを取得する。対象口座：' + account);
 
-        let in_query = '';
-        if (only_undownloaded) {
-            in_query = `(\"${statusReady_APPLY}\")`;
-        }
-        else {
-            in_query = `(\"${statusReady_APPLY}\", \"${statusDone_APPLY}\")`;
-        }
+        const in_query = (only_undownloaded)
+            ? `(\"${statusReady_APPLY}\")`
+            : `(\"${statusReady_APPLY}\", \"${statusDone_APPLY}\")`;
 
-        let request_body = {
+        const request_body = {
             'app': APP_ID_APPLY,
             'fields': [
                 fieldRecordId_APPLY,
@@ -210,10 +206,10 @@
         const csv_format = (col => `"${col}"`);
 
         // YYYY-MM-DDをMMDDに変換
-        let pay_date_mmdd = payment_date.split('-')[1] + payment_date.split('-')[2];
+        const pay_date_mmdd = payment_date.split('-')[1] + payment_date.split('-')[2];
 
         // ヘッダー
-        let account_obj = new Account().create(account);
+        const account_obj = new Account().create(account);
         csv_content.push(getHeaderRecord(account_obj, pay_date_mmdd).map(csv_format).join(','));
 
         // データ
@@ -250,18 +246,18 @@
 
     function getDataRecords(kintone_records) {
         return kintone_records.map((kintone_record) => {
-            let bank_code_to = ('0000' + kintone_record[fieldBankCode_APPLY]['value']).slice(-4);
-            let bank_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['kana']);
-            let bank_name_to = adjustLength(bank_name_kana, 15);
-            let branch_code_to = ('000' + kintone_record[fieldBranchCode_APPLY]['value']).slice(-3);
-            let branch_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['branches'][branch_code_to]['kana']);
-            let branch_name_to = adjustLength(branch_name_kana, 15);
-            let deposit_to = (kintone_record[fieldDepositType_APPLY]['value'] === '普通')
+            const bank_code_to = ('0000' + kintone_record[fieldBankCode_APPLY]['value']).slice(-4);
+            const bank_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['kana']);
+            const bank_name_to = adjustLength(bank_name_kana, 15);
+            const branch_code_to = ('000' + kintone_record[fieldBranchCode_APPLY]['value']).slice(-3);
+            const branch_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['branches'][branch_code_to]['kana']);
+            const branch_name_to = adjustLength(branch_name_kana, 15);
+            const deposit_to = (kintone_record[fieldDepositType_APPLY]['value'] === '普通')
                 ? '1'
                 : '2';
-            let account_number_to = kintone_record[fieldAccountNumber_APPLY]['value'];
-            let account_name_to = (zenkakuToHankaku(kintone_record[fieldAccountName_APPLY]['value']) + ' '.repeat(30)).slice(0, 30);
-            let amount_of_money = kintone_record[fieldTransferAmount_APPLY]['value'];
+            const account_number_to = kintone_record[fieldAccountNumber_APPLY]['value'];
+            const account_name_to = (zenkakuToHankaku(kintone_record[fieldAccountName_APPLY]['value']) + ' '.repeat(30)).slice(0, 30);
+            const amount_of_money = kintone_record[fieldTransferAmount_APPLY]['value'];
 
             return [
                 '2',               //データ区分：データレコード
@@ -325,7 +321,7 @@
     function updateToDone(kintone_records) {
         console.log('出力を終えたレコードの状態を出力済みに更新する');
 
-        let request_body = {
+        const request_body = {
             'app': APP_ID_APPLY,
             'records': kintone_records.map((record) => {
                 return {
@@ -351,7 +347,7 @@
 
     // 全角カナを半角カナに変換する。全角カナ以外の入力はそのまま返す。
     function zenkakuToHankaku(input_string){
-        let zenkaku_array = new Array(
+        const zenkaku_array = [
             'ア','イ','ウ','エ','オ','カ','キ','ク','ケ','コ'
             ,'サ','シ','ス','セ','ソ','タ','チ','ツ','テ','ト'
             ,'ナ','ニ','ヌ','ネ','ノ','ハ','ヒ','フ','ヘ','ホ'
@@ -363,9 +359,9 @@
             ,'ァ','ィ','ゥ','ェ','ォ','ャ','ュ','ョ','ッ'
             ,'゛','°','、','。','「','」','ー','・','（','）','￥','／'
             ,'－','‐','―','─','━',
-        );
+        ];
 
-        let hankaku_array = new Array(
+        const hankaku_array = [
             'ｱ','ｲ','ｳ','ｴ','ｵ','ｶ','ｷ','ｸ','ｹ','ｺ'
             ,'ｻ','ｼ','ｽ','ｾ','ｿ','ﾀ','ﾁ','ﾂ','ﾃ','ﾄ'
             ,'ﾅ','ﾆ','ﾇ','ﾈ','ﾉ','ﾊ','ﾋ','ﾌ','ﾍ','ﾎ'
@@ -377,13 +373,13 @@
             ,'ｧ','ｨ','ｩ','ｪ','ｫ','ｬ','ｭ','ｮ','ｯ'
             ,'ﾞ','ﾟ',',','.','｢','｣','-',' ','(',')','\\','/' //中黒は使用不可能なのでスペースにする
             ,'-','-','-','-','-'
-        );
+        ];
 
         let converted = "";
 
         for (let i = 0; i < input_string.length; i++){
             let input_char = input_string.charAt(i);
-            let zen_index = zenkaku_array.indexOf(input_char);
+            const zen_index = zenkaku_array.indexOf(input_char);
             // 全角カナの配列の中に見つからなければそのまま返す
             if(zen_index >= 0){
                 input_char = hankaku_array[zen_index];
@@ -409,7 +405,7 @@
 
     // 全角文字を2、半角文字を1として、元の文字列の右に指定文字数まで半角空白を追加する。元々指定文字数より多かったら右から削る。
     function adjustLength(str, num) {
-        let str_byte_length = getBytes(str);
+        const str_byte_length = getBytes(str);
         let trimmed = str;
 
         if (num - str_byte_length > 0) {
