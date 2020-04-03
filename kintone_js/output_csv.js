@@ -1,8 +1,7 @@
 /*
     Version 1
     申込アプリにCSVダウンロードを行うボタンを追加する。
-    ボタンをクリックしたとき、
-    申し込みフォームから送信されたレコードのうち下記の条件を満たすレコードについて、
+    ボタンをクリックしたとき、申込レコードのうち下記の条件を満たすレコードについて、
     全銀形式に整形した上でCSVファイルに書き出し、ローカルに保存する。
         - 支払日フィールドの値が、promptのテキストボックスで指定した日付に一致する
         - 状態フィールドの値が、振込データ作成待ちに一致する（ダイアログの選択によって、出力済みデータも含めて出力可能）
@@ -250,9 +249,7 @@
     }
 
     function getDataRecords(kintone_records) {
-        let records = [];
-        const smbc_data_record = '2';
-        kintone_records.forEach((kintone_record) => {
+        return kintone_records.map((kintone_record) => {
             let bank_code_to = ('0000' + kintone_record[fieldBankCode_APPLY]['value']).slice(-4);
             let bank_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['kana']);
             let bank_name_to = adjustLength(bank_name_kana, 15);
@@ -266,8 +263,8 @@
             let account_name_to = (zenkakuToHankaku(kintone_record[fieldAccountName_APPLY]['value']) + ' '.repeat(30)).slice(0, 30);
             let amount_of_money = kintone_record[fieldTransferAmount_APPLY]['value'];
 
-            records.push([
-                smbc_data_record,  //データ区分：データレコード
+            return [
+                '2',               //データ区分：データレコード
                 bank_code_to,      //銀行コード
                 bank_name_to,      //銀行名ｶﾅ
                 branch_code_to,    //支店コード
@@ -282,32 +279,26 @@
                 '',                //顧客コード2：不使用
                 ' ',               //振込指定区分：スペース
                 ''                 //識別コード：不使用
-            ]);
+            ];
         });
-
-        return records;
     }
 
     function getTrailerRecord(kintone_records) {
-        const smbc_trailer_record = '8';
-        let record_num = kintone_records.length;
         let total_amount = 0;
         kintone_records.forEach((kintone_record) => {
             total_amount += Number(kintone_record[fieldTransferAmount_APPLY]['value']);
         });
 
         return [
-            smbc_trailer_record, //データ区分：トレーラーレコード
-            record_num,          //合計件数
-            total_amount         //合計金額
+            '8',                    //データ区分：トレーラーレコード
+            kintone_records.length, //合計件数
+            total_amount            //合計金額
         ];
     }
 
     function getEndRecord() {
-        const smbc_end_record = '9';
-
         return [
-            smbc_end_record //データ区分：エンドレコード
+            '9' //データ区分：エンドレコード
         ];
     }
 
@@ -388,19 +379,19 @@
             ,'-','-','-','-','-'
         );
 
-        let ret_string = "";
+        let converted = "";
 
-        for (let i=0;i<input_string.length;i++){
+        for (let i = 0; i < input_string.length; i++){
             let input_char = input_string.charAt(i);
-            let zenindex = zenkaku_array.indexOf(input_char);
+            let zen_index = zenkaku_array.indexOf(input_char);
             // 全角カナの配列の中に見つからなければそのまま返す
-            if(zenindex >= 0){
-                input_char = hankaku_array[zenindex];
+            if(zen_index >= 0){
+                input_char = hankaku_array[zen_index];
             }
-            ret_string += input_char;
+            converted += input_char;
         }
 
-        return ret_string;
+        return converted;
     }
 
     // 全角文字を2、半角文字を1として文字数を計算する
