@@ -1,10 +1,16 @@
 const fetch = require('node-fetch');
 const querystring = require('querystring');
 
-const conv = json => json.records.map(r => {
+const conv = records => records.map(r => {
     let record = {};
     Object.keys(r).forEach(k => {
-        record[k] = r[k].value;
+        if(r[k].value && 0 < r[k].value.length && typeof r[k].value[0] == 'object') {
+            record[k] = r[k].value.map(r => {
+                return Object.keys(r.value).reduce((a, s) => Object.assign(a, { [s]: r.value[s].value }), { });
+            });
+        } else {
+            record[k] = r[k].value;
+        }
     });
     return record;
 });
@@ -40,7 +46,7 @@ const fetch_pattern = function(env) {
             res.text().then(text => { throw new Error(text) });
         }
     })
-    .then(conv)
+    .then(json => conv(json.records))
     .then(records => {
         let by_pattern = { };
         records.forEach(r => {
@@ -54,9 +60,10 @@ const fetch_pattern = function(env) {
 };
 
 const fields = [
-    'id', 'service', 'pattern', 'cost', 'transfer_fee', 'limit', 'yield',
+    'id', '工務店正式名称', 'service', 'pattern', 'cost', 'transfer_fee', 'limit', 'yield',
     'form_1', 'form_2', 'link', 'mail',
-    'closing', 'deadline', 'early', 'original', 'lag', 'effect'
+    'closing', 'deadline', 'early', 'original', 'lag', 'effect',
+    'default_pay_date_list',
 ].join(',');
 
 const fetch_service = function(env) {
@@ -73,7 +80,7 @@ const fetch_service = function(env) {
             res.text().then(text => { throw new Error(text) });
         }
     })
-    .then(conv)
+    .then(json => conv(json.records))
     .then(records => {
         let by_id = { };
         records.forEach(r => {
