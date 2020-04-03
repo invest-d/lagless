@@ -1,13 +1,11 @@
 /*
     Version 1
-    LAGLESS2020開発テーブルにコントロールを二つ追加する。
-        - 振込日を指定するテキストボックス
-        - CSVダウンロードを行うボタン
+    申込アプリにCSVダウンロードを行うボタンを追加する。
     ボタンをクリックしたとき、
     申し込みフォームから送信されたレコードのうち下記の条件を満たすレコードについて、
     全銀形式に整形した上でCSVファイルに書き出し、ローカルに保存する。
-        - 支払日フィールドの値が、テキストボックスで指定した日付に一致する
-        - 状態フィールドの値が、振込データ作成待ちに一致する
+        - 支払日フィールドの値が、promptのテキストボックスで指定した日付に一致する
+        - 状態フィールドの値が、振込データ作成待ちに一致する（ダイアログの選択によって、出力済みデータも含めて出力可能）
     保存後、出力したデータの状態フィールドを振込データ出力済みに更新する。
 */
 
@@ -112,7 +110,6 @@
 
     // CSV出力ボタンクリック時の処理を定義
     function clickOutputCsv() {
-        // 処理を続行するかどうか聞く
         let do_download = confirm('振込用のcsvデータをダウンロードします。よろしいですか？\n\n※このあとに支払日の指定と、\n未出力のものだけ出力 OR 出力済みも含めて全て出力 のどちらかを選択できます。');
         if (!do_download) {
             alert('処理は中断されました。');
@@ -213,7 +210,7 @@
         let csv_content = [];
         const csv_format = (col => `"${col}"`);
 
-        // YYYY-MM-DDを変換
+        // YYYY-MM-DDをMMDDに変換
         let pay_date_mmdd = payment_date.split('-')[1] + payment_date.split('-')[2];
 
         // ヘッダー
@@ -249,7 +246,7 @@
             account_obj.branch_name,         //支店名ｶﾅ
             account_obj.deposit_type,        //口座種別
             account_obj.account_number       //口座番号
-        ]
+        ];
     }
 
     function getDataRecords(kintone_records) {
