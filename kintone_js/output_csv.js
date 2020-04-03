@@ -82,7 +82,7 @@
         importEncodingLibrary();
 
         // 出力ボタンを設置
-        const button = getButtonOutputCsv();
+        const button = createButtonOutputCsv();
         kintone.app.getHeaderMenuSpaceElement().appendChild(button);
     });
 
@@ -99,7 +99,7 @@
         document.head.appendChild(script_filesaver);
     }
 
-    function getButtonOutputCsv() {
+    function createButtonOutputCsv() {
         let outputCsv = document.createElement('button');
         outputCsv.id = 'outputCsv';
         outputCsv.innerText = 'SMBC向け振込データをダウンロード';
