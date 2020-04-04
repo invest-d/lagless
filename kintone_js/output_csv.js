@@ -11,7 +11,7 @@
 (function() {
     "use strict";
 
-    const APP_ID_APPLY = kintone.app.getId();
+    const APP_ID_APPLY              = kintone.app.getId();
     const fieldRecordId_APPLY       = 'レコード番号';
     const fieldBankCode_APPLY       = 'bankCode';
     const fieldBranchCode_APPLY     = 'branchCode';
