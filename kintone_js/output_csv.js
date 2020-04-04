@@ -120,14 +120,14 @@
             return;
         }
 
-        const payment_date = prompt('YYYY-MM-DDの形式で支払日を入力してください。\n例：2020-01-01');
+        const payment_date = prompt('YYYY-MM-DDの形式で支払日を入力してください。\n例：2020-01-23');
         const pattern = /^\d{4}-\d{2}-\d{2}$/;
         if (!pattern.test(payment_date)) {
             alert('入力形式が正しくありませんでした。\n入力した値：' + payment_date);
             return;
         }
 
-        const only_undownloaded = confirm('未出力の振込データだけを出力しますか？\nOK：未出力のみを出力し、出力済みのものは出力しない\nキャンセル：未出力のものも、未出力のものも、全て出力する');
+        const only_undownloaded = confirm('未出力の振込データだけを出力しますか？\nOK：未出力のものは出力し、出力済みのものは出力しない\nキャンセル：未出力のものも、未出力のものも、全て出力する');
 
         // 支払元口座のそれぞれについて、該当するレコードを取得→加工→CSVファイルに保存
         (async () => {
@@ -272,10 +272,9 @@
     }
 
     function getTrailerRecord(kintone_records) {
-        let total_amount = 0;
-        kintone_records.forEach((kintone_record) => {
-            total_amount += Number(kintone_record[fieldTransferAmount_APPLY]['value']);
-        });
+        const total_amount = kintone_records.reduce((amount, record) => {
+            return amount + Number(record[fieldTransferAmount_APPLY]['value'])
+        }, 0);
 
         return [
             '8',                    //データ区分：トレーラーレコード
@@ -290,7 +289,7 @@
         ];
     }
 
-    // CSVをファイルとしてローカルにダウンロードする。
+    // 生成したデータをCSVファイルとしてローカルにダウンロードする。
     function downloadFile(csv_data, file_name) {
         console.log('downloading...');
         console.log(csv_data);
