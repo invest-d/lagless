@@ -129,40 +129,35 @@
             'LAGLESS'
         ];
 
-        let csv_promises = [];
-        requester_accounts.forEach((account) => {
-            const csv_promise = getKintoneRecords(account, payment_date, only_undownloaded)
-            .then((target_applies) => {
-                console.log('target_applies: '  + account);
-                console.log(target_applies);
+        // 支払元口座のそれぞれについて、該当するレコードを取得→加工→CSVファイルに保存
+        (async () => {
+            await Promise.all(requester_accounts.map(async (account) => {
+                try {
+                    const target_records = await getKintoneRecords(account, payment_date, only_undownloaded);
+                    console.log('target_applies: account of '  + account);
+                    console.log(target_records);
 
-                if (target_applies.length === 0) {
-                    return new kintone.Promise((resolve, reject) => {
-                        reject(`支払元口座：${account}の支払い対象はありませんでした。`);
-                    });
+                    if (target_records.length === 0) {
+                        alert(`支払元口座：${account}の支払い対象はありませんでした。`);
+                        return;
+                    }
+
+                    const csv_data = generateCsvData(account, target_records, payment_date);
+
+                    const file_name = `支払日${payment_date}ぶんの振込データ（振込元：${account}）.csv`;
+                    downloadFile(csv_data, file_name);
+
+                    return updateToDone(target_records);
+                } catch (err) {
+                    console.log(err);
+                    alert(`支払元口座：${account}のデータを処理中にエラーが発生しました。`);
                 }
+            }));
 
-                const csv_data = generateCsvData(account, target_applies, payment_date);
-
-                const file_name = '支払日' + payment_date + 'ぶんの振込データ（振込元：' + account + '）.csv';
-                downloadFile(csv_data, file_name);
-
-                return updateToDone(target_applies);
-            })
-            .catch((rejected) => {
-                alert(rejected);
-            });
-
-            csv_promises.push(csv_promise);
-        });
-
-        // 全ての支払元口座について処理が終わったら
-        kintone.Promise.all(csv_promises)
-        .then(() => {
             alert('振込データのダウンロードを完了しました。');
             alert('ページを更新します。');
             window.location.reload();
-        });
+        })();
     }
 
     function getKintoneRecords(account, target_date, only_undownloaded) {
@@ -193,7 +188,6 @@
             , (resp) => {
                 resolve(resp.records);
             }, (err) => {
-                console.log(err);
                 reject(err);
             });
         });
@@ -318,12 +312,12 @@
         saveAs(write_data, file_name);
     }
 
-    function updateToDone(kintone_records) {
+    function updateToDone(outputted_records) {
         console.log('出力を終えたレコードの状態を出力済みに更新する');
 
         const request_body = {
             'app': APP_ID_APPLY,
-            'records': kintone_records.map((record) => {
+            'records': outputted_records.map((record) => {
                 return {
                     'id': record[fieldRecordId_APPLY]['value'],
                     'record': {
@@ -335,14 +329,7 @@
             })
         };
 
-        return new kintone.Promise((resolve, reject) => {
-            kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
-            , (resp) => {
-                resolve();
-            }, (err) => {
-                reject(err);
-            });
-        });
+        return kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body);
     }
 
     // 全角カナを半角カナに変換する。全角カナ以外の入力はそのまま返す。
