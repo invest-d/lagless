@@ -114,7 +114,7 @@
 
     // CSV出力ボタンクリック時の処理を定義
     function clickOutputCsv() {
-        const do_download = confirm('振込用のcsvデータをダウンロードします。よろしいですか？\n\n※このあとに支払日の指定と、\n未出力のものだけ出力 OR 出力済みも含めて全て出力 のどちらかを選択できます。');
+        const do_download = confirm('振込用のcsvデータをダウンロードします。よろしいですか？\n\n※このあとに支払日を指定し、\n未出力のものだけ出力 OR 出力済みも含めて全て出力 のどちらかを選択できます。');
         if (!do_download) {
             alert('処理は中断されました。');
             return;
