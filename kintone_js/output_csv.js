@@ -24,6 +24,10 @@
     const statusDone_APPLY          = '振込データ出力済';
     const fieldPaymentDate_APPLY    = 'paymentDate';
     const fieldPaymentAccount_APPLY = 'paymentAccount';
+    const requester_accounts = [
+        'ID',
+        'LAGLESS'
+    ];
 
     class Account {
         constructor() {
@@ -33,10 +37,10 @@
         }
 
         create(account) {
-            if (account === 'ID') {
+            if (account === requester_accounts[0]) {
                 return new AccountID();
             }
-            else if (account === 'LAGLESS') {
+            else if (account === requester_accounts[1]) {
                 return new AccountLagless();
             }
             else {
@@ -123,11 +127,6 @@
         }
 
         const only_undownloaded = confirm('未出力の振込データだけを出力しますか？\nOK：未出力のみを出力し、出力済みのものは出力しない\nキャンセル：未出力のものも、未出力のものも、全て出力する');
-
-        const requester_accounts = [
-            'ID',
-            'LAGLESS'
-        ];
 
         // 支払元口座のそれぞれについて、該当するレコードを取得→加工→CSVファイルに保存
         (async () => {
