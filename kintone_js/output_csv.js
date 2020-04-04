@@ -29,10 +29,11 @@
         'LAGLESS'
     ];
 
+    // インベストデザイン側の口座情報をそれぞれclassで持つ
     class Account {
         constructor() {
-            this.smbc_header_record = '1';
-            this.smbc_transfer_type = '21';
+            this.smbc_header_record  = '1';
+            this.smbc_transfer_type  = '21';
             this.smbc_char_code_type = '0';
         }
 
@@ -53,11 +54,11 @@
         constructor() {
             super();
             this.smbc_code      = '2648852000';
-            this.requester_name = ('ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ' + ' '.repeat(40)).slice(0, 40);
+            this.requester_name = 'ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ'.padEnd(40, ' ');
             this.bank_code      = '0009';
-            this.bank_name      = adjustLength(zenkakuToHankaku(bank_info[this.bank_code]['kana']), 15);
+            this.bank_name      = addPadding(bank_info[this.bank_code]['kana'], 15);
             this.branch_code    = '219';
-            this.branch_name    = adjustLength(zenkakuToHankaku(bank_info[this.bank_code]['branches'][this.branch_code]['kana']), 15);
+            this.branch_name    = addPadding(bank_info[this.bank_code]['branches'][this.branch_code]['kana'], 15);
             this.deposit_type   = '1';
             this.account_number = '3391195';
         }
@@ -67,11 +68,11 @@
         constructor() {
             super();
             this.smbc_code      = '3648579000';
-            this.requester_name = ('ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ' + ' '.repeat(40)).slice(0, 40);
+            this.requester_name = 'ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ'.padEnd(40, ' ');
             this.bank_code      = '0009';
-            this.bank_name      = adjustLength(zenkakuToHankaku(bank_info[this.bank_code]['kana']), 15);
+            this.bank_name      = addPadding(bank_info[this.bank_code]['kana'], 15);
             this.branch_code    = '219';
-            this.branch_name    = adjustLength(zenkakuToHankaku(bank_info[this.bank_code]['branches'][this.branch_code]['kana']), 15);
+            this.branch_name    = addPadding(bank_info[this.bank_code]['branches'][this.branch_code]['kana'], 15);
             this.deposit_type   = '1';
             this.account_number = '3409134';
         }
@@ -149,7 +150,7 @@
                     return updateToDone(target_records);
                 } catch (err) {
                     console.log(err);
-                    alert(`支払元口座：${account}のデータを処理中にエラーが発生しました。`);
+                    alert(`支払元口座：${account}のデータを処理中にエラーが発生しました。\n${err.message}`);
                 }
             }));
 
@@ -240,16 +241,14 @@
     function getDataRecords(kintone_records) {
         return kintone_records.map((kintone_record) => {
             const bank_code_to = ('0000' + kintone_record[fieldBankCode_APPLY]['value']).slice(-4);
-            const bank_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['kana']);
-            const bank_name_to = adjustLength(bank_name_kana, 15);
+            const bank_name_to = addPadding(bank_info[bank_code_to]['kana'], 15);
             const branch_code_to = ('000' + kintone_record[fieldBranchCode_APPLY]['value']).slice(-3);
-            const branch_name_kana = zenkakuToHankaku(bank_info[bank_code_to]['branches'][branch_code_to]['kana']);
-            const branch_name_to = adjustLength(branch_name_kana, 15);
+            const branch_name_to = addPadding(bank_info[bank_code_to]['branches'][branch_code_to]['kana'], 15);
             const deposit_to = (kintone_record[fieldDepositType_APPLY]['value'] === '普通')
                 ? '1'
                 : '2';
             const account_number_to = kintone_record[fieldAccountNumber_APPLY]['value'];
-            const account_name_to = (zenkakuToHankaku(kintone_record[fieldAccountName_APPLY]['value']) + ' '.repeat(30)).slice(0, 30);
+            const account_name_to = addPadding(kintone_record[fieldAccountName_APPLY]['value'], 30);
             const amount_of_money = kintone_record[fieldTransferAmount_APPLY]['value'];
 
             return [
@@ -331,80 +330,77 @@
         return kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body);
     }
 
-    // 全角カナを半角カナに変換する。全角カナ以外の入力はそのまま返す。
+    // 全銀形式で使用可能な文字を半角に変換する。使用不可能な文字を受け取った場合はエラーとする。
     function zenkakuToHankaku(input_string){
         const zenkaku_array = [
             'ア','イ','ウ','エ','オ','カ','キ','ク','ケ','コ'
             ,'サ','シ','ス','セ','ソ','タ','チ','ツ','テ','ト'
             ,'ナ','ニ','ヌ','ネ','ノ','ハ','ヒ','フ','ヘ','ホ'
-            ,'マ','ミ','ム','メ','モ','ヤ','ヰ','ユ','ヱ','ヨ'
-            ,'ラ','リ','ル','レ','ロ','ワ','ヲ','ン'
+            ,'マ','ミ','ム','メ','モ','ヤ','ユ','ヨ'
+            ,'ラ','リ','ル','レ','ロ','ワ','ヰ','ヱ','ヲ','ン'
             ,'ガ','ギ','グ','ゲ','ゴ','ザ','ジ','ズ','ゼ','ゾ'
             ,'ダ','ヂ','ヅ','デ','ド','バ','ビ','ブ','ベ','ボ'
             ,'パ','ピ','プ','ペ','ポ'
             ,'ァ','ィ','ゥ','ェ','ォ','ャ','ュ','ョ','ッ'
             ,'゛','°','、','。','「','」','ー','・','（','）','￥','／'
-            ,'－','‐','―','─','━',
+            ,'－','‐','―','─','━'
+            ,"Ａ","Ｂ","Ｃ","Ｄ","Ｅ","Ｆ","Ｇ","Ｈ","Ｉ","Ｊ","Ｋ","Ｌ","Ｍ","Ｎ","Ｏ","Ｐ","Ｑ","Ｒ","Ｓ","Ｔ","Ｕ","Ｖ","Ｗ","Ｘ","Ｙ","Ｚ"
+            ,"ａ","ｂ","ｃ","ｄ","ｅ","ｆ","ｇ","ｈ","ｉ","ｊ","ｋ","ｌ","ｍ","ｎ","ｏ","ｐ","ｑ","ｒ","ｓ","ｔ","ｕ","ｖ","ｗ","ｘ","ｙ","ｚ"
+            ,"０","１","２","３","４","５","６","７","８","９"
+            ,'　'
         ];
 
         const hankaku_array = [
             'ｱ','ｲ','ｳ','ｴ','ｵ','ｶ','ｷ','ｸ','ｹ','ｺ'
             ,'ｻ','ｼ','ｽ','ｾ','ｿ','ﾀ','ﾁ','ﾂ','ﾃ','ﾄ'
             ,'ﾅ','ﾆ','ﾇ','ﾈ','ﾉ','ﾊ','ﾋ','ﾌ','ﾍ','ﾎ'
-            ,'ﾏ','ﾐ','ﾑ','ﾒ','ﾓ','ﾔ','ｲ','ﾕ','ｴ','ﾖ'
-            ,'ﾗ','ﾘ','ﾙ','ﾚ','ﾛ','ﾜ','ｦ','ﾝ'
+            ,'ﾏ','ﾐ','ﾑ','ﾒ','ﾓ','ﾔ','ﾕ','ﾖ'
+            ,'ﾗ','ﾘ','ﾙ','ﾚ','ﾛ','ﾜ','ｲ','ｴ','ｦ','ﾝ'
             ,'ｶﾞ','ｷﾞ','ｸﾞ','ｹﾞ','ｺﾞ','ｻﾞ','ｼﾞ','ｽﾞ','ｾﾞ','ｿﾞ'
             ,'ﾀﾞ','ﾁﾞ','ﾂﾞ','ﾃﾞ','ﾄﾞ','ﾊﾞ','ﾋﾞ','ﾌﾞ','ﾍﾞ','ﾎﾞ'
             ,'ﾊﾟ','ﾋﾟ','ﾌﾟ','ﾍﾟ','ﾎﾟ'
-            ,'ｧ','ｨ','ｩ','ｪ','ｫ','ｬ','ｭ','ｮ','ｯ'
-            ,'ﾞ','ﾟ',',','.','｢','｣','-',' ','(',')','\\','/' //中黒は使用不可能なのでスペースにする
+            ,'ｱ','ｲ','ｳ','ｴ','ｵ','ﾔ','ﾕ','ﾖ','ﾂ'
+            ,'ﾞ','ﾟ',',','.','｢','｣','-',' ','(',')','\\','/' //中黒は使用不可能なのでスペースにする。
             ,'-','-','-','-','-'
+            ,"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
+            ,"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"
+            ,"0","1","2","3","4","5","6","7","8","9"
+            ,' '
         ];
 
-        let converted = "";
+        let converted_han = "";
 
         for (let i = 0; i < input_string.length; i++){
             let input_char = input_string.charAt(i);
-            const zen_index = zenkaku_array.indexOf(input_char);
-            // 全角カナの配列の中に見つからなければそのまま返す
-            if(zen_index >= 0){
-                input_char = hankaku_array[zen_index];
+            if (hankaku_array.includes(input_char)) {
+                // 元々半角文字だったらそのまま使う
+                converted_han += input_char;
+            } else if (zenkaku_array.includes(input_char)){
+                // 使えるけど全角の文字は半角にして使う
+                converted_han += hankaku_array[zenkaku_array.indexOf(input_char)];
+            } else {
+                // 使えない文字はエラー
+                throw new Error(`振込データに使用できない文字が含まれています：${input_string}`);
             }
-            converted += input_char;
         }
 
-        return converted;
+        return converted_han;
     }
 
-    // 全角文字を2、半角文字を1として文字数を計算する
-    function getBytes(str) {
-        // 半角カタカナを、半角文字の代表としてアルファベットKに置換
-        str = str.replace(/[｡-ﾟ]/g, 'K');
-        let hex = '';
-        for (let i = 0; i < str.length; i++) {
-            // 16進数の文字コードに変換することで、半角英数文字は半角2文字に、全角文字は半角4文字に変換
-            hex += str.charCodeAt(i).toString(16);
-        }
-        // 2文字になった半角と4文字になった全角の文字列のlengthを2で割ることで文字数を算出
-        return hex.length / 2;
-    }
+    // 全銀フォーマットの文字数に合わせるため、半角文字に変換して指定文字数まで半角空白を追加する。もし指定文字数より多かったら右から削る。
+    function addPadding(input, num) {
+        // inputは半角に出来るものだけ受け付ける
+        const input_han = zenkakuToHankaku(input);
+        const char_num = input_han.length;
+        let padded = input_han;
 
-    // 全角文字を2、半角文字を1として、元の文字列の右に指定文字数まで半角空白を追加する。元々指定文字数より多かったら右から削る。
-    function adjustLength(str, num) {
-        const str_byte_length = getBytes(str);
-        let trimmed = str;
-
-        if (num - str_byte_length > 0) {
-            for (let i = 0; i < num - str_byte_length; i++) {
-                trimmed += ' ';
-            }
+        if (num - char_num > 0) {
+            padded = input_han + ' '.repeat(num - char_num);
         }
         else {
-            while (getBytes(trimmed) > num) {
-                trimmed = trimmed.slice(0, -1);
-            }
+            padded = padded.slice(0, num);
         }
 
-        return trimmed;
+        return padded;
     }
 })();
