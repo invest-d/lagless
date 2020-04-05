@@ -29,7 +29,7 @@
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
-            const button = getCountAppliesButton();
+            const button = createCountAppliesButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -39,7 +39,7 @@
         return document.getElementById('countApplies') === null;
     }
 
-    function getCountAppliesButton() {
+    function createCountAppliesButton() {
         let countApplies = document.createElement('button');
         countApplies.id = 'countApplies';
         countApplies.innerText = '直近一年間の申込み回数を更新';
