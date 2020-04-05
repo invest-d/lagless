@@ -49,12 +49,12 @@
 
     // ボタンクリック時の処理を定義
     function clickCountApplies() {
-        get_applies_last_year()
+        getAppliesLastYear()
         .then((kyoryoku_id_array) => {
-            return count_by_kyoryoku_id(kyoryoku_id_array);
+            return countByKyoryokuId(kyoryoku_id_array);
         })
         .then((counted_by_kyoryoku_id) => {
-            return update_kyoryoku_master(counted_by_kyoryoku_id);
+            return updateKyoryokuMaster(counted_by_kyoryoku_id);
         })
         .then((update_records_num) => {
             console.log(update_records_num + ' records updated.');
@@ -64,7 +64,7 @@
         });
     }
 
-    function get_applies_last_year() {
+    function getAppliesLastYear() {
         return new kintone.Promise((resolve, reject) => {
             new kintone.Promise((rslv) => {
                 console.log('直近1年間に実行完了している申込レコードを全て取得する');
@@ -74,7 +74,7 @@
                 let request_body = {
                     "app": APP_ID_APPLY,
                     "fields": [fieldKyoryokuId_APPLY],
-                    "query": `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${get_query_paid_in_last_year()} order by ${fieldRecordNo_APPLY} asc`,
+                    "query": `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${getQueryPaidInLastYear()} order by ${fieldRecordNo_APPLY} asc`,
                     "size": KINTONE_GET_MAX_SIZE
                 };
 
@@ -108,7 +108,7 @@
         });
     }
 
-    function count_by_kyoryoku_id(kyoryoku_id_array) {
+    function countByKyoryokuId(kyoryoku_id_array) {
         return new Promise((resolve) => {
             console.log('協力会社IDごとに回数をカウントする');
             // 想定する引数の値：[{"ルックアップ": {"type": "hoge", "value": "foo"}}, ...]
@@ -133,7 +133,7 @@
         })
     }
 
-    function update_kyoryoku_master(counted_by_kyoryoku_id) {
+    function updateKyoryokuMaster(counted_by_kyoryoku_id) {
         return new kintone.Promise((resolve) => {
             let update_process = new kintone.Promise((rslv) => {
                 console.log('カウント結果をもとに協力会社マスタを更新する');
@@ -158,7 +158,7 @@
                 });
 
                 // 一度に更新できるレコード数は100件までなので、put_recordsを100件ごとに分割する
-                let divided_records = array_chunk(put_records, 100);
+                let divided_records = arrayChunk(put_records, 100);
                 let promises = [];
                 divided_records.forEach((records) => {
                     let put_promise = new kintone.Promise((put_resolve) => {
@@ -202,12 +202,12 @@
                     updated_ids.push(kyoryoku_id);
                 });
                 console.log(updated_ids);
-                return get_zero_target_ids(updated_ids);
+                return getZeroTargetIds(updated_ids);
             })
             .then((zero_target_ids) => {
                 console.log('ゼロ回に更新すべき協力会社IDの一覧を取得完了');
                 console.log(zero_target_ids);
-                return update_to_zero_count(zero_target_ids);
+                return updateToZeroCount(zero_target_ids);
             })
             .then((zero_updated_count) => {
                 resolve(Number(not_zero_updated_count) + Number(zero_updated_count));
@@ -216,11 +216,11 @@
     }
 
     // ...arrayを分割して二次元配列にして返す。二次元配列内の各配列の要素数はsizeで指定した数になる。最後の配列の要素数はあまり。
-    function array_chunk([...array], size = 1) {
+    function arrayChunk([...array], size = 1) {
         return array.reduce((acc, value, index) => index % size ? acc : [...acc, array.slice(index, index + size)], []);
     }
 
-    function get_zero_target_ids(updated_ids) {
+    function getZeroTargetIds(updated_ids) {
         return new kintone.Promise((resolve) => {
             console.log('協力会社マスタから、updated_ids以外で申込み回数が1回以上の協力会社IDを取得する');
 
@@ -239,7 +239,7 @@
         })
     }
 
-    function update_to_zero_count(zero_target_ids) {
+    function updateToZeroCount(zero_target_ids) {
         return new kintone.Promise((resolve, reject) => {
             let request_body = {
                 "app": APP_ID_KYORYOKU,
@@ -273,7 +273,7 @@
         });
     }
 
-    function get_query_paid_in_last_year() {
+    function getQueryPaidInLastYear() {
         // クエリに使う日付書式は"更新日時 > \"2012-02-03T09:00:00+0900\""で、ダブルクォートのエスケープが必要
         let target_date = new Date();
         target_date.setFullYear(target_date.getFullYear() - 1);
