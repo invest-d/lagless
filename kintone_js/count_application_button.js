@@ -29,7 +29,7 @@
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
-            let button = getCountAppliesButton();
+            const button = getCountAppliesButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -71,7 +71,7 @@
                 console.log('カーソル作成');
 
                 // 過去1年間のレコードを取得するため、件数が多くなることを想定
-                let request_body = {
+                const request_body = {
                     "app": APP_ID_APPLY,
                     "fields": [fieldKyoryokuId_APPLY],
                     "query": `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${getQueryPaidInLastYear()} order by ${fieldRecordNo_APPLY} asc`,
@@ -88,14 +88,14 @@
             })
             .then(async (cursor_id) => {
                 console.log('カーソル取得');
-                let request_body = {
+                const request_body = {
                     'id': cursor_id
                 };
 
                 let kyoryoku_records = [];
                 let records_remaining = true;
                 do {
-                    let resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', request_body);
+                    const resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', request_body);
                     kyoryoku_records = kyoryoku_records.concat(resp.records);
                     records_remaining = resp.next;
                 } while (records_remaining);
@@ -113,7 +113,7 @@
             console.log('協力会社IDごとに回数をカウントする');
             // 想定する引数の値：[{"ルックアップ": {"type": "hoge", "value": "foo"}}, ...]
             // まず協力会社IDのvalueだけ抜き出す
-            let kyoryoku_ids = kintone_records.map((field) => {
+            const kyoryoku_ids = kintone_records.map((field) => {
                 return field[fieldKyoryokuId_APPLY]["value"];
             });
 
@@ -133,10 +133,10 @@
 
     function updateKyoryokuMaster(counted_by_kyoryoku_id) {
         return new kintone.Promise((resolve) => {
-            let update_process = new kintone.Promise((rslv) => {
+            const update_process = new kintone.Promise((rslv) => {
                 console.log('カウント結果をもとに協力会社マスタを更新する');
 
-                let put_records = Object.entries(counted_by_kyoryoku_id).map(([id, count]) => {
+                const put_records = Object.entries(counted_by_kyoryoku_id).map(([id, count]) => {
                     return {
                         "updateKey": {
                             "field": fieldKyoryokuId_KYORYOKU,
@@ -151,11 +151,11 @@
                 });
 
                 // 一度に更新できるレコード数は100件までなので、put_recordsを100件ごとに分割する
-                let divided_records = arrayChunk(put_records, 100);
+                const divided_records = arrayChunk(put_records, 100);
                 let promises = [];
                 for (const records of divided_records) {
-                    let put_promise = new kintone.Promise((put_resolve) => {
-                        let request_body = {
+                    const put_promise = new kintone.Promise((put_resolve) => {
+                        const request_body = {
                             "app": APP_ID_KYORYOKU,
                             "records": records
                         };
@@ -169,7 +169,7 @@
                 }
 
                 kintone.Promise.all(promises).then((put_results) => {
-                    let updated_count = put_results.reduce((count, result) => {
+                    const updated_count = put_results.reduce((count, result) => {
                         return count + Number(result);
                     });
 
@@ -213,9 +213,9 @@
             console.log('協力会社マスタから、updated_ids以外で申込み回数が1回以上の協力会社IDを取得する');
 
             // in条件に使用する文字列を取得する。 '("1", "87", "48", ...)'
-            let in_query = '(\"' + updated_ids.join('\",\"') + '\")';
+            const in_query = '(\"' + updated_ids.join('\",\"') + '\")';
 
-            let request_body = {
+            const request_body = {
                 'app': APP_ID_KYORYOKU,
                 'fields': [fieldKyoryokuId_KYORYOKU],
                 'query': `${fieldNumberOfApplication_KYORYOKU} > 0 and ${fieldKyoryokuId_KYORYOKU} not in ${in_query}`
@@ -229,7 +229,7 @@
 
     function updateToZeroCount(zero_target_ids) {
         return new kintone.Promise((resolve, reject) => {
-            let request_body = {
+            const request_body = {
                 "app": APP_ID_KYORYOKU,
                 "records": zero_target_ids.records.map((kyoryoku_id_obj) => {
                     return {
@@ -262,7 +262,7 @@
         let target_date = new Date();
         target_date.setFullYear(target_date.getFullYear() - 1);
         target_date.setHours(0, 0, 0, 0);
-        let a_year_ago_today = String(target_date.getFullYear())
+        const a_year_ago_today = String(target_date.getFullYear())
             + "-" + ("0" + String(target_date.getMonth() + 1)).slice(-2)
             + "-" + ("0" + String(target_date.getDate())).slice(-2)
             + "T"
