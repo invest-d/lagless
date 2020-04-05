@@ -17,13 +17,13 @@
 
     const KINTONE_GET_MAX_SIZE = 500;
 
-    const APP_ID_APPLY = 159;
+    const APP_ID_APPLY = kintone.app.getId();
     const fieldRecordNo_APPLY = 'レコード番号';
     const fieldKyoryokuId_APPLY = 'ルックアップ';
     const fieldStatus_APPLY = '状態';
     const statusPaid_APPLY = '実行完了';
 
-    const APP_ID_KYORYOKU = 88;
+    const APP_ID_KYORYOKU = 88; // 開発・本番とも共通のため固定
     const fieldKyoryokuId_KYORYOKU = '支払企業No_';
     const fieldNumberOfApplication_KYORYOKU = 'numberOfApplication';
 
