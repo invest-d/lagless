@@ -9,7 +9,9 @@ $(function() {
 
     if(location.protocol == 'file:') {
         show({
+            "工務店正式名称": "ほげほげ工務店",
             "cost": "3.85%",
+            "yield": "1%",
             "transfer_fee": "100円(税抜)",
             "original": "翌月末",
             "mail": "d-p@invest-d.com",
@@ -27,26 +29,36 @@ $(function() {
             "early": "当月末",
             "schedule": [
                 {
-                    "closing": "2019-09-20",
-                    "deadline": "2019-09-22",
-                    "early": "2019-09-30"
-                },
-                {
-                    "closing": "2019-10-20",
-                    "deadline": "2019-10-22",
-                    "early": "2019-10-31"
-                },
-                {
                     "closing": "2019-11-20",
                     "deadline": "2019-11-22",
+                    "late": "2020-01-31",
                     "early": "2019-11-30"
                 },
                 {
                     "closing": "2020-12-20",
                     "deadline": "2020-12-22",
+                    "late": "2021-03-31",
                     "early": "2020-12-31"
                 }
-            ]
+            ],
+            "default_pay_date_list": [
+                {
+                    "closing_date": "2020-04-30",
+                    "default_pay_date": "2020-05-25"
+                },
+                {
+                    "closing_date": "2020-05-31",
+                    "default_pay_date": "2020-06-25"
+                },
+                {
+                    "closing_date": "2020-06-30",
+                    "default_pay_date": "2020-07-24"
+                },
+                {
+                    "closing_date": "2020-12-20",
+                    "default_pay_date": "2021-01-15"
+                }
+            ], 
         }, param);
         $('#content').show();
         return;
@@ -75,7 +87,9 @@ var show = function(client, param) {
     $('.service').text(client.service);
     var mode = { 'ラグレス': 'lagless', 'ダンドリペイメント': 'dandori', 'リノベ不動産Payment': 'renove' }[client.service];
     
+    $('.工務店正式名称').text(client.工務店正式名称);
     $('.cost').text(client.cost);
+    $('.yield').text(client.yield);
     $('.transfer_fee').text(client.transfer_fee);
     $('.limit').text(client.limit);
     $('.cond-'+mode).show();
@@ -106,6 +120,16 @@ var show = function(client, param) {
         $('.schedule_closing').text(format_date(schedule.closing));
         $('.schedule_early').text(format_date(schedule.early));
         $('.schedule_deadline').text(format_date(schedule.deadline));
+        $('.schedule_late').text(format_date(schedule.late));
+
+        client.default_pay_date_list.find(function(pair) {
+            if(pair.closing_date == schedule.closing) {
+                $('.schedule_default').text(format_date(pair.default_pay_date));
+                return true;
+            } else {
+                return false;
+            }
+        });
     }
     
     if(param.f) {
