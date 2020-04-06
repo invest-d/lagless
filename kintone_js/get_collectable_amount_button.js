@@ -22,7 +22,7 @@
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
-            const button = getGetCollectableAmountButton();
+            const button = createGetCollectableAmountButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -32,7 +32,7 @@
         return document.getElementById('getCollectable') === null;
     }
 
-    function getGetCollectableAmountButton() {
+    function createGetCollectableAmountButton() {
         let getCollectable = document.createElement('button');
         getCollectable.id = 'getCollectable';
         getCollectable.innerText = '各工務店の未回収金額を更新';
