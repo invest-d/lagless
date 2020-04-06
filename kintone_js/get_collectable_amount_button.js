@@ -22,7 +22,7 @@
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
-            let button = getGetCollectableAmountButton();
+            const button = getGetCollectableAmountButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -42,7 +42,7 @@
 
     // ボタンクリック時の処理を定義
     function clickGetCollectableAmount() {
-        let clicked_ok = confirm('回収アプリの未回収金額を合計して取得します。');
+        const clicked_ok = confirm('回収アプリの未回収金額を合計して取得します。');
         if (!clicked_ok) {
             alert('処理は中断されました。');
             return;
@@ -90,7 +90,7 @@
         return new kintone.Promise((resolve, reject) => {
             console.log('回収アプリの中でステータスが(回収済み||却下)以外の全てのレコードを取得する');
 
-            let request_body = {
+            const request_body = {
                 'app': APP_ID_COLLECT,
                 'fields': [
                     fieldConstructionShopId_COLLECT,
@@ -115,12 +115,12 @@
             console.log('取引企業Noごとに未回収金額を合計する。');
 
             // 取引企業Noの配列を作る
-            let customer_codes_collect = unpaid_records.map((unpaid_record) => {
+            const customer_codes_collect = unpaid_records.map((unpaid_record) => {
                 return unpaid_record[fieldCustomerCode_COLLECT]['value'];
             });
 
             // 取引企業Noの重複を削除する
-            let not_dpl_customers = customer_codes_collect.filter((id, index, self) => {
+            const not_dpl_customers = customer_codes_collect.filter((id, index, self) => {
                 return self.indexOf(id) === index;
             });
 
@@ -128,7 +128,7 @@
             // まず各取引企業Noごとに、{取引企業No: 合計金額}のオブジェクトを作る。
             let sum_by_customers = {};
             for (const customer_code of not_dpl_customers) {
-                let unpaid_total = unpaid_records.reduce((total, record) => {
+                const unpaid_total = unpaid_records.reduce((total, record) => {
                     if (record[fieldCustomerCode_COLLECT]['value'] === customer_code) {
                         return total + Number(record[fieldUnpaidAmount_COLLECT]['value']);
                     }
@@ -145,7 +145,7 @@
             .then((komuten_customer_pairs) => {
                 // 最後に、sum_by_customersの取引企業Noの値を、対応する工務店IDで記述したオブジェクトを作成する。
                 // 取引企業Noと工務店IDは1:n対応なので、対応する工務店IDが複数ある場合は、同じ未回収金額のオブジェクトを複数作成する。
-                let sum_by_constructors = komuten_customer_pairs.map((pair) => {
+                const sum_by_constructors = komuten_customer_pairs.map((pair) => {
                     return {
                         [fieldConstructionShopId_COLLECT]: pair[fieldConstructionShopId_KOMUTEN]['value'],
                         [fieldUnpaidAmount_COLLECT]: sum_by_customers[pair[fieldCustomerCode_KOMUTEN]['value']]
@@ -161,9 +161,9 @@
         return new kintone.Promise((resolve) => {
             console.log('工務店IDと取引企業Noの組み合わせを取得。回収アプリの取引企業Noのみ');
 
-            let in_query = '(\"' + customer_codes_collect.join('\",\"') + '\")';
+            const in_query = '(\"' + customer_codes_collect.join('\",\"') + '\")';
 
-            let request_body = {
+            const request_body = {
                 'app': APP_ID_KOMUTEN,
                 'fields': [fieldConstructionShopId_KOMUTEN, fieldCustomerCode_KOMUTEN],
                 'query': `${fieldCustomerCode_KOMUTEN} in ${in_query}`
@@ -180,29 +180,26 @@
         return new kintone.Promise((resolve, reject) => {
             console.log('計算結果を工務店マスタにPUTする');
 
-            // PUT用にオブジェクトを生成
-            let put_records = sum_result.map((sum) => {
-                return {
-                        'updateKey': {
-                            "field": fieldConstructionShopId_KOMUTEN,
-                            "value": sum[fieldConstructionShopId_COLLECT]
-                        },
-                        'record': {
-                            [fieldUnpaidAmount_KOMUTEN]: {
-                                'value': sum[fieldUnpaidAmount_COLLECT]
-                            }
-                        }
-                };
-            });
-
-            // PUT
-            let request_body = {
+            const request_body = {
                 'app': APP_ID_KOMUTEN,
-                'records': put_records
+                'records': sum_result.map((sum) => {
+                    return {
+                            'updateKey': {
+                                "field": fieldConstructionShopId_KOMUTEN,
+                                "value": sum[fieldConstructionShopId_COLLECT]
+                            },
+                            'record': {
+                                [fieldUnpaidAmount_KOMUTEN]: {
+                                    'value': sum[fieldUnpaidAmount_COLLECT]
+                                }
+                            }
+                    }
+                })
             };
+
             kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
             , (resp) => {
-                let updated_ids = resp.records.map((record) => record['id']);
+                const updated_ids = resp.records.map((record) => record['id']);
                 resolve(updated_ids);
             }, (err) => {
                 console.log(err);
@@ -216,8 +213,8 @@
             console.log('未回収金額がゼロになった工務店の金額をゼロに更新する');
 
             // updated_idsに含まれていないのに、未回収金額が1円以上の工務店IDを取得。
-            let in_query = '(\"' + updated_record_ids.join('\",\"') + '\")';
-            let request_body = {
+            const in_query = '(\"' + updated_record_ids.join('\",\"') + '\")';
+            const request_body = {
                 'app': APP_ID_KOMUTEN,
                 'fields': [fieldConstructionShopId_KOMUTEN],
                 'query': `$id not in ${in_query} and ${fieldUnpaidAmount_KOMUTEN} > 0`
@@ -233,7 +230,7 @@
                 })
             })
             .then((komuten_records) => {
-                let request_body = {
+                const request_body = {
                     'app': APP_ID_KOMUTEN,
                     'records': komuten_records.map((record) => {
                         return {
