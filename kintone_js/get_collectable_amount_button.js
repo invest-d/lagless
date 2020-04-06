@@ -115,9 +115,8 @@
             console.log('取引企業Noごとに未回収金額を合計する。');
 
             // 取引企業Noの配列を作る
-            let customer_codes_collect = [];
-            unpaid_records.filter((unpaid_record) => {
-                customer_codes_collect.push(unpaid_record[fieldCustomerCode_COLLECT]['value']);
+            let customer_codes_collect = unpaid_records.map((unpaid_record) => {
+                return unpaid_record[fieldCustomerCode_COLLECT]['value'];
             });
 
             // 取引企業Noの重複を削除する
@@ -125,31 +124,35 @@
                 return self.indexOf(id) === index;
             });
 
-            // このあとPUTするときに工務店IDが必要になるので、工務店IDと取引企業Noの組み合わせを取得
+            // 工務店ID、取引企業Noごとの未回収金額の合計、という2つの情報を持つオブジェクトを作っていく。
+            // まず各取引企業Noごとに、{取引企業No: 合計金額}のオブジェクトを作る。
+            let sum_by_customers = {};
+            for (const customer_code of not_dpl_customers) {
+                let unpaid_total = unpaid_records.reduce((total, record) => {
+                    if (record[fieldCustomerCode_COLLECT]['value'] === customer_code) {
+                        return total + Number(record[fieldUnpaidAmount_COLLECT]['value']);
+                    }
+                    else {
+                        return total + 0;
+                    }
+                }, 0);
+
+                sum_by_customers[customer_code] = unpaid_total;
+            }
+
+            // 次に、取引企業Noに対応する工務店IDの組み合わせを取得する。
             getKomutenCustomerPairs(not_dpl_customers)
             .then((komuten_customer_pairs) => {
-                // 各取引企業Noごとに金額を合計する
-                let sum_result = [];
-                not_dpl_customers.forEach((customer_code) => {
-                    let unpaid_total = 0;
-                    unpaid_records.forEach((unpaid_record) => {
-                        if (unpaid_record[fieldCustomerCode_COLLECT]['value'] === customer_code) {
-                            unpaid_total += Number(unpaid_record[fieldUnpaidAmount_COLLECT]['value']);
-                        }
-                    });
-
-                    // sum_resultに工務店IDの情報を入力。
-                    // 同一の取引企業Noを持つ工務店IDが複数ある場合は、全ての工務店IDに同じ金額を設定
-                    komuten_customer_pairs.forEach((pair) => {
-                        if (pair[fieldCustomerCode_KOMUTEN]['value'] === customer_code) {
-                            sum_result.push({
-                                [fieldConstructionShopId_COLLECT]: pair[fieldConstructionShopId_KOMUTEN]['value'],
-                                [fieldUnpaidAmount_COLLECT]: unpaid_total
-                            });
-                        }
-                    });
+                // 最後に、sum_by_customersの取引企業Noの値を、対応する工務店IDで記述したオブジェクトを作成する。
+                // 取引企業Noと工務店IDは1:n対応なので、対応する工務店IDが複数ある場合は、同じ未回収金額のオブジェクトを複数作成する。
+                let sum_by_constructors = komuten_customer_pairs.map((pair) => {
+                    return {
+                        [fieldConstructionShopId_COLLECT]: pair[fieldConstructionShopId_KOMUTEN]['value'],
+                        [fieldUnpaidAmount_COLLECT]: sum_by_customers[pair[fieldCustomerCode_KOMUTEN]['value']]
+                    };
                 });
-                resolve(sum_result);
+
+                resolve(sum_by_constructors);
             });
         });
     }
@@ -178,10 +181,8 @@
             console.log('計算結果を工務店マスタにPUTする');
 
             // PUT用にオブジェクトを生成
-            let put_records = [];
-            sum_result.forEach((sum) => {
-                put_records.push(
-                    {
+            let put_records = sum_result.map((sum) => {
+                return {
                         'updateKey': {
                             "field": fieldConstructionShopId_KOMUTEN,
                             "value": sum[fieldConstructionShopId_COLLECT]
@@ -191,8 +192,7 @@
                                 'value': sum[fieldUnpaidAmount_COLLECT]
                             }
                         }
-                    }
-                );
+                };
             });
 
             // PUT
@@ -202,10 +202,7 @@
             };
             kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
             , (resp) => {
-                let updated_ids = [];
-                resp.records.forEach((record) => {
-                    updated_ids.push(record['id']);
-                })
+                let updated_ids = resp.records.map((record) => record['id']);
                 resolve(updated_ids);
             }, (err) => {
                 console.log(err);
@@ -236,24 +233,21 @@
                 })
             })
             .then((komuten_records) => {
-                let records = [];
-                komuten_records.forEach((record) => {
-                    records.push({
-                        'updateKey': {
-                            'field': fieldConstructionShopId_KOMUTEN,
-                            'value': record[fieldConstructionShopId_KOMUTEN]['value']
-                        },
-                        'record': {
-                            [fieldUnpaidAmount_KOMUTEN]: {
-                                'value': 0
-                            }
-                        }
-                    })
-                });
-
                 let request_body = {
                     'app': APP_ID_KOMUTEN,
-                    'records': records
+                    'records': komuten_records.map((record) => {
+                        return {
+                            'updateKey': {
+                                'field': fieldConstructionShopId_KOMUTEN,
+                                'value': record[fieldConstructionShopId_KOMUTEN]['value']
+                            },
+                            'record': {
+                                [fieldUnpaidAmount_KOMUTEN]: {
+                                    'value': 0
+                                }
+                            }
+                        };
+                    })
                 };
 
                 kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
