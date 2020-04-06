@@ -47,182 +47,157 @@
     }
 
     // ボタンクリック時の処理を定義
-    function clickCountApplies() {
-        getAppliesLastYear()
-        .then((kintone_records) => {
-            return countByKyoryokuId(kintone_records);
-        })
-        .then((counted_by_kyoryoku_id) => {
-            return updateKyoryokuMaster(counted_by_kyoryoku_id);
-        })
-        .then((update_records_num) => {
+    async function clickCountApplies() {
+        try {
+            const target = await getAppliesLastYear()
+            .catch((err) => {
+                console.log(err);
+                throw new Error('申込みレコードの取得中にエラーが発生しました。');
+            });
+
+            const count_result = countByKyoryokuId(target.records);
+
+            const update_records_num = await updateKyoryokuMaster(count_result)
+            .catch((err) => {
+                console.log(err);
+                throw new Error('申込み回数の更新中にエラーが発生しました。');
+            });
+
             console.log(update_records_num + ' records updated.');
             alert(update_records_num + '件 の協力会社の申込み回数を更新しました。');
             alert('ページを更新します。');
             window.location.reload();
-        });
+        } catch(err) {
+            alert(err);
+        }
     }
 
     function getAppliesLastYear() {
-        return new kintone.Promise((resolve, reject) => {
-            console.log('直近1年間に実行完了している申込レコードを全て取得する');
+        console.log('直近1年間に実行完了している申込レコードを全て取得する');
 
-            // 過去1年間のレコードを取得するため、件数が多くなることを想定。seek: true
-            const request_body = {
-                'app': APP_ID_APPLY,
-                'fields': [fieldKyoryokuId_APPLY],
-                'query': `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${getQueryPaidInLastYear()}`,
-                'seek': true
-            };
+        // 過去1年間のレコードを取得するため、件数が多くなることを想定。seek: true
+        const request_body = {
+            'app': APP_ID_APPLY,
+            'fields': [fieldKyoryokuId_APPLY],
+            'query': `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${getQueryPaidInLastYear()}`,
+            'seek': true
+        };
 
-            kintoneRecord.getAllRecordsByQuery(request_body).then((resp) => {
-                resolve(resp.records);
-            })
-            .catch((err)=> {
-                reject(err);
-            });
-        });
+        return kintoneRecord.getAllRecordsByQuery(request_body);
     }
 
     function countByKyoryokuId(kintone_records) {
-        return new Promise((resolve) => {
-            console.log('協力会社IDごとに回数をカウントする');
-            // 想定する引数の値：[{"ルックアップ": {"type": "hoge", "value": "foo"}}, ...]
-            // まず協力会社IDのvalueだけ抜き出す
-            const kyoryoku_ids = kintone_records.map((field) => {
-                return field[fieldKyoryokuId_APPLY]["value"];
-            });
+        console.log(kintone_records);
+        console.log('協力会社IDごとに回数をカウントする');
+        // 想定する引数の値：[{"ルックアップ": {"type": "hoge", "value": "foo"}}, ...]
+        // まず協力会社IDのvalueだけ抜き出す
+        const kyoryoku_ids = kintone_records.map((field) => {
+            return field[fieldKyoryokuId_APPLY]["value"];
+        });
 
-            // [id]: [回数]の辞書形式にしてそれぞれカウント
-            let counts = {};
-            for (const id of kyoryoku_ids) {
-                counts[id] = counts.hasOwnProperty(id)
-                    ? counts[id] + 1
-                    : 1;
-            }
+        // [id]: [回数]の辞書形式にしてそれぞれカウント
+        let counts = {};
+        for (const id of kyoryoku_ids) {
+            counts[id] = counts.hasOwnProperty(id)
+                ? counts[id] + 1
+                : 1;
+        }
 
-            // 空白は不要なので消しておく
-            delete counts[''];
-            resolve(counts);
-        })
+        // 空白は不要なので消しておく
+        delete counts[''];
+        return counts;
     }
 
-    function updateKyoryokuMaster(counted_by_kyoryoku_id) {
-        return new kintone.Promise((resolve, reject) => {
-            const update_process = new kintone.Promise((rslv) => {
-                console.log('カウント結果をもとに協力会社マスタを更新する');
+    async function updateKyoryokuMaster(counted_by_kyoryoku_id) {
+        console.log('カウント結果をもとに協力会社マスタを更新する');
 
-                const put_records = Object.entries(counted_by_kyoryoku_id).map(([id, count]) => {
-                    return {
-                        'updateKey': {
-                            'field': fieldKyoryokuId_KYORYOKU,
-                            'value': id
-                        },
-                        'record': {
-                            [fieldNumberOfApplication_KYORYOKU]: {
-                                'value': count
-                            }
+        const request_body = {
+            'app': APP_ID_KYORYOKU,
+            'records': Object.entries(counted_by_kyoryoku_id).map(([id, count]) => {
+                return {
+                    'updateKey': {
+                        'field': fieldKyoryokuId_KYORYOKU,
+                        'value': id
+                    },
+                    'record': {
+                        [fieldNumberOfApplication_KYORYOKU]: {
+                            'value': count
                         }
-                    };
-                });
-
-                const request_body = {
-                    'app': APP_ID_KYORYOKU,
-                    'records': put_records
+                    }
                 };
-
-                if (request_body['records'].length === 0) {
-                    // 更新対象なしのままupdateしようとするとエラーになる
-                    rslv(0);
-                } else {
-                    kintoneRecord.updateAllRecords(request_body).then((resp) => {
-                        rslv(resp.results[0].records.length);
-                    })
-                    .catch((err) => {
-                        reject(err);
-                    });
-                }
-            });
-
-            // 最後の「XX件更新しました」メッセージに使う変数
-            let not_zero_updated_count = 0;
-
-            update_process.then((updated_count) => {
-                console.log('updated count is ' + String(updated_count));
-                not_zero_updated_count = updated_count;
-
-                // 前回の処理以降、申込み回数が1回以上からゼロ回になった協力会社を更新する。
-                // ゼロ回になった協力会社 とは：
-                //   先ほどのupdate処理に含まれていない協力会社である
-                //   かつ 申込回数が1回以上になっている
-                console.log('更新済みIDの一覧');
-                console.log(Object.keys(counted_by_kyoryoku_id));
-                return getZeroTargetIds(Object.keys(counted_by_kyoryoku_id));
             })
-            .then((zero_target_ids) => {
-                console.log('ゼロ回に更新すべき協力会社IDの一覧を取得完了');
-                console.log(zero_target_ids);
-                return updateToZeroCount(zero_target_ids);
-            })
-            .then((zero_updated_count) => {
-                resolve(Number(not_zero_updated_count) + Number(zero_updated_count));
-            });
-        });
+        };
+
+        let kyoroku_count_last_year = 0;
+        if (request_body['records'].length !== 0) {
+            // 直近1年間に申込があった場合だけupdateする
+            const update_resp = await kintoneRecord.updateAllRecords(request_body);
+            kyoroku_count_last_year = update_resp.results[0].records.length;
+        }
+
+        // 最後の「XX件更新しました」メッセージに使う変数
+        console.log(`直近1年間に申し込みのあった${kyoroku_count_last_year}社の協力会社について更新しました。`);
+
+        // 前回の処理以降、申込み回数が1回以上からゼロ回になった協力会社を更新する。
+        // ゼロ回になった協力会社 とは：
+        //   先ほどのupdate処理に含まれていない協力会社である
+        //   かつ 申込回数が1回以上になっている
+        console.log('更新済みIDの一覧');
+        console.log(Object.keys(counted_by_kyoryoku_id));
+        const zero_target_ids = await getZeroTargetIds(Object.keys(counted_by_kyoryoku_id));
+
+        console.log('ゼロ回に更新すべき協力会社IDの一覧を取得完了');
+        console.log(zero_target_ids);
+        const zero_updated_count = await updateToZeroCount(zero_target_ids);
+        return Number(kyoroku_count_last_year) + Number(zero_updated_count);
     }
 
     function getZeroTargetIds(updated_ids) {
-        return new kintone.Promise((resolve) => {
-            console.log('協力会社マスタから、updated_ids以外で申込み回数が1回以上の協力会社IDを取得する');
+        console.log('協力会社マスタから、updated_ids以外で申込み回数が1回以上の協力会社IDを取得する');
 
-            // in条件に使用する文字列を取得する。 '("1", "87", "48", ...)'
-            const in_query = '(\"' + updated_ids.join('\",\"') + '\")';
+        // in条件に使用する文字列を取得する。 '("1", "87", "48", ...)'
+        const in_query = '(\"' + updated_ids.join('\",\"') + '\")';
 
-            const request_body = {
-                'app': APP_ID_KYORYOKU,
-                'fields': [fieldKyoryokuId_KYORYOKU],
-                'query': `${fieldNumberOfApplication_KYORYOKU} > 0 and ${fieldKyoryokuId_KYORYOKU} not in ${in_query}`,
-                'seek': true
-            };
+        const request_body = {
+            'app': APP_ID_KYORYOKU,
+            'fields': [fieldKyoryokuId_KYORYOKU],
+            'query': `${fieldNumberOfApplication_KYORYOKU} > 0 and ${fieldKyoryokuId_KYORYOKU} not in ${in_query}`,
+            'seek': true
+        };
 
-            kintoneRecord.getAllRecordsByQuery(request_body).then((resp) => {
-                resolve(resp);
-            });
-        })
+        return kintoneRecord.getAllRecordsByQuery(request_body);
     }
 
-    function updateToZeroCount(zero_target_ids) {
-        return new kintone.Promise((resolve, reject) => {
-            const request_body = {
-                'app': APP_ID_KYORYOKU,
-                'records': zero_target_ids.records.map((kyoryoku_id_obj) => {
-                    return {
-                        'updateKey': {
-                            'field': fieldKyoryokuId_KYORYOKU,
-                            'value': kyoryoku_id_obj[fieldKyoryokuId_KYORYOKU]['value']
-                        },
-                        'record': {
-                            [fieldNumberOfApplication_KYORYOKU]: {
-                                'value': 0
-                            }
+    async function updateToZeroCount(zero_target_ids) {
+        const request_body = {
+            'app': APP_ID_KYORYOKU,
+            'records': zero_target_ids.records.map((kyoryoku_id_obj) => {
+                return {
+                    'updateKey': {
+                        'field': fieldKyoryokuId_KYORYOKU,
+                        'value': kyoryoku_id_obj[fieldKyoryokuId_KYORYOKU]['value']
+                    },
+                    'record': {
+                        [fieldNumberOfApplication_KYORYOKU]: {
+                            'value': 0
                         }
-                    };
-                })
-            };
+                    }
+                };
+            })
+        };
 
-            if (request_body['records'].length === 0) {
-                // 更新対象なしのままupdateしようとするとエラーになる
-                resolve(0);
-            } else {
-                kintoneRecord.updateAllRecords(request_body).then((resp) => {
-                    resolve(resp.results[0].records.length);
-                })
-                .catch((err) => {
-                    alert('レコードの更新に失敗しました')
-                    console.log(err);
-                    reject(err);
-                });
+        if (request_body['records'].length === 0) {
+            // 更新対象なしのままupdateしようとするとエラーになる
+            return 0;
+        } else {
+            try {
+                const update_resp = await kintoneRecord.updateAllRecords(request_body);
+                return update_resp.results[0].records.length;
+            } catch(err) {
+                // 更新対象なし以外のエラーは上位でハンドリング
+                throw new Error(err);
             }
-        });
+        }
     }
 
     function getQueryPaidInLastYear() {
