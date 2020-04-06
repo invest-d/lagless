@@ -19,6 +19,7 @@
     const fieldKyoryokuId_APPLY = 'ルックアップ';
     const fieldStatus_APPLY = '状態';
     const statusPaid_APPLY = '実行完了';
+    const fieldPaymentDate = 'paymentDate';
 
     const APP_ID_KYORYOKU = 88; // 開発・本番とも共通のため固定
     const fieldKyoryokuId_KYORYOKU = '支払企業No_';
@@ -79,7 +80,7 @@
         const request_body = {
             'app': APP_ID_APPLY,
             'fields': [fieldKyoryokuId_APPLY],
-            'query': `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${getQueryPaidInLastYear()}`,
+            'query': `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${fieldPaymentDate} >= ${getFormattedDate(getOneYearAgoToday())}`,
             'seek': true
         };
 
@@ -200,19 +201,27 @@
         }
     }
 
-    function getQueryPaidInLastYear() {
-        // クエリに使う日付書式は"更新日時 > \"2012-02-03T09:00:00+0900\""で、ダブルクォートのエスケープが必要
+    function getOneYearAgoToday() {
+        // 今日の1年前の日付をDate型で取得する。時刻はAM0時0分0秒で固定。
         let target_date = new Date();
         target_date.setFullYear(target_date.getFullYear() - 1);
         target_date.setHours(0, 0, 0, 0);
-        const a_year_ago_today = String(target_date.getFullYear())
-            + '-' + ('0' + String(target_date.getMonth() + 1)).slice(-2)
-            + '-' + ('0' + String(target_date.getDate())).slice(-2)
+        return target_date;
+    }
+
+    function getFormattedDate(input_date) {
+        // Date型をクエリ用の日付書式に変換する。
+        // 日付フィールドに対するクエリの例： "更新日時 > \"2012-02-03T09:00:00+0900\""（ダブルクォートのエスケープが必要）
+        const formatted_date = '\"'
+            + String(input_date.getFullYear())
+            + '-' + ('0' + String(input_date.getMonth() + 1)).slice(-2)
+            + '-' + ('0' + String(input_date.getDate())).slice(-2)
             + 'T'
-            + ('0' + String(target_date.getHours())).slice(-2)
-            + ':' + ('0' + String(target_date.getMinutes())).slice(-2)
-            + ':' + ('0' + String(target_date.getSeconds())).slice(-2)
-            + '+0900'; //タイムゾーン
-        return `paymentDate >= \"${a_year_ago_today}\"`;
+            + ('0' + String(input_date.getHours())).slice(-2)
+            + ':' + ('0' + String(input_date.getMinutes())).slice(-2)
+            + ':' + ('0' + String(input_date.getSeconds())).slice(-2)
+            + '+0900' //タイムゾーン
+            + '\"';
+        return formatted_date;
     }
 })();
