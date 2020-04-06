@@ -1,7 +1,7 @@
 /*
     Version 1
-    回収アプリ(160)のレコードのうち、回収予定のレコードを取得し、
-    取引企業Noごとに回収予定金額を合計し、工務店マスタ(96)の未回収金額にセットする。
+    回収アプリのレコードのうち、回収予定のレコードを取得し、
+    取引企業Noごとに回収予定金額を合計し、工務店マスタの未回収金額にセットする。
 */
 
 (function () {
@@ -12,7 +12,7 @@
     const fieldCustomerCode_KOMUTEN = 'customerCode';
     const fieldUnpaidAmount_KOMUTEN = 'uncollectedAmount';
 
-    const APP_ID_COLLECT = 160;
+    const APP_ID_COLLECT = kintone.app.getId();
     const fieldConstructionShopId_COLLECT = 'constructionShopId';
     const fieldCustomerCode_COLLECT = 'customerCode';
     const fieldUnpaidAmount_COLLECT = 'scheduledCollectableAmount';
