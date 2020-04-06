@@ -60,7 +60,9 @@ $(function() {
                 }
             ], 
         }, param);
-        $('#content').show();
+        setTimeout(function() {
+            $('#content').show();
+        }, 500);
         return;
     }
     
