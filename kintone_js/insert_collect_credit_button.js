@@ -173,10 +173,11 @@
         console.log('not_duplicated_key_pairs is');
         console.log(not_duplicated_key_pairs);
 
-        // 工務店マスタから回収日の情報を取得
+        // 工務店マスタから回収日の情報を取得。申込みのある工務店のみ
         const body_komuten_payment_date = {
             'app': APP_ID_KOMUTEN,
             'fields': [fieldConstructionShopId_KOMUTEN, fieldOriginalPaymentDate_KOMUTEN],
+            'query': `${fieldConstructionShopId_KOMUTEN} in (\"${key_pairs.map(pair => pair[fieldConstructionShopId_APPLY]).join('\",\"')}\")`,
             'seek': true
         };
 
