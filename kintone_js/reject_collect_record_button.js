@@ -59,7 +59,7 @@
     }
 
     // ボタンクリック時の処理を定義
-    function clickRejectCollectRecord(event) {
+    async function clickRejectCollectRecord(event) {
         // 却下されたレコードでのみ動作
         const rejected = (event.record[fieldStatus_COLLECT]['value'] === statusRejected_COLLECT);
         if (!rejected) {
@@ -73,51 +73,51 @@
             return;
         }
 
-        getDetailApplies(event.record[fieldRecordNo_COLLECT]['value'])
-        .then((detail_ids) => {
-            return deleteCollectIdField(detail_ids);
-        })
-        .then(() => {
-            return deleteCollectRecord(event.record[fieldRecordNo_COLLECT]['value']);
-        })
-        .then((result) => {
-            console.log(result);
+        try {
+            const detail_ids = await getDetailApplies(event.record[fieldRecordNo_COLLECT]['value'])
+            .catch((err) => {
+                console.log(err);
+                throw new Error('回収レコードに紐づく申込レコードの取得中にエラーが発生しました。');
+            });
+
+            await deleteCollectIdField(detail_ids.records)
+            .catch((err) => {
+                console.log(err);
+                throw new Error('申込レコードの回収IDの削除中にエラーが発生しました。');
+            });
+
+            await deleteCollectRecord(event.record[fieldRecordNo_COLLECT]['value'])
+            .catch((err) => {
+                console.log(err);
+                throw new Error('回収レコードの削除中にエラーが発生しました。\n今開いているレコード詳細画面から手動で削除してください。\nその後、不要な申込レコードを「保留中」にした後で、債権譲渡契約準備を開始ボタンを再び押してください。');
+            });
 
             alert('回収IDの紐づけを解除し、回収レコードを削除しました。\n不要な申込レコードを「保留中」にした後で、債権譲渡契約準備を開始ボタンを再び押してください。');
             alert('レコード一覧画面に戻ります。');
             window.location.href = `https://investdesign.cybozu.com/k/${APP_ID_COLLECT}/`;
-        }, (err) => {
-            alert(err.message);
-        })
-        .catch((err) => {
-            console.log(err);
+        } catch(err) {
             alert(err);
-        });
+        }
     }
 
     function getDetailApplies(collect_record_no) {
-        return new kintone.Promise((resolve, reject) => {
-            console.log('表示中の回収レコードの明細にあたる申込レコードを全て取得する');
+        console.log('表示中の回収レコードの明細にあたる申込レコードを全て取得する');
 
-            const request_body = {
-                'app': APP_ID_APPLY,
-                'fields': [fieldRecordNo_APPLY],
-                'query': `${fieldCollectId_APPLY} = ${collect_record_no}`
-            };
+        const request_body = {
+            'app': APP_ID_APPLY,
+            'fields': [fieldRecordNo_APPLY],
+            'query': `${fieldCollectId_APPLY} = ${collect_record_no}`
+        };
 
-            kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body, function(resp) {
-                resolve(resp.records);
-            }, function(err) {
-                reject(err);
-            });
-        });
+        return kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body);
     }
 
     function deleteCollectIdField(detail_ids) {
-        return new kintone.Promise((resolve, reject) => {
-            console.log('クラウドサインの明細にあたるレコードの回収IDをブランクに戻す');
+        console.log('クラウドサインの明細にあたるレコードの回収IDをブランクに戻す');
 
-            const update_records = detail_ids.map((detail) => {
+        const request_body = {
+            'app': APP_ID_APPLY,
+            records: detail_ids.map((detail) => {
                 return {
                     'id': detail[fieldRecordNo_APPLY]['value'],
                     'record': {
@@ -126,35 +126,20 @@
                         }
                     }
                 };
-            });
+            })
+        };
 
-            const request_body = {
-                'app': APP_ID_APPLY,
-                records: update_records
-            };
-
-            kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body, (resp) => {
-                resolve();
-            }, (err) => {
-                reject(err);
-            });
-        });
+        return kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body);
     }
 
     function deleteCollectRecord(record_id) {
-        return new kintone.Promise((resolve, reject) => {
-            console.log('回収アプリから、今開いているレコードを削除する');
+        console.log('回収アプリから、今開いているレコードを削除する');
 
-            const request_body = {
-                'app': APP_ID_COLLECT,
-                'ids': [record_id]
-            };
+        const request_body = {
+            'app': APP_ID_COLLECT,
+            'ids': [record_id]
+        };
 
-            kintone.api(kintone.api.url('/k/v1/records', true), 'DELETE', request_body, (resp) => {
-                resolve(resp);
-            }, function(err) {
-                reject(err);
-            });
-        });
-    };
+        return kintone.api(kintone.api.url('/k/v1/records', true), 'DELETE', request_body);
+    }
 })();
