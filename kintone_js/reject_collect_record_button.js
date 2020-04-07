@@ -7,12 +7,32 @@
 (function () {
     "use strict";
 
-    const APP_ID_COLLECT = 160;
+    const APP_ID = ((app_id) => {
+        switch(app_id) {
+            // 開発版の回収アプリ
+            case 160:
+                return {
+                    APPLY: 159,
+                    COLLECT: 160
+                };
+
+            // 本番の回収アプリ
+            case 162:
+                return {
+                    APPLY: 161,
+                    COLLECT: 162
+                };
+            default:
+                console.warn('Unknown app: ' + app_id);
+        }
+    })(kintone.app.getId());
+
+    const APP_ID_COLLECT = APP_ID.COLLECT;
     const fieldRecordNo_COLLECT = 'レコード番号';
     const fieldStatus_COLLECT = 'collectStatus';
     const statusRejected_COLLECT = 'クラウドサイン却下・再作成待ち';
 
-    const APP_ID_APPLY = 159;
+    const APP_ID_APPLY = APP_ID.APPLY;
     const fieldRecordNo_APPLY = 'レコード番号';
     const fieldCollectId_APPLY = 'collectId';
 
