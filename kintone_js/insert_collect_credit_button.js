@@ -166,10 +166,10 @@
             // 今回はオブジェクトの配列なので、インデックスを探す上でindexOfが使えない代わりにfindIndexを使っている。
             const not_duplicated_key_pairs = key_pairs.filter((key_pair1, key_pairs_index, self_arr) => {
                 const target_index = self_arr.findIndex(((key_pair2) => {
-                    const same_constructionShopId = (key_pair1[fieldConstructionShopId_APPLY] === key_pair2[fieldConstructionShopId_APPLY]);
-                    const same_closingDay = (key_pair1[fieldClosingDay_APPLY] === key_pair2[fieldClosingDay_APPLY]);
-
-                    return (same_constructionShopId && same_closingDay)
+                    // 工務店IDの一致
+                    return (key_pair1[fieldConstructionShopId_APPLY] === key_pair2[fieldConstructionShopId_APPLY])
+                    // 締日の一致
+                    && (key_pair1[fieldClosingDay_APPLY] === key_pair2[fieldClosingDay_APPLY]);
                 }));
 
                 const not_dpl = (target_index === key_pairs_index);
