@@ -60,7 +60,7 @@
 
     // ボタンクリック時の処理を定義
     function clickRejectCollectRecord(event) {
-        // 却下されたレコードでない場合は動作させない
+        // 却下されたレコードでのみ動作
         let rejected = (event.record[fieldStatus_COLLECT]['value'] === statusRejected_COLLECT);
         if (!rejected) {
             alert('削除するには、このレコードの状態を一度却下にして保存してからもう一度操作してください。');
@@ -117,16 +117,15 @@
         return new kintone.Promise((resolve, reject) => {
             console.log('クラウドサインの明細にあたるレコードの回収IDをブランクに戻す');
 
-            let update_records = [];
-            detail_ids.forEach((detail) => {
-                update_records.push({
+            let update_records = detail_ids.map((detail) => {
+                return {
                     'id': detail[fieldRecordNo_APPLY]['value'],
                     'record': {
                         [fieldCollectId_APPLY]: {
                             'value': null
                         }
                     }
-                });
+                };
             });
 
             let request_body = {
