@@ -60,7 +60,7 @@
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
-            const button = getInsertCollectRecordButton();
+            const button = createInsertCollectRecordButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -70,7 +70,7 @@
         return document.getElementById('insertCollect') === null;
     }
 
-    function getInsertCollectRecordButton() {
+    function createInsertCollectRecordButton() {
         let insertCollect = document.createElement('button');
         insertCollect.id = 'insertCollect';
         insertCollect.innerText = '債権譲渡契約準備を開始';
