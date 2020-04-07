@@ -38,7 +38,7 @@
 
     kintone.events.on('app.record.detail.show', function(event) {
         if (needShowButton()) {
-            const button = getRejectCollectRecordButton(event);
+            const button = createRejectCollectRecordButton(event);
             kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -50,7 +50,7 @@
         return not_displayed;
     }
 
-    function getRejectCollectRecordButton(event) {
+    function createRejectCollectRecordButton(event) {
         let getRejectCollect = document.createElement('button');
         getRejectCollect.id = 'rejectCollect';
         getRejectCollect.innerText = 'クラウドサイン再送信用にレコードを削除する';
