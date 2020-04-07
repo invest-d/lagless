@@ -14,7 +14,27 @@
 
     const KINTONE_GET_MAX_SIZE = 500;
 
-    const APP_ID_APPLY = 159;
+    const APP_ID = ((app_id) => {
+        switch(app_id) {
+            // 開発版の申込みアプリ
+            case 159:
+                return {
+                    APPLY: 159,
+                    COLLECT: 160
+                };
+
+            // 本番の申込みアプリ
+            case 161:
+                return {
+                    APPLY: 161,
+                    COLLECT: 162
+                };
+            default:
+                console.warn('Unknown app: ' + app_id);
+        }
+    })(kintone.app.getId());
+
+    const APP_ID_APPLY = APP_ID.APPLY;
     const fieldRecordId_APPLY = 'レコード番号';
     const fieldStatus_APPLY = '状態';
     const statusReady_APPLY = '支払予定明細送付済'
@@ -25,7 +45,7 @@
     const fieldPaymentDate_APPLY = 'paymentDate';
     const fieldCollectId_APPLY = 'collectId';
 
-    const APP_ID_COLLECT = 160;
+    const APP_ID_COLLECT = APP_ID.COLLECT;
     const fieldRecordId_COLLECT = 'レコード番号';
     const fieldConstructionShopId_COLLECT = 'constructionShopId';
     const fieldClosingDate_COLLECT = 'closingDate';
