@@ -41,7 +41,7 @@
     }
 
     // ボタンクリック時の処理を定義
-    function clickGetCollectableAmount() {
+    async function clickGetCollectableAmount() {
         const clicked_ok = confirm('回収アプリの未回収金額を合計して取得します。');
         if (!clicked_ok) {
             alert('処理は中断されました。');
@@ -50,211 +50,182 @@
 
         // 対象となるレコードを回収アプリから全件取得
         let updated_count = 0;
-        getUnpaidRecords()
-        .then((unpaid_records) => {
+        try {
+            // 回収アプリの中で今後回収予定のレコードを全て取得
+            const unpaid = await getUnpaidRecords()
+            .catch((err) => {
+                console.log(err);
+                throw new Error('未回収レコードの読み込み中にエラーが発生しました。');
+            });
             console.log('unpaid records');
-            console.log(unpaid_records);
+            console.log(unpaid.records);
 
             // 取引企業Noごとに未回収金額を合計
-            return sumUnpaidAmountByCustomer(unpaid_records);
-        })
-        .then((sum_result) => {
+            const sum_by_customer = await sumUnpaidAmountByCustomer(unpaid.records)
+            .catch((err) => {
+                console.log(err);
+                throw new Error('未回収金額の計算中にエラーが発生しました。');
+            });
             console.log('sum result');
-            console.log(sum_result);
+            console.log(sum_by_customer);
 
             // 工務店マスタに未回収金額をPUT
-            return updateKomutenTotalUnpaidAmount(sum_result)
-        })
-        .then((updated_ids) => {
+            const updated_ids = await updateKomutenTotalUnpaidAmount(sum_by_customer)
+            .catch((err) => {
+                console.log(err);
+                throw new Error('計算した未回収金額を工務店マスタに上書き中にエラーが発生しました。');
+            });
             console.log('unpaid updated record ids');
             console.log(updated_ids);
             updated_count += updated_ids.length;
 
             // 未回収金額がゼロになった工務店レコードを更新
-            return updateKomutenUnpaidZero(updated_ids);
-        })
-        .then((updated) => {
+            const updated = await updateKomutenUnpaidZero(updated_ids)
+            .catch((err) => {
+                console.log(err);
+                throw new Error('未回収金額がゼロになった工務店の更新中にエラーが発生しました。');
+            });
             console.log('zero updated record ids');
-            console.log(updated);
-            updated_count += updated.length;
+            console.log(updated.records);
+            updated_count += updated.records.length;
 
             alert(`${updated_count}件 の工務店の未回収金額を更新しました。`);
             alert('ページを更新します。');
             window.location.reload();
-        }, (err) => {
-            alert(err.message);
-        });
+        } catch(err) {
+            alert(err);
+        }
     }
 
-    function getUnpaidRecords() {
-        return new kintone.Promise((resolve, reject) => {
-            console.log('回収アプリの中でステータスが(回収済み||却下)以外の全てのレコードを取得する');
+    async function getUnpaidRecords() {
+        console.log('回収アプリの中でステータスが(回収済み||却下)以外の全てのレコードを取得する');
 
-            const request_body = {
-                'app': APP_ID_COLLECT,
-                'fields': [
-                    fieldConstructionShopId_COLLECT,
-                    fieldCustomerCode_COLLECT,
-                    fieldUnpaidAmount_COLLECT
-                ],
-                'query': `${fieldStatus_COLLECT} not in (\"${statusAlreadyPaid_COLLECT}\", \"${statusRejected_COLLECT}\") order by レコード番号 asc`
+        const request_body = {
+            'app': APP_ID_COLLECT,
+            'fields': [
+                fieldConstructionShopId_COLLECT,
+                fieldCustomerCode_COLLECT,
+                fieldUnpaidAmount_COLLECT
+            ],
+            'query': `${fieldStatus_COLLECT} not in (\"${statusAlreadyPaid_COLLECT}\", \"${statusRejected_COLLECT}\") order by レコード番号 asc`
+        };
+
+        return kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body);
+    }
+
+    async function sumUnpaidAmountByCustomer(unpaid_records) {
+        console.log('取引企業Noごとに未回収金額を合計する。');
+
+        // 取引企業Noの配列を作る
+        const customer_codes_collect = unpaid_records.map((unpaid_record) => {
+            return unpaid_record[fieldCustomerCode_COLLECT]['value'];
+        });
+
+        // 取引企業Noの重複を削除する
+        const not_dpl_customers = customer_codes_collect.filter((id, index, self) => {
+            return self.indexOf(id) === index;
+        });
+
+        // ①工務店ID、②取引企業Noごとの未回収金額の合計、という2つの情報を持つオブジェクトを作っていく。
+        // まず各取引企業Noごとに、{取引企業No: 合計金額}のオブジェクトを作る。
+        let sum_by_customers = {};
+        for (const customer_code of not_dpl_customers) {
+            const total_unpaid = unpaid_records.reduce((total, record) => {
+                if (record[fieldCustomerCode_COLLECT]['value'] === customer_code) {
+                    return total + Number(record[fieldUnpaidAmount_COLLECT]['value']);
+                }
+                else {
+                    return total + 0;
+                }
+            }, 0);
+
+            sum_by_customers[customer_code] = total_unpaid;
+        }
+
+        // 次に、取引企業Noに対応する工務店IDの組み合わせを取得する。
+        const komuten_customer_pairs = await getKomutenCustomerPairs(not_dpl_customers);
+
+        // 最後に、sum_by_customersの取引企業Noの値を、対応する工務店IDで記述したオブジェクトを作成する。
+        // 取引企業Noと工務店IDは1:n対応なので、対応する工務店IDが複数ある場合は、同じ未回収金額のオブジェクトを複数作成する。
+        const sum_by_constructors = komuten_customer_pairs.records.map((pair) => {
+            return {
+                [fieldConstructionShopId_COLLECT]: pair[fieldConstructionShopId_KOMUTEN]['value'],
+                [fieldUnpaidAmount_COLLECT]: sum_by_customers[pair[fieldCustomerCode_KOMUTEN]['value']]
             };
-
-            kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body, (resp) => {
-                console.log(resp.records);
-                resolve(resp.records);
-            }, (err) => {
-                console.log(err);
-                reject(err);
-            });
         });
-    }
 
-    function sumUnpaidAmountByCustomer(unpaid_records) {
-        return new kintone.Promise((resolve, reject) => {
-            console.log('取引企業Noごとに未回収金額を合計する。');
-
-            // 取引企業Noの配列を作る
-            const customer_codes_collect = unpaid_records.map((unpaid_record) => {
-                return unpaid_record[fieldCustomerCode_COLLECT]['value'];
-            });
-
-            // 取引企業Noの重複を削除する
-            const not_dpl_customers = customer_codes_collect.filter((id, index, self) => {
-                return self.indexOf(id) === index;
-            });
-
-            // 工務店ID、取引企業Noごとの未回収金額の合計、という2つの情報を持つオブジェクトを作っていく。
-            // まず各取引企業Noごとに、{取引企業No: 合計金額}のオブジェクトを作る。
-            let sum_by_customers = {};
-            for (const customer_code of not_dpl_customers) {
-                const unpaid_total = unpaid_records.reduce((total, record) => {
-                    if (record[fieldCustomerCode_COLLECT]['value'] === customer_code) {
-                        return total + Number(record[fieldUnpaidAmount_COLLECT]['value']);
-                    }
-                    else {
-                        return total + 0;
-                    }
-                }, 0);
-
-                sum_by_customers[customer_code] = unpaid_total;
-            }
-
-            // 次に、取引企業Noに対応する工務店IDの組み合わせを取得する。
-            getKomutenCustomerPairs(not_dpl_customers)
-            .then((komuten_customer_pairs) => {
-                // 最後に、sum_by_customersの取引企業Noの値を、対応する工務店IDで記述したオブジェクトを作成する。
-                // 取引企業Noと工務店IDは1:n対応なので、対応する工務店IDが複数ある場合は、同じ未回収金額のオブジェクトを複数作成する。
-                const sum_by_constructors = komuten_customer_pairs.map((pair) => {
-                    return {
-                        [fieldConstructionShopId_COLLECT]: pair[fieldConstructionShopId_KOMUTEN]['value'],
-                        [fieldUnpaidAmount_COLLECT]: sum_by_customers[pair[fieldCustomerCode_KOMUTEN]['value']]
-                    };
-                });
-
-                resolve(sum_by_constructors);
-            });
-        });
+        return sum_by_constructors;
     }
 
     function getKomutenCustomerPairs(customer_codes_collect) {
-        return new kintone.Promise((resolve) => {
-            console.log('工務店IDと取引企業Noの組み合わせを取得。回収アプリの取引企業Noのみ');
+        console.log('工務店IDと取引企業Noの組み合わせを取得。回収アプリの取引企業Noのみ');
 
-            const in_query = '(\"' + customer_codes_collect.join('\",\"') + '\")';
+        const in_query = '(\"' + customer_codes_collect.join('\",\"') + '\")';
 
-            const request_body = {
-                'app': APP_ID_KOMUTEN,
-                'fields': [fieldConstructionShopId_KOMUTEN, fieldCustomerCode_KOMUTEN],
-                'query': `${fieldCustomerCode_KOMUTEN} in ${in_query}`
-            }
+        const request_body = {
+            'app': APP_ID_KOMUTEN,
+            'fields': [fieldConstructionShopId_KOMUTEN, fieldCustomerCode_KOMUTEN],
+            'query': `${fieldCustomerCode_KOMUTEN} in ${in_query}`
+        };
 
-            kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body
-            , (resp) => {
-                resolve(resp.records);
-            });
-        });
+        return kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body);
     }
 
-    function updateKomutenTotalUnpaidAmount(sum_result) {
-        return new kintone.Promise((resolve, reject) => {
-            console.log('計算結果を工務店マスタにPUTする');
+    async function updateKomutenTotalUnpaidAmount(sum_result) {
+        console.log('計算結果を工務店マスタにPUTする');
 
-            const request_body = {
-                'app': APP_ID_KOMUTEN,
-                'records': sum_result.map((sum) => {
-                    return {
-                            'updateKey': {
-                                "field": fieldConstructionShopId_KOMUTEN,
-                                "value": sum[fieldConstructionShopId_COLLECT]
-                            },
-                            'record': {
-                                [fieldUnpaidAmount_KOMUTEN]: {
-                                    'value': sum[fieldUnpaidAmount_COLLECT]
-                                }
-                            }
+        const request_body = {
+            'app': APP_ID_KOMUTEN,
+            'records': sum_result.map((sum) => {
+                return {
+                    'updateKey': {
+                        "field": fieldConstructionShopId_KOMUTEN,
+                        "value": sum[fieldConstructionShopId_COLLECT]
+                    },
+                    'record': {
+                        [fieldUnpaidAmount_KOMUTEN]: {
+                            'value': sum[fieldUnpaidAmount_COLLECT]
+                        }
                     }
-                })
-            };
+                };
+            })
+        };
 
-            kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
-            , (resp) => {
-                const updated_ids = resp.records.map((record) => record['id']);
-                resolve(updated_ids);
-            }, (err) => {
-                console.log(err);
-                reject(err);
-            });
-        });
+        const resp = await kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body);
+        // 更新に成功した工務店IDの配列を返す
+        return resp.records.map((record) => record['id']);
     }
 
-    function updateKomutenUnpaidZero(updated_record_ids) {
-        return new kintone.Promise((resolve, reject) => {
-            console.log('未回収金額がゼロになった工務店の金額をゼロに更新する');
+    async function updateKomutenUnpaidZero(updated_record_ids) {
+        console.log('未回収金額がゼロになった工務店の金額をゼロに更新する');
 
-            // updated_idsに含まれていないのに、未回収金額が1円以上の工務店IDを取得。
-            const in_query = '(\"' + updated_record_ids.join('\",\"') + '\")';
-            const request_body = {
-                'app': APP_ID_KOMUTEN,
-                'fields': [fieldConstructionShopId_KOMUTEN],
-                'query': `$id not in ${in_query} and ${fieldUnpaidAmount_KOMUTEN} > 0`
-            };
+        // updated_ids（回収アプリで回収予定の金額がある工務店ID）に含まれていないのに、未回収金額がゼロでない工務店IDを取得。
+        const in_query = '(\"' + updated_record_ids.join('\",\"') + '\")';
+        const body_remaining_unpaid = {
+            'app': APP_ID_KOMUTEN,
+            'fields': [fieldConstructionShopId_KOMUTEN],
+            'query': `$id not in ${in_query} and ${fieldUnpaidAmount_KOMUTEN} > 0`
+        };
+        const komuten_records = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', body_remaining_unpaid);
 
-            new kintone.Promise((rslv) => {
-                kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body
-                , (resp) => {
-                    rslv(resp.records);
-                }, (err) => {
-                    console.log(err);
-                    reject(err);
-                })
-            })
-            .then((komuten_records) => {
-                const request_body = {
-                    'app': APP_ID_KOMUTEN,
-                    'records': komuten_records.map((record) => {
-                        return {
-                            'updateKey': {
-                                'field': fieldConstructionShopId_KOMUTEN,
-                                'value': record[fieldConstructionShopId_KOMUTEN]['value']
-                            },
-                            'record': {
-                                [fieldUnpaidAmount_KOMUTEN]: {
-                                    'value': 0
-                                }
-                            }
-                        };
-                    })
+        // ゼロ円になった工務店の一覧を更新する
+        const body_put_zero = {
+            'app': APP_ID_KOMUTEN,
+            'records': komuten_records.records.map((record) => {
+                return {
+                    'updateKey': {
+                        'field': fieldConstructionShopId_KOMUTEN,
+                        'value': record[fieldConstructionShopId_KOMUTEN]['value']
+                    },
+                    'record': {
+                        [fieldUnpaidAmount_KOMUTEN]: {
+                            'value': 0
+                        }
+                    }
                 };
+            })
+        };
 
-                kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
-                , (resp) => {
-                    resolve(resp.records);
-                }, (err) => {
-                    console.log(err);
-                    reject(err);
-                });
-            });
-        });
+        return kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', body_put_zero);
     }
 })();
