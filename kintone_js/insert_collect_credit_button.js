@@ -12,8 +12,6 @@
 (function () {
     "use strict";
 
-    const KINTONE_GET_MAX_SIZE = 500;
-
     const APP_ID = ((app_id) => {
         switch(app_id) {
             // 開発版の申込みアプリ
@@ -57,6 +55,8 @@
     const APP_ID_KOMUTEN = 96;
     const fieldConstructionShopId_KOMUTEN = 'id';
     const fieldOriginalPaymentDate_KOMUTEN = 'original';
+
+    const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
@@ -122,45 +122,23 @@
 
     function getAppliesReadyForCollect() {
         return new kintone.Promise((resolve, reject) => {
-            new kintone.Promise((rslv) => {
-                console.log('申込みアプリの中で支払予定明細送付済 かつ 回収IDが未入力のレコードを全て取得する。');
+            console.log('申込みアプリの中で支払予定明細送付済 かつ 回収IDがブランクのレコードを全て取得する。');
+            const request_body = {
+                'app': APP_ID_APPLY,
+                'fields': [
+                    fieldRecordId_APPLY,
+                    fieldConstructionShopId_APPLY,
+                    fieldClosingDay_APPLY,
+                    fieldApplicant_APPLY,
+                    fieldTotalReceivables_APPLY,
+                    fieldPaymentDate_APPLY
+                ],
+                'query': `${fieldStatus_APPLY} in (\"${statusReady_APPLY}\") and ${fieldCollectId_APPLY} = \"\"`, //回収IDブランク
+                'seek': true
+            };
 
-                const request_body = {
-                    'app': APP_ID_APPLY,
-                    'fields': [
-                        fieldRecordId_APPLY,
-                        fieldConstructionShopId_APPLY,
-                        fieldClosingDay_APPLY,
-                        fieldApplicant_APPLY,
-                        fieldTotalReceivables_APPLY,
-                        fieldPaymentDate_APPLY
-                    ],
-                    'query': `${fieldStatus_APPLY} in (\"${statusReady_APPLY}\") and ${fieldCollectId_APPLY} = \"\" order by レコード番号 asc`,
-                    'size': KINTONE_GET_MAX_SIZE
-                };
-
-                kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'POST', request_body, (resp) => {
-                    rslv(resp.id);
-                }, (err) => {
-                    console.log(err);
-                    reject(err);
-                });
-            })
-            .then(async (cursor_id) => {
-                const request_body = {
-                    'id': cursor_id
-                };
-
-                let apply_records = [];
-                let record_remaining = true;
-                do {
-                    const resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', request_body);
-                    apply_records = apply_records.concat(resp.records);
-                    record_remaining = resp.next;
-                } while (record_remaining);
-
-                // カーソルからすべてのレコードを取得すると、カーソルは自動的に削除される。
-
+            kintoneRecord.getAllRecordsByQuery(request_body).then((resp) => {
+                const apply_records = resp.records;
                 console.log('all target records are');
                 console.log(apply_records);
                 resolve(apply_records);
@@ -203,36 +181,23 @@
 
             // 工務店マスタから回収日の情報を取得
             new kintone.Promise(async (rslv) => {
-                const cursor_body = {
+                const body_komuten_payment_date = {
                     'app': APP_ID_KOMUTEN,
                     'fields': [fieldConstructionShopId_KOMUTEN, fieldOriginalPaymentDate_KOMUTEN],
-                    'query': 'order by レコード番号 asc',
-                    'size': KINTONE_GET_MAX_SIZE
-                }
+                    'seek': true
+                };
 
-                const cursor_resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'POST', cursor_body);
-
-                const request_body = {
-                    'id': cursor_resp.id
-                }
-
-                let komuten_records = [];
-                let record_remaining = true;
-                do {
-                    const resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', request_body);
-                    komuten_records = komuten_records.concat(resp.records);
-                    record_remaining = resp.next;
-                } while (record_remaining);
+                const komuten = await kintoneRecord.getAllRecordsByQuery(body_komuten_payment_date);
 
                 // {工務店ID: 通常支払日}のオブジェクトを作る
                 let rslv_obj = {};
-                komuten_records.forEach((komuten_record) => {
+                komuten.records.forEach((komuten_record) => {
                     rslv_obj[komuten_record[fieldConstructionShopId_KOMUTEN]['value']] = komuten_record[fieldOriginalPaymentDate_KOMUTEN]['value'];
                 });
 
                 rslv(rslv_obj);
             })
-            .then((komuten_info) => {
+            .then(async (komuten_info) => {
                 // 申込レコード一覧の中から重複なしの工務店IDと締日のペアをキーに、INSERT用のレコードを作成。
                 const request_body = {
                     'app': APP_ID_COLLECT,
@@ -273,9 +238,8 @@
                 // INSERT実行
                 console.log('insert request body is');
                 console.log(request_body);
-                kintone.api(kintone.api.url('/k/v1/records', true), 'POST', request_body, (resp) => {
-                    resolve(resp.ids);
-                });
+                const resp = await kintoneRecord.addAllRecords(request_body);
+                resolve(resp.results[0].ids);
             })
             .catch((err) => {
                 console.log(err);
@@ -325,8 +289,8 @@
                     'fields': [fieldRecordId_COLLECT, fieldConstructionShopId_COLLECT, fieldClosingDate_COLLECT],
                     'query': `${fieldRecordId_COLLECT} in ${in_query}`
                 };
-                kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body
-                , (resp) => {
+
+                kintoneRecord.getAllRecordsByQuery(request_body).then((resp) => {
                     rslv(resp.records);
                 }, (err) => {
                     console.log(err);
@@ -355,11 +319,10 @@
                             }
                         };
                     })
-                }
+                };
 
-                kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body
-                , (resp) => {
-                    resolve(resp.records);
+                kintoneRecord.updateAllRecords(request_body).then((resp) => {
+                    resolve(resp.results[0].records);
                 }, (err) => {
                     console.log(err);
                     reject(err);
