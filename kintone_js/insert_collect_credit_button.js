@@ -158,7 +158,7 @@
         // 抜き出した工務店IDと締日のペアについて、重複なしのリストを作る。
         // ロジックとしては、filterを利用するよく知られた重複削除のロジックと同じ。
         // 今回はオブジェクトの配列なので、インデックスを探す上でindexOfが使えない代わりにfindIndexを使っている。
-        const not_duplicated_key_pairs = key_pairs.filter((key_pair1, key_pairs_index, self_arr) => {
+        const unique_key_pairs = key_pairs.filter((key_pair1, key_pairs_index, self_arr) => {
             const target_index = self_arr.findIndex(((key_pair2) => {
                 // 工務店IDの一致
                 return (key_pair1[fieldConstructionShopId_APPLY] === key_pair2[fieldConstructionShopId_APPLY])
@@ -166,12 +166,12 @@
                 && (key_pair1[fieldClosingDay_APPLY] === key_pair2[fieldClosingDay_APPLY]);
             }));
 
-            const not_dpl = (target_index === key_pairs_index);
-            return not_dpl;
+            const is_unique = (target_index === key_pairs_index);
+            return is_unique;
         });
 
-        console.log('not_duplicated_key_pairs is');
-        console.log(not_duplicated_key_pairs);
+        console.log('unique_key_pairs is');
+        console.log(unique_key_pairs);
 
         // 工務店マスタから回収日の情報を取得。申込みのある工務店のみ
         const body_komuten_payment_date = {
@@ -192,7 +192,7 @@
         // 申込レコード一覧の中から重複なしの工務店IDと締日のペアをキーに、INSERT用のレコードを作成。
         const request_body = {
             'app': APP_ID_COLLECT,
-            'records': not_duplicated_key_pairs.map((key_pair) => {
+            'records': unique_key_pairs.map((key_pair) => {
                 // 工務店IDと締日が同じ申込みレコードを抽出
                 const target_records = insert_targets_array.filter((obj) => {
                     return (obj[fieldConstructionShopId_APPLY]['value'] === key_pair[fieldConstructionShopId_APPLY]
@@ -266,7 +266,7 @@
     async function assignCollectIdsToApplies(applies, inserted_ids) {
         console.log('申込みレコードに回収レコードのレコード番号を振る');
 
-        // 先ほど回収アプリに挿入したレコードのidを使って、そのまま回収アプリからGET。取得上限の500件は超えない想定
+        // 先ほど回収アプリに挿入したレコードのidを使って、そのまま回収アプリからGET
         const in_query = '(\"' + inserted_ids.join('\",\"') + '\")';
         const body_new_collects = {
             'app': APP_ID_COLLECT,
