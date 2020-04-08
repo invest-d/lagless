@@ -90,7 +90,7 @@
                 let request_body = {
                     'app': APP_ID_JUDGE,
                     'fields': [customerCode_JUDGE, creditAmount_JUDGE, judgedDay_JUDGE],
-                    'query': `${creditAmount_JUDGE} >= 0`, // ヤバい取引企業は与信枠ゼロにして対応することもあるので、ゼロ円のレコードも取得
+                    'query': `${judgedDay_JUDGE} != \"\" and ${creditAmount_JUDGE} >= 0`, // ヤバい取引企業は与信枠ゼロにして対応することもあるので、ゼロ円のレコードも取得
                     'size': KINTONE_GET_MAX_SIZE
                 };
 
