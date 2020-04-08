@@ -2,13 +2,33 @@
     Version 1
     回収アプリ(160)の支払実行済みレコードに対して、工務店への振込依頼書を作成する。
     工務店IDと回収期限が同一のレコードのまとまりに対して、振込依頼書を1通生成。
-    Version1ではテキスト形式による振込依頼書を生成。
+    生成する振込依頼書はプレーンテキスト形式。
 */
 
 (function() {
     "use strict";
 
-    const APP_ID_COLLECT = 160;
+    const APP_ID = ((app_id) => {
+        switch(app_id) {
+            // 開発版の回収アプリ
+            case 160:
+                return {
+                    APPLY: 159,
+                    COLLECT: 160
+                };
+
+            // 本番の回収アプリ
+            case 162:
+                return {
+                    APPLY: 161,
+                    COLLECT: 162
+                };
+            default:
+                console.warn('Unknown app: ' + app_id);
+        }
+    })(kintone.app.getId());
+
+    const APP_ID_COLLECT = APP_ID.COLLECT;
     const fieldRecordId_COLLECT = 'レコード番号';
     const fieldDeadline_COLLECT = 'deadline';
     const fieldProductName_COLLECT = 'productName';
@@ -23,7 +43,7 @@
     const fieldStatus_COLLECT = 'collectStatus';
     const statusPaid_COLLECT = '支払実行済み'
 
-    const APP_ID_APPLY = 159;
+    const APP_ID_APPLY = APP_ID.APPLY;
     const fieldPayDestName_APPLY = '支払先正式名称';
     const fieldPayDate_APPLY = 'paymentDate';
     const fieldReceivables_APPLY = 'totalReceivables';
@@ -37,7 +57,7 @@
         }
     });
 
-    function needShowButton() {``
+    function needShowButton() {
         // 一旦は常にボタンを表示する。増殖バグだけ防止
         return document.getElementById('generateInvoice') === null;
     }
