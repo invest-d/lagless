@@ -38,7 +38,7 @@
 
     kintone.events.on('app.record.detail.show', function(event) {
         if (needShowButton()) {
-            const button = createRejectCollectRecordButton(event);
+            const button = createRejectCollectRecordButton(event.record);
             kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -50,18 +50,18 @@
         return not_displayed;
     }
 
-    function createRejectCollectRecordButton(event) {
+    function createRejectCollectRecordButton(showing_record) {
         let getRejectCollect = document.createElement('button');
         getRejectCollect.id = 'rejectCollect';
         getRejectCollect.innerText = 'クラウドサイン再送信用にレコードを削除する';
-        getRejectCollect.addEventListener('click', clickRejectCollectRecord.bind(null, event));
+        getRejectCollect.addEventListener('click', clickRejectCollectRecord.bind(null, showing_record));
         return getRejectCollect;
     }
 
     // ボタンクリック時の処理を定義
-    async function clickRejectCollectRecord(event) {
+    async function clickRejectCollectRecord(showing_record) {
         // 却下されたレコードでのみ動作
-        const rejected = (event.record[fieldStatus_COLLECT]['value'] === statusRejected_COLLECT);
+        const rejected = (showing_record[fieldStatus_COLLECT]['value'] === statusRejected_COLLECT);
         if (!rejected) {
             alert('削除するには、このレコードの状態を一度却下にして保存してからもう一度操作してください。');
             return;
@@ -74,7 +74,7 @@
         }
 
         try {
-            const detail_ids = await getDetailApplies(event.record[fieldRecordNo_COLLECT]['value'])
+            const detail_ids = await getDetailApplies(showing_record[fieldRecordNo_COLLECT]['value'])
             .catch((err) => {
                 console.log(err);
                 throw new Error('回収レコードに紐づく申込レコードの取得中にエラーが発生しました。');
@@ -86,7 +86,7 @@
                 throw new Error('申込レコードの回収IDの削除中にエラーが発生しました。');
             });
 
-            await deleteCollectRecord(event.record[fieldRecordNo_COLLECT]['value'])
+            await deleteCollectRecord(showing_record[fieldRecordNo_COLLECT]['value'])
             .catch((err) => {
                 console.log(err);
                 throw new Error('回収レコードの削除中にエラーが発生しました。\n今開いているレコード詳細画面から手動で削除してください。\nその後、不要な申込レコードを「保留中」にした後で、債権譲渡契約準備を開始ボタンを再び押してください。');
