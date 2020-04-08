@@ -37,7 +37,7 @@
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
-            let button = getCopyCreditButton();
+            const button = getCopyCreditButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -57,7 +57,7 @@
 
     // ボタンクリック時の処理を定義
     function clickCopyCredit() {
-        let clicked_ok = confirm('付与与信枠を最新の額に更新しますか？');
+        const clicked_ok = confirm('付与与信枠を最新の額に更新しますか？');
         if (!clicked_ok) {
             alert('処理は中断されました。');
             return;
@@ -87,7 +87,7 @@
                 console.log('審査アプリの中で審査完了日が最新のレコードを取引企業Noごとにすべて取得する。');
 
                 // 全件取得してから、取引企業Noごとの最新レコードを抜き出す
-                let request_body = {
+                const request_body = {
                     'app': APP_ID_JUDGE,
                     'fields': [customerCode_JUDGE, creditAmount_JUDGE, judgedDay_JUDGE],
                     'query': `${judgedDay_JUDGE} != \"\" and ${creditAmount_JUDGE} >= 0`, // ヤバい取引企業は与信枠ゼロにして対応することもあるので、ゼロ円のレコードも取得
@@ -102,7 +102,7 @@
             })
             .then((cursor_id) => {
                 return new kintone.Promise(async (resolve) => {
-                    let request_body = {
+                    const request_body = {
                         'id': cursor_id
                     };
 
@@ -110,7 +110,7 @@
 
                     let remaining = true;
                     do {
-                        let resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', request_body);
+                        const resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', request_body);
                         records = records.concat(resp.records);
                         remaining = resp.next;
                     } while (remaining);
@@ -152,19 +152,19 @@
 
     // YYYY-MM-DDの書式のままでは日付の比較ができないので、比較可能な値に変換する
     function getComparableDate(yyyy_mm_dd) {
-        let date_info = String(yyyy_mm_dd).split('-');
-        let date = new Date(Number(date_info[0]), Number(date_info[1]-1), Number(date_info[2]));
+        const date_info = String(yyyy_mm_dd).split('-');
+        const date = new Date(Number(date_info[0]), Number(date_info[1]-1), Number(date_info[2]));
         return date.getTime();
     }
 
     function updateKomutenCredits(latest_judge_records) {
         return new kintone.Promise((resolve, reject) => {
-            let get_komuten_info = new kintone.Promise((rslv, rjct) => {
+            const get_komuten_info = new kintone.Promise((rslv, rjct) => {
                 console.log('工務店マスタからレコードIDと取引企業Noの一覧を取得する');
                 // カーソルを作成
                 // 付与与信枠を取得したくない工務店は除外する
-                let komuten_cursor = new kintone.Promise((resolve_post_cursor) => {
-                    let post_cursor_body = {
+                const komuten_cursor = new kintone.Promise((resolve_post_cursor) => {
+                    const post_cursor_body = {
                         'app': APP_ID_KOMUTEN,
                         'fields': [recordNo_KOMUTEN, customerCode_KOMUTEN],
                         'query': `${fieldGetCreditNextTime_KOMUTEN} in (\"${statusGetCredit_KOMUTEN}\")`,
@@ -180,14 +180,14 @@
 
                 // カーソルから工務店全件取得
                 komuten_cursor.then(async (cursor) => {
-                    let get_cursor_body = {
+                    const get_cursor_body = {
                         'id': cursor.id
                     };
 
                     let komuten_info = [];
                     let records_remaining = true;
                     do {
-                        let resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', get_cursor_body);
+                        const resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', get_cursor_body);
                         Array.prototype.push.apply(komuten_info, resp.records);
                         records_remaining = resp.next;
                     } while (records_remaining);
@@ -196,10 +196,10 @@
                 });
             });
 
-            let process_record_ids = get_komuten_info.then((komuten_info) => {
+            const process_record_ids = get_komuten_info.then((komuten_info) => {
                 return new kintone.Promise((rslv) => {
                     // 各工務店レコードに、審査アプリから取得した与信枠をPUTするオブジェクトを作る。
-                    let put_records = komuten_info.map((komuten) => {
+                    const put_records = komuten_info.map((komuten) => {
                         // 審査レコードの中から、工務店レコードの取引企業Noフィールドと同じ取引企業Noのレコードを探してセット。
                         // 工務店レコード1件に対して審査レコードは1件のみなのでfind（n件あるのは逆の場合）
                         // 結果、匠和美健などの場合は一つの審査レコードの与信枠が複数の工務店レコードにセットされる。
@@ -233,7 +233,7 @@
                     reject('工務店マスタの中で、審査が行われている企業はありませんでした。\nどの工務店の付与与信枠も更新されていません。');
                 }
 
-                let request_body = {
+                const request_body = {
                     'app': APP_ID_KOMUTEN,
                     'records': put_records
                 };
