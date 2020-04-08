@@ -122,14 +122,14 @@
         });
 
         // 取引企業Noの重複を削除する
-        const not_dpl_customers = customer_codes_collect.filter((id, index, self) => {
+        const unique_customers = customer_codes_collect.filter((id, index, self) => {
             return self.indexOf(id) === index;
         });
 
         // ①工務店ID、②取引企業Noごとの未回収金額の合計、という2つの情報を持つオブジェクトを作っていく。
         // まず各取引企業Noごとに、{取引企業No: 合計金額}のオブジェクトを作る。
         let sum_by_customers = {};
-        for (const customer_code of not_dpl_customers) {
+        for (const customer_code of unique_customers) {
             const total_collectable = collectable_records.reduce((total, record) => {
                 if (record[fieldCustomerCode_COLLECT]['value'] === customer_code) {
                     return total + Number(record[fieldCollectableAmount_COLLECT]['value']);
@@ -143,7 +143,7 @@
         }
 
         // 次に、取引企業Noに対応する工務店IDの組み合わせを取得する。
-        const komuten_customer_pairs = await getKomutenCustomerPairs(not_dpl_customers);
+        const komuten_customer_pairs = await getKomutenCustomerPairs(unique_customers);
 
         // 最後に、sum_by_customersの取引企業Noの値を、対応する工務店IDで記述したオブジェクトを作成する。
         // 取引企業Noと工務店IDは1:n対応なので、対応する工務店IDが複数ある場合は、同じ未回収金額のオブジェクトを複数作成する。
@@ -199,7 +199,7 @@
     async function updateKomutenCollectableZero(updated_record_ids) {
         console.log('未回収金額がゼロになった工務店の金額をゼロに更新する');
 
-        // updated_ids（回収アプリで回収予定の金額がある工務店ID）に含まれていないのに、未回収金額がゼロでない工務店IDを取得。
+        // updated_record_ids（回収アプリで回収予定の金額がある工務店ID）に含まれていないのに、未回収金額がゼロでない工務店IDを取得。
         const in_query = '(\"' + updated_record_ids.join('\",\"') + '\")';
         const body_remaining_collectable = {
             'app': APP_ID_KOMUTEN,
