@@ -243,9 +243,10 @@
         // '翌'の数と'々'の数を合計して、何ヶ月後か判定する
         const months_later = (original_payment_date_str.match(/翌/g) || []).length + (original_payment_date_str.match(/々/g) || []).length;
 
-        // 第二引数にはデフォルトでgetDate()の値が渡される。その時、30日までしかない月なのにgetDate()の返り値で31日の値が入ってきたりすると月が進んでしまうので、1を渡しておく。
+        // 第二引数にはデフォルトでgetDate()の値が渡される。
+        // その時、setMonthで設定したい月が30日までしかない月なのにgetDate()の返り値で31日の値が入ってきたりすると設定したい月から余分に月が進んでしまうので、1を渡しておく。
         // この計算で年をまたいだ場合は、Yearも加算される。
-        let deadline = closing;
+        let deadline = new Date(closing.getTime());
         deadline.setMonth(deadline.getMonth() + Number(months_later), 1);
 
         // 日付を判定してセット。末日かそうでないかで場合分け
