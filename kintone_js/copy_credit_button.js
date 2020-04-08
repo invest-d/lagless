@@ -143,9 +143,9 @@
     }
 
     // YYYY-MM-DDの書式のままでは日付の比較ができないので、比較可能な値に変換する
-    function getComparableDate(kintone_formatted_date) {
-        let date_info = String(kintone_formatted_date).split('-');
-        let date = new Date(Number(date_info[0]), Number(date_info[1]), Number(date_info[2]));
+    function getComparableDate(yyyy_mm_dd) {
+        let date_info = String(yyyy_mm_dd).split('-');
+        let date = new Date(Number(date_info[0]), Number(date_info[1]-1), Number(date_info[2]));
         return date.getTime();
     }
 
