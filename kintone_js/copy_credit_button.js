@@ -20,8 +20,6 @@
 (function (){
     "use strict";
 
-    const KINTONE_GET_MAX_SIZE = 500;
-
     const APP_ID_JUDGE = 79;
     // フィールドコード
     const customerCode_JUDGE = '取引企業管理No_審査対象企業';
@@ -34,6 +32,8 @@
     const creditFacility_KOMUTEN = 'creditFacility';
     const fieldGetCreditNextTime_KOMUTEN = 'getCreditFacility';
     const statusGetCredit_KOMUTEN = '次回、与信枠を取得する';
+
+    const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
@@ -91,31 +91,11 @@
                     'app': APP_ID_JUDGE,
                     'fields': [customerCode_JUDGE, creditAmount_JUDGE, judgedDay_JUDGE],
                     'query': `${judgedDay_JUDGE} != \"\" and ${creditAmount_JUDGE} >= 0`, // ヤバい取引企業は与信枠ゼロにして対応することもあるので、ゼロ円のレコードも取得
-                    'size': KINTONE_GET_MAX_SIZE
+                    'seek': true
                 };
 
-                kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'POST', request_body, (resp) => {
-                    rslv(resp.id);
-                }, (err) => {
-                    reject(err);
-                });
-            })
-            .then((cursor_id) => {
-                return new kintone.Promise(async (resolve) => {
-                    const request_body = {
-                        'id': cursor_id
-                    };
-
-                    let records = [];
-
-                    let remaining = true;
-                    do {
-                        const resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', request_body);
-                        records = records.concat(resp.records);
-                        remaining = resp.next;
-                    } while (remaining);
-
-                    resolve(records);
+                kintoneRecord.getAllRecordsByQuery(request_body).then((resp) => {
+                    resolve(resp.records);
                 });
             })
             .then((all_judge_records) => {
@@ -163,36 +143,15 @@
                 console.log('工務店マスタからレコードIDと取引企業Noの一覧を取得する');
                 // カーソルを作成
                 // 付与与信枠を取得したくない工務店は除外する
-                const komuten_cursor = new kintone.Promise((resolve_post_cursor) => {
-                    const post_cursor_body = {
-                        'app': APP_ID_KOMUTEN,
-                        'fields': [recordNo_KOMUTEN, customerCode_KOMUTEN],
-                        'query': `${fieldGetCreditNextTime_KOMUTEN} in (\"${statusGetCredit_KOMUTEN}\")`,
-                        'size': KINTONE_GET_MAX_SIZE
-                    };
+                const request_body = {
+                    'app': APP_ID_KOMUTEN,
+                    'fields': [recordNo_KOMUTEN, customerCode_KOMUTEN],
+                    'query': `${fieldGetCreditNextTime_KOMUTEN} in (\"${statusGetCredit_KOMUTEN}\")`,
+                    'seek': true
+                };
 
-                    kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'POST', post_cursor_body, (resp) => {
-                        resolve_post_cursor(resp);
-                    }, (err) => {
-                        reject(err);
-                    });
-                });
-
-                // カーソルから工務店全件取得
-                komuten_cursor.then(async (cursor) => {
-                    const get_cursor_body = {
-                        'id': cursor.id
-                    };
-
-                    let komuten_info = [];
-                    let records_remaining = true;
-                    do {
-                        const resp = await kintone.api(kintone.api.url('/k/v1/records/cursor', true), 'GET', get_cursor_body);
-                        Array.prototype.push.apply(komuten_info, resp.records);
-                        records_remaining = resp.next;
-                    } while (records_remaining);
-
-                    rslv(komuten_info);
+                kintoneRecord.getAllRecordsByQuery(request_body).then((resp) => {
+                    rslv(resp.records);
                 });
             });
 
@@ -240,10 +199,8 @@
 
                 console.log(request_body);
 
-                kintone.api(kintone.api.url('/k/v1/records', true), 'PUT', request_body, (resp) => {
-                    resolve(resp.records.length);
-                }, (err) => {
-                    reject(err);
+                kintoneRecord.updateAllRecords(request_body).then((resp) => {
+                    resolve(resp.results[0].records.length);
                 });
             });
         });
