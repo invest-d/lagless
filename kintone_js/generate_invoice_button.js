@@ -284,7 +284,6 @@
             line_count++;
         });
 
-        let collectable_amount = Number(invoice_obj[fieldCollectableAmount_COLLECT]['value']).toLocaleString();
         lines.push(`合計金額	${collectable_amount}`);
 
         let mail = invoice_obj[fieldMailToInvest_COLLECT]['value'];
