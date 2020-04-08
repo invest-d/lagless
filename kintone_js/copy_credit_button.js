@@ -119,25 +119,33 @@
                 });
             })
             .then((all_judge_records) => {
-                // それぞれの取引企業Noについて、審査完了日が最新のものだけを抽出する
-                let key_pair = {};
+                // 重複なしの取引企業Noを取得
+                const customer_codes = all_judge_records
+                .map((record) => record[customerCode_JUDGE]['value'])
+                .filter((code, i, self) => self.indexOf(code) === i);
 
-                // key_pairに、取引企業Noごとに最新の審査完了日を持つレコードを保持しておく。
-                all_judge_records.map((judge_record) => {
-                    let customer_code = judge_record[customerCode_JUDGE]['value'];
-                    let judge_day = judge_record[judgedDay_JUDGE]['value'];
+                const latest_judges = customer_codes.map((customer_code) => {
+                    // 取引企業Noごとにfilterして処理する
+                    const target_judges = all_judge_records.filter(record => record[customerCode_JUDGE]['value'] === customer_code);
 
-                    // 保持している審査完了日よりも新しいものを発見したら、それを新しく保持
-                    if (!(customer_code in key_pair)) {
-                        key_pair[customer_code] = judge_record;
-                    }
-                    else if (getComparableDate(judge_day) > getComparableDate(key_pair[customer_code][judgedDay_JUDGE]['value'])) {
-                        key_pair[customer_code] = judge_record;
-                    }
+                    // 日付だけの配列を作って、その中の最新の日付を取得する
+                    const judge_dates = target_judges.map(record => getComparableDate(record[judgedDay_JUDGE]['value']));
+                    const latest_date = new Date(Math.max.apply(null, judge_dates));
+
+                    // kintone書式との一致を確認するためにyyyy-mm-ddにフォーマット
+                    const latest_yyyy_mm_dd = [
+                        latest_date.getFullYear(),
+                        ('0' + String(latest_date.getMonth()+1)).slice(-2),
+                        ('0' + String(latest_date.getDate())).slice(-2)
+                    ].join('-');
+
+                    // 審査レコードの中で、最新日付を持っているものを取得
+                    const latest_judge = target_judges.find(record => record[judgedDay_JUDGE]['value'] === latest_yyyy_mm_dd);
+
+                    return latest_judge;
                 });
 
-                // 最後にkey_pairを配列にして返す
-                resolve(Object.values(key_pair));
+                resolve(latest_judges);
             });
         });
     }
@@ -190,27 +198,26 @@
 
             let process_record_ids = get_komuten_info.then((komuten_info) => {
                 return new kintone.Promise((rslv) => {
-                    // 工務店情報と審査情報を取引企業管理Noをキーにして組み合わせて、付与与信枠と工務店マスタのレコードIDを関連付ける。
-                    let put_records = [];
+                    // 各工務店レコードに、審査アプリから取得した与信枠をPUTするオブジェクトを作る。
+                    let put_records = komuten_info.map((komuten) => {
+                        // 審査レコードの中から、工務店レコードの取引企業Noフィールドと同じ取引企業Noのレコードを探してセット。
+                        // 工務店レコード1件に対して審査レコードは1件のみなのでfind（n件あるのは逆の場合）
+                        // 結果、匠和美健などの場合は一つの審査レコードの与信枠が複数の工務店レコードにセットされる。
+                        const target_judge = latest_judge_records.find(record => record[customerCode_JUDGE]['value'] === komuten[customerCode_KOMUTEN]['value']);
 
-                    latest_judge_records.forEach((judge) => {
-                        let judge_customer_code = judge[customerCode_JUDGE]['value'];
+                        // 審査されていない場合はnullセット
+                        const credit = (target_judge === undefined)
+                            ? null
+                            : target_judge[creditAmount_JUDGE]['value'];
 
-                        // 審査アプリの取引企業Noを工務店マスタの中から探す
-                        // 一つの審査結果を複数の工務店IDにセットすることも想定（複数の工務店IDを持つ代表は匠和美建）
-                        let pushed_komuten_record_no = [];
-                        komuten_info.forEach((komuten) => {
-                            if ((komuten[customerCode_KOMUTEN]['value'] === judge_customer_code)
-                            && !(pushed_komuten_record_no.indexOf(komuten[recordNo_KOMUTEN]['value']) >= 0)) {
-                                let put_obj = {};
-                                put_obj['id'] = komuten[recordNo_KOMUTEN]['value'];
-                                put_obj['record'] = {};
-                                put_obj['record'][creditFacility_KOMUTEN] = {};
-                                put_obj['record'][creditFacility_KOMUTEN]['value'] = judge[creditAmount_JUDGE]['value'];
-                                put_records.push(put_obj);
-                                pushed_komuten_record_no.push(komuten[recordNo_KOMUTEN]['value']);
+                        return {
+                            'id': komuten[recordNo_KOMUTEN]['value'],
+                            'record': {
+                                [creditFacility_KOMUTEN]: {
+                                    'value': credit
+                                }
                             }
-                        });
+                        }
                     });
 
                     rslv(put_records);
