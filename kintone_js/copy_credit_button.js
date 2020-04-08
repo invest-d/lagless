@@ -37,7 +37,7 @@
 
     kintone.events.on('app.record.index.show', function(event) {
         if (needShowButton()) {
-            const button = getCopyCreditButton();
+            const button = createCopyCreditButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -47,7 +47,7 @@
         return document.getElementById('copyCredit') === null;
     }
 
-    function getCopyCreditButton() {
+    function createCopyCreditButton() {
         let copyCredit = document.createElement('button');
         copyCredit.id = 'copyCredit';
         copyCredit.innerText = '最新の与信枠を取得';
