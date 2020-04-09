@@ -52,7 +52,7 @@
     kintone.events.on('app.record.index.show', (event) => {
         // ボタンを表示するか判定
         if (needShowButton()) {
-            const button = getGenerateInvoiceButton();
+            const button = createGenerateInvoiceButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -62,7 +62,7 @@
         return document.getElementById('generateInvoice') === null;
     }
 
-    function getGenerateInvoiceButton() {
+    function createGenerateInvoiceButton() {
         let generateInvoice = document.createElement('button');
         generateInvoice.id = 'generateInvoice';
         generateInvoice.innerText = '振込依頼書を作成';
