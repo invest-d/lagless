@@ -71,165 +71,149 @@
     }
 
     // ボタンクリック時の処理を定義
-    function clickGenerateInvoice() {
+    async function clickGenerateInvoice() {
         const clicked_ok = confirm('支払実行済みのレコードに対して、振込依頼書を作成しますか？');
         if (!clicked_ok) {
             alert('処理は中断されました。');
             return;
         }
 
-        // 状態が支払実行済みのレコードを取得
-        getPaidRecords()
-        .then((paid_records) => {
-            if (!(paid_records.length > 0)) {
+        try {
+            // 状態が支払実行済みのレコードを取得
+            const paid = await getPaidRecords()
+            .catch((err) => {
+                console.log(err);
+                throw new Error('支払実行済みの回収レコードの取得中にエラーが発生しました。');
+            });
+
+            if (paid.records.length === 0) {
                 throw new Error('支払実行済みのレコードはありませんでした。');
             }
 
-            return addPaymentDetail(paid_records);
-        })
-        .then((invoice_objects) => {
-            return generateInvoices(invoice_objects);
-        })
-        .then((completed_count) => {
+            const invoice_objects = await addPaymentDetail(paid.records)
+            .catch((err) => {
+                console.log(err);
+                throw new Error('回収レコードに紐づく支払明細の取得中にエラーが発生しました。');
+            });
+
+            const completed_count = generateInvoices(invoice_objects);
             alert(`振込依頼書の作成が完了しました。\n ${completed_count}件 の振込依頼書をダウンロードしました。`);
-        })
-        .catch((err) => {
-            console.log(err);
-            alert(err.message);
-        });
+        } catch(err) {
+            alert(err);
+        }
     }
 
     function getPaidRecords() {
-        return new kintone.Promise((resolve, reject) => {
-            console.log('回収アプリから支払実行済みのレコードを全て取得する');
+        console.log('回収アプリから支払実行済みのレコードを全て取得する');
 
-            const request_body = {
-                'app': APP_ID_COLLECT,
-                'fields':[
-                    fieldRecordId_COLLECT,
-                    fieldProductName_COLLECT,
-                    fieldConstructionShopId_COLLECT,
-                    fieldConstructionShopName_COLLECT,
-                    fieldCeoTitle_COLLECT,
-                    fieldCeo_COLLECT,
-                    fieldMailToInvest_COLLECT,
-                    fieldClosingDate_COLLECT,
-                    fieldDeadline_COLLECT,
-                    fieldCollectableAmount_COLLECT,
-                    fieldAccount_COLLECT
-                ],
-                'query': `${fieldStatus_COLLECT} in (\"${statusPaid_COLLECT}\")`
-            };
+        const request_body = {
+            'app': APP_ID_COLLECT,
+            'fields':[
+                fieldRecordId_COLLECT,
+                fieldProductName_COLLECT,
+                fieldConstructionShopId_COLLECT,
+                fieldConstructionShopName_COLLECT,
+                fieldCeoTitle_COLLECT,
+                fieldCeo_COLLECT,
+                fieldMailToInvest_COLLECT,
+                fieldClosingDate_COLLECT,
+                fieldDeadline_COLLECT,
+                fieldCollectableAmount_COLLECT,
+                fieldAccount_COLLECT
+            ],
+            'query': `${fieldStatus_COLLECT} in (\"${statusPaid_COLLECT}\")`
+        };
 
-            kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body
-            , (resp) => {
-                resolve(resp.records);
-            }, (err) => {
-                reject(err);
-            });
-        });
+        return kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body);
     }
 
-    function addPaymentDetail(paid_records) {
-        return new kintone.Promise((resolve, reject) => {
-            new kintone.Promise((rslv) => {
-                console.log('振込依頼書の支払明細にあたるレコードを申込みアプリから取得する');
-
-                // 回収アプリのレコード番号を条件にして、申込アプリから取得
-                const collect_ids = paid_records.map((paid_record) => {
-                    return paid_record[fieldRecordId_COLLECT]['value'];
-                });
-                const in_query = '(\"' + collect_ids.join('\",\"') + '\")';
-
-                const request_body = {
-                    'app': APP_ID_APPLY,
-                    'fields': [fieldPayDestName_APPLY, fieldPayDate_APPLY, fieldReceivables_APPLY, fieldCollectId_APPLY],
-                    'query': `${fieldCollectId_APPLY} in ${in_query}`
-                };
-                kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body
-                , (resp) => {
-                    rslv(resp.records);
-                }, (err) => {
-                    reject(err);
-                });
-            })
-            .then((detail_records) => {
-                console.log('回収アプリのレコードに明細レコードを結合する');
-
-                const attached_details = paid_records.map((record) => {
-                    // 明細にあたる申込みレコードの中から、回収IDフィールドの値が回収レコードのレコード番号に等しいものだけ抽出
-                    record['details'] = detail_records.filter((detail) => {
-                        return detail[fieldCollectId_APPLY]['value'] === record[fieldRecordId_COLLECT]['value'];
-                    });
-
-                    return record;
-                });
-
-                resolve(attached_details);
-            });
+    async function addPaymentDetail(paid_records) {
+        console.log('振込依頼書の支払明細にあたるレコードを申込みアプリから取得する');
+        // 回収アプリのレコード番号を条件にして、申込アプリから取得
+        const collect_ids = paid_records.map((paid_record) => {
+            return paid_record[fieldRecordId_COLLECT]['value'];
         });
+        const in_query = '(\"' + collect_ids.join('\",\"') + '\")';
+
+        const request_body = {
+            'app': APP_ID_APPLY,
+            'fields': [fieldPayDestName_APPLY, fieldPayDate_APPLY, fieldReceivables_APPLY, fieldCollectId_APPLY],
+            'query': `${fieldCollectId_APPLY} in ${in_query}`
+        };
+
+        const detail = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body);
+
+        console.log('回収アプリのレコードに明細レコードを結合する');
+        const attached_details = paid_records.map((record) => {
+            // 明細にあたる申込みレコードの中から、回収IDフィールドの値が回収レコードのレコード番号に等しいものだけ抽出
+            record['details'] = detail.records.filter((detail) => {
+                return detail[fieldCollectId_APPLY]['value'] === record[fieldRecordId_COLLECT]['value'];
+            });
+
+            return record;
+        });
+
+        return attached_details;
     }
 
     function generateInvoices(invoice_objects) {
-        return new kintone.Promise((resolve, reject) => {
-            // 工務店IDと支払期限が同一のレコードを一通の振込依頼書にまとめていく。
-            // まず、振込依頼書作成対象のレコードから工務店IDと支払期限の重複なし組み合わせを取得。
-            const unique_key_pairs = invoice_objects.filter((invoice1, index, self) => {
-                return index === self.findIndex((invoice2) => {
-                    return invoice1[fieldConstructionShopId_COLLECT]['value'] === invoice2[fieldConstructionShopId_COLLECT]['value']
-                    && invoice1[fieldDeadline_COLLECT]['value'] === invoice2[fieldDeadline_COLLECT]['value'];
-                });
-            }).map((elem) => {
-                // mapで工務店IDと支払期限だけ取って、他の不要な値は捨てる
-                return {
-                    [fieldConstructionShopId_COLLECT]: {
-                        'value': elem[fieldConstructionShopId_COLLECT]['value']
-                    },
-                    [fieldDeadline_COLLECT]: {
-                        'value': elem[fieldDeadline_COLLECT]['value']
-                    }
-                };
+        // 工務店IDと支払期限が同一のレコードを一通の振込依頼書にまとめていく。
+        // まず、振込依頼書作成対象のレコードから工務店IDと支払期限の重複なし組み合わせを取得。
+        const unique_key_pairs = invoice_objects.filter((invoice1, index, self) => {
+            return index === self.findIndex((invoice2) => {
+                return invoice1[fieldConstructionShopId_COLLECT]['value'] === invoice2[fieldConstructionShopId_COLLECT]['value']
+                && invoice1[fieldDeadline_COLLECT]['value'] === invoice2[fieldDeadline_COLLECT]['value'];
             });
-
-            // 次に重複なし組み合わせのそれぞれについて、回収レコードをfilterして処理
-            const combined_invoices = unique_key_pairs.map((pair) => {
-                const filtered = invoice_objects.filter((invoice) => {
-                    return invoice[fieldConstructionShopId_COLLECT]['value'] === pair[fieldConstructionShopId_COLLECT]['value']
-                    && invoice[fieldDeadline_COLLECT]['value'] === pair[fieldDeadline_COLLECT]['value']
-                });
-
-                // フィルターされた中でレコード番号が最も小さい回収レコードを親にする
-                let summary_record = filtered.sort((a, b) => Number(a[fieldRecordId_COLLECT]['value']) - Number(b[fieldRecordId_COLLECT]['value']))[0];
-
-                // i = 0はsummary_record自身なので除く
-                for (let i = 1; i < filtered.length; i++) {
-                    // 親にdetailsを全てまとめる
-                    summary_record['details'] = summary_record['details'].concat(filtered[i]['details']);
-
-                    // 親に回収予定金額を全て合計する
-                    summary_record[fieldCollectableAmount_COLLECT]['value'] =
-                    Number(summary_record[fieldCollectableAmount_COLLECT]['value']) + Number(filtered[i][fieldCollectableAmount_COLLECT]['value']);
+        }).map((elem) => {
+            // mapで工務店IDと支払期限だけ取って、他の不要な値は捨てる
+            return {
+                [fieldConstructionShopId_COLLECT]: {
+                    'value': elem[fieldConstructionShopId_COLLECT]['value']
+                },
+                [fieldDeadline_COLLECT]: {
+                    'value': elem[fieldDeadline_COLLECT]['value']
                 }
+            };
+        });
 
-                return summary_record;
+        // 次に重複なし組み合わせのそれぞれについて、回収レコードをfilterしてdetailsをまとめる処理
+        const combined_invoices = unique_key_pairs.map((pair) => {
+            const filtered = invoice_objects.filter((invoice) => {
+                return invoice[fieldConstructionShopId_COLLECT]['value'] === pair[fieldConstructionShopId_COLLECT]['value']
+                && invoice[fieldDeadline_COLLECT]['value'] === pair[fieldDeadline_COLLECT]['value']
             });
 
-            let generated_count = 0;
-            for(const invoice of combined_invoices) {
-                const invoice_text = generateInvoiceText(invoice);
-                const bom  = new Uint8Array([0xEF, 0xBB, 0xBF]);
-                const blob = new Blob([bom, invoice_text], {"type": "text/plain"});
+            // フィルターされた中でレコード番号が最も小さい回収レコードを親にする
+            let summary_record = filtered.sort((a, b) => Number(a[fieldRecordId_COLLECT]['value']) - Number(b[fieldRecordId_COLLECT]['value']))[0];
 
-                // 作成した振込依頼書をテキスト形式でダウンロード
-                const file_name = invoice[fieldConstructionShopName_COLLECT]['value'] + '様向け' + invoice[fieldDeadline_COLLECT]['value'] + '回収振込依頼書';
-                downloadInvoice(blob, file_name);
+            // i = 0はsummary_record自身なので除く
+            for (let i = 1; i < filtered.length; i++) {
+                // 親にdetailsを全てまとめる
+                summary_record['details'] = summary_record['details'].concat(filtered[i]['details']);
 
-                // 振込依頼書の作成に成功したらカウントアップ
-                generated_count++;
+                // 親に回収予定金額を全て合計する
+                summary_record[fieldCollectableAmount_COLLECT]['value'] =
+                Number(summary_record[fieldCollectableAmount_COLLECT]['value']) + Number(filtered[i][fieldCollectableAmount_COLLECT]['value']);
             }
 
-            resolve(generated_count);
+            return summary_record;
         });
+
+        let generated_count = 0;
+        for(const invoice of combined_invoices) {
+            const invoice_text = generateInvoiceText(invoice);
+            const bom  = new Uint8Array([0xEF, 0xBB, 0xBF]);
+            const blob = new Blob([bom, invoice_text], {"type": "text/plain"});
+
+            // 作成した振込依頼書をテキスト形式でダウンロード
+            const file_name = invoice[fieldConstructionShopName_COLLECT]['value'] + '様向け' + invoice[fieldDeadline_COLLECT]['value'] + '回収振込依頼書';
+            downloadInvoice(blob, file_name);
+
+            // 振込依頼書の作成に成功したらカウントアップ
+            generated_count++;
+        }
+
+        return generated_count;
     }
 
     function generateInvoiceText(invoice_obj) {
@@ -321,7 +305,7 @@ TEL:0120-516-818`);
         download_link.download = file_name + '.txt';
         download_link.href = (window.URL || window.webkitURL).createObjectURL(blob);
 
-        // DLリンクを生成して自動でクリックまでして、生成したものはその都度消す
+        // DLリンクを生成して自動でクリックまでして、生成したDLリンクはその都度消す
         kintone.app.getHeaderMenuSpaceElement().appendChild(download_link);
         setText(download_link, '振込依頼書ダウンロード');
         download_link.click();
