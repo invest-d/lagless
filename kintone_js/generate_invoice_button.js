@@ -206,7 +206,7 @@
             const blob = new Blob([bom, invoice_text], {"type": "text/plain"});
 
             // 作成した振込依頼書をテキスト形式でダウンロード
-            const file_name = invoice[fieldConstructionShopName_COLLECT]['value'] + '様向け' + invoice[fieldDeadline_COLLECT]['value'] + '回収振込依頼書';
+            const file_name = invoice[fieldConstructionShopName_COLLECT]['value'] + '様向け' + invoice[fieldDeadline_COLLECT]['value'] + '回収振込依頼書.txt';
             downloadInvoice(blob, file_name);
 
             // 振込依頼書の作成に成功したらカウントアップ
@@ -302,7 +302,7 @@ TEL:0120-516-818`);
 
     function downloadInvoice(blob, file_name) {
         let download_link = document.createElement('a');
-        download_link.download = file_name + '.txt';
+        download_link.download = file_name;
         download_link.href = (window.URL || window.webkitURL).createObjectURL(blob);
 
         // DLリンクを生成して自動でクリックまでして、生成したDLリンクはその都度消す
