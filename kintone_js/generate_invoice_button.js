@@ -269,13 +269,11 @@
 
         lines.push(`\r\n支払明細`);
 
-        let line_count = 1;
-        invoice_obj['details'].map((detail) => {
+        invoice_obj['details'].forEach((detail, index) => {
             const payment_date_detail = formatYYYYMD(detail[fieldPayDate_APPLY]['value']);
             const payment_amount_detail = Number(detail[fieldReceivables_APPLY]['value']).toLocaleString();
-            lines.push(`${line_count}	${detail[fieldPayDestName_APPLY]['value']}	${payment_date_detail}支払	${payment_amount_detail}円（税込）`);
-
-            line_count++;
+            // 明細の行番号をindex+1で表示する
+            lines.push(`${index+1}	${detail[fieldPayDestName_APPLY]['value']}	${payment_date_detail}支払	${payment_amount_detail}円（税込）`);
         });
 
         lines.push(`合計金額	${collectable_amount}`);
