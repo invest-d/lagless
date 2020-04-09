@@ -1,6 +1,6 @@
 /*
     Version 1
-    回収アプリ(160)の支払実行済みレコードに対して、工務店への振込依頼書を作成する。
+    回収アプリの支払実行済みレコードに対して、工務店への振込依頼書を作成する。
     工務店IDと回収期限が同一のレコードのまとまりに対して、振込依頼書を1通生成。
     生成する振込依頼書はプレーンテキスト形式。
 */
@@ -250,7 +250,7 @@
         const deadline = formatYYYYMD(invoice_obj[fieldDeadline_COLLECT]['value']);
         lines.push(`お支払期限 ${deadline}`);
 
-        const collectable_amount = Number(invoice_obj[fieldCollectableAmount_COLLECT]['value']).toLocaleString();
+        const collectable_amount = addComma(invoice_obj[fieldCollectableAmount_COLLECT]['value']);
         lines.push(`ご請求金額（消費税込み） ${collectable_amount}円`);
         lines.push('￣￣￣￣￣￣￣￣￣￣￣￣' + '￣'.repeat(Math.ceil(collectable_amount.length / 2) + 1) + '￣');
 
@@ -272,12 +272,12 @@
 
         invoice_obj['details'].forEach((detail, index) => {
             const payment_date_detail = formatYYYYMD(detail[fieldPayDate_APPLY]['value']);
-            const payment_amount_detail = Number(detail[fieldReceivables_APPLY]['value']).toLocaleString();
+            const payment_amount_detail = addComma(detail[fieldReceivables_APPLY]['value']);
             // 明細の行番号をindex+1で表示する
             lines.push(`${index+1}	${detail[fieldPayDestName_APPLY]['value']}	${payment_date_detail}支払	${payment_amount_detail}円（税込）`);
         });
 
-        lines.push(`合計金額	${collectable_amount}`);
+        lines.push(`合計金額	${collectable_amount}円`);
 
         const mail = invoice_obj[fieldMailToInvest_COLLECT]['value'];
         lines.push(`
@@ -297,6 +297,11 @@ TEL:0120-516-818`);
         // Numberでキャストしてゼロ埋めされているのを取り除く
         const date = String(yyyy_mm_dd).split('-');
         return String(Number(date[0])) + '年' + String(Number(date[1])) + '月' + String(Number(date[2])) + '日';
+    }
+
+    function addComma(num) {
+        // 数字に3桁区切りのコンマを挿入した文字列を返す。整数のみ考慮
+        return String(num).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1,');
     }
 
     function downloadInvoice(blob, file_name) {
