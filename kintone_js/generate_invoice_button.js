@@ -136,9 +136,8 @@
                 console.log('振込依頼書の支払明細にあたるレコードを申込みアプリから取得する');
 
                 // 回収アプリのレコード番号を条件にして、申込アプリから取得
-                let collect_ids = [];
-                paid_records.map((paid_record) => {
-                    collect_ids.push(paid_record[fieldRecordId_COLLECT]['value']);
+                let collect_ids = paid_records.map((paid_record) => {
+                    return paid_record[fieldRecordId_COLLECT]['value'];
                 });
                 let in_query = '(\"' + collect_ids.join('\",\"') + '\")';
 
@@ -157,66 +156,77 @@
             .then((detail_records) => {
                 console.log('回収アプリのレコードに明細レコードを結合する');
 
-                paid_records.map((paid_record) => {
-                    let detail_arr = [];
-                    // 回収IDフィールドが一致するものを結合
-                    let summary_id = paid_record[fieldRecordId_COLLECT]['value'];
-                    detail_records.map((detail_record) => {
-                        let detail_id = detail_record[fieldCollectId_APPLY]['value'];
-
-                        if (summary_id === detail_id) {
-                            detail_arr.push(detail_record);
-                        }
+                const attached_details = paid_records.map((record) => {
+                    // 明細にあたる申込みレコードの中から、回収IDフィールドの値が回収レコードのレコード番号に等しいものだけ抽出
+                    record['details'] = detail_records.filter((detail) => {
+                        return detail[fieldCollectId_APPLY]['value'] === record[fieldRecordId_COLLECT]['value'];
                     });
 
-                    paid_record['details'] = detail_arr;
+                    return record;
                 });
 
-                resolve(paid_records);
+                resolve(attached_details);
             });
         });
     }
 
     function generateInvoices(invoice_objects) {
         return new kintone.Promise((resolve, reject) => {
-            // 工務店IDと支払期限が同一のレコードは一通の振込依頼書にまとめる
-            let combined_invoices = [];
+            // 工務店IDと支払期限が同一のレコードを一通の振込依頼書にまとめていく。
+            // まず、振込依頼書作成対象のレコードから工務店IDと支払期限の重複なし組み合わせを取得。
+            const unique_key_pairs = invoice_objects.filter((invoice1, index, self) => {
+                return index === self.findIndex((invoice2) => {
+                    return invoice1[fieldConstructionShopId_COLLECT]['value'] === invoice2[fieldConstructionShopId_COLLECT]['value']
+                    && invoice1[fieldDeadline_COLLECT]['value'] === invoice2[fieldDeadline_COLLECT]['value'];
+                });
+            }).map((elem) => {
+                // mapで工務店IDと支払期限だけ取って、他の不要な値は捨てる
+                return {
+                    [fieldConstructionShopId_COLLECT]: {
+                        'value': elem[fieldConstructionShopId_COLLECT]['value']
+                    },
+                    [fieldDeadline_COLLECT]: {
+                        'value': elem[fieldDeadline_COLLECT]['value']
+                    }
+                };
+            });
 
-            let key_pair = {};
-            invoice_objects.map((obj) => {
-                let komuten_id = obj[fieldConstructionShopId_COLLECT]['value'];
-                let deadline = obj[fieldDeadline_COLLECT]['value'];
+            // 次に重複なし組み合わせのそれぞれについて、回収レコードをfilterして処理
+            const combined_invoices = unique_key_pairs.map((pair) => {
+                const filtered = invoice_objects.filter((invoice) => {
+                    return invoice[fieldConstructionShopId_COLLECT]['value'] === pair[fieldConstructionShopId_COLLECT]['value']
+                    && invoice[fieldDeadline_COLLECT]['value'] === pair[fieldDeadline_COLLECT]['value']
+                });
 
-                if ((komuten_id in key_pair) && (key_pair[komuten_id] === deadline)) {
-                    // 工務店IDと支払期限が同一のレコードが複数あった場合はdetailsを結合してcollectableAmountを合計
-                    let dpl_invoice = combined_invoices.filter((combined) => {
-                        return (combined[fieldConstructionShopId_COLLECT]['value'] === komuten_id
-                        && combined[fieldDeadline_COLLECT]['value'] === deadline);
-                    })[0];
+                // フィルターされた中でレコード番号が最も小さい回収レコードを親にする
+                let summary_record = filtered.sort((a, b) => Number(a[fieldRecordId_COLLECT]['value']) - Number(b[fieldRecordId_COLLECT]['value']))[0];
 
-                    dpl_invoice['details'] = dpl_invoice['details'].concat(obj['details']);
-                    dpl_invoice[fieldCollectableAmount_COLLECT]['value'] = Number(dpl_invoice[fieldCollectableAmount_COLLECT]['value']) + Number(obj[fieldCollectableAmount_COLLECT]['value']);
-                    // dpl_invoiceは既にcombined_invoicesの中にあるオブジェクトへの参照なので、改めてpushする必要はない
-                    // combined_invoices.push(dpl_invoice);
-                } else {
-                    key_pair[komuten_id] = deadline;
-                    combined_invoices.push(obj);
+                // i = 0はsummary_record自身なので除く
+                for (let i = 1; i < filtered.length; i++) {
+                    // 親にdetailsを全てまとめる
+                    summary_record['details'] = summary_record['details'].concat(filtered[i]['details']);
+
+                    // 親に回収予定金額を全て合計する
+                    summary_record[fieldCollectableAmount_COLLECT]['value'] =
+                    Number(summary_record[fieldCollectableAmount_COLLECT]['value']) + Number(filtered[i][fieldCollectableAmount_COLLECT]['value']);
                 }
+
+                return summary_record;
             });
 
             let generated_count = 0;
-            combined_invoices.map((invoice_obj) => {
-                let invoice_text = generateInvoiceText(invoice_obj);
+            for(const invoice of combined_invoices) {
+                let invoice_text = generateInvoiceText(invoice);
                 let bom  = new Uint8Array([0xEF, 0xBB, 0xBF]);
                 let blob = new Blob([bom, invoice_text], {"type": "text/plain"});
 
                 // 作成した振込依頼書をテキスト形式でダウンロード
-                let file_name = invoice_obj[fieldConstructionShopName_COLLECT]['value'] + '様向け' + invoice_obj[fieldDeadline_COLLECT]['value'] + '回収振込依頼書';
+                let file_name = invoice[fieldConstructionShopName_COLLECT]['value'] + '様向け' + invoice[fieldDeadline_COLLECT]['value'] + '回収振込依頼書';
                 downloadInvoice(blob, file_name);
 
                 // 振込依頼書の作成に成功したらカウントアップ
                 generated_count++;
-            });
+            }
 
             resolve(generated_count);
         });
