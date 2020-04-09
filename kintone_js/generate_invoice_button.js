@@ -223,6 +223,7 @@
         lines.push(`${product_name} 振込依頼書 兼 支払明細書`);
 
         const date = formatYYYYMD(invoice_obj['details'][0][fieldPayDate_APPLY]['value']);
+        // 1行空けたいところには適宜改行を挟む
         lines.push(`\r\n${date}`);
 
         const company = invoice_obj[fieldConstructionShopName_COLLECT]['value'];
@@ -287,7 +288,7 @@
 Mail:${mail}
 TEL:0120-516-818`);
 
-        // 空行でつないで一つの文書にする
+        // 各行の文を改行でつないで一つの文書にする
         console.log(lines.join('\r\n'));
         return lines.join('\r\n');
     }
