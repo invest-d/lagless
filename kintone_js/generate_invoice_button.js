@@ -52,7 +52,7 @@
     kintone.events.on('app.record.index.show', (event) => {
         // ボタンを表示するか判定
         if (needShowButton()) {
-            let button = getGenerateInvoiceButton();
+            const button = getGenerateInvoiceButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
@@ -72,7 +72,7 @@
 
     // ボタンクリック時の処理を定義
     function clickGenerateInvoice() {
-        let clicked_ok = confirm('支払実行済みのレコードに対して、振込依頼書を作成しますか？');
+        const clicked_ok = confirm('支払実行済みのレコードに対して、振込依頼書を作成しますか？');
         if (!clicked_ok) {
             alert('処理は中断されました。');
             return;
@@ -103,7 +103,7 @@
         return new kintone.Promise((resolve, reject) => {
             console.log('回収アプリから支払実行済みのレコードを全て取得する');
 
-            let request_body = {
+            const request_body = {
                 'app': APP_ID_COLLECT,
                 'fields':[
                     fieldRecordId_COLLECT,
@@ -136,12 +136,12 @@
                 console.log('振込依頼書の支払明細にあたるレコードを申込みアプリから取得する');
 
                 // 回収アプリのレコード番号を条件にして、申込アプリから取得
-                let collect_ids = paid_records.map((paid_record) => {
+                const collect_ids = paid_records.map((paid_record) => {
                     return paid_record[fieldRecordId_COLLECT]['value'];
                 });
-                let in_query = '(\"' + collect_ids.join('\",\"') + '\")';
+                const in_query = '(\"' + collect_ids.join('\",\"') + '\")';
 
-                let request_body = {
+                const request_body = {
                     'app': APP_ID_APPLY,
                     'fields': [fieldPayDestName_APPLY, fieldPayDate_APPLY, fieldReceivables_APPLY, fieldCollectId_APPLY],
                     'query': `${fieldCollectId_APPLY} in ${in_query}`
@@ -216,12 +216,12 @@
 
             let generated_count = 0;
             for(const invoice of combined_invoices) {
-                let invoice_text = generateInvoiceText(invoice);
-                let bom  = new Uint8Array([0xEF, 0xBB, 0xBF]);
-                let blob = new Blob([bom, invoice_text], {"type": "text/plain"});
+                const invoice_text = generateInvoiceText(invoice);
+                const bom  = new Uint8Array([0xEF, 0xBB, 0xBF]);
+                const blob = new Blob([bom, invoice_text], {"type": "text/plain"});
 
                 // 作成した振込依頼書をテキスト形式でダウンロード
-                let file_name = invoice[fieldConstructionShopName_COLLECT]['value'] + '様向け' + invoice[fieldDeadline_COLLECT]['value'] + '回収振込依頼書';
+                const file_name = invoice[fieldConstructionShopName_COLLECT]['value'] + '様向け' + invoice[fieldDeadline_COLLECT]['value'] + '回収振込依頼書';
                 downloadInvoice(blob, file_name);
 
                 // 振込依頼書の作成に成功したらカウントアップ
@@ -235,17 +235,17 @@
     function generateInvoiceText(invoice_obj) {
         let lines = [];
 
-        let product_name = invoice_obj[fieldProductName_COLLECT]['value'];
+        const product_name = invoice_obj[fieldProductName_COLLECT]['value'];
         lines.push(`${product_name} 振込依頼書 兼 支払明細書`);
 
-        let date = formatYYYYMD(invoice_obj['details'][0][fieldPayDate_APPLY]['value']);
+        const date = formatYYYYMD(invoice_obj['details'][0][fieldPayDate_APPLY]['value']);
         lines.push(`\r\n${date}`);
 
-        let company = invoice_obj[fieldConstructionShopName_COLLECT]['value'];
+        const company = invoice_obj[fieldConstructionShopName_COLLECT]['value'];
         lines.push(`\r\n${company}`);
 
-        let title = invoice_obj[fieldCeoTitle_COLLECT]['value'];
-        let ceo = invoice_obj[fieldCeoTitle_COLLECT]['value'];
+        const title = invoice_obj[fieldCeoTitle_COLLECT]['value'];
+        const ceo = invoice_obj[fieldCeoTitle_COLLECT]['value'];
         lines.push(`${title} ${ceo} 様`);
 
         lines.push(`
@@ -259,17 +259,17 @@
 今後ともどうぞ宜しくお願いいたします。
 敬具`);
 
-        let closingDate = formatYYYYMD(invoice_obj[fieldClosingDate_COLLECT]['value']);
+        const closingDate = formatYYYYMD(invoice_obj[fieldClosingDate_COLLECT]['value']);
         lines.push(`\r\n対象となる締め日 ${closingDate}`);
 
-        let deadline = formatYYYYMD(invoice_obj[fieldDeadline_COLLECT]['value']);
+        const deadline = formatYYYYMD(invoice_obj[fieldDeadline_COLLECT]['value']);
         lines.push(`お支払期限 ${deadline}`);
 
-        let collectable_amount = Number(invoice_obj[fieldCollectableAmount_COLLECT]['value']).toLocaleString();
+        const collectable_amount = Number(invoice_obj[fieldCollectableAmount_COLLECT]['value']).toLocaleString();
         lines.push(`ご請求金額（消費税込み） ${collectable_amount}円`);
         lines.push('￣￣￣￣￣￣￣￣￣￣￣￣' + '￣'.repeat(Math.ceil(collectable_amount.length / 2) + 1) + '￣');
 
-        let account_id = invoice_obj[fieldAccount_COLLECT]['value'];
+        const account_id = invoice_obj[fieldAccount_COLLECT]['value'];
         let account = '';
         switch(account_id) {
             case 'ID':
@@ -287,8 +287,8 @@
 
         let line_count = 1;
         invoice_obj['details'].map((detail) => {
-            let payment_date_detail = formatYYYYMD(detail[fieldPayDate_APPLY]['value']);
-            let payment_amount_detail = Number(detail[fieldReceivables_APPLY]['value']).toLocaleString();
+            const payment_date_detail = formatYYYYMD(detail[fieldPayDate_APPLY]['value']);
+            const payment_amount_detail = Number(detail[fieldReceivables_APPLY]['value']).toLocaleString();
             lines.push(`${line_count}	${detail[fieldPayDestName_APPLY]['value']}	${payment_date_detail}支払	${payment_amount_detail}円（税込）`);
 
             line_count++;
@@ -296,7 +296,7 @@
 
         lines.push(`合計金額	${collectable_amount}`);
 
-        let mail = invoice_obj[fieldMailToInvest_COLLECT]['value'];
+        const mail = invoice_obj[fieldMailToInvest_COLLECT]['value'];
         lines.push(`
 【${product_name}事務局】
 インベストデザイン株式会社
@@ -312,7 +312,7 @@ TEL:0120-516-818`);
 
     function formatYYYYMD(yyyy_mm_dd) {
         // Numberでキャストしてゼロ埋めされているのを取り除く
-        let date = String(yyyy_mm_dd).split('-');
+        const date = String(yyyy_mm_dd).split('-');
         return String(Number(date[0])) + '年' + String(Number(date[1])) + '月' + String(Number(date[2])) + '日';
     }
 
