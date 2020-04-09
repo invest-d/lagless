@@ -229,7 +229,7 @@
         lines.push(`\r\n${company}`);
 
         const title = invoice_obj[fieldCeoTitle_COLLECT]['value'];
-        const ceo = invoice_obj[fieldCeoTitle_COLLECT]['value'];
+        const ceo = invoice_obj[fieldCeo_COLLECT]['value'];
         lines.push(`${title} ${ceo} 様`);
 
         lines.push(`
