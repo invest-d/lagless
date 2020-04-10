@@ -1,0 +1,140 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.min.js"
+      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+      crossorigin="anonymous"></script>
+    <script src="app.js"></script>
+    <script>
+      function select_skip() {
+          $('#menu').hide();
+          $('#skip').show();
+          return false;
+      }
+    </script>
+    <style>
+      #content {
+          width: 100%;
+          margin-left: auto;
+          margin-right: auto;
+      }
+      #content h2 {
+          text-align: center;
+      }
+      #content .logo {
+          text-align: center;
+      }
+      #content .logo img {
+          max-width: 100%;
+      }
+      .center {
+          text-align: center;
+      }
+      .cond-lagless,
+      .cond-dandori,
+      .cond-renove {
+          display: none;
+      }
+      table, th, td { border: 1px solid #000; border-collapse: collapse; }
+      thead th { color: #fff; background-color: #666; line-height: 30px; }
+      tbody td { padding: 8px; line-height: 50px; }
+      tbody td.focus { background-color: #fcc; }
+      button.act { background-color: #f00; color: #fff; border-radius: 4px; width: 120px; height: 44px; font-size: 120%; font-weight: bold; cursor: pointer; }
+      button.act:hover { background-color: #fcc; }
+      button.act.skip { background-color: #555; }
+      button.act.skip:hover { background-color: #ccc; }
+      .framed { border: 1px solid #000; padding: 1ex; }
+      .schedule_closing { text-decoration: underline; }
+      .ratio { color: #f00; }
+      .act_description { display: inline-block; text-align: right; width: 180px; font-size: 80%; }
+      .act_description { position: relative; top: 8px; }
+      .ratio_information { font-size: 50%; }
+    </style>
+  </head>
+  <body>
+    <div id="error" style="display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: #ccc; padding-top: 30%; text-align: center;"></div>
+    <div id="content" style="display: none;">
+      <div class="logo cond-lagless"><img src="images/lagless-menu.png"></div>
+      <div class="logo cond-dandori"><img src="images/dandori.png"></div>
+      <div class="logo cond-renove"><img src="images/renove.png"></div>
+
+      <div style="text-align: center;">
+        <span class="工務店正式名称"></span>様の<br />
+        <span class="schedule_closing"></span>締め<br />
+        お仕事のお支払い
+      </div>
+
+      <div id="menu">
+      <br />
+      <br />
+      <div style="text-align: center; font-size: 80%; white-space: nowrap;">
+        ●ご希望の受取りタイミングを選択してください●
+      </div>
+      
+      <br />
+      <div style="text-align: center; margin: 1ex;"><span class="framed">
+        申込期限: <span class="schedule_deadline"></span>
+      </span></div>
+      <br />
+
+      <div style="text-align: center;">
+        <a href="#" onclick="select_skip()"><button class="act skip">通常払い</button></a>
+        <div class="act_description">
+          <span class="schedule_default"></span>に受取
+          <div class="ratio_information">手数料: <span class="ratio">±0%</span></div>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+      <a href="https://form.run/@info-7879"><button class="act">早払い</button></a>
+      <div class="act_description">
+        <span class="schedule_early"></span>に受取
+        <div class="ratio_information">手数料: <span class="ratio">-<span class="cost"></span></span></div>
+      </div>
+      </div>
+      
+      <div style="text-align: center;">
+      <a href="https://form.run/@info-7879"><button class="act">遅払い</button></a>
+        <div class="act_description">
+          <span class="schedule_late"></span>に受取
+          <div class="ratio_information">手数料: <span class="ratio">+<span class="yield"></span></span></div>
+        </div>
+      </div>
+      
+      <br />
+      <br />
+      <div style="max-width: 500px; margin-left: auto; margin-right: auto; font-size: 80%;">
+        ※振込手数料<span class="transfer_fee"></span>はお客様負担になります。 <br />
+        ※年間利用回数制限 <span class="limit"></span> <br />
+        ※【該当の方のみ】協力会費のお支払いが必要な場合は、各発注企業様の取り扱い方法に従い手続きいたします。
+      </div>
+      </div>
+
+    <div id="skip" style="display: none; max-width: 500px; margin-left: auto; margin-right: auto;">
+      <br />
+      お申込みありがとうございます。 <br />
+      <br />
+      <strong>今回のご請求分については、発注企業様から通常の 支払日にお支払いされる予定でございます。</strong> <br />
+      <br />
+      今後ともよろしくお願いいたします。
+    </div>
+
+      <br />
+      <br />
+      <div class="center" style="border: 1px solid #000; max-width: 500px; margin-left: auto; margin-right: auto; padding: 24px;">
+        <div style="text-align: left;">■お問い合わせ先■</div>
+        【<span class="service">ラグレス</span>事務局】 <br />
+        運営会社：インベストデザイン株式会社 <br />
+        メール：<a href="" class="mail">@invest-d.com</a> <br />
+        電話：0120-516-818 <br />
+        電話時間 ：10：00～17：00 <br />
+        定休日：土・日・祝 <br />
+        <br />
+        <div>配信停止は<a href="https://form.run/@info-173">こちら</a></div>
+      </div>
+    </div>
+    </div>
+
+  </body>
+</html>
