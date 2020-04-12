@@ -730,16 +730,9 @@
 
   // URLから指定したパラメータを取得する
   function getUrlParam(param_name) {
-    let query = window.location.search.substring(1);
-    let vars = query.split("&");
-    let target_val = '';
-    for (let i = 0; i < vars.length; i++) {
-      let pair = vars[i].split("=");
-      if(pair[0] == param_name) {
-        target_val = pair[1];
-      }
-    }
-    return target_val;
+    const query_string = window.location.search.substring(1);
+    const queries = new Map(query_string.split("&").map(query => query.split("=")));
+    return queries.get(param_name);
   }
 
   // 2回目以降申込みフォームで不要なコントロールの必須チェックを外してフォームから非表示にする
