@@ -954,15 +954,16 @@
       // formのデフォルトのsubmit挙動を止めて、独自にsubmit挙動を実装
       event.preventDefault();
 
+      // ブランクチェックなど
       if(!this.form.reportValidity()) {
         return;
       };
 
+      // 多重送信防止
       $("#send").html("送信中...");
       $("#send").prop("disabled", true);
 
-      // 現状はfirebase側でデータの加工もしてるけど、firebaseはkintoneに入れる役割だけを担う方がいいかも？
-      // データの加工はフォーム側で送信前に行うようにするという案
+      // データ送信。kintone用のデータ変換はfirebase側
       $.ajax({
         type: "POST",
         enctype: 'multipart/form-data',
@@ -975,7 +976,6 @@
       })
       .done(function(data) {
         // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
-        console.log(data);
         $("#send").html("送信");
         $("#send").prop("disabled", false);
         window.location.href = String(data);
