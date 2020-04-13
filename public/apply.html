@@ -985,7 +985,7 @@
         console.log(data);
         $("#send").html("送信");
         $("#send").prop("disabled", false);
-        alert('登録に失敗しました。');
+        alert('登録に失敗しました。\n' + data.responseText);
       });
     });
   });
