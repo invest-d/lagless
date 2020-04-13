@@ -5,10 +5,9 @@ const FormData = require('form-data');
 const axios = require('axios');
 
 exports.send_apply = functions.https.onRequest(async (req, res) => {
-    res.set('Access-Control-Allow-Origin', process.env.allow_origin_form_domain);
+    interceptor(req.headers.referer, res);
     console.log('フォーム送信開始');
     if (req.method != 'POST') {
-        //POST以外を受け取ったときはとりあえずエラーにしとく
         res.status(405).send('Method Not Allowed');
         return;
     } else {
@@ -177,3 +176,36 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         });
     }
 });
+
+// リクエストヘッダを確認し、hostが正規のフォームであればそれをCORSに設定
+function interceptor(referer, res){
+    host = extractHostDomain(referer);
+    console.log('requested from ' + String(host));
+
+    if(isAllowedOrigin(host)){
+        // 開発版のフォームなら開発版のドメインを、本番のフォームなら本番のドメインを設定
+        res.set('Access-Control-Allow-Origin','https://'+host);
+    }
+}
+
+function extractHostDomain(url) {
+    let host_domain;
+
+    if (url.indexOf("://") > -1) {
+        host_domain = url.split('/')[2];
+    }
+    else {
+        host_domain = url.split('/')[0];
+    }
+
+    host_domain = host_domain.split(':')[0];
+
+    return host_domain;
+}
+
+function isAllowedOrigin(host){
+    if(host == process.env.form_dev)return true;
+    if(host == process.env.form_prod)return true;
+
+    return false;
+}
