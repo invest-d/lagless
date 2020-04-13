@@ -5,48 +5,33 @@ const FormData = require('form-data');
 const axios = require('axios');
 
 exports.send_apply = functions.https.onRequest(async (req, res) => {
-    const env = new Environ(req.headers.referer).create();
-    interceptor(env, res);
-    console.log('フォーム送信開始');
     if (req.method != 'POST') {
         res.status(405).send('Method Not Allowed');
         return;
-    } else {
-        let sendObj = {};
-        sendObj.app = env.app_id;
-        let record = {};
-        let file_key_result = [];
+    }
 
-        // 送信元のフォームのURLからuserパラメータを受け取り、ファイルアップロードがいくつあるかを確認する。
-        const user_query = req.headers.referer.match(/user=.+?($|&)/);
-        console.log('user_query is');
-        console.log(user_query);
-        const user_type = (user_query !== null && user_query.length > 0)
-            ? user_query[0].replace('&', '').split('=')[1]
-            : 'new'; //userパラメータが無い場合は新規ユーザとする（フォームもパラメータが無い場合は新規として扱っている）
+    const env = new Environ(req.headers.referer).create();
+    interceptor(env, res);
+    console.log('フォームデータ受信');
+    let sendObj = {};
+    sendObj.app = env.app_id;
+    let record = {};
 
-        console.log('user type is ' + user_type);
-        // 2回目のフォームの場合、アップロードするファイルは請求書データのみなので1
-        const UPLOAD_REQUIRED = (user_type === "existing")
-            ? 1
-            : 3;
-        console.log(UPLOAD_REQUIRED + ' files will be uploaded.');
-
-        const busboy = new Busboy({ headers: req.headers });
-        const allowMimeTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-        const busboy_result = new Promise((resolve, reject) => {
-            busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-                if (mimetype == 'application/octet-stream') {
-                    // 添付ファイルが未入力の場合（application/octet-stream）はスルー
-                    // 未入力はそもそもフォームでバリデーションをかけているが、2回目以降のフォームの場合は運転免許証画像の欄が未入力のまま送信されてくる。スルーでよい。
-                    file.resume();
-                }
-                else if (!allowMimeTypes.includes(mimetype.toLocaleLowerCase())) {
+    const busboy = new Busboy({ headers: req.headers });
+    const allowMimeTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    let file_uploads = [];
+    busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+        // 請求書データ等のファイルアップロード
+        if (String(mimetype) === 'application/octet-stream') {
+            // 添付ファイルが未入力の場合（application/octet-stream）はスルー
+            // 未入力はそもそもフォームでバリデーションをかけているが、2回目以降のフォームの場合は運転免許証画像の欄が未入力のまま送信されてくる。スルーでよい。
+            file.resume();
+        } else {
+            const upload = new Promise((resolve, reject) => {
+                if (!allowMimeTypes.includes(mimetype.toLocaleLowerCase())) {
                     console.error('unexpected mimetype.');
                     console.error(mimetype);
-                    res.status(406).redirect(req.headers.referer);
-                    resolve();
-                    return;
+                    reject({status: 406, message: '添付ファイルは ' + allowMimeTypes.map(t=>t.split('/')[1]) + ' のいずれかの形式で送信してください。'});
                 } else {
                     const form = new FormData();
                     const ext = String(mimetype).split('/')[1];
@@ -57,51 +42,27 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                     });
                     axios.post('https://investdesign.cybozu.com/k/v1/file.json', form, { headers })
                     .then(result => {
-                        if(result.data) {
-                            if(result.data.fileKey) {
-                                // res.status(200).send("OK");
-                                // kintoneにアップロードしたファイルのファイルキーを配列に保持
-                                file_key_result.push({[fieldname]: {"value": [{"fileKey": result.data.fileKey}]}});
-
-                                // アップロードすべきファイルが全て終わるまでresolveしない
-                                if (file_key_result.length == UPLOAD_REQUIRED) {
-                                    // すべてのアップロードが終わったら、それぞれのフィールドオブジェクトをrecordにマージしてからようやくresolveする。
-                                    console.log('upload completed.');
-                                    file_key_result.forEach(result => {
-                                        record = Object.assign(record, result);
-                                    });
-                                    resolve(record);
-                                }
-                            } else {
-                                console.error(result.data);
-                                res.status(500).redirect(req.headers.referer);
-                                resolve();
-                            }
-                        } else {
-                            console.error(result);
-                            res.status(500).redirect(req.headers.referer);
-                            resolve();
-                        }
+                        resolve({[fieldname]: {"value": [{"fileKey": result.data.fileKey}]}});
                     })
                     .catch(err => {
-                        console.error(err.response);
-                        res.status(500).redirect(req.headers.referer);
-                        resolve();
+                        console.error('file upload error.');
+                        console.error(err);
+                        reject({status: 500, message: '不明なエラーが発生しました。'});
                     });
                 }
             });
-            busboy.on('field', (fieldname, val, fieldnameTruncated, valTruncated) => {
-                record = Object.assign(record, {[fieldname]: {"value": val}});
-            });
-            busboy.on('finish', () => {
-            });
-            busboy.end(req.rawBody);
-        });
 
-        busboy_result.then(function (record) {
-            console.log(req.rawBody);
-            console.log(JSON.stringify(record));
-
+            file_uploads.push(upload);
+        }
+    });
+    busboy.on('field', (fieldname, val, fieldnameTruncated, valTruncated) => {
+        record = Object.assign(record, {[fieldname]: {"value": val}});
+    });
+    busboy.on('finish', () => {
+        // ファイルアップロードが全て終わってから、kintoneへのレコード登録を行う。
+        Promise.all(file_uploads)
+        .then(results => {
+            results.forEach(result => {record = Object.assign(record, result);});
 
             // データ加工
             // FAX番号を入力してもらってる場合はメールアドレスに加工して保存
@@ -113,6 +74,15 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                 delete record["fax"];
             }
 
+            // 送信元のフォームのURLからuserパラメータを取得
+            const user_query = req.headers.referer.match(/user=.+?($|&)/);
+            console.log('user_query is');
+            console.log(user_query);
+            const user_type = (user_query !== null && user_query.length > 0)
+                ? user_query[0].replace('&', '').split('=')[1]
+                : 'new'; //userパラメータが無い場合は新規ユーザとする（フォームもパラメータが無い場合は新規として扱っている）
+
+            console.log('user type is ' + user_type);
 
             // 預金種目を日本語に変換(新規ユーザのみ)
             if (user_type !== "existing") {
@@ -124,17 +94,16 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                 record = Object.assign(record, {"deposit_Form": {"value": ja_deposit_type}});
             }
 
-
             // 不要な要素を削除
             delete record["email-fax-input"];
             delete record["agree"];
 
-
-            // sendObjと結合してkintoneにレコード登録
+            // sendObjと結合してkintoneにレコード登録可能な形に整える
             sendObj.record = record;
-            console.log('get sendObj completed.');
+            console.log('generate sendObj completed.');
             console.log(JSON.stringify(sendObj));
 
+            // kintoneへの登録開始
             const request = require('request');
 
             // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
@@ -167,11 +136,13 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                     console.log('headers is ' + JSON.stringify(headers));
                     console.error('sendObj is ' + JSON.stringify(sendObj));
                     console.error('req.body is ' + JSON.stringify(req.body));
-                    res.status(response.statusCode).redirect(req.headers.referer);
+                    res.status(response.statusCode).send(response.body.message);
                 }
             });
-        });
-    }
+        })
+        .catch(err => res.status(err.status).send(err.message));
+    });
+    busboy.end(req.rawBody);
 });
 
 // リクエストヘッダを確認し、hostが正規のフォームであればそれをCORSに設定
