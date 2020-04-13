@@ -206,59 +206,19 @@
       <!-- /電話番号 -->
 
 
-      <!-- メールアドレスとFAX番号を横並び -->
-      <span class="badge badge-default badge-danger">メールアドレス・FAX番号いずれか必須</span>
-      <span class="small pl-1">※申込み受付後に支払予定明細をメール・FAXいずれかにお送りします。</span>
+      <!-- メールアドレス -->
       <div class="form-group">
-        <div class="form-inline">
-          <div class="p-1 border rounded col-md-6">
-            <div class="custom-control custom-radio custom-control-inline py-1">
-              <input type="radio" class="custom-control-input" name="email-fax-input" id="input-email" value="email" checked>
-              <label class="custom-control-label pr-4" for="input-email">メールアドレスを入力</label>
-            </div>
-          </div>
-          <div class="p-1 border rounded col-md-6">
-            <div class="custom-control custom-radio custom-control-inline py-1">
-              <input type="radio" class="custom-control-input" name="email-fax-input" id="input-fax" value="fax">
-              <label class="custom-control-label" for="input-fax">FAX番号を入力</label>
-            </div>
-          </div>
-        </div>
+        <label for="mail">メールアドレス</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <span class="small pl-1">※申込み受付後に支払予定明細をメールでお送りします。</span>
+        <input type="email" class="form-control pattern-required"
+        name="mail" id="mail"
+        pattern="[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">正しく入力してください</div>
       </div>
-
-
-      <div class="form-row mb-3">
-
-        <!-- メールアドレス -->
-        <div class="col-md-6">
-          <div class="form-group mb-1">
-            <label for="mail">メールアドレス</label>
-            <input type="email" class="form-control pattern-required"
-              name="mail" id="mail" required
-              pattern="[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
-            <span class="fas fa-check valid-status-icon valid-input"></span>
-            <span class="fas fa-times valid-status-icon invalid-input"></span>
-            <div class="invalid-feedback">正しく入力してください</div>
-          </div>
-        </div>
-        <!-- /メールアドレス -->
-
-
-        <!-- FAX -->
-        <div class="col-md-6">
-          <div class="form-group mb-1">
-            <label for="fax">FAX番号</label>
-            <input type="phone" class="form-control pattern-required"
-              name="fax" id="fax" disabled
-              pattern="^[0-9]{10,12}$|^[0-9]{2,4}-[0-9]{2,4}-[0-9]{4}$|[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
-            <span class="fas fa-check valid-status-icon valid-input"></span>
-            <span class="fas fa-times valid-status-icon invalid-input"></span>
-            <div class="invalid-feedback">正しく入力してください</div>
-          </div>
-        </div>
-        <!-- FAX -->
-
-      </div>
+      <!-- /メールアドレス -->
 
 
       <!-- 2回目以降で表示するキャプション -->
@@ -905,35 +865,6 @@
         $(this).nextAll('.invalid-feedback').css({
           'display': 'block',
         });
-      }
-    });
-  });
-
-  // メールアドレスかFAX番号か、ラジオをチェックした方だけ入力が有効になる
-  $(function () {
-    $('input[name="email-fax-input"]:radio').change(function() {
-      if($(this).val() == "email"){
-          $('#mail').prop('disabled', false);
-          $('#mail').prop('required', true);
-
-          $('#fax').val("");
-          $('#fax').prop('required', false);
-          $('#fax').prop('disabled', true);
-          $('#fax').attr('style', 'none');
-          $('#fax').nextAll('.invalid-input').css({'display': 'none'});
-          $('#fax').nextAll('.valid-input').css({'display': 'none'});
-          $('#fax').nextAll('.invalid-feedback').css({'display': 'none'});
-      }else{
-          $('#fax').prop('disabled', false);
-          $('#fax').prop('required', true);
-
-          $('#mail').val("");
-          $('#mail').prop('required', false);
-          $('#mail').prop('disabled', true);
-          $('#mail').attr('style', 'none');
-          $('#mail').nextAll('.invalid-input').css({'display': 'none'});
-          $('#mail').nextAll('.valid-input').css({'display': 'none'});
-          $('#mail').nextAll('.invalid-feedback').css({'display': 'none'});
       }
     });
   });

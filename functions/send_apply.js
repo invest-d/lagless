@@ -65,15 +65,6 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             results.forEach(result => {record = Object.assign(record, result);});
 
             // データ加工
-            // FAX番号を入力してもらってる場合はメールアドレスに加工して保存
-            const mail_or_fax = record["email-fax-input"]["value"];
-            console.log('mail or fax is '+ mail_or_fax);
-            if (mail_or_fax === 'fax') {
-                const emailed_fax = `lagless+fax-${record.fax.value}@invest-d.com`;
-                record = Object.assign(record, {"mail": {"value": emailed_fax}});
-                delete record["fax"];
-            }
-
             // 送信元のフォームのURLからuserパラメータを取得
             const user_query = req.headers.referer.match(/user=.+?($|&)/);
             console.log('user_query is');
@@ -95,7 +86,6 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             }
 
             // 不要な要素を削除
-            delete record["email-fax-input"];
             delete record["agree"];
 
             // sendObjと結合してkintoneにレコード登録可能な形に整える
