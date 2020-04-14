@@ -2,7 +2,7 @@
     Version 1
     審査アプリ(79)に記載されている与信枠を工務店マスタ(96)に転記するボタンを設置する。
 
-    審査アプリと工務店マスタの対応付け
+    審査アプリと工務店マスタの対応付けは下記の通り
         審査Ver2.0側：取引企業管理No_審査対象企業（＝取引企業管理.レコード番号）
         工務店マスタ側：customerCode（＝取引企業管理.レコード番号）
 
@@ -12,7 +12,7 @@
         付与与信枠_決定金額_標準と高額
 
     取得条件
-        同一企業に対して複数回の審査が存在することを想定。（毎月審査を更新の予定）
+        同一企業に対して複数回の審査が存在することを想定。（審査は毎月更新の予定）
         同一の取引企業管理Noのレコードをまとめた中で、
         審査完了日が最も新しいレコードを採用する。
 */
@@ -67,18 +67,19 @@
             // 審査内容が最新のレコードを取得。判定基準は審査完了日フィールド。
             const latest_exam_records = await getLatestExamRecords()
             .catch((err) => {
-                console.log(err);
+                console.error(err);
                 throw new Error('審査アプリからのレコード取得中にエラーが発生しました。');
             });
 
 
             if (latest_exam_records.length === 0) {
-                throw new Error('与信枠が入力済みの企業はありませんでした。\nどの工務店の付与与信枠も更新されていません。');
+                alert('与信枠が入力済みの企業はありませんでした。\nどの工務店の付与与信枠も更新されていません。');
+                return;
             }
 
             const updated_count = await updateKomutenCredits(latest_exam_records)
             .catch((err) => {
-                console.log(err);
+                console.error(err);
                 throw new Error('取得した与信枠を工務店マスタに更新している途中にエラーが発生しました。');
             });
 
