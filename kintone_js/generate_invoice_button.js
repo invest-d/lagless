@@ -63,7 +63,7 @@
     }
 
     function createGenerateInvoiceButton() {
-        let generateInvoice = document.createElement('button');
+        const generateInvoice = document.createElement('button');
         generateInvoice.id = 'generateInvoice';
         generateInvoice.innerText = '振込依頼書を作成';
         generateInvoice.addEventListener('click', clickGenerateInvoice);
@@ -82,17 +82,18 @@
             // 状態が支払実行済みのレコードを取得
             const paid = await getPaidRecords()
             .catch((err) => {
-                console.log(err);
+                console.error(err);
                 throw new Error('支払実行済みの回収レコードの取得中にエラーが発生しました。');
             });
 
             if (paid.records.length === 0) {
-                throw new Error('支払実行済みのレコードはありませんでした。');
+                alert('支払実行済みのレコードはありませんでした。');
+                return;
             }
 
             const invoice_objects = await addPaymentDetail(paid.records)
             .catch((err) => {
-                console.log(err);
+                console.error(err);
                 throw new Error('回収レコードに紐づく支払明細の取得中にエラーが発生しました。');
             });
 
