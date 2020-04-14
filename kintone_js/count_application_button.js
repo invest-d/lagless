@@ -150,7 +150,7 @@
         console.log('ゼロ回に更新すべき協力会社IDの一覧を取得完了');
         console.log(zero_target_ids);
         const zero_updated_count = await updateToZeroCount(zero_target_ids);
-        return Number(kyoroku_count_last_year) + Number(zero_updated_count);
+        return kyoroku_count_last_year + zero_updated_count;
     }
 
     function getZeroTargetIds(updated_ids) {
