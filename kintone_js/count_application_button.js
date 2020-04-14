@@ -140,16 +140,16 @@
         //   かつ 申込回数が1回以上になっている
         console.log('更新済みIDの一覧');
         console.log(Object.keys(counted_by_kyoryoku_id));
-        const zero_target_ids = await getZeroTargetIds(Object.keys(counted_by_kyoryoku_id));
+        const zero_target_records = await getZeroTargetRecords(Object.keys(counted_by_kyoryoku_id));
 
         console.log('ゼロ回に更新すべき協力会社IDの一覧を取得完了');
-        console.log(zero_target_ids);
-        const zero_updated_count = await updateToZeroCount(zero_target_ids);
+        console.log(zero_target_records);
+        const zero_updated_count = await updateToZeroCount(zero_target_records);
         return kyoroku_count_last_year + zero_updated_count;
     }
 
-    function getZeroTargetIds(updated_ids) {
-        console.log('協力会社マスタから、updated_ids以外で申込み回数が1回以上の協力会社IDを取得する');
+    function getZeroTargetRecords(updated_ids) {
+        console.log('協力会社マスタから、updated_ids以外で申込み回数が1回以上の協力会社レコードを取得する');
 
         // in条件に使用する文字列を取得する。 '("1", "87", "48", ...)'
         const in_query = '(\"' + updated_ids.join('\",\"') + '\")';
@@ -164,14 +164,14 @@
         return kintoneRecord.getAllRecordsByQuery(request_body);
     }
 
-    async function updateToZeroCount(zero_target_ids) {
+    async function updateToZeroCount(zero_target_records) {
         const request_body = {
             'app': APP_ID_KYORYOKU,
-            'records': zero_target_ids.records.map((kyoryoku_id_obj) => {
+            'records': zero_target_records.records.map((record) => {
                 return {
                     'updateKey': {
                         'field': fieldKyoryokuId_KYORYOKU,
-                        'value': kyoryoku_id_obj[fieldKyoryokuId_KYORYOKU]['value']
+                        'value': record[fieldKyoryokuId_KYORYOKU]['value']
                     },
                     'record': {
                         [fieldNumberOfApplication_KYORYOKU]: {
