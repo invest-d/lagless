@@ -91,21 +91,16 @@
         console.log(kintone_records);
         console.log('協力会社IDごとに回数をカウントする');
         // 想定する引数の値：[{"ルックアップ": {"type": "hoge", "value": "foo"}}, ...]
-        // まず協力会社IDのvalueだけ抜き出す
-        const kyoryoku_ids = kintone_records.map((field) => {
-            return field[fieldKyoryokuId_APPLY]["value"];
-        });
-
-        // [id]: [回数]の辞書形式にしてそれぞれカウント
+        // filterして協力会社IDが入力済みの申込レコードだけをカウント
         let counts = {};
-        for (const id of kyoryoku_ids) {
+        kintone_records.filter(record => record[fieldKyoryokuId_APPLY]['value'] !== '').forEach(record => {
+            // { [id]: [回数], ... }の辞書形式にしてそれぞれカウント
+            const id = record[fieldKyoryokuId_APPLY]['value'];
             counts[id] = counts.hasOwnProperty(id)
                 ? counts[id] + 1
                 : 1;
-        }
+        });
 
-        // 空白は不要なので消しておく
-        delete counts[''];
         return counts;
     }
 
