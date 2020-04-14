@@ -126,7 +126,9 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             request(options_postrecord, function (error, response, body) {
                 if (!error && response.statusCode == 200) {
                     // 成功
-                    res.status(200).send(env.success_redirect_to);
+                    res.status(200).json({
+                        'redirect': env.success_redirect_to
+                    });
                 } else {
                     console.error('response is ' + response.statusCode + ': ' + response.body.code + ': ' + response.body.message);
                     console.log('headers is ' + JSON.stringify(headers));

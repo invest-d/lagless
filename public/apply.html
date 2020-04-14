@@ -899,7 +899,7 @@
         type: "POST",
         enctype: 'multipart/form-data',
         url: "https://us-central1-lagless.cloudfunctions.net/send_apply",
-        dataType: "text",
+        dataType: "json",
         data: new FormData($('#form_id')[0]),
         cache: false,
         processData: false,
@@ -909,7 +909,7 @@
         // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
         $("#send").html("送信");
         $("#send").prop("disabled", false);
-        window.location.href = String(data);
+        window.location.href = String(data['redirect']);
       })
       .fail(function(data) {
         // 失敗時はアラートを出すだけで遷移しない。フォームの入力内容もそのまま
