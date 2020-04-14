@@ -11,7 +11,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
     }
 
     // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
-    const env = new Environ(req.headers.referer).create();
+    const env = new Environ(req.headers.referer);
 
     setCORS(env, res);
 
@@ -152,40 +152,25 @@ function setCORS(env, res){
 
 class Environ {
     constructor(referer) {
-        this.referer = referer;
         this.host = extractHostDomain(referer);
-    }
 
-    create() {
         if (this.host === process.env.form_dev) {
-            return new EnvDev(this.referer);
-        }
-        else if (this.host === process.env.form_prod) {
-            return new EnvProd(this.referer);
+            // 開発環境
+            this.app_id = process.env.app_id_apply_dev;
+            this.api_token_record = process.env.api_token_apply_record_dev;
+            this.api_token_files = process.env.api_token_apply_files_dev;
+            this.success_redirect_to = 'https://' + this.host + '/apply_complete.html';
+        } else if (this.host === process.env.form_prod) {
+            // 本番環境
+            this.app_id = process.env.app_id_apply_prod;
+            this.api_token_record = process.env.api_token_apply_record_prod;
+            this.api_token_files = process.env.api_token_apply_files_prod;
+            this.success_redirect_to = 'https://' + this.host + '/apply_complete.html';
         }
         else {
-            throw new Error('invalid referer.');
+            // それ以外
+            throw new Error('invalid host.');
         }
-    }
-}
-
-class EnvDev extends Environ {
-    constructor(referer) {
-        super(referer);
-        this.app_id = process.env.app_id_apply_dev;
-        this.api_token_record = process.env.api_token_apply_record_dev;
-        this.api_token_files = process.env.api_token_apply_files_dev;
-        this.success_redirect_to = 'https://' + this.host + '/apply_complete.html';
-    }
-}
-
-class EnvProd extends Environ {
-    constructor(referer) {
-        super(referer);
-        this.app_id = process.env.app_id_apply_prod;
-        this.api_token_record = process.env.api_token_apply_record_prod;
-        this.api_token_files = process.env.api_token_apply_files_prod;
-        this.success_redirect_to = 'https://' + this.host + '/apply_complete.html';
     }
 }
 
