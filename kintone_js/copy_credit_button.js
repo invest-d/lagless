@@ -112,7 +112,7 @@
             // 取引企業Noごとにfilterして処理する
             const target_exams = all_exam.records.filter(record => record[customerCode_EXAM]['value'] === customer_code);
 
-            // 日付だけの配列を作って、配列の中の最新の日付を取得する
+            // 日付だけの配列を作って、配列の中の最新の日付を取得する。Math.max.applyの返り値は数値（UNIX時間）なので改めてnew Dateする
             const examined_dates = target_exams.map(record => getComparableDate(record[examinedDay_EXAM]['value']));
             const latest_date = new Date(Math.max.apply(null, examined_dates));
 
@@ -133,8 +133,7 @@
     // YYYY-MM-DDの書式のままでは日付の比較ができないので、比較可能な値に変換する
     function getComparableDate(yyyy_mm_dd) {
         const date_info = String(yyyy_mm_dd).split('-');
-        const date = new Date(Number(date_info[0]), Number(date_info[1]-1), Number(date_info[2]));
-        return date.getTime();
+        return new Date(Number(date_info[0]), Number(date_info[1])-1, Number(date_info[2]));
     }
 
     async function updateKomutenCredits(latest_exam_records) {
