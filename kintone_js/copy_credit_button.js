@@ -138,6 +138,22 @@
     }
 
     async function updateKomutenCredits(latest_exam_records) {
+        // 審査アプリの取引企業Noと工務店マスタの取引企業Noを繋いでUPDATE用のリクエストボディを作成
+        const body_update_credits = await generateUpdateKomutenReqBody(latest_exam_records);
+
+        if (body_update_credits.records.length === 0) {
+            console.log('latest exams are ');
+            console.log(latest_exam_records);
+            alert('与信枠を取得するよう設定した工務店の中で、審査が行われている企業はありませんでした。\nどの工務店の付与与信枠も更新されていません。');
+            return 0;
+        }
+
+        console.log('審査アプリから取得した付与与信枠を工務店アプリのレコードに転記する');
+        const resp_update = await kintoneRecord.updateAllRecords(body_update_credits);
+        return resp_update.results[0].records.length;
+    }
+
+    async function generateUpdateKomutenReqBody(latest_exam_records) {
         console.log('工務店マスタからレコードIDと取引企業Noの一覧を取得する');
         // 付与与信枠を取得したくない工務店は除外する
         const body_exams = {
@@ -146,17 +162,16 @@
             'query': `${fieldGetCreditNextTime_KOMUTEN} in (\"${statusGetCredit_KOMUTEN}\")`,
             'seek': true
         };
-
         const komuten_info = await kintoneRecord.getAllRecordsByQuery(body_exams);
 
-        // 各工務店レコードに、審査アプリから取得した与信枠をPUTするオブジェクトを作る。
+        console.log('工務店レコードそれぞれについて、審査アプリから取得した与信枠をPUTするオブジェクトを作る');
         const put_records = komuten_info.records.map((komuten) => {
             // 審査レコードの中から、工務店レコードの取引企業Noフィールドと同じ取引企業Noのレコードを探してセット。
             // 工務店レコード1件に対して審査レコードは1件のみなのでfind（n件あるのは逆の場合）
             // 結果、匠和美健などの場合は一つの審査レコードの与信枠が複数の工務店レコードにセットされる。
             const target_exam = latest_exam_records.find(record => record[customerCode_EXAM]['value'] === komuten[customerCode_KOMUTEN]['value']);
 
-            // 1件も審査レコードがない場合はnullセット
+            // 工務店に対して1件も審査レコードがない場合はnullセット
             const credit = (target_exam === undefined)
                 ? null
                 : target_exam[creditAmount_EXAM]['value'];
@@ -171,22 +186,12 @@
             }
         });
 
-        console.log('審査アプリから取得した付与与信枠を工務店アプリのレコードに転記する');
-
-        if (put_records.length === 0) {
-            console.log('update targets are ');
-            console.log(latest_exam_records);
-            throw new Error('工務店マスタの中で、審査が行われている企業はありませんでした。\nどの工務店の付与与信枠も更新されていません。');
-        }
-
         const body_update_credits = {
             'app': APP_ID_KOMUTEN,
             'records': put_records
         };
 
         console.log(body_update_credits);
-
-        const resp_update = await kintoneRecord.updateAllRecords(body_update_credits);
-        return resp_update.results[0].records.length;
+        return body_update_credits;
     }
 })();
