@@ -24,6 +24,7 @@
     const APP_ID_KYORYOKU = 88; // 開発・本番とも共通のため固定
     const fieldKyoryokuId_KYORYOKU = '支払企業No_';
     const fieldNumberOfApplication_KYORYOKU = 'numberOfApplication';
+    const fieldUpdatedDate_KYORYOKU = 'updatedDate';
 
     const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
@@ -80,7 +81,7 @@
         const request_body = {
             'app': APP_ID_APPLY,
             'fields': [fieldKyoryokuId_APPLY],
-            'query': `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${fieldPaymentDate} >= \"${getFormattedDate(getOneYearAgoToday())}\"`,
+            'query': `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${fieldPaymentDate} >= \"${getFormattedDate(getOneYearAgoToday(), false)}\"`,
             'seek': true
         };
 
@@ -107,6 +108,7 @@
     async function updateKyoryokuMaster(counted_by_kyoryoku_id) {
         console.log('カウント結果をもとに協力会社マスタを更新する');
 
+        // あとで更新日時を使うのでリクエストボディに更新日時を設定したいが、仕様上不可
         const request_body = {
             'app': APP_ID_KYORYOKU,
             'records': Object.entries(counted_by_kyoryoku_id).map(([id, count]) => {
@@ -124,6 +126,7 @@
             })
         };
 
+        // 最後の「XX件更新しました」メッセージに使う変数
         let kyoroku_count_last_year = 0;
         if (request_body['records'].length !== 0) {
             // 直近1年間に申込があった場合だけupdateする
@@ -131,16 +134,21 @@
             kyoroku_count_last_year = update_resp.results[0].records.length;
         }
 
-        // 最後の「XX件更新しました」メッセージに使う変数
         console.log(`直近1年間に申し込みのあった${kyoroku_count_last_year}社の協力会社について更新しました。`);
+        console.log('更新済みIDの一覧');
+        console.log(Object.keys(counted_by_kyoryoku_id));
 
         // 前回の処理以降、申込み回数が1回以上からゼロ回になった協力会社を更新する。
         // ゼロ回になった協力会社 とは：
-        //   先ほどのupdate処理に含まれていない協力会社である
+        //   直前の更新対象に含まれていない協力会社である
         //   かつ 申込回数が1回以上になっている
-        console.log('更新済みIDの一覧');
-        console.log(Object.keys(counted_by_kyoryoku_id));
-        const zero_target_records = await getZeroTargetRecords(Object.keys(counted_by_kyoryoku_id));
+        // 直前の更新対象かどうかは、協力会社マスタの更新日時フィールドで判定する。
+
+        // 協力会社の更新日時フィールドの値が、現在より5秒以内の過去であれば、直前の更新操作によって更新されたと判定。5秒という数字に根拠は無し。
+        const now = new Date();
+        const updated_date = new Date(now.getTime() - 5000);
+
+        const zero_target_records = await getZeroTargetRecords(getFormattedDate(updated_date, true));
 
         console.log('ゼロ回に更新すべき協力会社IDの一覧を取得完了');
         console.log(zero_target_records);
@@ -148,16 +156,13 @@
         return kyoroku_count_last_year + zero_updated_count;
     }
 
-    function getZeroTargetRecords(updated_ids) {
-        console.log('協力会社マスタから、updated_ids以外で申込み回数が1回以上の協力会社レコードを取得する');
-
-        // in条件に使用する文字列を取得する。 '("1", "87", "48", ...)'
-        const in_query = '(\"' + updated_ids.join('\",\"') + '\")';
+    function getZeroTargetRecords(updated_date) {
+        console.log('直前に更新されていないのに申込み回数が1回以上の協力会社レコードを取得する');
 
         const request_body = {
             'app': APP_ID_KYORYOKU,
-            'fields': [fieldKyoryokuId_KYORYOKU],
-            'query': `${fieldNumberOfApplication_KYORYOKU} > 0 and ${fieldKyoryokuId_KYORYOKU} not in ${in_query}`,
+            'fields': [fieldKyoryokuId_KYORYOKU, fieldUpdatedDate_KYORYOKU],
+            'query': `${fieldNumberOfApplication_KYORYOKU} > 0 and ${fieldUpdatedDate_KYORYOKU} < \"${updated_date}\"`,
             'seek': true
         };
 
@@ -204,17 +209,22 @@
         return target_date;
     }
 
-    function getFormattedDate(input_date) {
+    function getFormattedDate(input_date, is_datetime) {
         // Date型をクエリ用の日付書式に変換する。
         // 日付フィールドに対するクエリの例： "更新日時 > \"2012-02-03T09:00:00+0900\""（ダブルクォートのエスケープが必要）
-        const formatted_date = String(input_date.getFullYear())
+        // 日時(datetime)フィールドの場合はタイムゾーンの部分が +0900 から +09:00 になる。
+        const without_timezone = String(input_date.getFullYear())
             + '-' + ('0' + String(input_date.getMonth() + 1)).slice(-2)
             + '-' + ('0' + String(input_date.getDate())).slice(-2)
             + 'T'
             + ('0' + String(input_date.getHours())).slice(-2)
             + ':' + ('0' + String(input_date.getMinutes())).slice(-2)
-            + ':' + ('0' + String(input_date.getSeconds())).slice(-2)
-            + '+0900'; //タイムゾーン
-        return formatted_date;
+            + ':' + ('0' + String(input_date.getSeconds())).slice(-2);
+
+        if (is_datetime) {
+            return without_timezone + '+09:00';
+        } else {
+            return without_timezone + '+0900';
+        }
     }
 })();
