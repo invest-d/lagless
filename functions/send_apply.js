@@ -16,13 +16,13 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
     setCORS(env, res);
 
     console.log('フォームデータ受信');
-    let sendObj = {};
+    const sendObj = {};
     sendObj.app = env.app_id;
-    let record = {};
+    const record = {};
 
     const busboy = new Busboy({ headers: req.headers });
     const allowMimeTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-    let file_uploads = [];
+    const file_uploads = [];
     busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
         // 請求書データ等のファイルアップロード
         if (String(mimetype) === 'application/octet-stream') {
@@ -45,7 +45,10 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                     });
                     axios.post('https://investdesign.cybozu.com/k/v1/file.json', form, { headers })
                     .then(result => {
-                        resolve({[fieldname]: {"value": [{"fileKey": result.data.fileKey}]}});
+                        resolve({
+                            'fieldname': fieldname,
+                            'value': [{"fileKey": result.data.fileKey}]
+                        });
                     })
                     .catch(err => {
                         console.error('file upload error.');
@@ -59,13 +62,13 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         }
     });
     busboy.on('field', (fieldname, val, fieldnameTruncated, valTruncated) => {
-        record = Object.assign(record, {[fieldname]: {"value": val}});
+        record[fieldname]= {'value': val};
     });
     busboy.on('finish', () => {
         // ファイルアップロードが全て終わってから、kintoneへのレコード登録を行う。
         Promise.all(file_uploads)
         .then(results => {
-            results.forEach(result => {record = Object.assign(record, result);});
+            results.forEach(result => { record[result['fieldname']] = {'value': result['value']} });
 
             // データ加工
             // 送信元のフォームのURLからuserパラメータを取得
@@ -81,18 +84,18 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             // 預金種目を日本語に変換(新規ユーザのみ)
             if (user_type !== "existing") {
                 // どちらかを選んでいないとフォームからの送信は出来ない仕様
-                const ja_deposit_type = (record.deposit_Form.value == "ordinary")
+                const ja_deposit_type = (record['deposit_Form']['value'] === "ordinary")
                     ? "普通"
                     : "当座";
 
-                record = Object.assign(record, {"deposit_Form": {"value": ja_deposit_type}});
+                record["deposit_Form"] = {"value": ja_deposit_type};
             }
 
             // 不要な要素を削除
             delete record["agree"];
 
             // sendObjと結合してkintoneにレコード登録可能な形に整える
-            sendObj.record = record;
+            sendObj['record'] = record;
             console.log('generate sendObj completed.');
             console.log(JSON.stringify(sendObj));
 
