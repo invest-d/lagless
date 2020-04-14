@@ -10,8 +10,11 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         return;
     }
 
+    // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
     const env = new Environ(req.headers.referer).create();
-    interceptor(env, res);
+
+    setCORS(env, res);
+
     console.log('フォームデータ受信');
     let sendObj = {};
     sendObj.app = env.app_id;
@@ -135,12 +138,12 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
     busboy.end(req.rawBody);
 });
 
-// リクエストヘッダを確認し、hostが正規のフォームであればそれをCORSに設定
-function interceptor(env, res){
+// reqのhostをCORSに設定する。固定値にしないのは、開発・本番 複数ドメインのCORSを設定するため
+// 開発or本番以外のドメインからのリクエストはそもそもenvをインスタンス化出来ないのでチェックしない
+function setCORS(env, res){
     console.log('requested from ' + String(env.host));
 
     // リクエスト元が開発版のフォームなら開発版のドメインを、本番のフォームなら本番のドメインを設定。
-    // それ以外のリクエスト元はそもそもenvをインスタンス化出来ないのでチェックしない
     res.set('Access-Control-Allow-Origin','https://' + env.host);
 }
 
