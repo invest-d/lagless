@@ -48,7 +48,7 @@
     }
 
     function createCopyCreditButton() {
-        let copyCredit = document.createElement('button');
+        const copyCredit = document.createElement('button');
         copyCredit.id = 'copyCredit';
         copyCredit.innerText = '最新の与信枠を取得';
         copyCredit.addEventListener('click', clickCopyCredit);
