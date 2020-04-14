@@ -80,7 +80,7 @@
         const request_body = {
             'app': APP_ID_APPLY,
             'fields': [fieldKyoryokuId_APPLY],
-            'query': `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${fieldPaymentDate} >= ${getFormattedDate(getOneYearAgoToday())}`,
+            'query': `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${fieldPaymentDate} >= \"${getFormattedDate(getOneYearAgoToday())}\"`,
             'seek': true
         };
 
@@ -207,16 +207,14 @@
     function getFormattedDate(input_date) {
         // Date型をクエリ用の日付書式に変換する。
         // 日付フィールドに対するクエリの例： "更新日時 > \"2012-02-03T09:00:00+0900\""（ダブルクォートのエスケープが必要）
-        const formatted_date = '\"'
-            + String(input_date.getFullYear())
+        const formatted_date = String(input_date.getFullYear())
             + '-' + ('0' + String(input_date.getMonth() + 1)).slice(-2)
             + '-' + ('0' + String(input_date.getDate())).slice(-2)
             + 'T'
             + ('0' + String(input_date.getHours())).slice(-2)
             + ':' + ('0' + String(input_date.getMinutes())).slice(-2)
             + ':' + ('0' + String(input_date.getSeconds())).slice(-2)
-            + '+0900' //タイムゾーン
-            + '\"';
+            + '+0900'; //タイムゾーン
         return formatted_date;
     }
 })();
