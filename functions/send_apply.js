@@ -100,8 +100,6 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             console.log(JSON.stringify(sendObj));
 
             // kintoneへの登録開始
-            const request = require('request');
-
             // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
             const API_TOKEN = env.api_token_record + ',' + process.env.api_token_komuten;
 
@@ -115,26 +113,19 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                 'Content-Type': 'application/json',
             };
 
-            const options_postrecord = {
-                url: BASE_URL,
-                method: 'POST',
-                headers: headers,
-                'Content-Type': 'application/json',
-                json: sendObj
-            };
-
-            request(options_postrecord, function (error, response, body) {
-                if (!error && response.statusCode == 200) {
+            axios.post(BASE_URL, sendObj, { headers })
+            .then((response) => {
+                if (response.status == 200) {
                     // 成功
                     res.status(200).json({
                         'redirect': env.success_redirect_to
                     });
                 } else {
-                    console.error('response is ' + response.statusCode + ': ' + response.body.code + ': ' + response.body.message);
+                    console.error('response is ' + response.status + ': ' + response.data + ': ' + response.statusText);
                     console.log('headers is ' + JSON.stringify(headers));
                     console.error('sendObj is ' + JSON.stringify(sendObj));
                     console.error('req.body is ' + JSON.stringify(req.body));
-                    res.status(response.statusCode).send(response.body.message);
+                    res.status(response.status).send(response.data.message);
                 }
             });
         })
