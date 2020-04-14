@@ -190,16 +190,11 @@ class EnvProd extends Environ {
 }
 
 function extractHostDomain(url) {
-    let host_domain;
+    // スラッシュで区切ってドメイン部分とポート番号を抜き出す
+    const domain_and_port = (url.indexOf("://") > -1)
+        ? url.split('/')[2]
+        : url.split('/')[0];
 
-    if (url.indexOf("://") > -1) {
-        host_domain = url.split('/')[2];
-    }
-    else {
-        host_domain = url.split('/')[0];
-    }
-
-    host_domain = host_domain.split(':')[0];
-
-    return host_domain;
+    // ドメイン部分だけ抜き出す
+    return domain_and_port.split(':')[0];
 }
