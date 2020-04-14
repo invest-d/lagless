@@ -52,7 +52,7 @@
         try {
             const target = await getAppliesLastYear()
             .catch((err) => {
-                console.log(err);
+                console.error(err);
                 throw new Error('申込みレコードの取得中にエラーが発生しました。');
             });
 
@@ -60,7 +60,7 @@
 
             const update_records_num = await updateKyoryokuMaster(count_result)
             .catch((err) => {
-                console.log(err);
+                console.error(err);
                 throw new Error('申込み回数の更新中にエラーが発生しました。');
             });
 
