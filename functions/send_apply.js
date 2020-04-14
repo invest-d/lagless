@@ -47,7 +47,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                     .then(result => {
                         resolve({
                             'fieldname': fieldname,
-                            'value': [{"fileKey": result.data.fileKey}]
+                            'value': [{'fileKey': result.data.fileKey}]
                         });
                     })
                     .catch(err => {
@@ -82,17 +82,17 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             console.log('user type is ' + user_type);
 
             // 預金種目を日本語に変換(新規ユーザのみ)
-            if (user_type !== "existing") {
+            if (user_type !== 'existing') {
                 // どちらかを選んでいないとフォームからの送信は出来ない仕様
-                const ja_deposit_type = (record['deposit_Form']['value'] === "ordinary")
-                    ? "普通"
-                    : "当座";
+                const ja_deposit_type = (record['deposit_Form']['value'] === 'ordinary')
+                    ? '普通'
+                    : '当座';
 
-                record["deposit_Form"] = {"value": ja_deposit_type};
+                record['deposit_Form'] = {'value': ja_deposit_type};
             }
 
             // 不要な要素を削除
-            delete record["agree"];
+            delete record['agree'];
 
             // sendObjと結合してkintoneにレコード登録可能な形に整える
             sendObj['record'] = record;
@@ -191,7 +191,7 @@ class EnvProd extends Environ {
 
 function extractHostDomain(url) {
     // スラッシュで区切ってドメイン部分とポート番号を抜き出す
-    const domain_and_port = (url.indexOf("://") > -1)
+    const domain_and_port = (url.indexOf('://') > -1)
         ? url.split('/')[2]
         : url.split('/')[0];
 
