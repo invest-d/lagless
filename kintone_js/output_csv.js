@@ -87,20 +87,10 @@
             return;
         }
 
-        importEncodingLibrary();
-
         // 出力ボタンを設置
         const button = createButtonOutputCsv();
         kintone.app.getHeaderMenuSpaceElement().appendChild(button);
     });
-
-    // CSV作成時に使うライブラリを読み込む
-    function importEncodingLibrary() {
-        let script_filesaver = document.createElement('script');
-        script_filesaver.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.3/FileSaver.min.js');
-        script_filesaver.setAttribute('type', 'text/javascript');
-        document.head.appendChild(script_filesaver);
-    }
 
     function createButtonOutputCsv() {
         let outputCsv = document.createElement('button');
@@ -141,9 +131,10 @@
                     }
 
                     const csv_data = generateCsvData(account, target_records, payment_date);
+                    const sjis_list = encodeToSjis(csv_data);
 
                     const file_name = `支払日${payment_date}ぶんの振込データ（振込元：${account}）.csv`;
-                    downloadFile(csv_data, file_name);
+                    downloadFile(sjis_list, file_name);
 
                     return updateToDone(target_records);
                 } catch (err) {
@@ -287,11 +278,7 @@
         ];
     }
 
-    // 生成したデータをCSVファイルとしてローカルにダウンロードする。
-    function downloadFile(csv_data, file_name) {
-        console.log('downloading...');
-        console.log(csv_data);
-
+    function encodeToSjis(csv_data) {
         // 1文字ずつ格納
         const unicode_list = [];
         for (let i = 0; i < csv_data.length; i++) {
@@ -299,12 +286,35 @@
         }
 
         // 1文字ずつSJISに変換する
-        const sjis_code_list = Encoding.convert(unicode_list, 'sjis', 'unicode');
+        return Encoding.convert(unicode_list, 'sjis', 'unicode');
+    }
+
+    // 生成したデータをCSVファイルとしてローカルにダウンロードする。
+    function downloadFile(sjis_code_list, file_name) {
+        console.log('downloading...');
+
         const uint8_list = new Uint8Array(sjis_code_list);
         const write_data = new Blob([uint8_list], { type: 'text/csv' });
 
         // 保存
-        saveAs(write_data, file_name);
+        const download_link = document.createElement('a');
+        download_link.download = file_name;
+        download_link.href = (window.URL || window.webkitURL).createObjectURL(write_data);
+
+        // DLリンクを生成して自動でクリックまでして、生成したDLリンクはその都度消す
+        kintone.app.getHeaderMenuSpaceElement().appendChild(download_link);
+        setText(download_link, 'download csv');
+        download_link.click();
+        kintone.app.getHeaderMenuSpaceElement().removeChild(download_link);
+    }
+
+    function setText(element,str){
+        if(element.textContent !== undefined){
+            element.textContent = str;
+        }
+        if(element.innerText !== undefined){
+            element.innerText = str;
+        }
     }
 
     function updateToDone(outputted_records) {
