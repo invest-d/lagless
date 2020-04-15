@@ -2,6 +2,8 @@ const functions = require('firebase-functions');
 const admin = require("firebase-admin");
 admin.initializeApp();
 
+exports.zengin = require('./zengin');
+
 const database = require('./database');
 
 exports.helloWorld = functions.https.onRequest(async (req, res) => {
