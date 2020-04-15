@@ -14,8 +14,7 @@
     // CSVファイルで保存するにあたってShift-Jisに変換する
     const Encoding = require('encoding-japanese');
 
-    // 銀行情報（主にカタカナ表記）を取得するためのライブラリ
-    const zenginCode = require('zengin-code');
+    const fetch = require('node-fetch');
 
     const APP_ID_APPLY              = kintone.app.getId();
     const fieldRecordId_APPLY       = 'レコード番号';
@@ -35,16 +34,19 @@
         'LAGLESS'
     ];
 
-    function getBankInfo(json) {
-        if (!json.hasOwnProperty('bank_code')) {
-            throw new Error('no "bank_code" specified.');
+    async function getBankKana(json) {
+        if (!json.hasOwnProperty('bank')) {
+            throw new Error('no bank code specified.');
         }
 
-        if (json.hasOwnProperty('branch_code')) {
-            return zenginCode[json.bank_code]['branches'][json.branch_code]['kana'];
+        const res = await fetch('https://us-central1-lagless.cloudfunctions.net/zengin?bank=' + json.bank);
+        const info = await res.json();
+
+        if (json.hasOwnProperty('branch')) {
+            return info.banks[0].branches.find(branch => branch.code == json.branch).kana;
         }
         else {
-            return zenginCode[json.bank_code]['kana'];
+            return info.banks[0].kana;
         }
     }
 
@@ -75,9 +77,9 @@
             this.smbc_code      = '2648852000';
             this.requester_name = 'ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ'.padEnd(40, ' ');
             this.bank_code      = '0009';
-            this.bank_name      = addPadding(getBankInfo({bank_code: this.bank_code}), 15);
+            this.bank_name      = addPadding(getBankKana({bank: this.bank_code}), 15);
             this.branch_code    = '219';
-            this.branch_name    = addPadding(getBankInfo({bank_code: this.bank_code, branch_code: this.branch_code}), 15);
+            this.branch_name    = addPadding(getBankKana({bank: this.bank_code, branch: this.branch_code}), 15);
             this.deposit_type   = '1';
             this.account_number = '3391195';
         }
@@ -89,9 +91,9 @@
             this.smbc_code      = '3648579000';
             this.requester_name = 'ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ'.padEnd(40, ' ');
             this.bank_code      = '0009';
-            this.bank_name      = addPadding(getBankInfo({bank_code: this.bank_code}), 15);
+            this.bank_name      = addPadding(getBankKana({bank: this.bank_code}), 15);
             this.branch_code    = '219';
-            this.branch_name    = addPadding(getBankInfo({bank_code: this.bank_code, branch_code: this.branch_code}), 15);
+            this.branch_name    = addPadding(getBankKana({bank: this.bank_code, branch: this.branch_code}), 15);
             this.deposit_type   = '1';
             this.account_number = '3409134';
         }
@@ -246,9 +248,9 @@
     function getDataRecords(kintone_records) {
         return kintone_records.map((kintone_record) => {
             const bank_code_to = ('0000' + kintone_record[fieldBankCode_APPLY]['value']).slice(-4);
-            const bank_name_to = addPadding(getBankInfo({bank_code: bank_code_to}), 15);
+            const bank_name_to = addPadding(getBankKana({bank: bank_code_to}), 15);
             const branch_code_to = ('000' + kintone_record[fieldBranchCode_APPLY]['value']).slice(-3);
-            const branch_name_to = addPadding(getBankInfo({bank_code: bank_code_to, branch_code: branch_code_to}), 15);
+            const branch_name_to = addPadding(getBankKana({bank: bank_code_to, branch: branch_code_to}), 15);
             const deposit_to = (kintone_record[fieldDepositType_APPLY]['value'] === '普通')
                 ? '1'
                 : '2';
