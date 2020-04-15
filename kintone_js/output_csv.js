@@ -11,6 +11,9 @@
 (function() {
     "use strict";
 
+    // CSVファイルで保存するにあたってShift-Jisに変換する
+    const Encoding = require('encoding-japanese');
+
     const APP_ID_APPLY              = kintone.app.getId();
     const fieldRecordId_APPLY       = 'レコード番号';
     const fieldBankCode_APPLY       = 'bankCode';
@@ -93,11 +96,6 @@
 
     // CSV作成時に使うライブラリを読み込む
     function importEncodingLibrary() {
-        let script_encoding = document.createElement('script');
-        script_encoding.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/1.0.30/encoding.min.js');
-        script_encoding.setAttribute('type', 'text/javascript');
-        document.head.appendChild(script_encoding);
-
         let script_filesaver = document.createElement('script');
         script_filesaver.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.3/FileSaver.min.js');
         script_filesaver.setAttribute('type', 'text/javascript');
