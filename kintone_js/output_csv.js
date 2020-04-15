@@ -14,6 +14,9 @@
     // CSVファイルで保存するにあたってShift-Jisに変換する
     const Encoding = require('encoding-japanese');
 
+    // 銀行情報（主にカタカナ表記）を取得するためのライブラリ
+    const zenginCode = require('zengin-code');
+
     const APP_ID_APPLY              = kintone.app.getId();
     const fieldRecordId_APPLY       = 'レコード番号';
     const fieldBankCode_APPLY       = 'bankCode';
@@ -59,9 +62,9 @@
             this.smbc_code      = '2648852000';
             this.requester_name = 'ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ'.padEnd(40, ' ');
             this.bank_code      = '0009';
-            this.bank_name      = addPadding(bank_info[this.bank_code]['kana'], 15);
+            this.bank_name      = addPadding(zenginCode[this.bank_code]['kana'], 15);
             this.branch_code    = '219';
-            this.branch_name    = addPadding(bank_info[this.bank_code]['branches'][this.branch_code]['kana'], 15);
+            this.branch_name    = addPadding(zenginCode[this.bank_code]['branches'][this.branch_code]['kana'], 15);
             this.deposit_type   = '1';
             this.account_number = '3391195';
         }
@@ -73,9 +76,9 @@
             this.smbc_code      = '3648579000';
             this.requester_name = 'ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ'.padEnd(40, ' ');
             this.bank_code      = '0009';
-            this.bank_name      = addPadding(bank_info[this.bank_code]['kana'], 15);
+            this.bank_name      = addPadding(zenginCode[this.bank_code]['kana'], 15);
             this.branch_code    = '219';
-            this.branch_name    = addPadding(bank_info[this.bank_code]['branches'][this.branch_code]['kana'], 15);
+            this.branch_name    = addPadding(zenginCode[this.bank_code]['branches'][this.branch_code]['kana'], 15);
             this.deposit_type   = '1';
             this.account_number = '3409134';
         }
@@ -230,9 +233,9 @@
     function getDataRecords(kintone_records) {
         return kintone_records.map((kintone_record) => {
             const bank_code_to = ('0000' + kintone_record[fieldBankCode_APPLY]['value']).slice(-4);
-            const bank_name_to = addPadding(bank_info[bank_code_to]['kana'], 15);
+            const bank_name_to = addPadding(zenginCode[bank_code_to]['kana'], 15);
             const branch_code_to = ('000' + kintone_record[fieldBranchCode_APPLY]['value']).slice(-3);
-            const branch_name_to = addPadding(bank_info[bank_code_to]['branches'][branch_code_to]['kana'], 15);
+            const branch_name_to = addPadding(zenginCode[bank_code_to]['branches'][branch_code_to]['kana'], 15);
             const deposit_to = (kintone_record[fieldDepositType_APPLY]['value'] === '普通')
                 ? '1'
                 : '2';
