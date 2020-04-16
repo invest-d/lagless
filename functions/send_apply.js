@@ -10,6 +10,8 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
         return;
     }
 
+    console.log('requested from ' + String(req.headers.referer));
+
     // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
     const env = new Environ(req.headers.referer);
 
@@ -137,8 +139,6 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
 // reqのhostをCORSに設定する。固定値にしないのは、開発・本番 複数ドメインのCORSを設定するため
 // 開発or本番以外のドメインからのリクエストはそもそもenvをインスタンス化出来ないのでチェックしない
 function setCORS(env, res){
-    console.log('requested from ' + String(env.host));
-
     // リクエスト元が開発版のフォームなら開発版のドメインを、本番のフォームなら本番のドメインを設定。
     res.set('Access-Control-Allow-Origin','https://' + env.host);
 }
@@ -162,7 +162,7 @@ class Environ {
         }
         else {
             // それ以外
-            throw new Error('invalid host.');
+            throw new Error('invalid host: '+ this.host);
         }
     }
 }
