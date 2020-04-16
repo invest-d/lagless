@@ -58,14 +58,14 @@ $(function() {
                     "closing_date": "2020-12-20",
                     "default_pay_date": "2021-01-15"
                 }
-            ], 
+            ],
         }, param);
         setTimeout(function() {
             $('#content').show();
         }, 500);
         return;
     }
-    
+
     var target = "https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/data.json?alt=media";
     $.ajax({
         url: target
@@ -88,21 +88,27 @@ var format_date = function(str) {
 var show = function(client, param) {
     $('.service').text(client.service);
     var mode = { 'ラグレス': 'lagless', 'ダンドリペイメント': 'dandori', 'リノベ不動産Payment': 'renove' }[client.service];
-    
+
     $('.工務店正式名称').text(client.工務店正式名称);
     $('.cost').text(client.cost);
     $('.yield').text(client.yield);
     $('.transfer_fee').text(client.transfer_fee);
     $('.limit').text(client.limit);
     $('.cond-'+mode).show();
-    $('.form_1').attr('href', client.form_1);
-    $('.form_2').attr('href', client.form_2);
+    // 特定の工務店IDだけは工務店マスタ記載のフォームを使用
+    if (["101", "104"].includes(param.c)) {
+        $('.form_1').attr('href', client.form_1);
+        $('.form_2').attr('href', client.form_2);
+    } else {
+        $('.form_1').attr('href', `./apply?user=new&c=${param.c}&product=${mode}`);
+        $('.form_2').attr('href', `./apply?user=existing&c=${param.c}&product=${mode}`);
+    }
     if(client.link) {
         $('.link').attr('href', client.link).text(client.link);
         $('.link').parents('div').show();
     }
     $('.mail').text(client.mail).attr('href', 'mailto:'+client.mail);
-    
+
     $('.closing').text(client.closing);
     $('.deadline').text(client.deadline);
     $('.early').text(client.early);
@@ -133,7 +139,7 @@ var show = function(client, param) {
             }
         });
     }
-    
+
     if(param.f) {
         $('.first').show();
     }

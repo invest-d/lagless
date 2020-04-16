@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>お申込フォーム</title>
+
+  <!-- URLパラメータによって初回申込みフォームもしくは2回目以降申込みフォームになる -->
+  <!-- 初回パラメータ：&user=new もしくはパラメータなし -->
+  <!-- 2回目以降パラメータ :&user=existing -->
+
+  <!-- URLパラメータの商品名によってフォームの見た目を変更する -->
+  <!-- &product=[lagless|dandori|renove] パラメータ指定無しの場合はlaglessとして扱う -->
+
+  <!-- BootStrap -->
+  <link
+    rel="stylesheet"
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+    crossorigin="anonymous">
+  <script
+    src="https://code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+    crossorigin="anonymous"></script>
+  <!-- Bootstrapで推奨されている下記のslim版ではajaxが動かないため、上記の通常版jqueryを使う -->
+  <!-- <script
+    src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script> -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script
+    src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"></script>
+
+  <!-- Tempus Dominus DateTimePicker -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"
+    integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ="
+    crossorigin="anonymous"></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js"
+    integrity="sha256-AdQN98MVZs44Eq2yTwtoKufhnU+uZ7v2kXnD5vqzZVo="
+    crossorigin="anonymous"></script>
+  <script
+    type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/js/tempusdominus-bootstrap-4.min.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/css/tempusdominus-bootstrap-4.min.css" />
+  <!-- /BootStrap -->
+
+  <!-- 銀行をサジェスト表示 -->
+  <script src="https://zipaddr.github.io/bankautob.js" charset="UTF-8"></script>
+  <!-- /銀行をサジェスト表示 -->
+
+  <!-- CSS -->
+  <style type="text/css">
+    @media (min-width: 800px) {
+      .container {
+        max-width: 750px;
+      }
+    }
+
+    #bnkauto {
+      position: absolute;
+      font-family:'ヒラギノ角ゴ Pro W3','Hiragino Kaku Gothic Pro','メイリオ',Meiryo,'ＭＳ Ｐゴシック',sans-serif;
+      background: #009999;
+      font-weight: normal;
+      padding: 5px 8px !important;
+      border-radius: 8px;
+      z-index: 999999;
+    }
+
+    @media only screen {
+      /* PC */
+      .bnk_line {         /* 行部分 */
+        color: #ffffcc;
+      }
+      #bnk_count {        /* Hit件数 */
+        color: #ffffcc;
+        white-space: nowrap;
+      }
+      #bnk_close a {
+        color: #333333;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      #bnk_footer a {
+        color: #333333;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+    }
+
+    .valid-status-icon {
+      float: right;
+      margin-right: 15px;
+      margin-top: -27px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .valid-status-icon-file {
+      float: right;
+      margin-right: 15px;
+      margin-top: -32px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .valid-input {
+      display: none;
+      color: #28a745;
+    }
+
+    .invalid-input {
+      display: none;
+      color: #dc3545;
+    }
+  </style>
+
+  <!-- URLによって変更するCSS -->
+  <link rel="stylesheet" type="text/css" href="./styles/form_lagless.css" id="product-css">
+  <!-- /CSS -->
+
+  <!-- 郵便番号から住所自動入力 -->
+  <script src="https://ajaxzip3.github.io/ajaxzip3.js" charset="UTF-8"></script>
+  <!-- /郵便番号から住所自動入力 -->
+
+  <!-- Font Awesome -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/js/all.min.js"
+    integrity="sha256-MAgcygDRahs+F/Nk5Vz387whB4kSK9NXlDN3w58LLq0="
+    crossorigin="anonymous"></script>
+  <!-- /Font Awesome -->
+</head>
+<body class="font-weight-light py-2">
+
+
+  <!-- container -->
+  <div class="container mx-auto">
+
+
+    <!-- form -->
+    <form action="https://us-central1-lagless.cloudfunctions.net/send_apply"
+    method="POST" id="form_id" enctype="multipart/form-data">
+
+
+      <!-- header -->
+      <div class="form-group">
+        <div class="col-12 mb--md-4 mx-auto" id="header-logo"></div>
+      </div>
+      <!-- /header -->
+
+
+      <div class="form-group">
+        <h2>お申込みフォーム</h2>
+
+        <p name="only_first">
+          早期支払いをご希望の方は、お手元に運転免許証をご用意いただいた上で<br>
+          下記のフォームよりお申込みください。</p>
+
+        <p>お申込みフォームの入力でお困りの際は、下記連絡先までお気軽にお電話ください。</p>
+
+        <p>運営：インベストデザイン株式会社<br>
+          （各種ペイメントサービスの事務局を担っております）<br>
+          電話番号 ： <a href="tel:0120-516-818">0120-516-818</a> <br>
+          受付時間 ： 10：00～17：00 <br>
+          定休日 ： 土・日・祝</p>
+      </div>
+
+
+      <div class="form-group pt-5">
+        <h3>■ お客さま情報 ■</h3>
+      </div>
+
+
+      <!-- 貴社名 -->
+      <div class="form-group">
+        <label for="company">貴社名（個人事業主の場合は屋号名）</label>
+        <span class="badge badge-danger">必須</span>
+        <input type="text" class="form-control no-blank"
+          name="company" id="company" required>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">入力してください。</div>
+      </div>
+      <!-- /貴社名 -->
+
+
+      <!-- 電話番号 -->
+      <div class="form-group" id="phoneGroup">
+        <label for="phone">電話番号</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <input type="tel" class="form-control pattern-required"
+          name="phone" id="phone" required
+          pattern="^[0-9]{10,12}$|^[0-9]{2,4}-[0-9]{2,4}-[0-9]{4}$" />
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">半角で正しく入力してください</div>
+      </div>
+      <!-- /電話番号 -->
+
+
+      <!-- メールアドレス -->
+      <div class="form-group">
+        <label for="mail">メールアドレス</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <span class="small pl-1">※申込み受付後に支払予定明細をメールでお送りします。</span>
+        <input type="email" class="form-control pattern-required"
+        name="mail" id="mail"
+        pattern="[\w\d_-]+@[\w\d_-]+\.[\w\d._-]+" />
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">正しく入力してください</div>
+      </div>
+      <!-- /メールアドレス -->
+
+
+      <!-- 2回目以降で表示するキャプション -->
+      <div class="form-group mb-2 mt-5" id="second_caption" style="display: none;">
+        <p>※以下の項目は、前回申込時から変更がある場合にのみ入力してください。</p>
+      </div>
+      <!-- /2回目以降で表示するキャプション -->
+
+
+      <div class="form-group mb-1" name="arbitrary_second">
+        <label for="">貴社住所（本店所在地）</label>
+
+        <!-- 郵便番号と都道府県を横並び -->
+        <div class="form-row">
+
+          <!-- 郵便番号 -->
+          <div class="col-md-6">
+            <div class="form-group mb-1">
+              <label for="postalCode">郵便番号</label>
+              <span class="badge badge-danger">必須</span>
+              <!-- 郵便番号からの住所自動入力はハイフンがあっても無くても両方対応している -->
+              <input type="text" class="form-control pattern-required-on-modified"
+                name="postalCode" id="postalCode" required
+                maxlength="8" pattern="^[0-9]{3}-?[0-9]{4}$"
+                onkeyup="AjaxZip3.zip2addr(this,'','prefecture','address');"/>
+              <span class="fas fa-check valid-status-icon valid-input"></span>
+              <span class="fas fa-times valid-status-icon invalid-input"></span>
+              <div class="invalid-feedback">7桁の数字で入力してください。</div>
+            </div>
+          </div>
+          <!-- /郵便番号 -->
+
+          <!-- 都道府県 -->
+          <div class="col-md-6 mb-1">
+            <div class="form-group mb-1">
+              <label for="prefecture">都道府県</label>
+              <span class="badge badge-danger">必須</span>
+              <select type="text" class="form-control no-blank"
+                name="prefecture" id="prefecture" required>
+                <option value="">選択してください</option>
+                <optgroup label="北海道・東北">
+                  <option value="北海道">北海道</option>
+                  <option value="青森県">青森県</option>
+                  <option value="秋田県">秋田県</option>
+                  <option value="岩手県">岩手県</option>
+                  <option value="山形県">山形県</option>
+                  <option value="宮城県">宮城県</option>
+                  <option value="福島県">福島県</option>
+                </optgroup>
+                <optgroup label="甲信越・北陸">
+                  <option value="山梨県">山梨県</option>
+                  <option value="長野県">長野県</option>
+                  <option value="新潟県">新潟県</option>
+                  <option value="富山県">富山県</option>
+                  <option value="石川県">石川県</option>
+                  <option value="福井県">福井県</option>
+                </optgroup>
+                <optgroup label="関東">
+                  <option value="茨城県">茨城県</option>
+                  <option value="栃木県">栃木県</option>
+                  <option value="群馬県">群馬県</option>
+                  <option value="埼玉県">埼玉県</option>
+                  <option value="千葉県">千葉県</option>
+                  <option value="東京都">東京都</option>
+                  <option value="神奈川県">神奈川県</option>
+                </optgroup>
+                <optgroup label="東海">
+                  <option value="愛知県">愛知県</option>
+                  <option value="静岡県">静岡県</option>
+                  <option value="岐阜県">岐阜県</option>
+                  <option value="三重県">三重県</option>
+                </optgroup>
+                <optgroup label="関西">
+                  <option value="大阪府">大阪府</option>
+                  <option value="兵庫県">兵庫県</option>
+                  <option value="京都府">京都府</option>
+                  <option value="滋賀県">滋賀県</option>
+                  <option value="奈良県">奈良県</option>
+                  <option value="和歌山県">和歌山県</option>
+                </optgroup>
+                <optgroup label="中国">
+                  <option value="岡山県">岡山県</option>
+                  <option value="広島県">広島県</option>
+                  <option value="鳥取県">鳥取県</option>
+                  <option value="島根県">島根県</option>
+                  <option value="山口県">山口県</option>
+                </optgroup>
+                <optgroup label="四国">
+                  <option value="徳島県">徳島県</option>
+                  <option value="香川県">香川県</option>
+                  <option value="愛媛県">愛媛県</option>
+                  <option value="高知県">高知県</option>
+                </optgroup>
+                <optgroup label="九州・沖縄">
+                  <option value="福岡県">福岡県</option>
+                  <option value="佐賀県">佐賀県</option>
+                  <option value="長崎県">長崎県</option>
+                  <option value="熊本県">熊本県</option>
+                  <option value="大分県">大分県</option>
+                  <option value="宮崎県">宮崎県</option>
+                  <option value="鹿児島県">鹿児島県</option>
+                  <option value="沖縄県">沖縄県</option>
+                </optgroup>
+              </select>
+              <span class="fas fa-check valid-status-icon valid-input"></span>
+              <span class="fas fa-times valid-status-icon invalid-input"></span>
+              <div class="invalid-feedback">選択してください。</div>
+            </div>
+          </div>
+          <!-- /都道府県 -->
+
+        </div>
+        <!-- /郵便番号と都道府県を横並び -->
+
+      </div>
+
+
+      <!-- 住所 -->
+      <div class="form-group" name="arbitrary_second">
+        <label for="address">住所</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <input type="text" class="form-control no-blank"
+          name="address" id="address" required />
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">入力してください</div>
+      </div>
+      <!-- /住所 -->
+
+
+      <!-- 番地・建物名・部屋番号 -->
+      <div class="form-group" name="arbitrary_second">
+        <label for="streetAddress">番地・建物名・部屋番号</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <input type="text" class="form-control no-blank"
+          name="streetAddress" id="streetAddress" required />
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">入力してください</div>
+      </div>
+      <!-- /番地・建物名・部屋番号 -->
+
+
+      <!-- 代表者名 -->
+      <div class="form-group" name="arbitrary_second">
+        <label for="representative">代表者名</label>
+        <span class="badge badge-default badge-danger">必須</span>
+        <input type="text" class="form-control no-blank"
+          name="representative" id="representative" required />
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">入力してください</div>
+      </div>
+      <!-- /代表者名 -->
+
+
+      <div class="form-group pt-5">
+        <h2>■ 対象債権内容（件名・税込金額）■</h2>
+        <p>※早期支払をご希望の請求書データをご添付ください。<br>
+          　携帯で撮った請求書の写真でも構いません。<br>
+          　請求書が複数枚に渡る場合は、一つのファイルにまとめて頂きますようお願いいたします。</p>
+        <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。<br>
+          　（運営：インベストデザイン株式会社　<a href="tel:0120-516-818">0120-516-818</a>）</p>
+        <p>※【該当の方のみ】<br>
+          協力会費のお支払が必要な場合は、各発注企業さまの取り扱い方法に従い手続きいたします（請求書の合計金額から協力会費を差し引かせていただきます）</p>
+      </div>
+
+
+      <!-- 請求先企業名 -->
+      <div class="form-group">
+        <label for="billingCompany">請求先企業名（発注者名）</label>
+        <span class="badge badge-danger">必須</span>
+        <input type="text" class="form-control no-blank"
+          name="billingCompany" id="billingCompany" required/>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">入力してください。</div>
+      </div>
+      <!-- /請求先企業名 -->
+
+
+      <!-- 請求書の締日 -->
+      <div class="form-group" id="closingDayGroup">
+        <label for="closingDay">請求書の締日（早期支払対象となる締日）</label>
+        <span class="badge badge-danger">必須</span>
+        <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
+          <input type="text" class="form-control datetimepicker-input pattern-required"
+          name="closingDay" id="closingDay" required
+          data-toggle="datetimepicker" data-target="#closingDay" placeholder=""
+          maxlength="10" pattern="\d{4}-\d{2}-\d{2}">
+          <span class="fas fa-check valid-status-icon valid-input"></span>
+          <span class="fas fa-times valid-status-icon invalid-input"></span>
+          <div class="invalid-feedback">年-月-日の正しい形式で入力してください。</div>
+        </div>
+      </div>
+      <!-- /請求書の締日 -->
+
+
+      <!-- 請求書データの添付 -->
+      <div class="form-group">
+        <label for="invoice">請求書データの添付</label>
+        <span class="badge badge-danger">必須</span>
+        <input type="file" class="form-control-file p-2 border rounded no-blank"
+          name="invoice" id="invoice" required/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+      <!-- /請求書データの添付 -->
+
+
+      <!-- 対象債権合計金額 -->
+      <div class="form-group">
+        <label for="applicationAmount">対象債権合計金額（税込）</label>
+        <span class="badge badge-danger">必須</span>
+        <input type="text" class="form-control pattern-required"
+          name="applicationAmount" id="applicationAmount" required
+          pattern="[0-9]+"/>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">半角数字のみ入力してください（コンマ等は不要です）</div>
+      </div>
+      <!-- /対象債権合計金額 -->
+
+
+      <div class="form-group pt-5" name="only_first">
+        <h2>■ お客さま口座情報 ■</h2>
+        <p>支払い口座情報をご記入ください。<br>
+          （個人事業主様は代表者名の口座をご指定下さい)</p>
+      </div>
+
+
+      <!-- 金融機関 -->
+      <div class="form-row" name="only_first">
+
+        <!-- 金融機関コード -->
+        <div class="col-md-4">
+          <div class="form-group">
+            <label for="bank_code">金融機関コード(4桁)</label>
+            <span class="badge badge-danger">必須</span>
+            <input type="text" class="form-control"
+              name="bankCode_Form" id="bank_code" required
+              maxlength="4" pattern="\d{4}"/>
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">数字4桁で入力してください</div>
+          </div>
+        </div>
+        <!-- /金融機関コード -->
+
+        <!-- 金融機関名 -->
+        <div class="col-md-8">
+          <div class="form-group">
+            <label for="bank_name">金融機関名</label>
+            <span class="badge badge-danger">必須</span>
+            <input type="text" class="form-control"
+              name="bankName_Form" id="bank_name" required/>
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">入力してください</div>
+          </div>
+        </div>
+        <!-- /金融機関名 -->
+
+      </div>
+      <!-- /金融機関 -->
+
+
+      <!-- 支店 -->
+      <div class="form-row" name="only_first">
+
+        <!-- 支店コード -->
+        <div class="col-md-4">
+          <div class="form-group">
+            <label for="branch_code">支店コード（3桁）</label>
+            <span class="badge badge-danger">必須</span>
+            <input type="text" class="form-control"
+              name="branchCode_Form" id="branch_code" required
+              maxlength="3" pattern="\d{3}"/>
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">数字3桁で入力してください</div>
+          </div>
+        </div>
+        <!-- /支店コード -->
+
+        <!-- 支店名 -->
+        <div class="col-md-8">
+          <div class="form-group">
+            <label for="branch_name">支店名</label>
+            <span class="badge badge-danger">必須</span>
+            <input type="text" class="form-control"
+              name="branchName_Form" id="branch_name" required/>
+            <span class="fas fa-check valid-status-icon valid-input"></span>
+            <span class="fas fa-times valid-status-icon invalid-input"></span>
+            <div class="invalid-feedback">入力してください</div>
+          </div>
+        </div>
+        <!-- /支店名 -->
+
+      </div>
+      <!-- /支店 -->
+
+
+      <!-- 預金種目 -->
+      <div class="form-group pt-2 mb-1" name="only_first">
+        <label>預金種目</label><span class="badge badge-danger">必須</span>
+      </div>
+      <div class="form-inline mb-4" name="only_first">
+        <div class="p-2 border rounded col-md-6">
+          <div class="custom-control custom-radio custom-control-inline py-1">
+            <input type="radio" class="custom-control-input no-blank" name="deposit_Form" id="deposit-ordinary" value="ordinary" required>
+            <label class="custom-control-label pr-4" for="deposit-ordinary">普通</label>
+          </div>
+        </div>
+        <div class="p-2 border rounded col-md-6">
+          <div class="custom-control custom-radio custom-control-inline py-1">
+            <input type="radio" class="custom-control-input no-blank" name="deposit_Form" id="deposit-current" value="current" required>
+            <label class="custom-control-label" for="deposit-current">当座</label>
+          </div>
+        </div>
+      </div>
+      <!-- /預金種目 -->
+
+
+      <!-- 口座番号 -->
+      <div class="form-group" name="only_first">
+        <label for="accountNumber_Form">口座番号</label>
+        <span class="badge badge-danger">必須</span>
+        <input type="text" class="form-control pattern-required"
+          name="accountNumber_Form" id="accountNumber_Form" required
+          maxlength="7" pattern="[0-9]+"/>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">半角数字のみ入力してください</div>
+      </div>
+      <!-- /口座番号 -->
+
+
+      <!-- 口座名義 -->
+      <div class="form-group" name="only_first">
+        <label for="accountName_Form">口座名義（カナ）</label>
+        <span class="badge badge-danger">必須</span>
+        <input type="text" class="form-control pattern-required"
+          name="accountName_Form" id="accountName_Form" required
+          pattern="^[ア-ンＡ-Ｚ０-９ー（）「」／．，￥ー　]+$"/>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">全角カタカナで入力してください</div>
+      </div>
+      <!-- /口座名義 -->
+
+
+      <div class="form-group pt-5" name="only_first">
+        <h2>■ 本人確認書類 ■</h2>
+      </div>
+
+
+      <!-- 運転免許証表 -->
+      <div class="form-group" name="only_first">
+        <label for="driverLicenseFront">運転免許証（表面）</label>
+        <span class="badge badge-danger">必須</span>
+        <input type="file" class="form-control-file p-2 border rounded no-blank"
+          name="driverLicenseFront" id="driverLicenseFront" required/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+      <!-- /運転免許証表 -->
+
+
+      <!-- 運転免許証裏 -->
+      <div class="form-group" name="only_first">
+        <label for="driverLicenseBack">運転免許証（裏面）</label>
+        <span class="badge badge-danger">必須</span>
+        <input type="file" class="form-control-file p-2 border rounded no-blank"
+          name="driverLicenseBack" id="driverLicenseBack" required/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+      <!-- /運転免許証裏 -->
+
+
+      <!-- 利用規約へのリンク -->
+      <div class="form-group col-6 mx-auto pt-5">
+        <button type="button" class="btn btn-secondary btn-lg btn-block"
+          onclick="window.open('https://www.lag-less.com/terms', '_blank')">利用規約</button>
+      </div>
+      <!-- /利用規約へのリンク -->
+
+
+      <!-- 利用規約に同意する -->
+      <div class="form-group p-2 col-6 mx-auto border rounded">
+        <div class="custom-control custom-checkbox">
+          <input type="checkbox" class="custom-control-input no-blank" name="agree" id="agree" required />
+          <label for="agree" class="custom-control-label">規約に同意する</label>
+        </div>
+      </div>
+      <!-- /利用規約に同意する -->
+
+
+      <div class="form-group pt-3">
+        <p>本フォームでのお申込みは、お申込みを希望する法人の代表者または個人事業者の事業主がお申込みしたものとみなします。</p>
+      </div>
+
+
+      <!-- URLの工務店IDパラメータを引き継ぐ -->
+      <input type="hidden" value="" name="constructionShopId" id="constructionShopId"/>
+
+
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary btn-lg btn-block"
+          id="send">送信</button>
+      </div>
+
+
+    </form>
+    <!-- /form -->
+
+
+  </div>
+  <!-- /container -->
+
+  <script type="text/javascript">
+
+  // URLの商品名によってフォームの見た目を変更する
+  $(function() {
+    const product_name = getUrlParam('product');
+    let css_path = './styles/form_lagless.css';
+    switch (product_name) {
+      case 'dandori':
+        css_path = './styles/form_dandori.css';
+        break;
+      case 'renove':
+        css_path = './styles/form_renove.css';
+        break;
+      // それ以外はlaglessとする
+    }
+    document.getElementById("product-css").href = css_path;
+  });
+
+  // URLの工務店IDパラメータを引き継ぐ
+  $(function() {
+    const id_key = 'c';
+    const id_val = getUrlParam(id_key);
+
+    document.getElementById('constructionShopId').value = id_val;
+  });
+
+  // URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする
+  $(function() {
+    const key = 'user';
+    const val = getUrlParam(key);
+    if (val === 'existing') {
+      // 2回目以降の申込みフォーム
+      // 初回のみ必須入力の項目を非表示にする
+      const only_first_elems = $('*[name=only_first]');
+      hideElement(only_first_elems);
+      // 2回目以降は任意入力になる項目を設定する
+      arbitrariseInput();
+      // 2回目以降で表示するキャプションを設定
+      $('#second_caption').css('display', 'block');
+    } else {
+      // 初回申込みフォーム
+      // 特に変更する必要はない
+    }
+  });
+
+  // URLから指定したパラメータを取得する
+  function getUrlParam(param_name) {
+    const query_string = window.location.search.substring(1);
+    const queries = new Map(query_string.split("&").map(query => query.split("=")));
+    return queries.get(param_name);
+  }
+
+  // 2回目以降申込みフォームで不要なコントロールの必須チェックを外してフォームから非表示にする
+  function hideElement(element) {
+    cancelValidation(element);
+    element.css('display', 'none');
+  }
+
+  // 必須入力項目を任意入力に変更する
+  function arbitrariseInput() {
+    $('div[name=arbitrary_second]').each(function() {
+      // 必須のラベルを任意に変更
+      $(this).find('span' + '.badge').removeClass('badge-danger');
+      $(this).find('span' + '.badge').addClass('badge-secondary');
+      $(this).find('span' + '.badge').html('任意');
+
+      // ブランクのまま送信は許すが、入力するなら入力可能パターンはチェックする
+      $(this).find('input').removeClass('no-blank');
+      $(this).find('select').removeClass('no-blank');
+      $(this).find('input').removeAttr('required');
+      $(this).find('select').removeAttr('required');
+    });
+  }
+
+  function cancelValidation(element) {
+    element.find('input').removeClass('no-blank pattern-required');
+    element.find('input').removeAttr('required');
+  }
+
+  // 日付入力欄でカレンダーからの入力を可能にする
+  $(function() {
+    $('#closingDay').datetimepicker({
+      format: 'YYYY-MM-DD',
+      locale: 'ja',
+      dayViewHeaderFormat: 'YYYY年 MMM',
+    });
+  });
+
+  // コントロール未入力のまま次に行こうとしたら警告を出す
+  $(function() {
+    $('.no-blank').blur(blank_validate);
+    $('.pattern-required').blur(function () {pattern_validate($(this));});
+
+    // 下記クラス.pattern-required-on-modifiedのバリデーションは、次のようになる
+    // 1. 初回フォームであれば無条件でblur時にパターンマッチのvalidate
+    // 2-1. 2回目以降フォームであればblur時にブランクならOK判定
+    // 2-2. 2回目以降フォームであればblur時に非ブランクならパターンマッチのvalidate
+    $('.pattern-required-on-modified').blur(function() {
+      pattern_validate($(this), getUrlParam('user') === 'existing');
+    });
+  });
+
+  function blank_validate() {
+      if ($(this).val()) {
+        $(this).removeClass(
+          'border border-danger',
+        );
+        $(this).addClass(
+          'border border-success',
+        );
+        $(this).nextAll('.valid-input').css({
+          'display': 'block',
+        });
+        $(this).nextAll('.invalid-input').css({
+          'display': 'none',
+        });
+        $(this).nextAll('.invalid-feedback').css({
+          'display': 'none',
+        });
+      } else {
+        $(this).removeClass(
+          'border border-success',
+        );
+        $(this).addClass(
+          'border border-danger',
+        );
+        $(this).nextAll('.valid-input').css({
+          'display': 'none',
+        });
+        $(this).nextAll('.invalid-input').css({
+          'display': 'block',
+        });
+        $(this).nextAll('.invalid-feedback').css({
+          'display': 'block',
+        });
+      }
+    }
+
+  function pattern_validate(obj, blank_allowed) {
+      const pattern = new RegExp(obj.attr('pattern'));
+
+      const input_is_valid = pattern.test(obj.val());
+      const input_is_blank = (obj.val() == '');
+      if (input_is_valid
+          || (blank_allowed && input_is_blank)) {
+        // 有効な入力
+        obj.css({
+          'border': '1px solid #28a745',
+        });
+        obj.nextAll('.valid-input').css({
+          'display': 'block',
+        });
+        obj.nextAll('.invalid-input').css({
+          'display': 'none',
+        });
+        obj.nextAll('.invalid-feedback').css({
+          'display': 'none',
+        });
+      } else {
+        // 無効な入力
+        obj.css({
+          'border': '1px solid #dc3545',
+        });
+        obj.nextAll('.valid-input').css({
+          'display': 'none',
+        });
+        obj.nextAll('.invalid-input').css({
+          'display': 'block',
+        });
+        obj.nextAll('.invalid-feedback').css({
+          'display': 'block',
+        });
+      }
+    }
+
+  // ライブラリから銀行情報を入力したときに正しくバリデーションがかからないので、預金種目をクリックした時にチェックする
+  $(function() {
+    $('input[name=deposit_Form]').on('click', function() {
+      $('input[name=bankCode_Form]').addClass('pattern-required');
+      $('input[name=bankName_Form]').addClass('no-blank');
+      $('input[name=branchCode_Form]').addClass('pattern-required');
+      $('input[name=branchName_Form]').addClass('no-blank');
+      $('input[name=bankCode_Form]').blur(function () {pattern_validate($(this));});
+      $('input[name=bankCode_Form]').blur();
+      $('input[name=bankName_Form]').blur(blank_validate);
+      $('input[name=bankName_Form]').blur();
+      $('input[name=branchCode_Form]').blur(function () {pattern_validate($(this));});
+      $('input[name=branchCode_Form]').blur();
+      $('input[name=branchName_Form]').blur(blank_validate);
+      $('input[name=branchName_Form]').blur();
+    });
+  });
+
+  $(function() {
+    $('.bank-info').blur(function() {
+      const pattern = new RegExp($(this).attr('pattern'));
+      if (pattern.test($(this).val())) {
+        $(this).css({
+          'border': '1px solid #28a745',
+        });
+        $(this).nextAll('.valid-input').css({
+          'display': 'block',
+        });
+        $(this).nextAll('.invalid-input').css({
+          'display': 'none',
+        });
+        $(this).nextAll('.invalid-feedback').css({
+          'display': 'none',
+        });
+      } else {
+        $(this).css({
+          'border': '1px solid #dc3545',
+        });
+        $(this).nextAll('.valid-input').css({
+          'display': 'none',
+        });
+        $(this).nextAll('.invalid-input').css({
+          'display': 'block',
+        });
+        $(this).nextAll('.invalid-feedback').css({
+          'display': 'block',
+        });
+      }
+    });
+  });
+
+  // 規約に同意するチェックをしていない場合に送信をタップしたらアラートを出す
+  $(function () {
+    $('#form_id').submit(function() {
+      if (!($('#agree').is(':checked'))) {
+        alert('お申込みするには「規約に同意する」にチェックしてください。');
+        return false;
+      }
+    });
+  });
+
+  // 送信ボタンをクリックしたときの挙動
+  $(function(){
+    $("#send").click(function(event){
+      // formのデフォルトのsubmit挙動を止めて、独自にsubmit挙動を実装
+      event.preventDefault();
+
+      // ブランクチェックなど
+      if(!this.form.reportValidity()) {
+        return;
+      };
+
+      // 多重送信防止
+      $("#send").html("送信中...");
+      $("#send").prop("disabled", true);
+
+      // データ送信。kintone用のデータ変換はfirebase側
+      $.ajax({
+        type: "POST",
+        enctype: 'multipart/form-data',
+        url: "https://us-central1-lagless.cloudfunctions.net/send_apply",
+        dataType: "json",
+        data: new FormData($('#form_id')[0]),
+        cache: false,
+        processData: false,
+        contentType: false
+      })
+      .done(function(data) {
+        // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
+        $("#send").html("送信");
+        $("#send").prop("disabled", false);
+        window.location.href = String(data['redirect']);
+      })
+      .fail(function(data) {
+        // 失敗時はアラートを出すだけで遷移しない。フォームの入力内容もそのまま
+        console.log(data);
+        $("#send").html("送信");
+        $("#send").prop("disabled", false);
+        alert('登録に失敗しました。\n' + data.responseText);
+      });
+    });
+  });
+  </script>
+</body>
+</html>

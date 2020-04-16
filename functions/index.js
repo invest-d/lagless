@@ -15,13 +15,13 @@ exports.helloWorld = functions.https.onRequest(async (req, res) => {
         res.status(200).send('unexpected method');
         return;
     }
-    
+
     console.log('fetch from kintone...');
     const result = await Promise.all([
         database.fetch_pattern(process.env),
         database.fetch_service(process.env),
     ]);
-    
+
     const pattern = result[0];
     const service = result[1];
     console.log('got '+Object.keys(pattern).length+' patterns and '+Object.keys(service).length+' services.');
@@ -42,6 +42,9 @@ exports.helloWorld = functions.https.onRequest(async (req, res) => {
     await file.setMetadata({ contentType: 'application/json' });
     res.set('Content-Type', 'application/json');
     res.status(200).send(JSON.stringify({ success: true, service_ids: Object.keys(service) }));
-    
+
     console.log('completed.');
 });
+
+//申込みフォームから送信されたデータをfirebaseで受け取り、kintoneに送信する
+exports.send_apply = require('./send_apply').send_apply;
