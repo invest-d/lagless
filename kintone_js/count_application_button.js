@@ -81,7 +81,7 @@
         const request_body = {
             'app': APP_ID_APPLY,
             'fields': [fieldKyoryokuId_APPLY],
-            'query': `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${fieldPaymentDate} >= \"${getFormattedDate(getOneYearAgoToday(), false)}\"`,
+            'query': `${fieldStatus_APPLY} in (\"${statusPaid_APPLY}\") and ${fieldPaymentDate} >= \"${getFormattedDate(getOneYearAgoToday())}\"`,
             'seek': true
         };
 
@@ -144,11 +144,15 @@
         //   かつ 申込回数が1回以上になっている
         // 直前の更新対象かどうかは、協力会社マスタの更新日時フィールドで判定する。
 
-        // 協力会社の更新日時フィールドの値が、現在より5秒以内の過去であれば、直前の更新操作によって更新されたと判定。5秒という数字に根拠は無し。
-        const now = new Date();
-        const updated_date = new Date(now.getTime() - 5000);
+        // 更新日時を知るため、先ほど更新した協力会社IDのレコードを取得。1件取得には協力会社IDではなくレコード番号が必要になるので、協力会社IDで取れるgetAllRecordsを使う
+        const updated = await kintoneRecord.getAllRecordsByQuery({
+            'app': APP_ID_KYORYOKU,
+            'query': `${fieldKyoryokuId_KYORYOKU} = ${Object.keys(counted_by_kyoryoku_id)[0]}`,
+            'fields': [fieldUpdatedDate_KYORYOKU]
+        });
 
-        const zero_target_records = await getZeroTargetRecords(getFormattedDate(updated_date, true));
+        // 取得したレコードの更新日時を使う
+        const zero_target_records = await getZeroTargetRecords(updated.records[0][fieldUpdatedDate_KYORYOKU]['value']);
 
         console.log('ゼロ回に更新すべき協力会社IDの一覧を取得完了');
         console.log(zero_target_records);
@@ -209,10 +213,9 @@
         return target_date;
     }
 
-    function getFormattedDate(input_date, is_datetime) {
+    function getFormattedDate(input_date) {
         // Date型をクエリ用の日付書式に変換する。
         // 日付フィールドに対するクエリの例： "更新日時 > \"2012-02-03T09:00:00+0900\""（ダブルクォートのエスケープが必要）
-        // 日時(datetime)フィールドの場合はタイムゾーンの部分が +0900 から +09:00 になる。
         const without_timezone = String(input_date.getFullYear())
             + '-' + ('0' + String(input_date.getMonth() + 1)).slice(-2)
             + '-' + ('0' + String(input_date.getDate())).slice(-2)
@@ -221,10 +224,6 @@
             + ':' + ('0' + String(input_date.getMinutes())).slice(-2)
             + ':' + ('0' + String(input_date.getSeconds())).slice(-2);
 
-        if (is_datetime) {
-            return without_timezone + '+09:00';
-        } else {
-            return without_timezone + '+0900';
-        }
+        return without_timezone + '+0900';
     }
 })();
