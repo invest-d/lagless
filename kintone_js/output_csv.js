@@ -15,6 +15,7 @@
     const Encoding = require('encoding-japanese');
 
     const fetch = require('node-fetch');
+    const data = {'banks': []};
 
     const APP_ID_APPLY              = kintone.app.getId();
     const fieldRecordId_APPLY       = 'レコード番号';
@@ -34,20 +35,34 @@
         'LAGLESS'
     ];
 
-    async function getBankKana(json) {
-        if (!json.hasOwnProperty('bank')) {
+    async function getBankKana(request_json) {
+        if (!request_json.hasOwnProperty('bank')) {
             throw new Error('no bank code specified.');
         }
 
-        const res = await fetch('https://us-central1-lagless.cloudfunctions.net/zengin?bank=' + json.bank);
-        const info = await res.json();
+        await fetchBank(request_json)
+        .catch(err => {
+            console.error(err);
+            throw new Error('銀行情報の取得中にエラーが発生しました');
+        });
 
-        if (json.hasOwnProperty('branch')) {
-            return info.banks[0].branches.find(branch => branch.code == json.branch).kana;
+        if (request_json.hasOwnProperty('branch')) {
+            return data.banks.find(bank => bank.code == request_json.bank).branches.find(branch => branch.code == request_json.branch).kana;
         }
         else {
-            return info.banks[0].kana;
+            return data.banks.find(bank => bank.code == request_json.bank).kana;
         }
+    }
+
+    async function fetchBank(request_json) {
+        // 銀行情報がキャッシュされていない場合のみ、fetchを行って追加でキャッシュする
+        if (data.banks.some(bank => bank.code == request_json.bank)) {
+            return;
+        }
+
+        const res = await fetch('https://us-central1-lagless.cloudfunctions.net/zengin?bank=' + request_json.bank);
+        const result = await res.json();
+        data.banks.push(result.banks[0]);
     }
 
     // インベストデザイン側の口座情報をそれぞれclassで持つ
@@ -77,9 +92,9 @@
             this.smbc_code      = '2648852000';
             this.requester_name = 'ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ'.padEnd(40, ' ');
             this.bank_code      = '0009';
-            this.bank_name      = addPadding(getBankKana({bank: this.bank_code}), 15);
+            this.bank_name      = addPadding('ﾐﾂｲｽﾐﾄﾓ', 15); //getBankKanaを使いたいけど、constructor内では非同期処理を同期的に扱えない。
             this.branch_code    = '219';
-            this.branch_name    = addPadding(getBankKana({bank: this.bank_code, branch: this.branch_code}), 15);
+            this.branch_name    = addPadding('ｶﾝﾀﾞ', 15);
             this.deposit_type   = '1';
             this.account_number = '3391195';
         }
@@ -91,9 +106,9 @@
             this.smbc_code      = '3648579000';
             this.requester_name = 'ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ'.padEnd(40, ' ');
             this.bank_code      = '0009';
-            this.bank_name      = addPadding(getBankKana({bank: this.bank_code}), 15);
+            this.bank_name      = addPadding('ﾐﾂｲｽﾐﾄﾓ', 15);
             this.branch_code    = '219';
-            this.branch_name    = addPadding(getBankKana({bank: this.bank_code, branch: this.branch_code}), 15);
+            this.branch_name    = addPadding('ｶﾝﾀﾞ', 15);
             this.deposit_type   = '1';
             this.account_number = '3409134';
         }
@@ -119,7 +134,7 @@
     }
 
     // CSV出力ボタンクリック時の処理を定義
-    function clickOutputCsv() {
+    async function clickOutputCsv() {
         const do_download = confirm('振込用のcsvデータをダウンロードします。よろしいですか？\n\n※このあとに支払日を指定し、\n未出力のものだけ出力 OR 出力済みも含めて全て出力 のどちらかを選択できます。');
         if (!do_download) {
             alert('処理は中断されました。');
@@ -136,35 +151,32 @@
         const only_undownloaded = confirm('未出力の振込データだけを出力しますか？\nOK：未出力のものは出力し、出力済みのものは出力しない\nキャンセル：未出力のものも、未出力のものも、全て出力する');
 
         // 支払元口座のそれぞれについて、該当するレコードを取得→加工→CSVファイルに保存
-        (async () => {
-            await Promise.all(requester_accounts.map(async (account) => {
-                try {
-                    const target_records = await getKintoneRecords(account, payment_date, only_undownloaded);
-                    console.log('target_applies: account of '  + account);
-                    console.log(target_records);
+        await kintone.Promise.all(requester_accounts.map(async (account) => {
+            const target = await getKintoneRecords(account, payment_date, only_undownloaded)
+            .catch(err => {
+                console.error(err);
+                alert(`支払元口座：${account}のデータを取得中にエラーが発生しました。\n${err.message}`);
+            });
 
-                    if (target_records.length === 0) {
-                        alert(`支払元口座：${account}の支払い対象はありませんでした。`);
-                        return;
-                    }
+            console.log('target_applies: account of '  + account);
+            console.log(target.records);
 
-                    const csv_data = generateCsvData(account, target_records, payment_date);
-                    const sjis_list = encodeToSjis(csv_data);
+            if (target.records.length === 0) {
+                alert(`支払元口座：${account}の支払い対象はありませんでした。`);
+            } else {
+                const csv_data = await generateCsvData(account, target.records, payment_date);
+                const sjis_list = encodeToSjis(csv_data);
 
-                    const file_name = `支払日${payment_date}ぶんの振込データ（振込元：${account}）.csv`;
-                    downloadFile(sjis_list, file_name);
+                const file_name = `支払日${payment_date}ぶんの振込データ（振込元：${account}）.csv`;
+                downloadFile(sjis_list, file_name);
 
-                    return updateToDone(target_records);
-                } catch (err) {
-                    console.log(err);
-                    alert(`支払元口座：${account}のデータを処理中にエラーが発生しました。\n${err.message}`);
-                }
-            }));
+                await updateToDone(target.records);
+            }
+        }));
 
-            alert('振込データのダウンロードを完了しました。');
-            alert('ページを更新します。');
-            window.location.reload();
-        })();
+        alert('振込データのダウンロードを完了しました。');
+        alert('ページを更新します。');
+        window.location.reload();
     }
 
     function getKintoneRecords(account, target_date, only_undownloaded) {
@@ -190,17 +202,10 @@
                     and ${fieldPaymentAccount_APPLY} = \"${account}\"`
         }
 
-        return new kintone.Promise((resolve, reject) => {
-            kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body
-            , (resp) => {
-                resolve(resp.records);
-            }, (err) => {
-                reject(err);
-            });
-        });
+        return kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body);
     }
 
-    function generateCsvData(account, applies, payment_date) {
+    async function generateCsvData(account, applies, payment_date) {
         console.log('取得したレコードをCSVファイルに変換する。');
 
         let csv_content = [];
@@ -214,7 +219,8 @@
         csv_content.push(getHeaderRecord(account_obj, pay_date_mmdd).map(csv_format).join(','));
 
         // データ
-        getDataRecords(applies).forEach((data_record) => {
+        const data_records = await getDataRecords(applies);
+        data_records.forEach((data_record) => {
             csv_content.push(data_record.map(csv_format).join(','));
         });
 
@@ -245,12 +251,12 @@
         ];
     }
 
-    function getDataRecords(kintone_records) {
-        return kintone_records.map((kintone_record) => {
+    async function getDataRecords(kintone_records) {
+        return await kintone.Promise.all(kintone_records.map(async (kintone_record) => {
             const bank_code_to = ('0000' + kintone_record[fieldBankCode_APPLY]['value']).slice(-4);
-            const bank_name_to = addPadding(getBankKana({bank: bank_code_to}), 15);
+            const bank_name_to = addPadding(await getBankKana({bank: bank_code_to}), 15);
             const branch_code_to = ('000' + kintone_record[fieldBranchCode_APPLY]['value']).slice(-3);
-            const branch_name_to = addPadding(getBankKana({bank: bank_code_to, branch: branch_code_to}), 15);
+            const branch_name_to = addPadding(await getBankKana({bank: bank_code_to, branch: branch_code_to}), 15);
             const deposit_to = (kintone_record[fieldDepositType_APPLY]['value'] === '普通')
                 ? '1'
                 : '2';
@@ -275,12 +281,12 @@
                 ' ',               //振込指定区分：スペース
                 ''                 //識別コード：不使用
             ];
-        });
+        }));
     }
 
     function getTrailerRecord(kintone_records) {
         const total_amount = kintone_records.reduce((amount, record) => {
-            return amount + Number(record[fieldTransferAmount_APPLY]['value'])
+            return amount + Number(record[fieldTransferAmount_APPLY]['value']);
         }, 0);
 
         return [
