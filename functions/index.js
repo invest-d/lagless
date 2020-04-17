@@ -2,6 +2,7 @@ const functions = require('firebase-functions');
 const admin = require("firebase-admin");
 admin.initializeApp();
 
+exports.chatwork = require('./chatwork');
 exports.zengin = require('./zengin');
 
 const database = require('./database');
