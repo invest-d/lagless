@@ -9,6 +9,8 @@ import flatpickr from "flatpickr";
 import "jquery";
 import $ from "jquery";
 
+import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
+
 // URLの商品名によってフォームの見た目を変更する
 $(() => {
     const product_name = getUrlParam("product");
@@ -249,10 +251,16 @@ $(() => {
     // formのデフォルトのsubmit挙動を止めて、独自にsubmit挙動を実装
         event.preventDefault();
 
+        rv.defineReportValidityPolyfill();
+
         // ブランクチェックなど
         if(!this.form.reportValidity()) {
+            $("#report-validity").css({display: "inline"});
             return;
         }
+
+        $("#report-validity").css({display: "none"});
+
 
         const form_data = new FormData($("#form_id")[0]);
 
