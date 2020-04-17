@@ -1,8 +1,7 @@
 const env = (() => {
     switch(document.domain) {
-        case "lagless-dev.netlify.app": return "development";
         case "payment.invest-d.com": return "production";
-        default: return "unknown";
+        default: return "development";
     }
 })();
 
