@@ -13,7 +13,8 @@ module.exports = functions.https.onRequest(async (req, res) => {
         body: new URLSearchParams({ body: [
             `[${req.body.event_name}]`,
             data.item.title,
-            data.url,
+            `at ${data.occurrence.request.url}`,
+            `see ${data.url}`,
         ].join("\n") }),
         headers: {
             'X-ChatWorkToken': env['CHATWORK_TOKEN'],
