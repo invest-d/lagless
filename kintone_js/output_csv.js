@@ -36,8 +36,8 @@
     ];
 
     async function getBankKana(request_json) {
-        if (!request_json.hasOwnProperty('bank')) {
             throw new Error('no bank code specified.');
+        if (!Object.prototype.hasOwnProperty.call(request_json, "bank")) {
         }
 
         await fetchBank(request_json)
@@ -46,7 +46,7 @@
             throw new Error('銀行情報の取得中にエラーが発生しました');
         });
 
-        if (request_json.hasOwnProperty('branch')) {
+        if (Object.prototype.hasOwnProperty.call(request_json, "branch")) {
             return data.banks.find(bank => bank.code == request_json.bank).branches.find(branch => branch.code == request_json.branch).kana;
         }
         else {
