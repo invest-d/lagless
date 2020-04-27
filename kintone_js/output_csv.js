@@ -17,19 +17,21 @@
     const fetch = require("node-fetch");
     const data = {"banks": []};
 
-    const APP_ID_APPLY              = kintone.app.getId();
-    const fieldRecordId_APPLY       = "レコード番号";
-    const fieldBankCode_APPLY       = "bankCode";
-    const fieldBranchCode_APPLY     = "branchCode";
-    const fieldDepositType_APPLY    = "deposit";
-    const fieldAccountNumber_APPLY  = "accountNumber";
-    const fieldAccountName_APPLY    = "accountName";
-    const fieldTransferAmount_APPLY = "transferAmount";
-    const fieldStatus_APPLY         = "状態";
-    const statusReady_APPLY         = "振込前確認完了";
-    const statusDone_APPLY          = "振込データ出力済";
-    const fieldPaymentDate_APPLY    = "paymentDate";
-    const fieldPaymentAccount_APPLY = "paymentAccount";
+    const APP_ID_APPLY                       = kintone.app.getId();
+    const fieldRecordId_APPLY                = "レコード番号";
+    const fieldBankCode_APPLY                = "bankCode";
+    const fieldBranchCode_APPLY              = "branchCode";
+    const fieldDepositType_APPLY             = "deposit";
+    const fieldAccountNumber_APPLY           = "accountNumber";
+    const fieldAccountName_APPLY             = "accountName";
+    const fieldTransferAmount_APPLY          = "transferAmount";
+    const fieldStatus_APPLY                  = "状態";
+    const statusReady_APPLY                  = "振込前確認完了";
+    const statusDone_APPLY                   = "振込データ出力済";
+    const fieldPaymentDate_APPLY             = "paymentDate";
+    const fieldPaymentAccount_APPLY          = "paymentAccount";
+    const fieldNeedAcquireRegistration_APPLY = "登記の取得";
+    const statusNeedAcquire_APPLY            = "取得要";
     const requester_accounts = [
         "ID",
         "LAGLESS"
@@ -190,6 +192,7 @@
             ? `("${statusReady_APPLY}")`
             : `("${statusReady_APPLY}", "${statusDone_APPLY}")`;
 
+        // 債権譲渡登記が必要な支払実行対象は、支払実行の前日に債権譲渡登記を取得する必要がある ＆ CSVによる一括振込は翌日の振込には間に合わないため、CSV出力対象から外す
         const request_body = {
             "app": APP_ID_APPLY,
             "fields": [
@@ -202,6 +205,7 @@
                 fieldTransferAmount_APPLY
             ],
             "query": `${fieldStatus_APPLY} in ${in_query}
+                    and ${fieldNeedAcquireRegistration_APPLY} not in ("${statusNeedAcquire_APPLY}")
                     and ${fieldPaymentDate_APPLY} = "${target_date}"
                     and ${fieldPaymentAccount_APPLY} = "${account}"`
         };
