@@ -2,13 +2,14 @@
   "name": "kintone_js",
   "version": "1.0.0",
   "description": "",
-  "main": "bank_info.js",
+  "main": "output_csv.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx webpack --config webpack.config.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "devDependencies": {
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
