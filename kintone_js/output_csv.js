@@ -14,7 +14,6 @@
     // CSVファイルで保存するにあたってShift-Jisに変換する
     const Encoding = require("encoding-japanese");
 
-    const fetch = require("node-fetch");
     const data = {"banks": []};
 
     const APP_ID_APPLY                       = kintone.app.getId();

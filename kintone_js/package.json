@@ -15,7 +15,6 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "encoding-japanese": "^1.0.30",
-    "node-fetch": "^2.6.0"
+    "encoding-japanese": "^1.0.30"
   }
 }
