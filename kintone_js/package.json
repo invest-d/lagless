@@ -1,0 +1,20 @@
+{
+  "name": "kintone_js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "output_csv.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx webpack --config webpack.config.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
+  },
+  "dependencies": {
+    "encoding-japanese": "^1.0.30"
+  }
+}
