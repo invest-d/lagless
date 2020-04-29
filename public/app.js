@@ -95,14 +95,8 @@ var show = function(client, param) {
     $('.transfer_fee').text(client.transfer_fee);
     $('.limit').text(client.limit);
     $('.cond-'+mode).show();
-    // 特定の工務店IDだけは工務店マスタ記載のフォームを使用
-    if (["101", "104"].includes(param.c)) {
-        $('.form_1').attr('href', client.form_1);
-        $('.form_2').attr('href', client.form_2);
-    } else {
-        $('.form_1').attr('href', `./apply.html?user=new&c=${param.c}&product=${mode}`);
-        $('.form_2').attr('href', `./apply.html?user=existing&c=${param.c}&product=${mode}`);
-    }
+    $('.form_1').attr('href', `./apply.html?user=new&c=${param.c}&product=${mode}`);
+    $('.form_2').attr('href', `./apply.html?user=existing&c=${param.c}&product=${mode}`);
     if(client.link) {
         $('.link').attr('href', client.link).text(client.link);
         $('.link').parents('div').show();
