@@ -353,6 +353,8 @@
         const request_new = {
             "app": APP_ID_COLLECT,
             "fields": [
+                fieldConstructionShopId_COLLECT,
+                fieldClosingDate_COLLECT,
                 fieldRecordId_COLLECT,
                 fieldScheduledCollectableAmount_COLLECT,
                 tableCloudSignApplies_COLLECT
@@ -394,12 +396,12 @@
         });
 
         await kintone.Promise.all([
-            makeParentSelf(has_no_parent),
-            addCollectableToParent(has_parent, parents)
+            makeSelfParent(has_no_parent),
+            addCollectableToParent(has_parent, parents.records)
         ]);
     }
 
-    async function makeParentSelf(has_no_parents) {
+    async function makeSelfParent(has_no_parents) {
         if (has_no_parents.length === 0) {
             return;
         }
@@ -413,7 +415,9 @@
                     "id": record[fieldRecordId_COLLECT]["value"],
                     "record": {
                         [fieldParent_COLLECT]: {
-                            "value": "true"
+                            "value": [
+                                "true"
+                            ]
                         },
                         [tableInvoiceTargets_COLLECT]: {
                             "value": record[tableCloudSignApplies_COLLECT]["value"].map((sub_table) => {
@@ -443,7 +447,7 @@
     }
 
     async function addCollectableToParent(has_parents, parents) {
-        if (parents.records.length === 0) {
+        if (parents.length === 0) {
             return;
         }
 
@@ -455,7 +459,6 @@
         const has_childs = parents.filter((record) => parent_ids.has(record[fieldRecordId_COLLECT]["value"]));
 
         if (has_childs.length === 0) {
-            console.log("子を持っている親が存在しない");
             return;
         }
 
@@ -463,30 +466,40 @@
         const request_body = {
             "app": APP_ID_COLLECT,
             "records": has_childs.map((parent) => {
-                const target_child = has_parents.filter((child) => child["parent_id"]["value"] === parent[fieldRecordId_COLLECT]["value"]);
+                // 子レコードは常に一つ。回収レコード作成のたびに工務店IDと締め日ごとに回収レコードがまとめられる
+                const target_child = has_parents.find((child) => child["parent_id"]["value"] === parent[fieldRecordId_COLLECT]["value"]);
+                const apply_data_for_invoice = target_child[tableCloudSignApplies_COLLECT]["value"].map((sub_record) => {
+                    return {
+                        "value": {
+                            [tableFieldApplyRecordNoIV]: {
+                                "value": sub_record["value"][tableFieldApplyRecordNoCS]["value"]
+                            },
+                            [tableFieldApplicantOfficialNameIV]: {
+                                "value": sub_record["value"][tableFieldApplicantOfficialNameCS]["value"]
+                            },
+                            [tableFieldReceivableIV]: {
+                                "value": sub_record["value"][tableFieldReceivableCS]["value"]
+                            }
+                        }
+                    };
+                });
+
+                // 既存のサブテーブルの行のvalueは必要ない
+                parent[tableInvoiceTargets_COLLECT]["value"].forEach((row) => delete row["value"]);
+
+                // 振込依頼書用のサブテーブルに子の情報を追加。元からあった親の行を消さないように追加する
+                parent[tableInvoiceTargets_COLLECT]["value"].push(...apply_data_for_invoice);
+
+                // 最終的にrequest_body.recordsにセットされるのはこの部分
                 return {
                     "id": parent[fieldRecordId_COLLECT]["value"],
                     "record": {
-                        // 初期値を親の回収予定金額としてreduce関数を実行し、子の回収金額を合計する
-                        [fieldScheduledCollectableAmount_COLLECT]: target_child
-                            .reduce((sum, child) => sum + Number(child[fieldScheduledCollectableAmount_COLLECT]["value"]), Number(parent[fieldScheduledCollectableAmount_COLLECT]["value"])),
-                        // 振込依頼書用のサブテーブルに子の情報を追加。元からあった親の行を消さないように追加する
+                        // 親の回収予定金額と子の回収予定金額を合計する
+                        [fieldScheduledCollectableAmount_COLLECT]: {
+                            "value": Number(parent[fieldScheduledCollectableAmount_COLLECT]["value"]) + Number(target_child[fieldScheduledCollectableAmount_COLLECT]["value"])
+                        },
                         [tableInvoiceTargets_COLLECT]: {
-                            "value": parent[tableInvoiceTargets_COLLECT]["value"].push(...target_child[tableCloudSignApplies_COLLECT]["value"].map((sub_record) => {
-                                return {
-                                    "value": {
-                                        [tableFieldApplyRecordNoIV]: {
-                                            "value": sub_record["value"][tableFieldApplyRecordNoCS]["value"]
-                                        },
-                                        [tableFieldApplicantOfficialNameIV]: {
-                                            "value": sub_record["value"][tableFieldApplicantOfficialNameCS]["value"]
-                                        },
-                                        [tableFieldReceivableIV]: {
-                                            "value": sub_record["value"][tableFieldReceivableCS]["value"]
-                                        }
-                                    }
-                                };
-                            }))
+                            "value": parent[tableInvoiceTargets_COLLECT]["value"]
                         }
                     }
                 };
