@@ -1,13 +1,13 @@
-$(function() {
-    var query = location.search;
-    var param = { };
-    var pairs = query.replace(/^\?/, '').split(/&/);
-    for(var i=0 ; i<pairs.length ; i++) {
-        var kv = pairs[i].split(/=/, 2);
+$(() => {
+    const query = location.search;
+    const param = { };
+    const pairs = query.replace(/^\?/, "").split(/&/);
+    for(let i=0 ; i<pairs.length ; i++) {
+        const kv = pairs[i].split(/=/, 2);
         param[kv[0]] = kv[1];
     }
 
-    if(location.protocol == 'file:') {
+    if(location.protocol == "file:") {
         show({
             "工務店正式名称": "ほげほげ工務店",
             "cost": "3.85%",
@@ -60,79 +60,73 @@ $(function() {
                 }
             ],
         }, param);
-        setTimeout(function() {
-            $('#content').show();
+        setTimeout(() => {
+            $("#content").show();
         }, 500);
         return;
     }
 
-    var target = "https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/data.json?alt=media";
+    const target = "https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/data.json?alt=media";
     $.ajax({
         url: target
-    }).then(function(resp) {
+    }).then((resp) => {
         if(resp[param.c]) {
             show(resp[param.c], param);
-            $('#content').show();
+            $("#content").show();
         } else {
-            $('#error').text('不正なパラメータです.').show();
+            $("#error").text("不正なパラメータです.").show();
         }
     });
 });
 
-var format_date = function(str) {
-    var t = new Date(str);
-    var wod = [ '日', '月', '火', '水', '木', '金', '土' ];
-    return t.getFullYear()+'年'+(t.getMonth()+1)+'月'+t.getDate()+'日 ('+wod[t.getDay()]+')';
+const format_date = function(str) {
+    const t = new Date(str);
+    const wod = [ "日", "月", "火", "水", "木", "金", "土" ];
+    return `${t.getFullYear()}年${t.getMonth()+1}月${t.getDate()}日 (${wod[t.getDay()]})`;
 };
 
-var show = function(client, param) {
-    $('.service').text(client.service);
-    var mode = { 'ラグレス': 'lagless', 'ダンドリペイメント': 'dandori', 'リノベ不動産Payment': 'renove' }[client.service];
+const show = function(client, param) {
+    $(".service").text(client.service);
+    const mode = { "ラグレス": "lagless", "ダンドリペイメント": "dandori", "リノベ不動産Payment": "renove" }[client.service];
 
-    $('.工務店正式名称').text(client.工務店正式名称);
-    $('.cost').text(client.cost);
-    $('.yield').text(client.yield);
-    $('.transfer_fee').text(client.transfer_fee);
-    $('.limit').text(client.limit);
-    $('.cond-'+mode).show();
-    // 特定の工務店IDだけは工務店マスタ記載のフォームを使用
-    if (["101", "104"].includes(param.c)) {
-        $('.form_1').attr('href', client.form_1);
-        $('.form_2').attr('href', client.form_2);
-    } else {
-        $('.form_1').attr('href', `./apply.html?user=new&c=${param.c}&product=${mode}`);
-        $('.form_2').attr('href', `./apply.html?user=existing&c=${param.c}&product=${mode}`);
-    }
+    $(".工務店正式名称").text(client.工務店正式名称);
+    $(".cost").text(client.cost);
+    $(".yield").text(client.yield);
+    $(".transfer_fee").text(client.transfer_fee);
+    $(".limit").text(client.limit);
+    $(`.cond-${mode}`).show();
+    $(".form_1").attr("href", `./apply.html?user=new&c=${param.c}&product=${mode}`);
+    $(".form_2").attr("href", `./apply.html?user=existing&c=${param.c}&product=${mode}`);
     if(client.link) {
-        $('.link').attr('href', client.link).text(client.link);
-        $('.link').parents('div').show();
+        $(".link").attr("href", client.link).text(client.link);
+        $(".link").parents("div").show();
     }
-    $('.mail').text(client.mail).attr('href', 'mailto:'+client.mail);
+    $(".mail").text(client.mail).attr("href", `mailto:${client.mail}`);
 
-    $('.closing').text(client.closing);
-    $('.deadline').text(client.deadline);
-    $('.early').text(client.early);
-    $('.original').text(client.original);
-    $('.closing').text(client.closing);
-    $('.lag').text(client.lag);
-    $('.effect').text(client.effect);
+    $(".closing").text(client.closing);
+    $(".deadline").text(client.deadline);
+    $(".early").text(client.early);
+    $(".original").text(client.original);
+    $(".closing").text(client.closing);
+    $(".lag").text(client.lag);
+    $(".effect").text(client.effect);
 
-    var now = new Date();
+    let now = new Date();
     now = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var schedule = client.schedule.find(function(s) {
-        var ymd = s.deadline.split(/\D/);
-        var t = new Date(ymd[0], parseInt(ymd[1])-1, ymd[2]);
+    const schedule = client.schedule.find((s) => {
+        const ymd = s.deadline.split(/\D/);
+        const t = new Date(ymd[0], parseInt(ymd[1])-1, ymd[2]);
         return now.getTime() <= t.getTime();
     });
     if(schedule) {
-        $('.schedule_closing').text(format_date(schedule.closing));
-        $('.schedule_early').text(format_date(schedule.early));
-        $('.schedule_deadline').text(format_date(schedule.deadline));
-        $('.schedule_late').text(format_date(schedule.late));
+        $(".schedule_closing").text(format_date(schedule.closing));
+        $(".schedule_early").text(format_date(schedule.early));
+        $(".schedule_deadline").text(format_date(schedule.deadline));
+        $(".schedule_late").text(format_date(schedule.late));
 
-        client.default_pay_date_list.find(function(pair) {
+        client.default_pay_date_list.find((pair) => {
             if(pair.closing_date == schedule.closing) {
-                $('.schedule_default').text(format_date(pair.default_pay_date));
+                $(".schedule_default").text(format_date(pair.default_pay_date));
                 return true;
             } else {
                 return false;
@@ -141,6 +135,6 @@ var show = function(client, param) {
     }
 
     if(param.f) {
-        $('.first').show();
+        $(".first").show();
     }
 };
