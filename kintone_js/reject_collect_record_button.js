@@ -2,6 +2,7 @@
     Version 1
     クラウドサイン却下になったレコードを削除するボタンをレコード詳細画面に設置する。
     回収アプリ上でのレコードを削除するとともに、申込アプリにおける回収IDの紐づけも解消する。
+    また、回収の親レコードに集約している情報も適切に処理する。
 */
 
 (function () {
@@ -31,10 +32,16 @@
     const fieldRecordNo_COLLECT = "レコード番号";
     const fieldStatus_COLLECT = "collectStatus";
     const statusRejected_COLLECT = "クラウドサイン却下・再作成待ち";
+    const fieldParent_COLLECT = "parentCollectRecord";
+    const statusParent_COLLECT = "true";
+    const fieldConstructionShopId_COLLECT = "constructionShopId";
+    const fieldClosingDate_COLLECT = "closingDate";
 
     const APP_ID_APPLY = APP_ID.APPLY;
     const fieldRecordNo_APPLY = "レコード番号";
     const fieldCollectId_APPLY = "collectId";
+
+    const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
     kintone.events.on("app.record.detail.show", (event) => {
         if (needShowButton()) {
@@ -74,21 +81,42 @@
         }
 
         try {
+            // これから削除するレコードが親レコードかどうかによって削除の挙動を変更する
+            if (showing_record[fieldParent_COLLECT]["value"] === statusParent_COLLECT) {
+                // 親を削除する場合。子レコードのうち最も番号が小さいものを見つけてくる
+                const new_parent = getNewParentRecord(
+                    showing_record[fieldConstructionShopId_COLLECT]["value"],
+                    showing_record[fieldClosingDate_COLLECT]["value"]
+                );
+
+                // 見つけてきた子レコードを親にして、旧親の情報を押し付ける
+                await imporseParent(new_parent, showing_record);
+            } else {
+                // 子を削除する場合。親を見つけてくる
+                const parent = getParentRecord(
+                    showing_record[fieldConstructionShopId_COLLECT]["value"],
+                    showing_record[fieldClosingDate_COLLECT]["value"]
+                );
+
+                // 親に集約している情報のうち、自分自身の情報を引く
+                await removeChildData(parent, showing_record);
+            }
+
             const detail_ids = await getDetailApplies(showing_record[fieldRecordNo_COLLECT]["value"])
                 .catch((err) => {
-                    console.log(err);
+                    console.error(err);
                     throw new Error("回収レコードに紐づく申込レコードの取得中にエラーが発生しました。");
                 });
 
             await deleteCollectIdField(detail_ids.records)
                 .catch((err) => {
-                    console.log(err);
+                    console.error(err);
                     throw new Error("申込レコードの回収IDの削除中にエラーが発生しました。");
                 });
 
             await deleteCollectRecord(showing_record[fieldRecordNo_COLLECT]["value"])
                 .catch((err) => {
-                    console.log(err);
+                    console.error(err);
                     throw new Error("回収レコードの削除中にエラーが発生しました。\n今開いているレコード詳細画面から手動で削除してください。\nその後、不要な申込レコードを「保留中」にした後で、債権譲渡契約準備を開始ボタンを再び押してください。");
                 });
 
@@ -97,6 +125,31 @@
             window.location.href = `https://investdesign.cybozu.com/k/${APP_ID_COLLECT}/`;
         } catch(err) {
             alert(err);
+        }
+    }
+
+    async function getNewParentRecord(constructor_id, closing_date) {
+        // 親でない かつ 工務店IDも締め日も親に等しい かつ レコード番号が小さい順
+        const request_body = {
+            "app": APP_ID_COLLECT,
+            "fields": [
+
+            ],
+            "query": `${fieldParent_COLLECT} not in ("${statusParent_COLLECT}") and ${fieldConstructionShopId_COLLECT} = ${constructor_id} and ${fieldClosingDate_COLLECT} = ${closing_date} order by ${fieldRecordNo_COLLECT} asc`
+        };
+
+        const result = await kintoneRecord.getAllRecordsByQuery(request_body);
+        // 最もレコード番号が小さいものを1件だけ返す
+        return result.records[0];
+    }
+
+    async function getParentRecord(constructor_id, closing_date) {
+        const request_body = {
+            "app": APP_ID_COLLECT,
+            "fields": [
+
+            ],
+            "query": `${fieldParent_COLLECT}`
         }
     }
 
