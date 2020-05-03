@@ -85,7 +85,7 @@
     function createInsertCollectRecordButton() {
         const insertCollect = document.createElement("button");
         insertCollect.id = "insertCollect";
-        insertCollect.innerText = "債権譲渡契約準備を開始";
+        insertCollect.innerText = "クラウドサイン用に回収レコードを作成";
         insertCollect.addEventListener("click", clickInsertCollect);
         return insertCollect;
     }
