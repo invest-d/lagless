@@ -51,18 +51,12 @@
     const fieldDeadline_COLLECT = "deadline";
     const fieldStatus_COLLECT = "collectStatus";
     const statusDefault_COLLECT = "クラウドサイン送信待ち";
-    const statusPaymentPendings_COLLECT = [statusDefault_COLLECT, "クラウドサイン回付中", "クラウドサイン承認済み"];
     const fieldScheduledCollectableAmount_COLLECT = "scheduledCollectableAmount";
-    const fieldParent_COLLECT = "parentCollectRecord";
     const tableCloudSignApplies_COLLECT = "cloudSignApplies";
     const tableFieldApplyRecordNoCS = "applyRecordNoCS";
     const tableFieldApplicantOfficialNameCS = "applicantOfficialNameCS";
     const tableFieldReceivableCS = "receivableCS";
     const tableFieldAttachmentFileKeyCS = "attachmentFileKeyCS";
-    const tableInvoiceTargets_COLLECT = "invoiceTargets";
-    const tableFieldApplyRecordNoIV = "applyRecordNoIV";
-    const tableFieldApplicantOfficialNameIV = "applicantOfficialNameIV";
-    const tableFieldReceivableIV = "receivableIV";
 
     const APP_ID_KOMUTEN = 96;
     const fieldConstructionShopId_KOMUTEN = "id";
@@ -127,13 +121,6 @@
             console.log("update completed.");
             console.log(updated_apply.results[0].records);
 
-            // いま新しく挿入した回収レコードについて、既に親が存在する場合、債権金額などを親の回収レコードに合計する
-            await appendDataToParent(inserted_ids)
-                .catch((err) => {
-                    console.error(err);
-                    throw new Error("回収アプリにはレコードを作成できましたが、\n回収親レコードへの情報追加中にエラーが発生しました。");
-                });
-
             alert(`${updated_apply.results[0].records.length}件 の申込みレコードを回収アプリに登録しました。`);
             alert("ページを更新します。");
             window.location.reload();
@@ -191,10 +178,10 @@
             return is_unique;
         });
 
-        console.log("unique_key_pairs is");
+        console.log("unique_key_pairs are");
         console.log(unique_key_pairs);
 
-        // 工務店マスタから回収日の情報を取得。申込みのある工務店のみ
+        // 工務店マスタから回収日の情報を取得。申込レコードに含まれる工務店の情報のみ取得する
         const body_komuten_payment_date = {
             "app": APP_ID_KOMUTEN,
             "fields": [fieldConstructionShopId_KOMUTEN, fieldOriginalPaymentDate_KOMUTEN],
@@ -220,12 +207,12 @@
                     && obj[fieldClosingDay_APPLY]["value"] === key_pair[fieldClosingDay_APPLY]);
                 });
 
-                // 抽出した中から申込金額を合計
+                // 抽出した中から申込金額を合計（ここで合計する金額はクラウドサイン送信用。振込依頼書送信用の合計金額は振込依頼書の送信時に別途計算する）
                 const totalAmount = target_records.reduce((total, record_obj) => {
                     return total + Number(record_obj[fieldTotalReceivables_APPLY]["value"]);
                 }, 0);
 
-                // INSERTするレコードオブジェクトを生成して格納
+                // サブテーブルに申し込みレコードの情報一覧を転記
                 // レコード内のサブテーブルを操作する方法のリファレンス：https://developer.cybozu.io/hc/ja/articles/200752984-%E3%83%AC%E3%82%B3%E3%83%BC%E3%83%89%E6%9B%B4%E6%96%B0%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%E6%93%8D%E4%BD%9C%E3%81%AE%E3%83%86%E3%82%AF%E3%83%8B%E3%83%83%E3%82%AF
                 return {
                     [fieldConstructionShopId_COLLECT]: {
@@ -244,7 +231,7 @@
                     [fieldScheduledCollectableAmount_COLLECT]: {
                         "value": totalAmount
                     },
-                    // レコード内サブテーブルに申込レコードの情報を追加する
+                    // サブテーブル部分
                     [tableCloudSignApplies_COLLECT]: {
                         "value": target_records.map((record) => {
                             return {
@@ -342,172 +329,5 @@
             })
         };
         return kintoneRecord.updateAllRecords(body_add_collect_id);
-    }
-
-    async function appendDataToParent(inserted_ids) {
-        console.log("新規に挿入された回収レコードの親に対して必要な情報を追加する");
-        // 別に親が存在すればその親に情報を追加し、存在しなければ自身を親に設定して自身に情報を追加する
-        // 親とは：親フラグフィールドがtrue and 支払実行前 and 工務店IDと締日がどちらも同じ
-
-        // まず新規回収レコードを全て取得
-        const request_new = {
-            "app": APP_ID_COLLECT,
-            "fields": [
-                fieldConstructionShopId_COLLECT,
-                fieldClosingDate_COLLECT,
-                fieldRecordId_COLLECT,
-                fieldScheduledCollectableAmount_COLLECT,
-                tableCloudSignApplies_COLLECT
-            ],
-            "query": `${fieldRecordId_COLLECT} in ("${inserted_ids.join("\",\"")}")`
-        };
-        const new_inserteds = await kintoneRecord.getAllRecordsByQuery(request_new);
-
-        // 次に親レコードを取得
-        // 工務店と締日の2フィールドをキーにするqueryの書き方が思いつかないので((工務店= and 締日=) or (工務店= and 締日=) or (...)と書くわけにもいかない) 、それ以外の支払実行前の親をとりあえず全部取る
-        const request_parent = {
-            "app": APP_ID_COLLECT,
-            "fields": [
-                fieldRecordId_COLLECT,
-                fieldConstructionShopId_COLLECT,
-                fieldClosingDate_COLLECT,
-                fieldScheduledCollectableAmount_COLLECT,
-                tableInvoiceTargets_COLLECT
-            ],
-            "query": `${fieldParent_COLLECT} in ("true") and ${fieldStatus_COLLECT} in ("${statusPaymentPendings_COLLECT.join("\",\"")}")`
-        };
-        const parents = await kintoneRecord.getAllRecordsByQuery(request_parent);
-
-        // 新規レコードのそれぞれについて、親がいるかどうかで2つのグループに分ける
-        const has_no_parent = [];
-        const has_parent = [];
-        new_inserteds.records.forEach((inserted) => {
-            const parent = parents.records.find((record) => record[fieldConstructionShopId_COLLECT]["value"] === inserted[fieldConstructionShopId_COLLECT]["value"]
-            && record[fieldClosingDate_COLLECT]["value"] === inserted[fieldClosingDate_COLLECT]["value"]);
-
-            // もし親が居なければparentはundefined
-            if (parent === undefined) {
-                has_no_parent.push(inserted);
-            } else {
-                // 親がいる場合は、親のIDはどれなのかという情報を追加
-                inserted["parent_id"] = {"value": parent[fieldRecordId_COLLECT]["value"]};
-                has_parent.push(inserted);
-            }
-        });
-
-        await kintone.Promise.all([
-            makeSelfParent(has_no_parent),
-            addCollectableToParent(has_parent, parents.records)
-        ]);
-    }
-
-    async function makeSelfParent(has_no_parents) {
-        if (has_no_parents.length === 0) {
-            return;
-        }
-
-        console.log("自分自身を親レコードとし、自分自身に振込依頼書作成に必要な情報を追加する");
-        // クラウドサインに必要なサブテーブルの情報を、振込依頼書に必要なサブテーブルにほぼ転記する形
-        const request_body = {
-            "app": APP_ID_COLLECT,
-            "records": has_no_parents.map((record) => {
-                return {
-                    "id": record[fieldRecordId_COLLECT]["value"],
-                    "record": {
-                        [fieldParent_COLLECT]: {
-                            "value": [
-                                "true"
-                            ]
-                        },
-                        [tableInvoiceTargets_COLLECT]: {
-                            "value": record[tableCloudSignApplies_COLLECT]["value"].map((sub_table) => {
-                                return {
-                                    "value": {
-                                        [tableFieldApplyRecordNoIV]: {
-                                            "value": sub_table["value"][tableFieldApplyRecordNoCS]["value"]
-                                        },
-                                        [tableFieldApplicantOfficialNameIV]: {
-                                            "value": sub_table["value"][tableFieldApplicantOfficialNameCS]["value"]
-                                        },
-                                        [tableFieldReceivableIV]: {
-                                            "value": sub_table["value"][tableFieldReceivableCS]["value"]
-                                        }
-                                    }
-                                };
-                            })
-                        }
-                    }
-                };
-            })
-        };
-
-        console.log("body is");
-        console.log(request_body);
-        return await kintoneRecord.updateAllRecords(request_body);
-    }
-
-    async function addCollectableToParent(has_parents, parents) {
-        if (parents.length === 0) {
-            return;
-        }
-
-        console.log("親レコードの回収金額に子の回収金額を合計し、親レコードの振込依頼書サブテーブルに子の情報を追加する");
-        // 親のレコード番号を抽出
-        const parent_ids = new Set(has_parents.map((record) => record["parent_id"]["value"]));
-
-        // 今回作成された回収レコードの中に子を持っている親だけを抽出
-        const has_childs = parents.filter((record) => parent_ids.has(record[fieldRecordId_COLLECT]["value"]));
-
-        if (has_childs.length === 0) {
-            return;
-        }
-
-        // 親それぞれについてupdate
-        const request_body = {
-            "app": APP_ID_COLLECT,
-            "records": has_childs.map((parent) => {
-                // 子レコードは常に一つ。回収レコード作成のたびに工務店IDと締め日ごとに回収レコードがまとめられる
-                const target_child = has_parents.find((child) => child["parent_id"]["value"] === parent[fieldRecordId_COLLECT]["value"]);
-                const apply_data_for_invoice = target_child[tableCloudSignApplies_COLLECT]["value"].map((sub_record) => {
-                    return {
-                        "value": {
-                            [tableFieldApplyRecordNoIV]: {
-                                "value": sub_record["value"][tableFieldApplyRecordNoCS]["value"]
-                            },
-                            [tableFieldApplicantOfficialNameIV]: {
-                                "value": sub_record["value"][tableFieldApplicantOfficialNameCS]["value"]
-                            },
-                            [tableFieldReceivableIV]: {
-                                "value": sub_record["value"][tableFieldReceivableCS]["value"]
-                            }
-                        }
-                    };
-                });
-
-                // 既存のサブテーブルの行のvalueは必要ない
-                parent[tableInvoiceTargets_COLLECT]["value"].forEach((row) => delete row["value"]);
-
-                // 振込依頼書用のサブテーブルに子の情報を追加。元からあった親の行を消さないように追加する
-                parent[tableInvoiceTargets_COLLECT]["value"].push(...apply_data_for_invoice);
-
-                // 最終的にrequest_body.recordsにセットされるのはこの部分
-                return {
-                    "id": parent[fieldRecordId_COLLECT]["value"],
-                    "record": {
-                        // 親の回収予定金額と子の回収予定金額を合計する
-                        [fieldScheduledCollectableAmount_COLLECT]: {
-                            "value": Number(parent[fieldScheduledCollectableAmount_COLLECT]["value"]) + Number(target_child[fieldScheduledCollectableAmount_COLLECT]["value"])
-                        },
-                        [tableInvoiceTargets_COLLECT]: {
-                            "value": parent[tableInvoiceTargets_COLLECT]["value"]
-                        }
-                    }
-                };
-            })
-        };
-
-        console.log("body is");
-        console.log(request_body);
-        return await kintoneRecord.updateAllRecords(request_body);
     }
 })();
