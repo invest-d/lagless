@@ -39,7 +39,7 @@
             }
 
             // 回収期限日が（土日を除いて）今日もしくは明日に迫っている場合
-            if (isWithinOneWeekday(deadline)) {
+            if (getWeekdayDiff(today, deadline) in [0, 1]) {
                 target_cells[i].style.backgroundColor = bg_within_one_day;
                 return;
             }
@@ -61,34 +61,29 @@
         return new Date(...num_ymd);
     }
 
-    // target_dateが今日もしくは1日後の場合にTrueを返す。ただし日数を計算するにあたって土日を除く。（target_dateが月曜の場合、月曜当日とその前の金曜がTrueになる）
-    // 本当は祝日も除ければベストだけど、判定が大変になってしまうので妥協してOK
-    function isWithinOneWeekday(target_date) {
-        // まず今日と同じ日付ならtrue
-        if (target_date.getTime() === today.getTime()) {
-            return true;
-        } else {
-            // 土曜日でも日曜日でもなくなるまで、再帰的に1日ずつ遡る
-            const last_weekday = getLastWeekDay(target_date);
+    // 営業日（平日）ベースでの日数の差を計算する。to - from。現状はtoが未来の場合の日数の計算が出来ればよいので、toの方が過去の場合はエラーとする
+    function getWeekdayDiff(date_from, date_to) {
+        const day_millisec = 86400000;
 
-            // 遡った結果の日が今日と同じ日付ならtrue
-            return last_weekday.getTime() === today.getTime();
+        // 単純に日数差を計算
+        const diff_days = (date_to - date_from) / day_millisec;
+
+        if (diff_days < 0) {
+            throw new Error(`date_fromよりも過去の日付がdate_toに渡されています。\ndate_from：${date_from}\ndate_to：${date_to}`);
         }
-    }
 
-    function getLastWeekDay(target_date) {
-        // 1日前を取得
-        const last_day = new Date(
-            target_date.getFullYear(),
-            target_date.getMonth(),
-            target_date.getDate() - 1
-        );
+        // 週数*(7-2) ＋ 端数の日数というロジックで計算していく
+        const weeks = Math.floor(diff_days / 7);
 
-        // 曜日が日曜(0)でも土曜(6)でもなくなるまで再帰的に取得
-        if (last_day.getDay() === 0 || last_day.getDay() === 6) {
-            return getLastWeekDay(last_day);
-        } else {
-            return last_day;
+        // 端数の日数について、土日以外の個数を数える
+        const start_day = date_from.getDay();
+        let remainder_weekdays = 0;
+        for (let i = 0; i < diff_days % 7; i++) {
+            if ((start_day + i) % 7 in [1, 2, 3, 4, 5]) {
+                remainder_weekdays++;
+            }
         }
+
+        return weeks * 5 + remainder_weekdays;
     }
 })();
