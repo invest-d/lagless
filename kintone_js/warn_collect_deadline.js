@@ -74,7 +74,7 @@
         // 翌日(i = 1)から一日ずつ曜日を確認し、平日の場合に加算
         let diff_weekdays = 0;
         for (let i = 1; i <= diff_days; i++) {
-            const target_date = new Date(date_from.getFullYear(), date_from.getMonth()+1, date_from.getDate()+i);
+            const target_date = new Date(date_from.getFullYear(), date_from.getMonth(), date_from.getDate()+i);
 
             if ([1, 2, 3, 4, 5].includes(target_date.getDay())) {
                 diff_weekdays++;
