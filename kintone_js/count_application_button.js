@@ -81,7 +81,7 @@
         const request_body = {
             "app": APP_ID_APPLY,
             "fields": [fieldKyoryokuId_APPLY],
-            "query": `${fieldStatus_APPLY} in ("${statusPaid_APPLY}") and ${fieldPaymentDate} >= "${getFormattedDate(getOneYearAgoToday())}"`,
+            "query": `${fieldKyoryokuId_APPLY} != "" and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}") and ${fieldPaymentDate} >= "${getFormattedDate(getOneYearAgoToday())}"`,
             "seek": true
         };
 
@@ -94,7 +94,7 @@
         // 想定する引数の値：[{"ルックアップ": {"type": "hoge", "value": "foo"}}, ...]
         // filterして協力会社IDが入力済みの申込レコードだけをカウント
         const counts = {};
-        kintone_records.filter((record) => record[fieldKyoryokuId_APPLY]["value"] !== "").forEach((record) => {
+        kintone_records.forEach((record) => {
             // { [id]: [回数], ... }の辞書形式にしてそれぞれカウント
             const id = record[fieldKyoryokuId_APPLY]["value"];
             counts[id] = id in counts
