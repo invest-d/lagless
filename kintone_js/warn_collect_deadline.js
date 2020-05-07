@@ -30,7 +30,7 @@
                 return;
             }
 
-            const deadline = getDateFromYMD(record[fieldDeadline]["value"]);
+            const deadline = createDateFromYMD(record[fieldDeadline]["value"]);
 
             // 回収対象なのに回収期限日を過ぎている場合
             if (deadline < today) {
@@ -54,7 +54,7 @@
     });
 
     // YYYY-MM-DDからDateを取得。時分秒は深夜0時とする
-    function getDateFromYMD(yyyy_mm_dd) {
+    function createDateFromYMD(yyyy_mm_dd) {
         const num_ymd = yyyy_mm_dd.split("-").map((elem) => Number(elem));
         // monthIndexだけ1を引く
         num_ymd[1] = num_ymd[1] - 1;
