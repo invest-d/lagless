@@ -208,8 +208,7 @@
 
     function getDateFromYYYYMMDD(yyyy_mm_dd) {
         const ymd_arr = yyyy_mm_dd.split("-").map((num) => Number(num));
-        ymd_arr[1] = ymd_arr[1] - 1;
-        return new Date(...ymd_arr);
+        return new Date(ymd_arr[0], ymd_arr[1]-1, ymd_arr[2]);
     }
 
     async function updateKyoryokuMaster(counted_by_kyoryoku_id) {
