@@ -57,8 +57,7 @@
     function createDateFromYMD(yyyy_mm_dd) {
         const num_ymd = yyyy_mm_dd.split("-").map((elem) => Number(elem));
         // monthIndexだけ1を引く
-        num_ymd[1] = num_ymd[1] - 1;
-        return new Date(...num_ymd);
+        return new Date(num_ymd[0], num_ymd[1]-1, num_ymd[2]);
     }
 
     // 営業日（平日）ベースでの日数の差を計算する。to - from。現状はtoが未来の場合の日数の計算が出来ればよいので、toの方が過去の場合はエラーとする
