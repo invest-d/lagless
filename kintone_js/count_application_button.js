@@ -325,15 +325,14 @@
 
     function getFormattedDate(input_date) {
         // Date型をクエリ用の日付書式に変換する。
-        // 日付フィールドに対するクエリの例： "更新日時 > \"2012-02-03T09:00:00+0900\""（ダブルクォートのエスケープが必要）
-        const without_timezone = `${String(input_date.getFullYear())
-        }-${  (`0${  String(input_date.getMonth() + 1)}`).slice(-2)
-        }-${  (`0${  String(input_date.getDate())}`).slice(-2)
-        }T${
-            (`0${  String(input_date.getHours())}`).slice(-2)
-        }:${  (`0${  String(input_date.getMinutes())}`).slice(-2)
-        }:${  (`0${  String(input_date.getSeconds())}`).slice(-2)}`;
+        // 日付フィールドに対するクエリの例： "更新日時 > \"2012-02-03T09:00:00+0900\""
+        const year = String(input_date.getFullYear());
+        const month = `0${String(input_date.getMonth() + 1)}`.slice(-2);
+        const date = `0${String(input_date.getDate())}`.slice(-2);
+        const hours = `0${String(input_date.getHours())}`.slice(-2);
+        const minutes = `0${String(input_date.getMinutes())}`.slice(-2);
+        const seconds = `0${String(input_date.getSeconds())}`.slice(-2);
 
-        return `${without_timezone  }+0900`;
+        return `${year}-${month}-${date}T${hours}:${minutes}:${seconds}+0900`;
     }
 })();
