@@ -71,18 +71,16 @@
             throw new Error(`date_fromよりも過去の日付がdate_toに渡されています。\ndate_from：${date_from}\ndate_to：${date_to}`);
         }
 
-        // 週数*(7-2) ＋ 端数の日数というロジックで計算していく
-        const weeks = Math.floor(diff_days / 7);
+        // 翌日(i = 1)から一日ずつ曜日を確認し、平日の場合に加算
+        let diff_weekdays = 0;
+        for (let i = 1; i <= diff_days; i++) {
+            const target_date = new Date(date_from.getFullYear(), date_from.getMonth()+1, date_from.getDate()+i);
 
-        // 端数の日数について、土日以外の個数を数える
-        const start_day = date_from.getDay();
-        let remainder_weekdays = 0;
-        for (let i = 0; i < diff_days % 7; i++) {
-                remainder_weekdays++;
-            if ([1, 2, 3, 4, 5].includes((start_day + i) % 7)) {
+            if ([1, 2, 3, 4, 5].includes(target_date.getDay())) {
+                diff_weekdays++;
             }
         }
 
-        return weeks * 5 + remainder_weekdays;
+        return diff_weekdays;
     }
 })();
