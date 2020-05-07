@@ -39,7 +39,7 @@
             }
 
             // 回収期限日が（土日を除いて）今日もしくは明日に迫っている場合
-            if ([0, 1].includes(getWeekdayDiff(today, deadline))) {
+            if (getWeekdayDiff(today, deadline) <= 1) {
                 target_cells[i].style.backgroundColor = bg_within_one_day;
                 return;
             }
