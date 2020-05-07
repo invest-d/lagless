@@ -39,7 +39,7 @@
             }
 
             // 回収期限日が（土日を除いて）今日もしくは明日に迫っている場合
-            if (getWeekdayDiff(today, deadline) in [0, 1]) {
+            if ([0, 1].includes(getWeekdayDiff(today, deadline))) {
                 target_cells[i].style.backgroundColor = bg_within_one_day;
                 return;
             }
@@ -78,8 +78,8 @@
         const start_day = date_from.getDay();
         let remainder_weekdays = 0;
         for (let i = 0; i < diff_days % 7; i++) {
-            if ((start_day + i) % 7 in [1, 2, 3, 4, 5]) {
                 remainder_weekdays++;
+            if ([1, 2, 3, 4, 5].includes((start_day + i) % 7)) {
             }
         }
 
