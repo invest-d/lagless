@@ -1,4 +1,9 @@
 /*
+    Version 1.1
+    LAGLESS-52において仕様変更
+    https://takadaid.backlog.com/view/LAGLESS-52
+    カウントのロジックを変更し、その協力会社の「次回申込期限の1年前以降 ～ 本日以前」という範囲で、請求書の締日を基準にカウントするようになった。
+
     Version 1
     各協力会社の申し込み回数を更新するボタンを設置する。
 
@@ -17,6 +22,8 @@
 
     const APP_ID_APPLY = kintone.app.getId();
     const fieldKyoryokuId_APPLY = "ルックアップ";
+    const fieldConstructionShopId_APPLY = "constructionShopId";
+    const fieldClosingDay_APPLY = "closingDay";
     const fieldStatus_APPLY = "状態";
     const statusPaid_APPLY = "実行完了";
     const fieldPaymentDate = "paymentDate";
@@ -25,6 +32,14 @@
     const fieldKyoryokuId_KYORYOKU = "支払企業No_";
     const fieldNumberOfApplication_KYORYOKU = "numberOfApplication";
     const fieldUpdatedDate_KYORYOKU = "updatedDate";
+
+    const APP_ID_CONSTRUCTION = 96;
+    const fieldId_CONSTRUCTION = "id";
+    const fieldPattern_CONSTRUCTION = "pattern";
+
+    const APP_ID_PATTERN = 95;
+    const fieldPattern_PATTERN = "pattern";
+    const fieldDeadline_PATTERN = "deadline";
 
     const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
@@ -51,13 +66,31 @@
     // ボタンクリック時の処理を定義
     async function clickCountApplies() {
         try {
-            const target = await getAppliesLastYear()
+            // まずざっくりと直近1年間に支払実行した申込を全て取得
+            const target_applies = await getAppliesLastYear()
                 .catch((err) => {
                     console.error(err);
                     throw new Error("申込みレコードの取得中にエラーが発生しました。");
                 });
 
-            const count_result = countByKyoryokuId(target.records);
+            // カウントするために工務店の情報が必要になるので取得
+            const construction_shop_ids = Array.from(new Set(target_applies.records.map((record) => record[fieldConstructionShopId_APPLY]["value"])));
+            const construction_shops = await getConstructionShops(construction_shop_ids)
+                .catch((err) => {
+                    console.error(err);
+                    throw new Error("工務店情報の取得中にエラーが発生しました。");
+                });
+
+            // 支払パターンの情報も必要になるので取得
+            const target_patterns = Array.from(new Set(construction_shops.records.map((rec) => rec[fieldPattern_CONSTRUCTION]["value"])));
+            const patterns = await getPaymentPatterns(target_patterns)
+                .catch((err) => {
+                    console.error(err);
+                    throw new Error("支払パターンの取得中にエラーが発生しました。");
+                });
+
+            // 協力会社ごとにカウント条件に当てはまる申込だけをカウント
+            const count_result = await countByKyoryokuId(target_applies.records, construction_shops.records, patterns.records);
 
             const update_records_num = await updateKyoryokuMaster(count_result)
                 .catch((err) => {
@@ -80,7 +113,11 @@
         // 過去1年間のレコードを取得するため、件数が多くなることを想定。seek: true
         const request_body = {
             "app": APP_ID_APPLY,
-            "fields": [fieldKyoryokuId_APPLY],
+            "fields": [
+                fieldKyoryokuId_APPLY,
+                fieldConstructionShopId_APPLY,
+                fieldClosingDay_APPLY
+            ],
             "query": `${fieldKyoryokuId_APPLY} != "" and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}") and ${fieldPaymentDate} >= "${getFormattedDate(getOneYearAgoToday())}"`,
             "seek": true
         };
@@ -88,21 +125,91 @@
         return kintoneRecord.getAllRecordsByQuery(request_body);
     }
 
-    function countByKyoryokuId(kintone_records) {
-        console.log(kintone_records);
+    function getConstructionShops(ids) {
+        console.log("申し込みのあった協力会社の工務店を取得する");
+
+        const request_body = {
+            "app": APP_ID_CONSTRUCTION,
+            "fields": [
+                fieldId_CONSTRUCTION,
+                fieldPattern_CONSTRUCTION
+            ],
+            "query": `${fieldId_CONSTRUCTION} in ("${ids.join("\",\"")}")`
+        };
+
+        return kintoneRecord.getAllRecordsByQuery(request_body);
+    }
+
+    function getPaymentPatterns(target_patterns) {
+        console.log("支払パターンを取得する");
+
+        // 申込期限が今日以降の支払パターンを取得
+        const request_body = {
+            "app": APP_ID_PATTERN,
+            "fields": [
+                fieldPattern_PATTERN,
+                fieldDeadline_PATTERN
+            ],
+            "query": `${fieldDeadline_PATTERN} >= TODAY() and ${fieldPattern_PATTERN} in ("${target_patterns.join("\",\"")}")`
+        };
+
+        return kintoneRecord.getAllRecordsByQuery(request_body);
+    }
+
+    async function countByKyoryokuId(target_applies, construction_shops, patterns) {
+        // カウント条件：
+        // カウント日をTo、カウント日の次の申込期限の1年前の日付をFrom、とした期間の中に、請求書の締日を含んでいること
+        console.log(target_applies);
         console.log("協力会社IDごとに回数をカウントする");
-        // 想定する引数の値：[{"ルックアップ": {"type": "hoge", "value": "foo"}}, ...]
-        // filterして協力会社IDが入力済みの申込レコードだけをカウント
+
         const counts = {};
-        kintone_records.forEach((record) => {
-            // { [id]: [回数], ... }の辞書形式にしてそれぞれカウント
-            const id = record[fieldKyoryokuId_APPLY]["value"];
-            counts[id] = id in counts
-                ? counts[id] + 1
-                : 1;
-        });
+        // 協力会社IDごとにループ
+        const kyoryoku_ids = new Set(target_applies.map((rec) => rec[fieldKyoryokuId_APPLY]["value"]));
+        for (const kyoryoku_id of kyoryoku_ids) {
+            // 協力会社に対応する工務店を取得
+            const construction_id = target_applies.find((rec) => rec[fieldKyoryokuId_APPLY]["value"] === kyoryoku_id)[fieldConstructionShopId_APPLY]["value"];
+            const construction_shop = construction_shops.find((rec) => rec[fieldId_CONSTRUCTION]["value"] === construction_id);
+
+            // 工務店に対応する直近の支払パターンを取得
+            const pattern = patterns
+                .filter((rec) => rec[fieldPattern_PATTERN]["value"] === construction_shop[fieldPattern_CONSTRUCTION]["value"])
+                .reduce((provisional, current) => {
+                    // 支払パターンフィールドの値が同じレコードの中で、申込期限が最も過去のもの
+                    const prov_date = getDateFromYYYYMMDD(provisional[fieldDeadline_PATTERN]["value"]);
+                    const curr_date = getDateFromYYYYMMDD(current[fieldDeadline_PATTERN]["value"]);
+
+                    return (prov_date < curr_date)
+                        ? provisional
+                        : current;
+                });
+
+            // 直近の支払パターンの申込期限の1年前をFromとする
+            const last_year = Number(pattern[fieldDeadline_PATTERN]["value"].split("-")[0]) - 1;
+            const from_date = new Date(getDateFromYYYYMMDD(pattern[fieldDeadline_PATTERN]["value"]).setFullYear(last_year));
+
+            const to_date = new Date();
+
+            // 申込レコードの中から、協力会社IDと請求書の締日でfilter。そのレコード数が申込期限
+            const count = target_applies
+                .filter((rec) => {
+                    const closing_date = getDateFromYYYYMMDD(rec[fieldClosingDay_APPLY]["value"]);
+
+                    return rec[fieldKyoryokuId_APPLY]["value"] === kyoryoku_id
+                    && closing_date >= from_date
+                    && closing_date <= to_date;
+                })
+                .length;
+
+            counts[kyoryoku_id] = count;
+        }
 
         return counts;
+    }
+
+    function getDateFromYYYYMMDD(yyyy_mm_dd) {
+        const ymd_arr = yyyy_mm_dd.split("-").map((num) => Number(num));
+        ymd_arr[1] = ymd_arr[1] - 1;
+        return new Date(...ymd_arr);
     }
 
     async function updateKyoryokuMaster(counted_by_kyoryoku_id) {
