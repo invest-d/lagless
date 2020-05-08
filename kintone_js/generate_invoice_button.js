@@ -1,8 +1,9 @@
 /*
     Version 1
-    回収アプリの支払実行済みレコードに対して、工務店への振込依頼書を作成する。
-    工務店IDと回収期限が同一のレコードのまとまりに対して、振込依頼書を1通生成。
-    生成する振込依頼書はプレーンテキスト形式。
+    1: 回収アプリの支払実行済みレコードを、工務店IDと回収期限が同一のグループでまとめる。
+    まとめた中でレコード番号が最も小さいものを親レコードとし、振込依頼書作成に必要な申込レコードの情報と最終的な振込金額の合計を集約する。
+    2: 工務店への振込依頼書を作成する。親レコード1件に対して振込依頼書を1通。子レコードに対しては何もしない。
+    作成した振込依頼書はプレーンテキストでローカルに保存する。
 */
 
 (function() {
@@ -10,46 +11,62 @@
 
     const APP_ID = ((app_id) => {
         switch(app_id) {
-            // 開発版の回収アプリ
-            case 160:
-                return {
-                    APPLY: 159,
-                    COLLECT: 160
-                };
+        // 開発版の回収アプリ
+        case 160:
+            return {
+                APPLY: 159,
+                COLLECT: 160
+            };
 
             // 本番の回収アプリ
-            case 162:
-                return {
-                    APPLY: 161,
-                    COLLECT: 162
-                };
-            default:
-                console.warn('Unknown app: ' + app_id);
+        case 162:
+            return {
+                APPLY: 161,
+                COLLECT: 162
+            };
+        default:
+            console.warn(`Unknown app: ${  app_id}`);
         }
     })(kintone.app.getId());
 
+    const ACCOUNTS = {
+        "ID": "三井住友銀行　神田支店　普通預金　3 3 9 1 1 9 5　インベストデザイン（カ",
+        "LAGLESS": "三井住友銀行　神田支店　普通預金　3 4 0 9 1 3 4　ラグレス（ド，マスターコウザ"
+    };
+
     const APP_ID_COLLECT = APP_ID.COLLECT;
-    const fieldRecordId_COLLECT = 'レコード番号';
-    const fieldDeadline_COLLECT = 'deadline';
-    const fieldProductName_COLLECT = 'productName';
-    const fieldConstructionShopId_COLLECT = 'constructionShopId';
-    const fieldConstructionShopName_COLLECT = 'constructionShopName';
-    const fieldCeoTitle_COLLECT = 'ceoTitle';
-    const fieldCeo_COLLECT = 'ceo';
-    const fieldMailToInvest_COLLECT ='mailToInvest';
-    const fieldClosingDate_COLLECT = 'closingDate';
-    const fieldCollectableAmount_COLLECT = 'scheduledCollectableAmount';
-    const fieldAccount_COLLECT = 'account';
-    const fieldStatus_COLLECT = 'collectStatus';
-    const statusPaid_COLLECT = '支払実行済み'
+    const fieldRecordId_COLLECT = "レコード番号";
+    const fieldDeadline_COLLECT = "deadline";
+    const fieldProductName_COLLECT = "productName";
+    const fieldConstructionShopId_COLLECT = "constructionShopId";
+    const fieldConstructionShopName_COLLECT = "constructionShopName";
+    const fieldCeoTitle_COLLECT = "ceoTitle";
+    const fieldCeo_COLLECT = "ceo";
+    const fieldMailToInvest_COLLECT ="mailToInvest";
+    const fieldClosingDate_COLLECT = "closingDate";
+    const fieldCollectableAmount_COLLECT = "scheduledCollectableAmount";
+    const fieldAccount_COLLECT = "account";
+    const fieldStatus_COLLECT = "collectStatus";
+    const statusPaid_COLLECT = "支払実行済み";
+    const fieldParentCollectRecord_COLLECT = "parentCollectRecord";
+    const statusParent_COLLECT = "true";
+    const fieldTotalBilledAmount_COLLECT = "totalBilledAmount";
+    const tableCloudSignApplies_COLLECT = "cloudSignApplies";
+    const tableFieldApplyRecordNoCS_COLLECT = "applyRecordNoCS";
+    const tableFieldApplicantOfficialNameCS_COLLECT = "applicantOfficialNameCS";
+    const tableFieldReceivableCS_COLLECT = "receivableCS";
+    const tableInvoiceTargets_COLLECT = "invoiceTargets";
+    const tableFieldApplyRecordNoIV_COLLECT = "applyRecordNoIV";
+    const tableFieldApplicantOfficialNameIV_COLLECT = "applicantOfficialNameIV";
+    const tableFieldReceivableIV_COLLECT = "receivableIV";
 
     const APP_ID_APPLY = APP_ID.APPLY;
-    const fieldPayDestName_APPLY = '支払先正式名称';
-    const fieldPayDate_APPLY = 'paymentDate';
-    const fieldReceivables_APPLY = 'totalReceivables';
-    const fieldCollectId_APPLY = 'collectId';
+    const fieldRecordId_APPLY = "$id";
+    const fieldPayDestName_APPLY = "支払先正式名称";
+    const fieldPayDate_APPLY = "paymentDate";
+    const fieldReceivables_APPLY = "totalReceivables";
 
-    kintone.events.on('app.record.index.show', (event) => {
+    kintone.events.on("app.record.index.show", (event) => {
         // ボタンを表示するか判定
         if (needShowButton()) {
             const button = createGenerateInvoiceButton();
@@ -59,45 +76,54 @@
 
     function needShowButton() {
         // 一旦は常にボタンを表示する。増殖バグだけ防止
-        return document.getElementById('generateInvoice') === null;
+        return document.getElementById("generateInvoice") === null;
     }
 
     function createGenerateInvoiceButton() {
-        const generateInvoice = document.createElement('button');
-        generateInvoice.id = 'generateInvoice';
-        generateInvoice.innerText = '振込依頼書を作成';
-        generateInvoice.addEventListener('click', clickGenerateInvoice);
+        const generateInvoice = document.createElement("button");
+        generateInvoice.id = "generateInvoice";
+        generateInvoice.innerText = "振込依頼書を作成";
+        generateInvoice.addEventListener("click", clickGenerateInvoice);
         return generateInvoice;
     }
 
     // ボタンクリック時の処理を定義
     async function clickGenerateInvoice() {
-        const clicked_ok = confirm('支払実行済みのレコードに対して、振込依頼書を作成しますか？');
+        const clicked_ok = confirm("支払実行済みのレコードに対して、振込依頼書を作成しますか？");
         if (!clicked_ok) {
-            alert('処理は中断されました。');
+            alert("処理は中断されました。");
             return;
         }
 
         try {
             // 状態が支払実行済みのレコードを取得
             const paid = await getPaidRecords()
-            .catch((err) => {
-                console.error(err);
-                throw new Error('支払実行済みの回収レコードの取得中にエラーが発生しました。');
-            });
+                .catch((err) => {
+                    console.error(err);
+                    throw new Error("支払実行済みの回収レコードの取得中にエラーが発生しました。");
+                });
 
             if (paid.records.length === 0) {
-                alert('支払実行済みのレコードはありませんでした。');
+                alert("支払実行済みのレコードはありませんでした。");
                 return;
             }
 
-            const invoice_objects = await addPaymentDetail(paid.records)
-            .catch((err) => {
-                console.error(err);
-                throw new Error('回収レコードに紐づく支払明細の取得中にエラーが発生しました。');
-            });
+            // updateのための、明細や金額を集約したあとの親レコード配列を取得
+            const parents = getAggregatedParentRecords(paid.records);
 
-            const completed_count = generateInvoices(invoice_objects);
+            // Update
+            const update_body = {
+                "app": APP_ID_COLLECT,
+                "records": parents
+            };
+            await kintone.api(kintone.api.url("/k/v1/records", true), "PUT", update_body)
+                .catch((err) => {
+                    console.error(err);
+                    throw new Error("回収レコードの親を更新中にエラーが発生しました。");
+                });
+
+            // 親レコードそれぞれから振込依頼書を作成
+            const completed_count = await generateInvoices();
             alert(`振込依頼書の作成が完了しました。\n ${completed_count}件 の振込依頼書をダウンロードしました。`);
         } catch(err) {
             alert(err);
@@ -105,11 +131,11 @@
     }
 
     function getPaidRecords() {
-        console.log('回収アプリから支払実行済みのレコードを全て取得する');
+        console.log("回収アプリから支払実行済みのレコードを全て取得する");
 
         const request_body = {
-            'app': APP_ID_COLLECT,
-            'fields':[
+            "app": APP_ID_COLLECT,
+            "fields":[
                 fieldRecordId_COLLECT,
                 fieldProductName_COLLECT,
                 fieldConstructionShopId_COLLECT,
@@ -120,94 +146,131 @@
                 fieldClosingDate_COLLECT,
                 fieldDeadline_COLLECT,
                 fieldCollectableAmount_COLLECT,
-                fieldAccount_COLLECT
+                fieldAccount_COLLECT,
+                fieldParentCollectRecord_COLLECT,
+                fieldTotalBilledAmount_COLLECT,
+                tableCloudSignApplies_COLLECT,
+                tableInvoiceTargets_COLLECT
             ],
-            'query': `${fieldStatus_COLLECT} in (\"${statusPaid_COLLECT}\")`
+            "query": `${fieldStatus_COLLECT} in ("${statusPaid_COLLECT}")`
         };
 
-        return kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body);
+        return kintone.api(kintone.api.url("/k/v1/records", true), "GET", request_body);
     }
 
-    async function addPaymentDetail(paid_records) {
-        console.log('振込依頼書の支払明細にあたるレコードを申込みアプリから取得する');
-        // 回収アプリのレコード番号を条件にして、申込アプリから取得
-        const collect_ids = paid_records.map((paid_record) => {
-            return paid_record[fieldRecordId_COLLECT]['value'];
-        });
-        const in_query = '(\"' + collect_ids.join('\",\"') + '\")';
-
-        const request_body = {
-            'app': APP_ID_APPLY,
-            'fields': [fieldPayDestName_APPLY, fieldPayDate_APPLY, fieldReceivables_APPLY, fieldCollectId_APPLY],
-            'query': `${fieldCollectId_APPLY} in ${in_query}`
-        };
-
-        const detail = await kintone.api(kintone.api.url('/k/v1/records', true), 'GET', request_body);
-
-        console.log('回収アプリのレコードに明細レコードを結合する');
-        const attached_details = paid_records.map((record) => {
-            // 明細にあたる申込みレコードの中から、回収IDフィールドの値が回収レコードのレコード番号に等しいものだけ抽出
-            record['details'] = detail.records.filter((detail) => {
-                return detail[fieldCollectId_APPLY]['value'] === record[fieldRecordId_COLLECT]['value'];
-            });
-
-            return record;
-        });
-
-        return attached_details;
-    }
-
-    function generateInvoices(invoice_objects) {
-        // 工務店IDと支払期限が同一のレコードを一通の振込依頼書にまとめていく。
-        // まず、振込依頼書作成対象のレコードから工務店IDと支払期限の重複なし組み合わせを取得。
-        const unique_key_pairs = invoice_objects.filter((invoice1, index, self) => {
-            return index === self.findIndex((invoice2) => {
-                return invoice1[fieldConstructionShopId_COLLECT]['value'] === invoice2[fieldConstructionShopId_COLLECT]['value']
-                && invoice1[fieldDeadline_COLLECT]['value'] === invoice2[fieldDeadline_COLLECT]['value'];
-            });
-        }).map((elem) => {
-            // mapで工務店IDと支払期限だけ取って、他の不要な値は捨てる
+    function getAggregatedParentRecords(paid_records) {
+        console.log("支払い済みレコードを締日と工務店IDごとにまとめ、明細の情報を親に集約する");
+        // まず工務店IDと締日だけ全て抜き出す
+        const key_pairs = paid_records.map((record) => {
             return {
-                [fieldConstructionShopId_COLLECT]: {
-                    'value': elem[fieldConstructionShopId_COLLECT]['value']
-                },
-                [fieldDeadline_COLLECT]: {
-                    'value': elem[fieldDeadline_COLLECT]['value']
+                [fieldConstructionShopId_COLLECT]: record[fieldConstructionShopId_COLLECT]["value"],
+                [fieldClosingDate_COLLECT]: record[fieldClosingDate_COLLECT]["value"]
+            };
+        });
+
+        // 抜き出した工務店IDと締日のペアについて、重複なしのリストを作る。
+        const unique_key_pairs = key_pairs.filter((key_pair1, key_pairs_index, self_arr) => {
+            const target_index = self_arr.findIndex(((key_pair2) => {
+                // 工務店IDの一致
+                return (key_pair1[fieldConstructionShopId_COLLECT] === key_pair2[fieldConstructionShopId_COLLECT])
+                // 締日の一致
+                && (key_pair1[fieldClosingDate_COLLECT] === key_pair2[fieldClosingDate_COLLECT]);
+            }));
+
+            const is_unique = (target_index === key_pairs_index);
+            return is_unique;
+        });
+
+        // 親レコード更新用のオブジェクトを作成
+        const update_targets = unique_key_pairs.map((pair) => {
+            // 振込依頼書をまとめるべき回収レコードを配列としてグループ化
+            const invoice_group = paid_records.filter((record) => {
+                return record[fieldConstructionShopId_COLLECT]["value"] === pair[fieldConstructionShopId_COLLECT]
+                && record[fieldClosingDate_COLLECT]["value"] === pair[fieldClosingDate_COLLECT];
+            });
+
+            // グループの中でレコード番号が最も小さいもの一つを親と決める
+            const parent_record = invoice_group.reduce((a, b) => {
+                if (Number(a[fieldRecordId_COLLECT]["value"]) < Number(b[fieldRecordId_COLLECT]["value"])) {
+                    return a;
+                } else {
+                    return b;
+                }
+            });
+
+            // グループの情報を親に集約。クラウドサイン用の情報とは別に保持するため、親の振込依頼書用サブテーブルに親自身のクラウドサイン用サブテーブルのレコードも加える。
+            // 振込依頼書に記載する合計額
+            const total_billed = invoice_group.reduce((total, record) => total + Number(record[fieldCollectableAmount_COLLECT]["value"]), 0);
+
+            // 振込依頼書に記載する申込レコード一覧（グループ化した回収レコードそれぞれの、クラウドサイン用サブテーブルに入っている申込レコードのunion）
+            const invoice_targets = invoice_group
+                .flatMap((record) => {
+                    // サブテーブルのUpdateをするにあたって、サブテーブルのレコードそれぞれのオブジェクトの構造を整える
+                    return record[tableCloudSignApplies_COLLECT]["value"].map((sub_rec) => {
+                        return {
+                            "value": {
+                                [tableFieldApplyRecordNoIV_COLLECT]: {
+                                    "value": sub_rec["value"][tableFieldApplyRecordNoCS_COLLECT]["value"]
+                                },
+                                [tableFieldApplicantOfficialNameIV_COLLECT]: {
+                                    "value": sub_rec["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"]
+                                },
+                                [tableFieldReceivableIV_COLLECT]: {
+                                    "value": sub_rec["value"][tableFieldReceivableCS_COLLECT]["value"]
+                                }
+                            }
+                        };
+                    });
+                });
+
+            // apiに渡すためにオブジェクトの構造を整える
+            return {
+                "id": parent_record[fieldRecordId_COLLECT]["value"],
+                "record": {
+                    [fieldParentCollectRecord_COLLECT]: {
+                        "value": [statusParent_COLLECT] // チェックボックス型は複数選択のフィールドなので配列で値を指定
+                    },
+                    [fieldTotalBilledAmount_COLLECT]: {
+                        "value": total_billed
+                    },
+                    [tableInvoiceTargets_COLLECT]: {
+                        "value": invoice_targets
+                    }
                 }
             };
         });
 
-        // 次に重複なし組み合わせのそれぞれについて、回収レコードをfilterしてdetailsをまとめる処理
-        const combined_invoices = unique_key_pairs.map((pair) => {
-            const filtered = invoice_objects.filter((invoice) => {
-                return invoice[fieldConstructionShopId_COLLECT]['value'] === pair[fieldConstructionShopId_COLLECT]['value']
-                && invoice[fieldDeadline_COLLECT]['value'] === pair[fieldDeadline_COLLECT]['value']
-            });
+        return update_targets;
+    }
 
-            // フィルターされた中でレコード番号が最も小さい回収レコードを親にする
-            let summary_record = filtered.sort((a, b) => Number(a[fieldRecordId_COLLECT]['value']) - Number(b[fieldRecordId_COLLECT]['value']))[0];
-
-            // i = 0はsummary_record自身なので除く
-            for (let i = 1; i < filtered.length; i++) {
-                // 親にdetailsを全てまとめる
-                summary_record['details'] = summary_record['details'].concat(filtered[i]['details']);
-
-                // 親に回収予定金額を全て合計する
-                summary_record[fieldCollectableAmount_COLLECT]['value'] =
-                Number(summary_record[fieldCollectableAmount_COLLECT]['value']) + Number(filtered[i][fieldCollectableAmount_COLLECT]['value']);
-            }
-
-            return summary_record;
-        });
+    async function generateInvoices() {
+        // 支払実行済みの親レコードを全て取得
+        const get_parents = {
+            "app": APP_ID_COLLECT,
+            "fields": [
+                fieldConstructionShopName_COLLECT,
+                fieldCeoTitle_COLLECT,
+                fieldCeo_COLLECT,
+                fieldProductName_COLLECT,
+                fieldClosingDate_COLLECT,
+                fieldDeadline_COLLECT,
+                fieldTotalBilledAmount_COLLECT,
+                tableInvoiceTargets_COLLECT,
+                fieldAccount_COLLECT,
+                fieldMailToInvest_COLLECT
+            ],
+            "query": `${fieldStatus_COLLECT} in ("${statusPaid_COLLECT}") and ${fieldParentCollectRecord_COLLECT} in ("${statusParent_COLLECT}")`
+        };
+        const target_parents = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_parents);
 
         let generated_count = 0;
-        for(const invoice of combined_invoices) {
-            const invoice_text = generateInvoiceText(invoice);
+        for(const parent_record of target_parents.records) {
+            const invoice_text = await generateInvoiceText(parent_record);
             const bom  = new Uint8Array([0xEF, 0xBB, 0xBF]);
             const blob = new Blob([bom, invoice_text], {"type": "text/plain"});
 
             // 作成した振込依頼書をテキスト形式でダウンロード
-            const file_name = invoice[fieldConstructionShopName_COLLECT]['value'] + '様向け' + invoice[fieldDeadline_COLLECT]['value'] + '回収振込依頼書.txt';
+            const file_name = `${parent_record[fieldConstructionShopName_COLLECT]["value"]}様向け${parent_record[fieldDeadline_COLLECT]["value"]}回収振込依頼書.txt`;
             downloadInvoice(blob, file_name);
 
             // 振込依頼書の作成に成功したらカウントアップ
@@ -217,22 +280,24 @@
         return generated_count;
     }
 
-    function generateInvoiceText(invoice_obj) {
-        let lines = [];
+    async function generateInvoiceText(parent_record) {
+        const lines = [];
 
-        const product_name = invoice_obj[fieldProductName_COLLECT]['value'];
+        const product_name = parent_record[fieldProductName_COLLECT]["value"];
         lines.push(`${product_name} 振込依頼書 兼 支払明細書`);
 
-        const date = formatYYYYMD(invoice_obj['details'][0][fieldPayDate_APPLY]['value']);
+        // 振込依頼書に記載する日付。Y年M月D日
+        const today = new Date();
+        const date = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
         // 1行空けたいところには適宜改行を挟む
         lines.push(`\r\n${date}`);
 
-        const company = invoice_obj[fieldConstructionShopName_COLLECT]['value'];
+        const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
         lines.push(`\r\n${company}`);
 
-        const title = invoice_obj[fieldCeoTitle_COLLECT]['value'];
-        const ceo = invoice_obj[fieldCeo_COLLECT]['value'];
-        lines.push(`${title} ${ceo} 様`);
+        // 肩書が空白の場合、単純に繋ぐと名前の前に空白が出来てしまう。空白でない場合だけ半角スペースでjoinすることで対策
+        const addressee = [parent_record[fieldCeoTitle_COLLECT]["value"], parent_record[fieldCeo_COLLECT]["value"]].filter((a) => a != "").join(" ");
+        lines.push(`${addressee} 様`);
 
         lines.push(`
 拝啓　時下ますますご清栄のこととお慶び申し上げます。
@@ -245,42 +310,49 @@
 今後ともどうぞ宜しくお願いいたします。
 敬具`);
 
-        const closingDate = formatYYYYMD(invoice_obj[fieldClosingDate_COLLECT]['value']);
+        const closingDate = formatYMD(parent_record[fieldClosingDate_COLLECT]["value"]);
         lines.push(`\r\n対象となる締め日 ${closingDate}`);
 
-        const deadline = formatYYYYMD(invoice_obj[fieldDeadline_COLLECT]['value']);
+        const deadline = formatYMD(parent_record[fieldDeadline_COLLECT]["value"]);
         lines.push(`お支払期限 ${deadline}`);
 
-        const collectable_amount = addComma(invoice_obj[fieldCollectableAmount_COLLECT]['value']);
-        lines.push(`ご請求金額（消費税込み） ${collectable_amount}円`);
-        lines.push('￣￣￣￣￣￣￣￣￣￣￣￣' + '￣'.repeat(Math.ceil(collectable_amount.length / 2) + 1) + '￣');
+        const total_billed_amount = addComma(parent_record[fieldTotalBilledAmount_COLLECT]["value"]);
+        lines.push(`ご請求金額（消費税込み） ${total_billed_amount}円`);
+        lines.push(`￣￣￣￣￣￣￣￣￣￣￣￣${  "￣".repeat(Math.ceil(total_billed_amount.length / 2) + 1)  }￣`); // "XXX,XXX円"の右まで下線が伸びるように"￣"の数を調整
 
-        const account_id = invoice_obj[fieldAccount_COLLECT]['value'];
-        let account = '';
-        switch(account_id) {
-            case 'ID':
-                account = '三井住友銀行　神田支店　普通預金　3 3 9 1 1 9 5　インベストデザイン（カ';
-                break;
-            case 'LAGLESS':
-                account = '三井住友銀行　神田支店　普通預金　3 4 0 9 1 3 4　ラグレス（ド，マスターコウザ';
-                break;
+        const account_id = parent_record[fieldAccount_COLLECT]["value"];
+        if (!(account_id in ACCOUNTS)) {
+            throw new Error(`不明な支払先口座IDです：${account_id}`);
         }
+        const account = ACCOUNTS[account_id];
         lines.push(`\r\n【振込先口座】${account}`);
 
-        lines.push(`※お振込手数料はお客様にてご負担をお願いいたします。`);
+        lines.push("※お振込手数料はお客様にてご負担をお願いいたします。");
 
-        lines.push(`\r\n支払明細`);
+        lines.push("\r\n支払明細");
 
-        invoice_obj['details'].forEach((detail, index) => {
-            const payment_date_detail = formatYYYYMD(detail[fieldPayDate_APPLY]['value']);
-            const payment_amount_detail = addComma(detail[fieldReceivables_APPLY]['value']);
+        // 支払日等を申込アプリから取得。支払日以外は既に親レコードの中に持ってるけど、どうせ取るなら全部取ってしまうことにした
+        const get_apply = {
+            "app": APP_ID_APPLY,
+            "fields": [
+                fieldPayDestName_APPLY,
+                fieldPayDate_APPLY,
+                fieldReceivables_APPLY
+            ],
+            "query": `${fieldRecordId_APPLY} in ("${parent_record[tableInvoiceTargets_COLLECT]["value"].map((apply) => apply["value"][tableFieldApplyRecordNoIV_COLLECT]["value"]).join("\",\"")}")`
+        };
+        const apply_resp = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_apply);
+
+        apply_resp.records.forEach((record, index) => {
+            const payment_date_detail = formatYMD(record[fieldPayDate_APPLY]["value"]);
+            const payment_amount_detail = addComma(record[fieldReceivables_APPLY]["value"]);
             // 明細の行番号をindex+1で表示する
-            lines.push(`${index+1}	${detail[fieldPayDestName_APPLY]['value']}	${payment_date_detail}支払	${payment_amount_detail}円（税込）`);
+            lines.push(`${index+1}	${record[fieldPayDestName_APPLY]["value"]}	${payment_date_detail}支払	${payment_amount_detail}円（税込）`);
         });
 
-        lines.push(`合計金額	${collectable_amount}円`);
+        lines.push(`合計金額	${total_billed_amount}円`);
 
-        const mail = invoice_obj[fieldMailToInvest_COLLECT]['value'];
+        const mail = parent_record[fieldMailToInvest_COLLECT]["value"];
         lines.push(`
 【${product_name}事務局】
 インベストデザイン株式会社
@@ -290,29 +362,29 @@ Mail:${mail}
 TEL:03-6261-6818`);
 
         // 各行の文を改行でつないで一つの文書にする
-        console.log(lines.join('\r\n'));
-        return lines.join('\r\n');
+        console.log(lines.join("\r\n"));
+        return lines.join("\r\n");
     }
 
-    function formatYYYYMD(yyyy_mm_dd) {
+    function formatYMD(yyyy_mm_dd) {
         // Numberでキャストしてゼロ埋めされているのを取り除く
-        const date = String(yyyy_mm_dd).split('-');
-        return String(Number(date[0])) + '年' + String(Number(date[1])) + '月' + String(Number(date[2])) + '日';
+        const date = String(yyyy_mm_dd).split("-");
+        return `${String(Number(date[0]))}年${String(Number(date[1]))}月${String(Number(date[2]))}日`;
     }
 
     function addComma(num) {
         // 数字に3桁区切りのコンマを挿入した文字列を返す。整数のみ考慮
-        return String(num).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1,');
+        return String(num).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
     }
 
     function downloadInvoice(blob, file_name) {
-        let download_link = document.createElement('a');
+        const download_link = document.createElement("a");
         download_link.download = file_name;
         download_link.href = (window.URL || window.webkitURL).createObjectURL(blob);
 
         // DLリンクを生成して自動でクリックまでして、生成したDLリンクはその都度消す
         kintone.app.getHeaderMenuSpaceElement().appendChild(download_link);
-        setText(download_link, '振込依頼書ダウンロード');
+        setText(download_link, "振込依頼書ダウンロード");
         download_link.click();
         kintone.app.getHeaderMenuSpaceElement().removeChild(download_link);
     }
