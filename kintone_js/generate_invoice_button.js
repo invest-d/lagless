@@ -204,28 +204,24 @@
 
             // 振込依頼書に記載する申込レコード一覧（グループ化した回収レコードそれぞれの、クラウドサイン用サブテーブルに入っている申込レコードのunion）
             const invoice_targets = invoice_group
-                .map((record) => record[tableCloudSignApplies_COLLECT]["value"])
-                .reduce((details, sub_table_records) => {
-                    // サブテーブルのUpdateをするにあたってオブジェクトの構造を整える
-                    const applies = sub_table_records.map((record) => {
+                .flatMap((record) => {
+                    // サブテーブルのUpdateをするにあたって、サブテーブルのレコードそれぞれのオブジェクトの構造を整える
+                    return record[tableCloudSignApplies_COLLECT]["value"].map((sub_rec) => {
                         return {
                             "value": {
                                 [tableFieldApplyRecordNoIV_COLLECT]: {
-                                    "value": record["value"][tableFieldApplyRecordNoCS_COLLECT]["value"]
+                                    "value": sub_rec["value"][tableFieldApplyRecordNoCS_COLLECT]["value"]
                                 },
                                 [tableFieldApplicantOfficialNameIV_COLLECT]: {
-                                    "value": record["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"]
+                                    "value": sub_rec["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"]
                                 },
                                 [tableFieldReceivableIV_COLLECT]: {
-                                    "value": record["value"][tableFieldReceivableCS_COLLECT]["value"]
+                                    "value": sub_rec["value"][tableFieldReceivableCS_COLLECT]["value"]
                                 }
                             }
                         };
                     });
-
-                    details.push(...applies);
-                    return details;
-                }, []);
+                });
 
             // apiに渡すためにオブジェクトの構造を整える
             return {
