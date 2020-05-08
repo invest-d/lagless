@@ -295,8 +295,8 @@
         const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
         lines.push(`\r\n${company}`);
 
-        // 肩書が空白の場合、名前の前に空白が出来てしまうので、replaceで取り除く
-        const addressee = `${parent_record[fieldCeoTitle_COLLECT]["value"]} ${parent_record[fieldCeo_COLLECT]["value"]}`.replace(/^( |　)+/,"");
+        // 肩書が空白の場合、単純に繋ぐと名前の前に空白が出来てしまう。空白でない場合だけ半角スペースでjoinすることで対策
+        const addressee = [parent_record[fieldCeoTitle_COLLECT]["value"], parent_record[fieldCeo_COLLECT]["value"]].filter((a) => a != "").join(" ");
         lines.push(`${addressee} 様`);
 
         lines.push(`
