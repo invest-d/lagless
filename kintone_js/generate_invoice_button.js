@@ -322,7 +322,7 @@
 
         const account_id = parent_record[fieldAccount_COLLECT]["value"];
         if (!(account_id in ACCOUNTS)) {
-            throw new Error(`不明な支払先口座を入力しています：${account_id}`);
+            throw new Error(`不明な支払先口座IDです：${account_id}`);
         }
         const account = ACCOUNTS[account_id];
         lines.push(`\r\n【振込先口座】${account}`);
