@@ -185,7 +185,7 @@
         const body_komuten_payment_date = {
             "app": APP_ID_KOMUTEN,
             "fields": [fieldConstructionShopId_KOMUTEN, fieldOriginalPaymentDate_KOMUTEN],
-            "query": `${fieldConstructionShopId_KOMUTEN} in ("${key_pairs.map((pair) => pair[fieldConstructionShopId_APPLY]).join("\",\"")}")`,
+            "query": `${fieldConstructionShopId_KOMUTEN} in ("${key_pairs.map((pair) => pair[fieldConstructionShopId_APPLY]).join('","')}")`,
             "seek": true
         };
 
@@ -298,7 +298,7 @@
         console.log("申込みレコードに回収レコードのレコード番号を振る");
 
         // 先ほど回収アプリに挿入したレコードのidを使って、そのまま回収アプリからGET
-        const in_query = `("${  inserted_ids.join("\",\"")  }")`;
+        const in_query = `("${  inserted_ids.join('","')  }")`;
         const body_new_collects = {
             "app": APP_ID_COLLECT,
             "fields": [fieldRecordId_COLLECT, fieldConstructionShopId_COLLECT, fieldClosingDate_COLLECT],

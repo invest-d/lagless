@@ -160,7 +160,7 @@
     function getKomutenCustomerPairs(customer_codes_collect) {
         console.log("工務店IDと取引企業Noの組み合わせを取得。回収アプリの取引企業Noのみ");
 
-        const in_query = `("${  customer_codes_collect.join("\",\"")  }")`;
+        const in_query = `("${  customer_codes_collect.join('","')  }")`;
 
         const request_body = {
             "app": APP_ID_KOMUTEN,
@@ -200,7 +200,7 @@
         console.log("未回収金額がゼロになった工務店の金額をゼロに更新する");
 
         // updated_record_ids（回収アプリで回収予定の金額がある工務店ID）に含まれていないのに、未回収金額がゼロでない工務店IDを取得。
-        const in_query = `("${  updated_record_ids.join("\",\"")  }")`;
+        const in_query = `("${  updated_record_ids.join('","')  }")`;
         const body_remaining_collectable = {
             "app": APP_ID_KOMUTEN,
             "fields": [fieldConstructionShopId_KOMUTEN],
