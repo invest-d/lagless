@@ -188,6 +188,7 @@
             const from_date = new Date(getDateFromYYYYMMDD(pattern[fieldDeadline_PATTERN]["value"]).setFullYear(last_year));
 
             const to_date = new Date();
+            to_date.setHours(0, 0, 0, 0);
 
             // 申込レコードの中から、協力会社IDと請求書の締日でfilter。そのレコード数が申込期限
             const count = target_applies
