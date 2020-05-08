@@ -89,7 +89,7 @@
             alert("回収IDの紐づけを解除しました。\n"
             + "必要に応じて申込レコードを変更し、再度回収レコードを作成してください。");
             alert("レコード一覧画面に戻ります。");
-            window.location.href = `https://investdesign.cybozu.com/k/${APP_ID_COLLECT}/`;
+            window.location.href = `/k/${APP_ID_COLLECT}/`;
         } catch(err) {
             alert(err);
         }
