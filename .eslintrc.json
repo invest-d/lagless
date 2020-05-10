@@ -1,0 +1,59 @@
+{
+    "env": {
+        "browser": true,
+        "es2017": true,
+        "jquery": true
+    },
+    "extends": "eslint:recommended",
+    "globals": {
+        "kintone": false,
+        "kintoneJSSDK": false
+    },
+    "rules": {
+        "indent": [
+            "error",
+            4
+        ],
+        "quotes": [
+            "error",
+            "double",
+            { "avoidEscape": true }
+        ],
+        "semi": [
+            "error",
+            "always"
+        ],
+        "arrow-parens": [
+            "error",
+            "always"
+        ],
+        "arrow-spacing": [
+            "error",
+            { "before": true, "after": true }
+        ],
+        "constructor-super": [
+            "error"
+        ],
+        "no-const-assign": [
+            "error"
+        ],
+        "no-dupe-class-members": [
+            "error"
+        ],
+        "no-var": [
+            "error"
+        ],
+        "prefer-arrow-callback": [
+            "error"
+        ],
+        "prefer-const": [
+            "error"
+        ],
+        "prefer-spread": [
+            "error"
+        ],
+        "prefer-template": [
+            "error"
+        ]
+    }
+}
