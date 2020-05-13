@@ -1,4 +1,7 @@
 /*
+    Version 1.1
+    振込依頼書をPDF形式で作成し、kintoneの添付ファイルフィールドに保存する。
+
     Version 1
     1: 回収アプリの支払実行済みレコードを、工務店IDと回収期限が同一のグループでまとめる。
     まとめた中でレコード番号が最も小さいものを親レコードとし、振込依頼書作成に必要な申込レコードの情報と最終的な振込金額の合計を集約する。
@@ -70,6 +73,7 @@ pdfMake.fonts = {
     const tableFieldApplyRecordNoIV_COLLECT = "applyRecordNoIV";
     const tableFieldApplicantOfficialNameIV_COLLECT = "applicantOfficialNameIV";
     const tableFieldReceivableIV_COLLECT = "receivableIV";
+    const fieldInvoicePdf_COLLECT = "invoicePdf";
 
     const APP_ID_APPLY = APP_ID.APPLY;
     const fieldRecordId_APPLY = "$id";
@@ -110,6 +114,9 @@ pdfMake.fonts = {
             return;
         }
 
+        const text_ready = this.innerText;
+        this.innerText = "振込依頼書を作成中...";
+
         try {
             // 状態が支払実行済みのレコードを取得
             const paid = await getPaidRecords()
@@ -138,17 +145,25 @@ pdfMake.fonts = {
                 });
 
             // 親レコードそれぞれから振込依頼書を作成
-            let completed_count = 0;
-            try {
-                completed_count = await generateInvoices();
-            } catch(err) {
-                console.error(err);
-                throw new Error("振込依頼書の作成中にエラーが発生しました。");
-            }
+            const invoices = await generateInvoices()
+                .catch((err) => {
+                    console.error(err);
+                    throw new Error("振込依頼書の作成中にエラーが発生しました。");
+                });
 
-            alert(`振込依頼書の作成が完了しました。\n ${completed_count}件 の振込依頼書をダウンロードしました。`);
+            // 作成した振込依頼書を添付ファイルとしてレコードに添付
+            const completed_count = await uploadInvoices(invoices)
+                .catch((err) => {
+                    console.error(err);
+                    throw new Error("振込依頼書の添付中にエラーが発生しました。");
+                });
+
+            alert(`${completed_count}件 振込依頼書の作成が完了しました。\n\nそれぞれのレコードの添付ファイルを確認したのち、\n確認OKの状態に変更してレコードを保存してください。\n確認OKになったレコードの振込依頼書が自動的に送信されます。`);
+
         } catch(err) {
             alert(err);
+        } finally {
+            this.innerText = text_ready;
         }
     }
 
@@ -270,6 +285,7 @@ pdfMake.fonts = {
         const get_parents = {
             "app": APP_ID_COLLECT,
             "fields": [
+                fieldRecordId_COLLECT,
                 fieldConstructionShopName_COLLECT,
                 fieldCeoTitle_COLLECT,
                 fieldCeo_COLLECT,
@@ -285,19 +301,21 @@ pdfMake.fonts = {
         };
         const target_parents = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_parents);
 
-        let generated_count = 0;
+        const attachment_pdfs = [];
         for(const parent_record of target_parents.records) {
             const invoice_doc = await generateInvoiceDocument(parent_record);
             const file_name = `${parent_record[fieldConstructionShopName_COLLECT]["value"]}様用 支払明細書兼振込依頼書${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分.pdf`;
 
             console.log("作成した振込依頼書をPDF形式で生成");
-            pdfMake.createPdf(invoice_doc).download(file_name);
-
-            // 振込依頼書の作成に成功したらカウントアップ
-            generated_count++;
+            // 添付先のレコード番号と添付するファイルをオブジェクトにして返す
+            attachment_pdfs.push({
+                "id": parent_record[fieldRecordId_COLLECT]["value"],
+                "file_name": file_name,
+                "doc_generator": pdfMake.createPdf(invoice_doc)
+            });
         }
 
-        return generated_count;
+        return attachment_pdfs;
     }
 
     async function generateInvoiceDocument(parent_record) {
@@ -650,5 +668,69 @@ pdfMake.fonts = {
     function addComma(num) {
         // 数字に3桁区切りのコンマを挿入した文字列を返す。整数のみ考慮
         return String(num).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+    }
+
+    async function uploadInvoices(invoices) {
+        console.log("生成した振込依頼書を各レコードに添付する");
+
+        let count = 0;
+        const processes = [];
+        for (const invoice_obj of invoices) {
+            const pdf_data = new FormData();
+            pdf_data.append("__REQUEST_TOKEN__", kintone.getRequestToken());
+
+            // getBlob(func)は非同期処理だけどPromiseを返さない（というかコールバック関数を省略できない）ので自前でPromiseを使う
+            const process = new kintone.Promise((resolve, reject) => {
+                invoice_obj.doc_generator.getBlob(async (blob) => {
+                    console.log(`PDFアップロード：ファイル名 ${invoice_obj.file_name}`);
+                    pdf_data.append("file", blob, invoice_obj.file_name);
+
+                    const param = {
+                        method: "POST",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        },
+                        body: pdf_data
+                    };
+                    const upload = await fetch(kintone.api.url("/k/v1/file", true), param)
+                        .catch((err) => {
+                            reject(err);
+                        });
+
+                    const upload_resp = await upload.json();
+                    if (!upload_resp.fileKey) {
+                        reject("fileKeyを取得できませんでした");
+                    }
+
+                    console.log(`PDF添付：レコード番号 ${invoice_obj.id}`);
+                    const attach_pdf_body = {
+                        "app": APP_ID_COLLECT,
+                        "id": invoice_obj.id,
+                        "record": {
+                            [fieldInvoicePdf_COLLECT]: {
+                                "value": [
+                                    {
+                                        "fileKey": upload_resp.fileKey
+                                    }
+                                ]
+                            }
+                            // 状態を"振込依頼書確認中"などに更新しようと思ったけど、状態を変えてしまうともう一度振込依頼書を作成した時に本来子であるレコードが親と判定されてしまうため、やめた。
+                        }
+                    };
+                    await kintone.api(kintone.api.url("/k/v1/record", true), "PUT", attach_pdf_body)
+                        .catch((err) => {
+                            reject(err);
+                        });
+
+                    count++;
+                    resolve();
+                });
+            });
+
+            processes.push(process);
+        }
+
+        await kintone.Promise.all(processes);
+        return count;
     }
 })();
