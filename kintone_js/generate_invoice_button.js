@@ -412,7 +412,7 @@ pdfMake.fonts = {
             text: [
                 `【${product_name}事務局】\n`,
                 {
-                    text: "インベストデザイン株式会社\n",
+                    text: "インベストデザイン株式会社\n(ラグレス合同会社)\n",
                     bold: true
                 },
                 "東京都千代田区一番町15番地1\n",
