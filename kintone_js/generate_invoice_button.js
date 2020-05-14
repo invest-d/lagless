@@ -430,7 +430,7 @@ pdfMake.fonts = {
                 // autoの列はセルを塗りつぶして擬似的に縦のラインを作るためのもの
                 widths: ["75%", "auto", "25%"],
                 body: [
-                    [letter_body, {text: "", border: [false]},                    logo ],
+                    [letter_body, {text: "", border: [false]},                    logo         ],
                     [{},          {text: "", border: [false], fillColor: orange}, invoice_from ]
                 ]
             }
@@ -505,8 +505,8 @@ pdfMake.fonts = {
                 headerRows: 0,
                 body: [
                     [closing_date_title , closing_date,   account_title, account_value],
-                    [deadline_title,      deadline,       "",            ""],
-                    [billed_amount_title, billed_amount,  "",            ""]
+                    [deadline_title,      deadline,       {},            {}           ],
+                    [billed_amount_title, billed_amount,  {},            {}           ]
                 ]
             },
             margin: [0, 25, 0, 0]
@@ -631,7 +631,7 @@ pdfMake.fonts = {
 
         // 明細は15行以上。15行より少ない場合は余白行を作り、15行以上の場合は明細の数のまま
         if (details.length < 15) {
-            // 一行だけ「以下余白」の行を挿入
+            // 初めに一行だけ「以下余白」の行を挿入
             const row_num = JSON.parse(JSON.stringify(detail_value_template));
             row_num.text = String(details.length + 1);
             row_num.alignment = "right";
