@@ -17,6 +17,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "encoding-japanese": "^1.0.30"
+    "encoding-japanese": "^1.0.30",
+    "pdfmake": "^0.1.65"
   }
 }
