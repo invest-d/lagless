@@ -1,4 +1,13 @@
 module.exports = {
+    module: {
+        rules: [
+            {
+                test: /\.png$/i,
+                use: ["url-loader"]
+            }
+        ]
+    },
+
     entry: {
         output_csv: "./output_csv.js",
         generate_invoice_button: "./generate_invoice_button.js"
