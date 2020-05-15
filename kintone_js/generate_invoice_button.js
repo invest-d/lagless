@@ -302,7 +302,9 @@ const id_logo = require("./images/id_logo.png");
 
         const attachment_pdfs = [];
         for(const parent_record of target_parents.records) {
-            const invoice_doc = await generateInvoiceDocument(parent_record);
+            const details_resp = await getDetailRows(parent_record);
+            parent_record.detail_records = details_resp.records;
+            const invoice_doc = generateInvoiceDocument(parent_record);
             const file_name = `${parent_record[fieldConstructionShopName_COLLECT]["value"]}様用 支払明細書兼振込依頼書${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分.pdf`;
 
             console.log("作成した振込依頼書をPDF形式で生成");
@@ -317,7 +319,7 @@ const id_logo = require("./images/id_logo.png");
         return attachment_pdfs;
     }
 
-    async function generateInvoiceDocument(parent_record) {
+    function generateInvoiceDocument(parent_record) {
         // pdfmakeのライブラリ用のオブジェクトを生成する。
         const product_name = parent_record[fieldProductName_COLLECT]["value"];
         const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
@@ -553,8 +555,8 @@ const id_logo = require("./images/id_logo.png");
         const detail_table_body = [];
         detail_table_body.push(detail_header_row);
 
-        const detail_rows = await getDetailRows(parent_record);
-        detail_table_body.push(...detail_rows);
+        const detail_doc = getDetailDoc(parent_record.detail_records);
+        detail_table_body.push(...detail_doc);
 
         const sum_title = JSON.parse(JSON.stringify(detail_title_template));
         sum_title.text = "合計金額";
@@ -587,7 +589,7 @@ const id_logo = require("./images/id_logo.png");
         return doc;
     }
 
-    async function getDetailRows(parent_record) {
+    function getDetailRows(parent_record) {
         // 支払日等を申込アプリから取得。支払日以外は既に親レコードの中に持ってるけど、どうせ取るなら全部取ってしまうことにした
         const get_apply = {
             "app": APP_ID_APPLY,
@@ -598,15 +600,17 @@ const id_logo = require("./images/id_logo.png");
             ],
             "query": `${fieldRecordId_APPLY} in ("${parent_record[tableInvoiceTargets_COLLECT]["value"].map((apply) => apply["value"][tableFieldApplyRecordNoIV_COLLECT]["value"]).join("\",\"")}")`
         };
-        const apply_resp = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_apply);
+        return kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_apply);
+    }
 
+    function getDetailDoc(detail_records) {
         const detail_value_template = {
             text: "",
             alignment: "",
             lineHeight: 1,
             borderColor: [orange, black, orange, black]
         };
-        const details = apply_resp.records.map((record, index) => {
+        const details = detail_records.map((record, index) => {
             const row_num = JSON.parse(JSON.stringify(detail_value_template));
             row_num.text = String(index + 1);
             row_num.alignment = "right";
