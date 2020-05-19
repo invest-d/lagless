@@ -16,6 +16,10 @@ const PDF_FONT_NAME = "Koruri";
 // PDF内で使う画像
 const id_logo = require("./images/id_logo.png");
 
+// 祝日判定ライブラリ
+const holiday_jp = require("@holiday-jp/holiday_jp");
+const dateFns = require("date-fns");
+
 (function() {
     "use strict";
 
@@ -70,6 +74,7 @@ const id_logo = require("./images/id_logo.png");
     const tableFieldApplicantOfficialNameIV_COLLECT = "applicantOfficialNameIV";
     const tableFieldReceivableIV_COLLECT = "receivableIV";
     const fieldInvoicePdf_COLLECT = "invoicePdf";
+    const fieldHandleForHolidays_COLLECT = "handleForHolidays";
 
     const APP_ID_APPLY = APP_ID.APPLY;
     const fieldRecordId_APPLY = "$id";
@@ -291,7 +296,8 @@ const id_logo = require("./images/id_logo.png");
                 fieldTotalBilledAmount_COLLECT,
                 tableInvoiceTargets_COLLECT,
                 fieldAccount_COLLECT,
-                fieldMailToInvest_COLLECT
+                fieldMailToInvest_COLLECT,
+                fieldHandleForHolidays_COLLECT
             ],
             "query": `${fieldStatus_COLLECT} in ("${statusPaid_COLLECT}") and ${fieldParentCollectRecord_COLLECT} in ("${statusParent_COLLECT}")`
         };
@@ -471,7 +477,10 @@ const id_logo = require("./images/id_logo.png");
         deadline_title.borderColor = [orange, white, orange, white];
 
         const deadline = JSON.parse(JSON.stringify(billing_value_template));
-        deadline.text = formatYMD(parent_record[fieldDeadline_COLLECT]["value"]);
+        const ymd_arr = parent_record[fieldDeadline_COLLECT]["value"].split("-").map((num) => Number(num));
+        const base_deadline_date = new Date(ymd_arr[0], ymd_arr[1]-1, ymd_arr[2]);
+        const actual_deadline_date = getNearestWeekday(base_deadline_date, parent_record[fieldHandleForHolidays_COLLECT]["value"]);
+        deadline.text = `${actual_deadline_date.getFullYear()}年${actual_deadline_date.getMonth()+1}月${actual_deadline_date.getDate()}日`;
 
         const billed_amount_title = JSON.parse(JSON.stringify(billing_title_template));
         billed_amount_title.text = "ご請求金額\n（消費税込み）";
@@ -661,6 +670,25 @@ const id_logo = require("./images/id_logo.png");
 
         return details;
     }
+
+    // 1日ずつ再帰的に日付をずらして、最も近い平日を取得
+    const getNearestWeekday = function(date, handle_holiday) {
+        if (dateFns.isWeekend(date) || holiday_jp.isHoliday(date)) {
+            let calced_date = date;
+
+            if (handle_holiday === "前営業日") {
+                calced_date = dateFns.subDays(date, 1);
+            } else if (handle_holiday === "翌営業日") {
+                calced_date = dateFns.addDays(date, 1);
+            } else {
+                throw new Error(`休日の取扱が前営業日でも翌営業日でもありません：${handle_holiday}`);
+            }
+
+            return getNearestWeekday(calced_date, handle_holiday);
+        }
+
+        return date;
+    };
 
     function formatYMD(yyyy_mm_dd) {
         // Numberでキャストしてゼロ埋めされているのを取り除く
