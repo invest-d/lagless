@@ -329,13 +329,22 @@ const dateFns = require("date-fns");
         // pdfmakeのライブラリ用のオブジェクトを生成する。
         const product_name = parent_record[fieldProductName_COLLECT]["value"];
         const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
+        const contact_company = {
+            "ID": "インベストデザイン株式会社",
+            "LAGLESS": "ラグレス合同会社"
+        }[parent_record[fieldAccount_COLLECT]["value"]];
+
+        if (!contact_company) {
+            throw new Error(`不明な支払元口座です: ${contact_company}`);
+        }
+
         const doc = {
             info: {
                 title: `${company}様宛${product_name}利用分振込依頼書`,
-                author: `${product_name}事務局 インベストデザイン株式会社`,
+                author: `${product_name}事務局 ${contact_company}`,
                 subject: `${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分`,
-                creator: `${product_name}事務局 インベストデザイン株式会社`,
-                producer: `${product_name}事務局 インベストデザイン株式会社`,
+                creator: `${product_name}事務局 ${contact_company}`,
+                producer: `${product_name}事務局 ${contact_company}`,
             },
             content: [],
             pageSize: "A4",
@@ -419,7 +428,7 @@ const dateFns = require("date-fns");
             text: [
                 `【${product_name}事務局】\n`,
                 {
-                    text: "インベストデザイン株式会社\n(ラグレス合同会社)\n",
+                    text: `${contact_company}\n`,
                     bold: true
                 },
                 "東京都千代田区一番町15番地1\n",
