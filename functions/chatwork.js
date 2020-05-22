@@ -31,9 +31,10 @@ module.exports = functions.https.onRequest(async (req, res) => {
         }
         
         res.set('Content-Type', 'application/json');
-        res.status(200).send(chatwork_res.json());
+        res.status(200).send('{}');
     })
     .catch(chatwork_err => {
+        console.error(chatwork_err);
         res.set('Content-Type', 'text/plain');
         res.status(500).send(chatwork_err);
     });
