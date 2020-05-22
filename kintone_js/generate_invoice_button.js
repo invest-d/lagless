@@ -335,7 +335,7 @@ const dateFns = require("date-fns");
         }[parent_record[fieldAccount_COLLECT]["value"]];
 
         if (!contact_company) {
-            throw new Error(`不明な支払元口座です: ${contact_company}`);
+            throw new Error(`不明な支払元口座です: ${parent_record[fieldAccount_COLLECT]["value"]}`);
         }
 
         const doc = {
