@@ -894,6 +894,16 @@
         return;
       };
 
+      const form_data = new FormData($('#form_id')[0]);
+
+      // 添付ファイルが空の場合は要素を削除。削除しないとSafariで不具合が出る
+      $("input[type=file]").each(function (i, j){
+        const name = $(j).attr("name");
+        if(!$('[name=' + name + ']').val()) {
+          form_data.delete(name);
+        }
+      });
+
       // 多重送信防止
       $("#send").html("送信中...");
       $("#send").prop("disabled", true);
@@ -904,7 +914,7 @@
         enctype: 'multipart/form-data',
         url: "https://us-central1-lagless.cloudfunctions.net/send_apply",
         dataType: "json",
-        data: new FormData($('#form_id')[0]),
+        data: form_data,
         cache: false,
         processData: false,
         contentType: false

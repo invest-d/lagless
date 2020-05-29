@@ -74,20 +74,8 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             .then((results) => {
                 results.forEach((result) => { record[result["fieldname"]] = {"value": result["value"]}; });
 
-                // データ加工
-                // 送信元のフォームのURLからuserパラメータを取得
-                const user_query = req.headers.referer.match(/user=.+?($|&)/);
-                console.log("user_query is");
-                console.log(user_query);
-                const user_type = (user_query !== null && user_query.length > 0)
-                    ? user_query[0].replace("&", "").split("=")[1]
-                    : "new"; //userパラメータが無い場合は新規ユーザとする（フォームもパラメータが無い場合は新規として扱っている）
-
-                console.log(`user type is ${user_type}`);
-
-                // 預金種目を日本語に変換(新規ユーザのみ)
-                if (user_type !== "existing") {
-                // どちらかを選んでいないとフォームからの送信は出来ない仕様
+                // 預金種目を日本語に変換。この情報をサーバに送信しない場合（＝既存ユーザの場合）もあるので、そのときは変換もなし
+                if (Object.prototype.hasOwnProperty.call(record, "deposit_Form")) {
                     const ja_deposit_type = (record["deposit_Form"]["value"] === "ordinary")
                         ? "普通"
                         : "当座";
