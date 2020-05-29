@@ -267,13 +267,15 @@ $(() => {
 
         const form_data = new FormData($("#form_id")[0]);
 
-        // 添付ファイルが空の場合は要素を削除。削除しないとSafariで不具合が出る
-        $("input[type=file]").each((i, j) => {
-            const name = $(j).attr("name");
-            if(!$(`[name=${  name  }]`).val()) {
-                form_data.delete(name);
-            }
-        });
+        if (isSafari()) {
+            // 添付ファイルが空の場合は要素を削除。削除しないとSafariで不具合が出る
+            $("input[type=file]").each((i, j) => {
+                const name = $(j).attr("name");
+                if(!$(`[name=${  name  }]`).val()) {
+                    form_data.delete(name);
+                }
+            });
+        }
 
         // 多重送信防止
         $("#send").html("送信中...");
@@ -305,3 +307,20 @@ $(() => {
             });
     });
 });
+
+function isSafari() {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    if (userAgent.indexOf("msie") != -1 || userAgent.indexOf("trident") != -1) {
+    // ie
+    } else if (userAgent.indexOf("edge") != -1) {
+    // edge
+    } else if (userAgent.indexOf("chrome") != -1) {
+    // chrome
+    } else if (userAgent.indexOf("safari") != -1) {
+    // safari
+        return true;
+    }
+
+    // それ以外
+    return false;
+}
