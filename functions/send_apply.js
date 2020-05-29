@@ -11,6 +11,8 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
     }
 
     console.log(`requested from ${String(req.headers.referer)}`);
+    console.log("raw data: ");
+    console.log(req.headers);
 
     // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
     const env = new Environ(req.headers.referer);
@@ -117,18 +119,15 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
 
                 axios.post(BASE_URL, sendObj, { headers })
                     .then((response) => {
-                        if (response.status == 200) {
-                            // 成功
-                            res.status(200).json({
-                                "redirect": env.success_redirect_to
-                            });
-                        } else {
-                            console.error(`response is ${response.status}: ${response.data}: ${response.statusText}`);
-                            console.log(`headers is ${JSON.stringify(headers)}`);
-                            console.error(`sendObj is ${JSON.stringify(sendObj)}`);
-                            console.error(`req.body is ${JSON.stringify(req.body)}`);
-                            res.status(response.status).send(response.data.message);
-                        }
+                        res.status(response.status).json({
+                            "redirect": env.success_redirect_to
+                        });
+                    })
+                    .catch((err) => {
+                        console.error(`response is ${JSON.stringify(err)}`);
+                        console.error(`headers is ${JSON.stringify(headers)}`);
+                        console.error(`sendObj is ${JSON.stringify(sendObj)}`);
+                        res.status(500).send(err.message);
                     });
             })
             .catch((err) => res.status(err.status).send(err.message));
