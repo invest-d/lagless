@@ -264,6 +264,51 @@ $(() => {
 
         $("#report-validity").css({display: "none"});
 
+        // array.prototype.findはIEだと使えないので、ポリフィルを用意 https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/find#Polyfill
+        if (!Array.prototype.find) {
+            Object.defineProperty(Array.prototype, "find", {
+                value: function(predicate) {
+                    if (this == null) {
+                        throw TypeError('"this" is null or not defined');
+                    }
+
+                    const o = Object(this);
+                    const len = o.length >>> 0;
+
+                    if (typeof predicate !== "function") {
+                        throw TypeError("predicate must be a function");
+                    }
+
+                    const thisArg = arguments[1];
+                    let k = 0;
+
+                    while (k < len) {
+                        const kValue = o[k];
+                        if (predicate.call(thisArg, kValue, k, o)) {
+                            return kValue;
+                        }
+                        k++;
+                    }
+
+                    return undefined;
+                },
+                configurable: true,
+                writable: true
+            });
+        }
+
+        // 添付ファイルのファイルサイズが大きすぎるとサーバーエラーになるため、送信できないようにする。
+        const FILE_SIZE_LIMIT = 4 * Math.pow(1024, 2);
+        // Byte数で取得。既存ユーザのときは添付ファイルが必要ない項目があるので、それは無視する
+        const inputs = $.makeArray($("input[type='file']").filter((i, elem) => $(elem).val() != ""));
+        const over_input = inputs.find((input) => input.files[0].size >= FILE_SIZE_LIMIT);
+        if (over_input !== undefined) {
+            // alertに表示するため、inputに対応するラベルを取得
+            const label_text = $(`label[for='${over_input.id}']`).text();
+            alert(`${label_text}のファイル容量を${FILE_SIZE_LIMIT / Math.pow(1024, 2)}MBより小さくしてください。\n`
+            + `現在のファイル容量：およそ${(over_input.files[0].size / Math.pow(1024, 2)).toPrecision(2)}MB`);
+            return;
+        }
 
         const form_data = new FormData($("#form_id")[0]);
 
