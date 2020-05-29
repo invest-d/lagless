@@ -1,0 +1,37 @@
+{
+  "name": "lagless",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.13.0",
+    "axios": "^0.19.2",
+    "bootstrap": "^4.4.1",
+    "busboy": "^0.3.1",
+    "copy-webpack-plugin": "^5.1.1",
+    "date-with-offset": "^1.0.1",
+    "encoding-japanese": "^1.0.30",
+    "eslint": "^6.8.0",
+    "firebase": "^7.8.2",
+    "flatpickr": "^4.6.3",
+    "form-data": "^3.0.0",
+    "jquery": "^3.4.1",
+    "popper.js": "^1.16.1",
+    "urijs": "^1.19.2"
+  },
+  "devDependencies": {
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
+  },
+  "scripts": {
+    "build": "webpack --config webpack.config.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:invest-d/lagless.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED"
+}
