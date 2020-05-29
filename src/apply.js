@@ -294,8 +294,6 @@ $(() => {
         })
             .done((data) => {
                 // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
-                $("#send").html("送信");
-                $("#send").prop("disabled", false);
                 window.location.href = String(data["redirect"]);
             })
             .fail((data) => {
