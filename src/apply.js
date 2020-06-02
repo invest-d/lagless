@@ -27,7 +27,7 @@ $(() => {
         break;
     // それ以外はlaglessとする
     }
-    document.getElementById("product-css").href = css_path;
+    $("#product-css").attr("href", css_path);
 });
 
 // URLの工務店IDパラメータを引き継ぐ
@@ -35,7 +35,7 @@ $(() => {
     const id_key = "c";
     const id_val = getUrlParam(id_key);
 
-    document.getElementById("constructionShopId").value = id_val;
+    $("#constructionShopId").val(id_val);
 });
 
 // URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする
@@ -74,15 +74,13 @@ function hideElement(element) {
 function arbitrariseInput() {
     $("div[name=arbitrary_second]").each(function() {
     // 必須のラベルを任意に変更
-        $(this).find("span" + ".badge").removeClass("badge-danger");
-        $(this).find("span" + ".badge").addClass("badge-secondary");
-        $(this).find("span" + ".badge").html("任意");
+        $(this).find("span.badge").removeClass("badge-danger");
+        $(this).find("span.badge").addClass("badge-secondary");
+        $(this).find("span.badge").html("任意");
 
         // ブランクのまま送信は許すが、入力するなら入力可能パターンはチェックする
-        $(this).find("input").removeClass("no-blank");
-        $(this).find("select").removeClass("no-blank");
-        $(this).find("input").removeAttr("required");
-        $(this).find("select").removeAttr("required");
+        $(this).find("input, select").removeClass("no-blank");
+        $(this).find("input, select").removeAttr("required");
     });
 }
 
