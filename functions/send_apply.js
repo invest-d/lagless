@@ -6,13 +6,11 @@ const axios = require("axios");
 
 exports.send_apply = functions.https.onRequest(async (req, res) => {
     if (req.method != "POST") {
-        res.status(405).send("Method Not Allowed");
+        res.status(405).json({message: "Method Not Allowed"});
         return;
     }
 
     console.log(`requested from ${String(req.headers.referer)}`);
-    console.log("raw data: ");
-    console.log(req.headers);
 
     // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
     const env = new Environ(req.headers.referer);
@@ -60,7 +58,11 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                             reject({status: 500, message: "不明なエラーが発生しました。"});
                         });
                 }
-            });
+            })
+                .catch((err) => {
+                    console.error(`kintoneファイルアップロードエラー：${JSON.stringify(err)}`);
+                    renspond_err(res, err);
+                });
 
             file_uploads.push(upload);
         }
@@ -112,16 +114,19 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                         });
                     })
                     .catch((err) => {
-                        console.error(`response is ${JSON.stringify(err)}`);
-                        console.error(`headers is ${JSON.stringify(headers)}`);
-                        console.error(`sendObj is ${JSON.stringify(sendObj)}`);
-                        res.status(500).send(err.message);
+                        console.error(`kintoneレコード登録エラー：${JSON.stringify(err)}`);
+                        renspond_err(res, err);
                     });
-            })
-            .catch((err) => res.status(err.status).send(err.message));
+            });
     });
     busboy.end(req.rawBody);
 });
+
+function renspond_err(res, err) {
+    const res_status = ("status" in err) ? err.status : 500;
+    const res_msg = ("message" in err) ? err.message : "サーバーエラーが発生しました。";
+    res.status(res_status).json({message: res_msg});
+}
 
 // reqのhostをCORSに設定する。固定値にしないのは、開発・本番 複数ドメインのCORSを設定するため
 // 開発or本番以外のドメインからのリクエストはそもそもenvをインスタンス化出来ないのでチェックしない

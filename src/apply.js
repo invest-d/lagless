@@ -286,11 +286,11 @@ $(() => {
                 window.location.href = String(data["redirect"]);
             })
             .fail((data) => {
-                // 失敗時はアラートを出すだけで遷移しない。フォームの入力内容もそのまま
-                console.log(data);
+                // 失敗時はアラートを出すだけ。ページ遷移しない。フォームの入力内容もそのまま
+                console.error(JSON.stringify(data));
                 $("#send").html("送信");
                 $("#send").prop("disabled", false);
-                alert(`登録に失敗しました。\n${  data.responseText}`);
+                alert(`登録に失敗しました。\n${data.responseJSON.message}`);
             });
     });
 });
