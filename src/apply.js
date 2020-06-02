@@ -346,7 +346,7 @@ function showSending(msg){
         msg = "";
     }
     // 画面表示メッセージ
-    $("#sending>.sendingMsg").html(msg);
+    $("#sending>.sendingMsg").text(msg);
     $("#sending").show();
 }
 
