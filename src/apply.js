@@ -13,6 +13,7 @@ import "urijs";
 import URI from "urijs";
 
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
+import * as find from "./defineFindPolyfill";
 
 // URLの商品名によってフォームの見た目を変更する
 $(() => {
@@ -264,38 +265,7 @@ $(() => {
 
         $("#report-validity").css({display: "none"});
 
-        // array.prototype.findはIEだと使えないので、ポリフィルを用意 https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/find#Polyfill
-        if (!Array.prototype.find) {
-            Object.defineProperty(Array.prototype, "find", {
-                value: function(predicate) {
-                    if (this == null) {
-                        throw TypeError('"this" is null or not defined');
-                    }
-
-                    const o = Object(this);
-                    const len = o.length >>> 0;
-
-                    if (typeof predicate !== "function") {
-                        throw TypeError("predicate must be a function");
-                    }
-
-                    const thisArg = arguments[1];
-                    let k = 0;
-
-                    while (k < len) {
-                        const kValue = o[k];
-                        if (predicate.call(thisArg, kValue, k, o)) {
-                            return kValue;
-                        }
-                        k++;
-                    }
-
-                    return undefined;
-                },
-                configurable: true,
-                writable: true
-            });
-        }
+        find.definePolyfill();
 
         // 添付ファイルのファイルサイズが大きすぎるとサーバーエラーになるため、送信できないようにする。
         const FILE_SIZE_LIMIT = 4 * Math.pow(1024, 2);
