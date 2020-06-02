@@ -293,7 +293,7 @@ $(() => {
         }
 
         // 多重送信防止
-        displaySending("送信中...");
+        showSending("送信中...");
         $("#send").html("送信中...");
         $("#send").prop("disabled", true);
 
@@ -315,7 +315,7 @@ $(() => {
             .fail((data) => {
                 // 失敗時はアラートを出すだけ。ページ遷移しない。フォームの入力内容もそのまま
                 console.error(JSON.stringify(data));
-                removeSending();
+                hideSending();
                 $("#send").html("送信");
                 $("#send").prop("disabled", false);
                 alert(`登録に失敗しました。\n${data.responseJSON.message}`);
@@ -340,19 +340,16 @@ function isSafari() {
     return false;
 }
 
-function displaySending(msg){
+function showSending(msg){
     // 引数なし（メッセージなし）を許容
     if( msg == undefined ){
         msg = "";
     }
     // 画面表示メッセージ
-    const disp = `<div class='sendingMsg'>${  msg  }</div>`;
-    // ローディング画像が表示されていない場合のみ出力
-    if($("#sending").length == 0){
-        $("body").append(`<div id='sending'>${  disp  }</div>`);
-    }
+    $("#sending>.sendingMsg").html(msg);
+    $("#sending").show();
 }
 
-function removeSending(){
-    $("#sending").remove();
+function hideSending(){
+    $("#sending").hide();
 }

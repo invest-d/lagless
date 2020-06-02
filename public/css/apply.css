@@ -62,9 +62,9 @@
 }
 
 #sending {
-    display: table;
-    width: 100%;
-    height: 100%;
+    display: none;
+    width: 100vw;
+    height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
@@ -73,9 +73,13 @@
 }
 
 #sending .sendingMsg {
-    display: table-cell;
-    text-align: center;
-    vertical-align: middle;
-    padding-top: 140px;
+    width: 200px;
+    height: 200px;
     background: url("../images/Spinner-1s-200px.gif") center center no-repeat;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    padding-top: 160px;
 }
