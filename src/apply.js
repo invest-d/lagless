@@ -76,7 +76,7 @@ function arbitrariseInput() {
     // 必須のラベルを任意に変更
         $(this).find("span.badge").removeClass("badge-danger");
         $(this).find("span.badge").addClass("badge-secondary");
-        $(this).find("span.badge").html("任意");
+        $(this).find("span.badge").text("任意");
 
         // ブランクのまま送信は許すが、入力するなら入力可能パターンはチェックする
         $(this).find("input, select").removeClass("no-blank");
@@ -276,7 +276,7 @@ $(() => {
         }
 
         // 多重送信防止
-        $("#send").html("送信中...");
+        $("#send").text("送信中...");
         $("#send").prop("disabled", true);
 
         // データ送信。kintone用のデータ変換はfirebase側
@@ -292,14 +292,14 @@ $(() => {
         })
             .done((data) => {
                 // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
-                $("#send").html("送信");
+                $("#send").text("送信");
                 $("#send").prop("disabled", false);
                 window.location.href = String(data["redirect"]);
             })
             .fail((data) => {
                 // 失敗時はアラートを出すだけ。ページ遷移しない。フォームの入力内容もそのまま
                 console.error(JSON.stringify(data));
-                $("#send").html("送信");
+                $("#send").text("送信");
                 $("#send").prop("disabled", false);
                 alert(`登録に失敗しました。\n${data.responseJSON.message}`);
             });
