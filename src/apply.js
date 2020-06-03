@@ -43,8 +43,8 @@ $(() => {
     if (val === "existing") {
     // 2回目以降の申込みフォーム
     // 初回のみ必須入力の項目を非表示にする
-        const only_first_elems = $("*[name=only_first]");
-        hideElement(only_first_elems);
+        const objects = $("*[name=only_first]");
+        hideObjects(objects);
         // 2回目以降は任意入力になる項目を設定する
         arbitrariseInput();
         // 2回目以降で表示するキャプションを設定
@@ -62,9 +62,9 @@ function getUrlParam(param_name) {
 }
 
 // 2回目以降申込みフォームで不要なコントロールの必須チェックを外してフォームから非表示にする
-function hideElement(element) {
-    cancelValidation(element);
-    element.hide();
+function hideObjects(objects) {
+    cancelValidation(objects);
+    objects.hide();
 }
 
 // 必須入力項目を任意入力に変更する
@@ -81,8 +81,8 @@ function arbitrariseInput() {
     });
 }
 
-function cancelValidation(element) {
-    element.find("input").removeClass("no-blank pattern-required")
+function cancelValidation(objects) {
+    objects.find("input").removeClass("no-blank pattern-required")
         .prop("required", false);
 }
 
