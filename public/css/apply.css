@@ -60,3 +60,11 @@
     display: none;
     color: #dc3545;
 }
+
+.valid-pattern {
+    border: 1px solid #28a745;
+}
+
+.invalid-pattern {
+    border: 1px solid #dc3545,
+}

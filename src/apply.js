@@ -50,7 +50,7 @@ $(() => {
         // 2回目以降は任意入力になる項目を設定する
         arbitrariseInput();
         // 2回目以降で表示するキャプションを設定
-        $("#second_caption").css("display", "block");
+        $("#second_caption").show();
     } else {
     // 初回申込みフォーム
     // 特に変更する必要はない
@@ -67,7 +67,7 @@ function getUrlParam(param_name) {
 // 2回目以降申込みフォームで不要なコントロールの必須チェックを外してフォームから非表示にする
 function hideElement(element) {
     cancelValidation(element);
-    element.css("display", "none");
+    element.hide();
 }
 
 // 必須入力項目を任意入力に変更する
@@ -120,15 +120,9 @@ function blank_validate() {
         $(this).addClass(
             "border border-success"
         );
-        $(this).nextAll(".valid-input").css({
-            "display": "block"
-        });
-        $(this).nextAll(".invalid-input").css({
-            "display": "none"
-        });
-        $(this).nextAll(".invalid-feedback").css({
-            "display": "none"
-        });
+        $(this).nextAll(".valid-input").show();
+        $(this).nextAll(".invalid-input").hide();
+        $(this).nextAll(".invalid-feedback").hide();
     } else {
         $(this).removeClass(
             "border border-success"
@@ -136,15 +130,9 @@ function blank_validate() {
         $(this).addClass(
             "border border-danger"
         );
-        $(this).nextAll(".valid-input").css({
-            "display": "none"
-        });
-        $(this).nextAll(".invalid-input").css({
-            "display": "block"
-        });
-        $(this).nextAll(".invalid-feedback").css({
-            "display": "block"
-        });
+        $(this).nextAll(".valid-input").hide();
+        $(this).nextAll(".invalid-input").show();
+        $(this).nextAll(".invalid-feedback").show();
     }
 }
 
@@ -156,32 +144,16 @@ function pattern_validate(obj, blank_allowed) {
     if (input_is_valid
         || (blank_allowed && input_is_blank)) {
         // 有効な入力
-        obj.css({
-            "border": "1px solid #28a745",
-        });
-        obj.nextAll(".valid-input").css({
-            "display": "block",
-        });
-        obj.nextAll(".invalid-input").css({
-            "display": "none",
-        });
-        obj.nextAll(".invalid-feedback").css({
-            "display": "none",
-        });
+        obj.removeClass("invalid-pattern").addClass("valid-pattern");
+        obj.nextAll(".valid-input").show();
+        obj.nextAll(".invalid-input").hide();
+        obj.nextAll(".invalid-feedback").hide();
     } else {
         // 無効な入力
-        obj.css({
-            "border": "1px solid #dc3545",
-        });
-        obj.nextAll(".valid-input").css({
-            "display": "none",
-        });
-        obj.nextAll(".invalid-input").css({
-            "display": "block",
-        });
-        obj.nextAll(".invalid-feedback").css({
-            "display": "block",
-        });
+        obj.removeClass("valid-pattern").addClass("invalid-pattern");
+        obj.nextAll(".valid-input").hide();
+        obj.nextAll(".invalid-input").show();
+        obj.nextAll(".invalid-feedback").show();
     }
 }
 
@@ -207,31 +179,15 @@ $(() => {
     $(".bank-info").blur(function() {
         const pattern = new RegExp($(this).attr("pattern"));
         if (pattern.test($(this).val())) {
-            $(this).css({
-                "border": "1px solid #28a745",
-            });
-            $(this).nextAll(".valid-input").css({
-                "display": "block",
-            });
-            $(this).nextAll(".invalid-input").css({
-                "display": "none",
-            });
-            $(this).nextAll(".invalid-feedback").css({
-                "display": "none",
-            });
+            $(this).removeClass("invalid-pattern").addClass("valid-pattern");
+            $(this).nextAll(".valid-input").show();
+            $(this).nextAll(".invalid-input").hide();
+            $(this).nextAll(".invalid-feedback").hide();
         } else {
-            $(this).css({
-                "border": "1px solid #dc3545",
-            });
-            $(this).nextAll(".valid-input").css({
-                "display": "none",
-            });
-            $(this).nextAll(".invalid-input").css({
-                "display": "block",
-            });
-            $(this).nextAll(".invalid-feedback").css({
-                "display": "block",
-            });
+            $(this).removeClass("valid-pattern").addClass("invalid-pattern");
+            $(this).nextAll(".valid-input").hide();
+            $(this).nextAll(".invalid-input").show();
+            $(this).nextAll(".invalid-feedback").hide();
         }
     });
 });
@@ -256,11 +212,11 @@ $(() => {
 
         // ブランクチェックなど
         if(!this.form.reportValidity()) {
-            $("#report-validity").css({display: "inline"});
+            $("#report-validity").show();
             return;
         }
 
-        $("#report-validity").css({display: "none"});
+        $("#report-validity").hide();
 
 
         const form_data = new FormData($("#form_id")[0]);
