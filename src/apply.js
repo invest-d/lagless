@@ -9,8 +9,7 @@ import flatpickr from "flatpickr";
 import "jquery";
 import $ from "jquery";
 
-import "urijs";
-import URI from "urijs";
+import "url-search-params-polyfill";
 
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 
@@ -59,9 +58,8 @@ $(() => {
 
 // URLから指定したパラメータを取得する
 function getUrlParam(param_name) {
-    const uri = new URI(window.location);
-    const params = uri.query(true);
-    return params[param_name];
+    const params = new URLSearchParams(window.location.search);
+    return params.get(param_name);
 }
 
 // 2回目以降申込みフォームで不要なコントロールの必須チェックを外してフォームから非表示にする
