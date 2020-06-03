@@ -6,7 +6,6 @@ import "flatpickr";
 import "flatpickr/dist/l10n/ja.js";
 import flatpickr from "flatpickr";
 
-import "jquery";
 import $ from "jquery";
 
 import "url-search-params-polyfill";
