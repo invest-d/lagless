@@ -74,19 +74,19 @@ function hideElement(element) {
 function arbitrariseInput() {
     $("div[name=arbitrary_second]").each(function() {
     // 必須のラベルを任意に変更
-        $(this).find("span.badge").removeClass("badge-danger");
-        $(this).find("span.badge").addClass("badge-secondary");
-        $(this).find("span.badge").text("任意");
+        $(this).find("span.badge").removeClass("badge-danger")
+            .addClass("badge-secondary")
+            .text("任意");
 
         // ブランクのまま送信は許すが、入力するなら入力可能パターンはチェックする
-        $(this).find("input, select").removeClass("no-blank");
-        $(this).find("input, select").removeAttr("required");
+        $(this).find("input, select").removeClass("no-blank")
+            .prop("required", false);
     });
 }
 
 function cancelValidation(element) {
-    element.find("input").removeClass("no-blank pattern-required");
-    element.find("input").removeAttr("required");
+    element.find("input").removeClass("no-blank pattern-required")
+        .prop("required", false);
 }
 
 // 日付入力欄でカレンダーからの入力を可能にする
@@ -114,22 +114,14 @@ $(() => {
 
 function blank_validate() {
     if ($(this).val()) {
-        $(this).removeClass(
-            "border border-danger"
-        );
-        $(this).addClass(
-            "border border-success"
-        );
+        $(this).removeClass("border border-danger")
+            .addClass("border border-success");
         $(this).nextAll(".valid-input").show();
         $(this).nextAll(".invalid-input").hide();
         $(this).nextAll(".invalid-feedback").hide();
     } else {
-        $(this).removeClass(
-            "border border-success"
-        );
-        $(this).addClass(
-            "border border-danger"
-        );
+        $(this).removeClass("border border-success")
+            .addClass("border border-danger");
         $(this).nextAll(".valid-input").hide();
         $(this).nextAll(".invalid-input").show();
         $(this).nextAll(".invalid-feedback").show();
@@ -160,18 +152,21 @@ function pattern_validate(obj, blank_allowed) {
 // ライブラリから銀行情報を入力したときに正しくバリデーションがかからないので、預金種目をクリックした時にチェックする
 $(() => {
     $("input[name=deposit_Form]").on("click", () => {
-        $("input[name=bankCode_Form]").addClass("pattern-required");
-        $("input[name=bankName_Form]").addClass("no-blank");
-        $("input[name=branchCode_Form]").addClass("pattern-required");
-        $("input[name=branchName_Form]").addClass("no-blank");
-        $("input[name=bankCode_Form]").blur(function () {pattern_validate($(this));});
-        $("input[name=bankCode_Form]").blur();
-        $("input[name=bankName_Form]").blur(blank_validate);
-        $("input[name=bankName_Form]").blur();
-        $("input[name=branchCode_Form]").blur(function () {pattern_validate($(this));});
-        $("input[name=branchCode_Form]").blur();
-        $("input[name=branchName_Form]").blur(blank_validate);
-        $("input[name=branchName_Form]").blur();
+        $("input[name=bankCode_Form]").addClass("pattern-required")
+            .blur(function () {pattern_validate($(this));})
+            .blur();
+
+        $("input[name=bankName_Form]").addClass("no-blank")
+            .blur(blank_validate)
+            .blur();
+
+        $("input[name=branchCode_Form]").addClass("pattern-required")
+            .blur(function () {pattern_validate($(this));})
+            .blur();
+
+        $("input[name=branchName_Form]").addClass("no-blank")
+            .blur(blank_validate)
+            .blur();
     });
 });
 
@@ -232,8 +227,8 @@ $(() => {
         }
 
         // 多重送信防止
-        $("#send").text("送信中...");
-        $("#send").prop("disabled", true);
+        $("#send").text("送信中...")
+            .prop("disabled", true);
 
         // データ送信。kintone用のデータ変換はfirebase側
         $.ajax({
@@ -248,15 +243,15 @@ $(() => {
         })
             .done((data) => {
                 // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
-                $("#send").text("送信");
-                $("#send").prop("disabled", false);
+                $("#send").text("送信")
+                    .prop("disabled", false);
                 window.location.href = String(data["redirect"]);
             })
             .fail((data) => {
                 // 失敗時はアラートを出すだけ。ページ遷移しない。フォームの入力内容もそのまま
                 console.error(JSON.stringify(data));
-                $("#send").text("送信");
-                $("#send").prop("disabled", false);
+                $("#send").text("送信")
+                    .prop("disabled", false);
                 alert(`登録に失敗しました。\n${data.responseJSON.message}`);
             });
     });
