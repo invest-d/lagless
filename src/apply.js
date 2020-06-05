@@ -2,9 +2,8 @@ import "@fortawesome/fontawesome-free";
 
 import "bootstrap";
 
-import "flatpickr";
-import "flatpickr/dist/l10n/ja.js";
 import flatpickr from "flatpickr";
+import "flatpickr/dist/l10n/ja.js";
 
 import $ from "jquery";
 
