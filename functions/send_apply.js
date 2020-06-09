@@ -6,7 +6,7 @@ const axios = require("axios");
 
 exports.send_apply = functions.https.onRequest(async (req, res) => {
     if (req.method != "POST") {
-        res.status(405).send("Method Not Allowed");
+        res.status(405).json({message: "Method Not Allowed"});
         return;
     }
 
@@ -58,7 +58,11 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                             reject({status: 500, message: "不明なエラーが発生しました。"});
                         });
                 }
-            });
+            })
+                .catch((err) => {
+                    console.error(`kintoneファイルアップロードエラー：${JSON.stringify(err)}`);
+                    respond_error(res, err);
+                });
 
             file_uploads.push(upload);
         }
@@ -72,20 +76,8 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             .then((results) => {
                 results.forEach((result) => { record[result["fieldname"]] = {"value": result["value"]}; });
 
-                // データ加工
-                // 送信元のフォームのURLからuserパラメータを取得
-                const user_query = req.headers.referer.match(/user=.+?($|&)/);
-                console.log("user_query is");
-                console.log(user_query);
-                const user_type = (user_query !== null && user_query.length > 0)
-                    ? user_query[0].replace("&", "").split("=")[1]
-                    : "new"; //userパラメータが無い場合は新規ユーザとする（フォームもパラメータが無い場合は新規として扱っている）
-
-                console.log(`user type is ${user_type}`);
-
-                // 預金種目を日本語に変換(新規ユーザのみ)
-                if (user_type !== "existing") {
-                // どちらかを選んでいないとフォームからの送信は出来ない仕様
+                // 預金種目を日本語に変換。この情報をサーバに送信しない場合（＝既存ユーザの場合）もあるので、そのときは変換もなし
+                if (Object.prototype.hasOwnProperty.call(record, "deposit_Form")) {
                     const ja_deposit_type = (record["deposit_Form"]["value"] === "ordinary")
                         ? "普通"
                         : "当座";
@@ -117,24 +109,24 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
 
                 axios.post(BASE_URL, sendObj, { headers })
                     .then((response) => {
-                        if (response.status == 200) {
-                            // 成功
-                            res.status(200).json({
-                                "redirect": env.success_redirect_to
-                            });
-                        } else {
-                            console.error(`response is ${response.status}: ${response.data}: ${response.statusText}`);
-                            console.log(`headers is ${JSON.stringify(headers)}`);
-                            console.error(`sendObj is ${JSON.stringify(sendObj)}`);
-                            console.error(`req.body is ${JSON.stringify(req.body)}`);
-                            res.status(response.status).send(response.data.message);
-                        }
+                        res.status(response.status).json({
+                            "redirect": env.success_redirect_to
+                        });
+                    })
+                    .catch((err) => {
+                        console.error(`kintoneレコード登録エラー：${JSON.stringify(err)}`);
+                        respond_error(res, err);
                     });
-            })
-            .catch((err) => res.status(err.status).send(err.message));
+            });
     });
     busboy.end(req.rawBody);
 });
+
+function respond_error(res, err) {
+    const res_status = ("status" in err) ? err.status : 500;
+    const res_msg = ("message" in err) ? err.message : "サーバーエラーが発生しました。";
+    res.status(res_status).json({message: res_msg});
+}
 
 // reqのhostをCORSに設定する。固定値にしないのは、開発・本番 複数ドメインのCORSを設定するため
 // 開発or本番以外のドメインからのリクエストはそもそもenvをインスタンス化出来ないのでチェックしない

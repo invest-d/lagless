@@ -16,131 +16,25 @@
   <script src="./rollbar/rollbar.js"></script>
   <!-- /rollbar -->
 
-  <!-- BootStrap -->
-  <link
-    rel="stylesheet"
-    href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
-    crossorigin="anonymous">
-  <script
-    src="https://code.jquery.com/jquery-3.4.1.min.js"
-    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-    crossorigin="anonymous"></script>
-  <!-- Bootstrapで推奨されている下記のslim版ではajaxが動かないため、上記の通常版jqueryを使う -->
-  <!-- <script
-    src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
-    crossorigin="anonymous"></script> -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-    crossorigin="anonymous"></script>
-  <script
-    src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
-    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
-    crossorigin="anonymous"></script>
+  <script src="./apply.js" charset="UTF-8"></script>
 
-  <!-- Tempus Dominus DateTimePicker -->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"
-    integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ="
-    crossorigin="anonymous"></script>
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js"
-    integrity="sha256-AdQN98MVZs44Eq2yTwtoKufhnU+uZ7v2kXnD5vqzZVo="
-    crossorigin="anonymous"></script>
-  <script
-    type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/js/tempusdominus-bootstrap-4.min.js"></script>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/css/tempusdominus-bootstrap-4.min.css" />
-  <!-- /BootStrap -->
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="./css/bootstrap.min.css">
+
+  <!-- DatePicker -->
+  <link rel="stylesheet" href="./css/flatpickr.min.css">
+
+  <link rel="stylesheet" href="./css/apply.css">
 
   <!-- 銀行をサジェスト表示 -->
   <script src="https://zipaddr.github.io/bankautob.js" charset="UTF-8"></script>
-  <!-- /銀行をサジェスト表示 -->
 
-  <!-- CSS -->
-  <style type="text/css">
-    @media (min-width: 800px) {
-      .container {
-        max-width: 750px;
-      }
-    }
-
-    #bnkauto {
-      position: absolute;
-      font-family:'ヒラギノ角ゴ Pro W3','Hiragino Kaku Gothic Pro','メイリオ',Meiryo,'ＭＳ Ｐゴシック',sans-serif;
-      background: #009999;
-      font-weight: normal;
-      padding: 5px 8px !important;
-      border-radius: 8px;
-      z-index: 999999;
-    }
-
-    @media only screen {
-      /* PC */
-      .bnk_line {         /* 行部分 */
-        color: #ffffcc;
-      }
-      #bnk_count {        /* Hit件数 */
-        color: #ffffcc;
-        white-space: nowrap;
-      }
-      #bnk_close a {
-        color: #333333;
-        text-decoration: none;
-        white-space: nowrap;
-      }
-      #bnk_footer a {
-        color: #333333;
-        text-decoration: none;
-        white-space: nowrap;
-      }
-    }
-
-    .valid-status-icon {
-      float: right;
-      margin-right: 15px;
-      margin-top: -27px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .valid-status-icon-file {
-      float: right;
-      margin-right: 15px;
-      margin-top: -32px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .valid-input {
-      display: none;
-      color: #28a745;
-    }
-
-    .invalid-input {
-      display: none;
-      color: #dc3545;
-    }
-  </style>
-
-  <!-- URLによって変更するCSS -->
+  <!-- URLパラメータによって変更するCSS -->
   <link rel="stylesheet" type="text/css" href="./styles/form_lagless.css" id="product-css">
   <!-- /CSS -->
 
   <!-- 郵便番号から住所自動入力 -->
   <script src="https://ajaxzip3.github.io/ajaxzip3.js" charset="UTF-8"></script>
-  <!-- /郵便番号から住所自動入力 -->
-
-  <!-- Font Awesome -->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/js/all.min.js"
-    integrity="sha256-MAgcygDRahs+F/Nk5Vz387whB4kSK9NXlDN3w58LLq0="
-    crossorigin="anonymous"></script>
-  <!-- /Font Awesome -->
 </head>
 <body class="font-weight-light py-2">
 
@@ -409,9 +303,8 @@
         <label for="closingDay">請求書の締日（早期支払対象となる締日）</label>
         <span class="badge badge-danger">必須</span>
         <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
-          <input type="text" class="form-control datetimepicker-input pattern-required"
+          <input type="text" class="form-control bg-white pattern-required"
           name="closingDay" id="closingDay" required
-          data-toggle="datetimepicker" data-target="#closingDay" placeholder=""
           maxlength="10" pattern="\d{4}-\d{2}-\d{2}">
           <span class="fas fa-check valid-status-icon valid-input"></span>
           <span class="fas fa-times valid-status-icon invalid-input"></span>
@@ -421,9 +314,9 @@
       <!-- /請求書の締日 -->
 
 
-      <!-- 請求書データの添付 -->
+      <!-- 請求書データ -->
       <div class="form-group">
-        <label for="invoice">請求書データの添付</label>
+        <label for="invoice">請求書データ</label>
         <span class="badge badge-danger">必須</span>
         <input type="file" class="form-control-file p-2 border rounded no-blank"
           name="invoice" id="invoice" required/>
@@ -431,7 +324,7 @@
         <span class="fas fa-times valid-status-icon-file invalid-input"></span>
         <div class="invalid-feedback">添付してください</div>
       </div>
-      <!-- /請求書データの添付 -->
+      <!-- /請求書データ -->
 
 
       <!-- 対象債権合計金額 -->
@@ -635,6 +528,11 @@
 
 
       <div class="form-group">
+        <p class="text-danger" style="display: none;" id="report-validity">正しく入力されていない項目があります。もう一度見直してください。</p>
+      </div>
+
+
+      <div class="form-group">
         <button type="submit" class="btn btn-primary btn-lg btn-block"
           id="send">送信</button>
       </div>
@@ -647,283 +545,11 @@
   </div>
   <!-- /container -->
 
-  <script type="text/javascript">
 
-  // URLの商品名によってフォームの見た目を変更する
-  $(function() {
-    const product_name = getUrlParam('product');
-    let css_path = './styles/form_lagless.css';
-    switch (product_name) {
-      case 'dandori':
-        css_path = './styles/form_dandori.css';
-        break;
-      case 'renove':
-        css_path = './styles/form_renove.css';
-        break;
-      // それ以外はlaglessとする
-    }
-    document.getElementById("product-css").href = css_path;
-  });
-
-  // URLの工務店IDパラメータを引き継ぐ
-  $(function() {
-    const id_key = 'c';
-    const id_val = getUrlParam(id_key);
-
-    document.getElementById('constructionShopId').value = id_val;
-  });
-
-  // URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする
-  $(function() {
-    const key = 'user';
-    const val = getUrlParam(key);
-    if (val === 'existing') {
-      // 2回目以降の申込みフォーム
-      // 初回のみ必須入力の項目を非表示にする
-      const only_first_elems = $('*[name=only_first]');
-      hideElement(only_first_elems);
-      // 2回目以降は任意入力になる項目を設定する
-      arbitrariseInput();
-      // 2回目以降で表示するキャプションを設定
-      $('#second_caption').css('display', 'block');
-    } else {
-      // 初回申込みフォーム
-      // 特に変更する必要はない
-    }
-  });
-
-  // URLから指定したパラメータを取得する
-  function getUrlParam(param_name) {
-    const query_string = window.location.search.substring(1);
-    const queries = new Map(query_string.split("&").map(query => query.split("=")));
-    return queries.get(param_name);
-  }
-
-  // 2回目以降申込みフォームで不要なコントロールの必須チェックを外してフォームから非表示にする
-  function hideElement(element) {
-    cancelValidation(element);
-    element.css('display', 'none');
-  }
-
-  // 必須入力項目を任意入力に変更する
-  function arbitrariseInput() {
-    $('div[name=arbitrary_second]').each(function() {
-      // 必須のラベルを任意に変更
-      $(this).find('span' + '.badge').removeClass('badge-danger');
-      $(this).find('span' + '.badge').addClass('badge-secondary');
-      $(this).find('span' + '.badge').html('任意');
-
-      // ブランクのまま送信は許すが、入力するなら入力可能パターンはチェックする
-      $(this).find('input').removeClass('no-blank');
-      $(this).find('select').removeClass('no-blank');
-      $(this).find('input').removeAttr('required');
-      $(this).find('select').removeAttr('required');
-    });
-  }
-
-  function cancelValidation(element) {
-    element.find('input').removeClass('no-blank pattern-required');
-    element.find('input').removeAttr('required');
-  }
-
-  // 日付入力欄でカレンダーからの入力を可能にする
-  $(function() {
-    $('#closingDay').datetimepicker({
-      format: 'YYYY-MM-DD',
-      locale: 'ja',
-      dayViewHeaderFormat: 'YYYY年 MMM',
-    });
-  });
-
-  // コントロール未入力のまま次に行こうとしたら警告を出す
-  $(function() {
-    $('.no-blank').blur(blank_validate);
-    $('.pattern-required').blur(function () {pattern_validate($(this));});
-
-    // 下記クラス.pattern-required-on-modifiedのバリデーションは、次のようになる
-    // 1. 初回フォームであれば無条件でblur時にパターンマッチのvalidate
-    // 2-1. 2回目以降フォームであればblur時にブランクならOK判定
-    // 2-2. 2回目以降フォームであればblur時に非ブランクならパターンマッチのvalidate
-    $('.pattern-required-on-modified').blur(function() {
-      pattern_validate($(this), getUrlParam('user') === 'existing');
-    });
-  });
-
-  function blank_validate() {
-      if ($(this).val()) {
-        $(this).removeClass(
-          'border border-danger',
-        );
-        $(this).addClass(
-          'border border-success',
-        );
-        $(this).nextAll('.valid-input').css({
-          'display': 'block',
-        });
-        $(this).nextAll('.invalid-input').css({
-          'display': 'none',
-        });
-        $(this).nextAll('.invalid-feedback').css({
-          'display': 'none',
-        });
-      } else {
-        $(this).removeClass(
-          'border border-success',
-        );
-        $(this).addClass(
-          'border border-danger',
-        );
-        $(this).nextAll('.valid-input').css({
-          'display': 'none',
-        });
-        $(this).nextAll('.invalid-input').css({
-          'display': 'block',
-        });
-        $(this).nextAll('.invalid-feedback').css({
-          'display': 'block',
-        });
-      }
-    }
-
-  function pattern_validate(obj, blank_allowed) {
-      const pattern = new RegExp(obj.attr('pattern'));
-
-      const input_is_valid = pattern.test(obj.val());
-      const input_is_blank = (obj.val() == '');
-      if (input_is_valid
-          || (blank_allowed && input_is_blank)) {
-        // 有効な入力
-        obj.css({
-          'border': '1px solid #28a745',
-        });
-        obj.nextAll('.valid-input').css({
-          'display': 'block',
-        });
-        obj.nextAll('.invalid-input').css({
-          'display': 'none',
-        });
-        obj.nextAll('.invalid-feedback').css({
-          'display': 'none',
-        });
-      } else {
-        // 無効な入力
-        obj.css({
-          'border': '1px solid #dc3545',
-        });
-        obj.nextAll('.valid-input').css({
-          'display': 'none',
-        });
-        obj.nextAll('.invalid-input').css({
-          'display': 'block',
-        });
-        obj.nextAll('.invalid-feedback').css({
-          'display': 'block',
-        });
-      }
-    }
-
-  // ライブラリから銀行情報を入力したときに正しくバリデーションがかからないので、預金種目をクリックした時にチェックする
-  $(function() {
-    $('input[name=deposit_Form]').on('click', function() {
-      $('input[name=bankCode_Form]').addClass('pattern-required');
-      $('input[name=bankName_Form]').addClass('no-blank');
-      $('input[name=branchCode_Form]').addClass('pattern-required');
-      $('input[name=branchName_Form]').addClass('no-blank');
-      $('input[name=bankCode_Form]').blur(function () {pattern_validate($(this));});
-      $('input[name=bankCode_Form]').blur();
-      $('input[name=bankName_Form]').blur(blank_validate);
-      $('input[name=bankName_Form]').blur();
-      $('input[name=branchCode_Form]').blur(function () {pattern_validate($(this));});
-      $('input[name=branchCode_Form]').blur();
-      $('input[name=branchName_Form]').blur(blank_validate);
-      $('input[name=branchName_Form]').blur();
-    });
-  });
-
-  $(function() {
-    $('.bank-info').blur(function() {
-      const pattern = new RegExp($(this).attr('pattern'));
-      if (pattern.test($(this).val())) {
-        $(this).css({
-          'border': '1px solid #28a745',
-        });
-        $(this).nextAll('.valid-input').css({
-          'display': 'block',
-        });
-        $(this).nextAll('.invalid-input').css({
-          'display': 'none',
-        });
-        $(this).nextAll('.invalid-feedback').css({
-          'display': 'none',
-        });
-      } else {
-        $(this).css({
-          'border': '1px solid #dc3545',
-        });
-        $(this).nextAll('.valid-input').css({
-          'display': 'none',
-        });
-        $(this).nextAll('.invalid-input').css({
-          'display': 'block',
-        });
-        $(this).nextAll('.invalid-feedback').css({
-          'display': 'block',
-        });
-      }
-    });
-  });
-
-  // 規約に同意するチェックをしていない場合に送信をタップしたらアラートを出す
-  $(function () {
-    $('#form_id').submit(function() {
-      if (!($('#agree').is(':checked'))) {
-        alert('お申込みするには「規約に同意する」にチェックしてください。');
-        return false;
-      }
-    });
-  });
-
-  // 送信ボタンをクリックしたときの挙動
-  $(function(){
-    $("#send").click(function(event){
-      // formのデフォルトのsubmit挙動を止めて、独自にsubmit挙動を実装
-      event.preventDefault();
-
-      // ブランクチェックなど
-      if(!this.form.reportValidity()) {
-        return;
-      };
-
-      // 多重送信防止
-      $("#send").html("送信中...");
-      $("#send").prop("disabled", true);
-
-      // データ送信。kintone用のデータ変換はfirebase側
-      $.ajax({
-        type: "POST",
-        enctype: 'multipart/form-data',
-        url: "https://us-central1-lagless.cloudfunctions.net/send_apply",
-        dataType: "json",
-        data: new FormData($('#form_id')[0]),
-        cache: false,
-        processData: false,
-        contentType: false
-      })
-      .done(function(data) {
-        // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
-        $("#send").html("送信");
-        $("#send").prop("disabled", false);
-        window.location.href = String(data['redirect']);
-      })
-      .fail(function(data) {
-        // 失敗時はアラートを出すだけで遷移しない。フォームの入力内容もそのまま
-        console.log(data);
-        $("#send").html("送信");
-        $("#send").prop("disabled", false);
-        alert('登録に失敗しました。\n' + data.responseText);
-      });
-    });
-  });
-  </script>
+  <!-- 送信中アニメーション -->
+  <div id="sending">
+    <div class="sendingMsg"></div>
+  </div>
+  <!-- /送信中アニメーション -->
 </body>
 </html>

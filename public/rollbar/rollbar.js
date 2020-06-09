@@ -1,11 +1,11 @@
-const env = (() => {
+var env = (function() {
     switch(document.domain) {
         case "payment.invest-d.com": return "production";
         default: return "development";
     }
 })();
 
-let _rollbarConfig = {
+var _rollbarConfig = {
     accessToken: "ce4a4b4c40db434598b9176eee0750f7",
     captureUncaught: true,
     captureUnhandledRejections: true,

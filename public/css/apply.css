@@ -1,0 +1,71 @@
+@media (min-width: 800px) {
+    .container {
+    max-width: 750px;
+    }
+}
+
+#bnkauto {
+    position: absolute;
+    font-family:'ヒラギノ角ゴ Pro W3','Hiragino Kaku Gothic Pro','メイリオ',Meiryo,'ＭＳ Ｐゴシック',sans-serif;
+    background: #009999;
+    font-weight: normal;
+    padding: 5px 8px !important;
+    border-radius: 8px;
+    z-index: 999999;
+}
+
+@media only screen {
+    /* PC */
+    .bnk_line {         /* 行部分 */
+    color: #ffffcc;
+    }
+    #bnk_count {        /* Hit件数 */
+    color: #ffffcc;
+    white-space: nowrap;
+    }
+    #bnk_close a {
+    color: #333333;
+    text-decoration: none;
+    white-space: nowrap;
+    }
+    #bnk_footer a {
+    color: #333333;
+    text-decoration: none;
+    white-space: nowrap;
+    }
+}
+
+.valid-status-icon {
+    float: right;
+    margin-right: 15px;
+    margin-top: -27px;
+    position: relative;
+    z-index: 2;
+}
+
+.valid-status-icon-file {
+    float: right;
+    margin-right: 15px;
+    margin-top: -32px;
+    position: relative;
+    z-index: 2;
+}
+
+.valid-input {
+    display: none;
+    color: #28a745;
+}
+
+.invalid-input {
+    display: none;
+    color: #dc3545;
+}
+
+
+.valid-pattern {
+    border: 1px solid #28a745;
+}
+
+.invalid-pattern {
+    border: 1px solid #dc3545;
+}
