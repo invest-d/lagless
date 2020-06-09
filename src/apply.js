@@ -1,5 +1,3 @@
-import "./rollbar/rollbar";
-
 import "@fortawesome/fontawesome-free";
 
 import "bootstrap";
