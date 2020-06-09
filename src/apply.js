@@ -10,6 +10,7 @@ import $ from "jquery";
 import "url-search-params-polyfill";
 
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
+import * as find from "./defineFindPolyfill";
 
 // URLの商品名によってフォームの見た目を変更する
 $(() => {
@@ -209,6 +210,20 @@ $(() => {
 
         $("#report-validity").hide();
 
+        find.definePolyfill();
+
+        // 添付ファイルのファイルサイズが大きすぎるとサーバーエラーになるため、送信できないようにする。
+        const FILE_SIZE_LIMIT = 4 * Math.pow(1024, 2);
+        // Byte数で取得。既存ユーザのときは添付ファイルが必要ない項目があるので、それは無視する
+        const inputs = $.makeArray($("input[type='file']").filter((i, elem) => $(elem).val() != ""));
+        const over_input = inputs.find((input) => input.files[0].size >= FILE_SIZE_LIMIT);
+        if (over_input !== undefined) {
+            // alertに表示するため、inputに対応するラベルを取得
+            const label_text = $(`label[for='${over_input.id}']`).text();
+            alert(`${label_text}のファイル容量を${FILE_SIZE_LIMIT / Math.pow(1024, 2)}MBより小さくしてください。\n`
+            + `現在のファイル容量：およそ${(over_input.files[0].size / Math.pow(1024, 2)).toPrecision(2)}MB`);
+            return;
+        }
 
         const form_data = new FormData($("#form_id")[0]);
 
@@ -223,6 +238,7 @@ $(() => {
         }
 
         // 多重送信防止
+        showSending("送信中...");
         $("#send").text("送信中...")
             .prop("disabled", true);
 
@@ -239,13 +255,12 @@ $(() => {
         })
             .done((data) => {
                 // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
-                $("#send").text("送信")
-                    .prop("disabled", false);
                 window.location.href = String(data["redirect"]);
             })
             .fail((data) => {
                 // 失敗時はアラートを出すだけ。ページ遷移しない。フォームの入力内容もそのまま
                 console.error(JSON.stringify(data));
+                hideSending();
                 $("#send").text("送信")
                     .prop("disabled", false);
                 alert(`登録に失敗しました。\n${data.responseJSON.message}`);
@@ -268,4 +283,18 @@ function isSafari() {
 
     // それ以外
     return false;
+}
+
+function showSending(msg){
+    // 引数なし（メッセージなし）を許容
+    if( msg == undefined ){
+        msg = "";
+    }
+    // 画面表示メッセージ
+    $("#sending>.sendingMsg").text(msg);
+    $("#sending").show();
+}
+
+function hideSending(){
+    $("#sending").hide();
 }

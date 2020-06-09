@@ -314,9 +314,9 @@
       <!-- /請求書の締日 -->
 
 
-      <!-- 請求書データの添付 -->
+      <!-- 請求書データ -->
       <div class="form-group">
-        <label for="invoice">請求書データの添付</label>
+        <label for="invoice">請求書データ</label>
         <span class="badge badge-danger">必須</span>
         <input type="file" class="form-control-file p-2 border rounded no-blank"
           name="invoice" id="invoice" required/>
@@ -324,7 +324,7 @@
         <span class="fas fa-times valid-status-icon-file invalid-input"></span>
         <div class="invalid-feedback">添付してください</div>
       </div>
-      <!-- /請求書データの添付 -->
+      <!-- /請求書データ -->
 
 
       <!-- 対象債権合計金額 -->
@@ -544,5 +544,12 @@
 
   </div>
   <!-- /container -->
+
+
+  <!-- 送信中アニメーション -->
+  <div id="sending">
+    <div class="sendingMsg"></div>
+  </div>
+  <!-- /送信中アニメーション -->
 </body>
 </html>
