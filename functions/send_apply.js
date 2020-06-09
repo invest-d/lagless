@@ -61,7 +61,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
             })
                 .catch((err) => {
                     console.error(`kintoneファイルアップロードエラー：${JSON.stringify(err)}`);
-                    renspond_err(res, err);
+                    respond_error(res, err);
                 });
 
             file_uploads.push(upload);
@@ -115,14 +115,14 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                     })
                     .catch((err) => {
                         console.error(`kintoneレコード登録エラー：${JSON.stringify(err)}`);
-                        renspond_err(res, err);
+                        respond_error(res, err);
                     });
             });
     });
     busboy.end(req.rawBody);
 });
 
-function renspond_err(res, err) {
+function respond_error(res, err) {
     const res_status = ("status" in err) ? err.status : 500;
     const res_msg = ("message" in err) ? err.message : "サーバーエラーが発生しました。";
     res.status(res_status).json({message: res_msg});

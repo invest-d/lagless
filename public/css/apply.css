@@ -61,25 +61,11 @@
     color: #dc3545;
 }
 
-#sending {
-    display: none;
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background-color: #fff;
-    opacity: 0.8;
+
+.valid-pattern {
+    border: 1px solid #28a745;
 }
 
-#sending .sendingMsg {
-    width: 200px;
-    height: 200px;
-    background: url("../images/Spinner-1s-200px.gif") center center no-repeat;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    padding-top: 160px;
+.invalid-pattern {
+    border: 1px solid #dc3545;
 }

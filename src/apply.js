@@ -2,15 +2,12 @@ import "@fortawesome/fontawesome-free";
 
 import "bootstrap";
 
-import "flatpickr";
-import "flatpickr/dist/l10n/ja.js";
 import flatpickr from "flatpickr";
+import "flatpickr/dist/l10n/ja.js";
 
-import "jquery";
 import $ from "jquery";
 
-import "urijs";
-import URI from "urijs";
+import "url-search-params-polyfill";
 
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 import * as find from "./defineFindPolyfill";
@@ -28,7 +25,7 @@ $(() => {
         break;
     // それ以外はlaglessとする
     }
-    document.getElementById("product-css").href = css_path;
+    $("#product-css").attr("href", css_path);
 });
 
 // URLの工務店IDパラメータを引き継ぐ
@@ -36,7 +33,7 @@ $(() => {
     const id_key = "c";
     const id_val = getUrlParam(id_key);
 
-    document.getElementById("constructionShopId").value = id_val;
+    $("#constructionShopId").val(id_val);
 });
 
 // URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする
@@ -46,12 +43,12 @@ $(() => {
     if (val === "existing") {
     // 2回目以降の申込みフォーム
     // 初回のみ必須入力の項目を非表示にする
-        const only_first_elems = $("*[name=only_first]");
-        hideElement(only_first_elems);
+        const objects = $("*[name=only_first]");
+        hideObjects(objects);
         // 2回目以降は任意入力になる項目を設定する
         arbitrariseInput();
         // 2回目以降で表示するキャプションを設定
-        $("#second_caption").css("display", "block");
+        $("#second_caption").show();
     } else {
     // 初回申込みフォーム
     // 特に変更する必要はない
@@ -60,36 +57,33 @@ $(() => {
 
 // URLから指定したパラメータを取得する
 function getUrlParam(param_name) {
-    const uri = new URI(window.location);
-    const params = uri.query(true);
-    return params[param_name];
+    const params = new URLSearchParams(window.location.search);
+    return params.get(param_name);
 }
 
 // 2回目以降申込みフォームで不要なコントロールの必須チェックを外してフォームから非表示にする
-function hideElement(element) {
-    cancelValidation(element);
-    element.css("display", "none");
+function hideObjects(objects) {
+    cancelValidation(objects);
+    objects.hide();
 }
 
 // 必須入力項目を任意入力に変更する
 function arbitrariseInput() {
     $("div[name=arbitrary_second]").each(function() {
     // 必須のラベルを任意に変更
-        $(this).find("span" + ".badge").removeClass("badge-danger");
-        $(this).find("span" + ".badge").addClass("badge-secondary");
-        $(this).find("span" + ".badge").html("任意");
+        $(this).find("span.badge").removeClass("badge-danger")
+            .addClass("badge-secondary")
+            .text("任意");
 
         // ブランクのまま送信は許すが、入力するなら入力可能パターンはチェックする
-        $(this).find("input").removeClass("no-blank");
-        $(this).find("select").removeClass("no-blank");
-        $(this).find("input").removeAttr("required");
-        $(this).find("select").removeAttr("required");
+        $(this).find("input, select").removeClass("no-blank")
+            .prop("required", false);
     });
 }
 
-function cancelValidation(element) {
-    element.find("input").removeClass("no-blank pattern-required");
-    element.find("input").removeAttr("required");
+function cancelValidation(objects) {
+    objects.find("input").removeClass("no-blank pattern-required")
+        .prop("required", false);
 }
 
 // 日付入力欄でカレンダーからの入力を可能にする
@@ -117,37 +111,17 @@ $(() => {
 
 function blank_validate() {
     if ($(this).val()) {
-        $(this).removeClass(
-            "border border-danger"
-        );
-        $(this).addClass(
-            "border border-success"
-        );
-        $(this).nextAll(".valid-input").css({
-            "display": "block"
-        });
-        $(this).nextAll(".invalid-input").css({
-            "display": "none"
-        });
-        $(this).nextAll(".invalid-feedback").css({
-            "display": "none"
-        });
+        $(this).removeClass("border border-danger")
+            .addClass("border border-success");
+        $(this).nextAll(".valid-input").show();
+        $(this).nextAll(".invalid-input").hide();
+        $(this).nextAll(".invalid-feedback").hide();
     } else {
-        $(this).removeClass(
-            "border border-success"
-        );
-        $(this).addClass(
-            "border border-danger"
-        );
-        $(this).nextAll(".valid-input").css({
-            "display": "none"
-        });
-        $(this).nextAll(".invalid-input").css({
-            "display": "block"
-        });
-        $(this).nextAll(".invalid-feedback").css({
-            "display": "block"
-        });
+        $(this).removeClass("border border-success")
+            .addClass("border border-danger");
+        $(this).nextAll(".valid-input").hide();
+        $(this).nextAll(".invalid-input").show();
+        $(this).nextAll(".invalid-feedback").show();
     }
 }
 
@@ -159,50 +133,37 @@ function pattern_validate(obj, blank_allowed) {
     if (input_is_valid
         || (blank_allowed && input_is_blank)) {
         // 有効な入力
-        obj.css({
-            "border": "1px solid #28a745",
-        });
-        obj.nextAll(".valid-input").css({
-            "display": "block",
-        });
-        obj.nextAll(".invalid-input").css({
-            "display": "none",
-        });
-        obj.nextAll(".invalid-feedback").css({
-            "display": "none",
-        });
+        obj.removeClass("invalid-pattern").addClass("valid-pattern");
+        obj.nextAll(".valid-input").show();
+        obj.nextAll(".invalid-input").hide();
+        obj.nextAll(".invalid-feedback").hide();
     } else {
         // 無効な入力
-        obj.css({
-            "border": "1px solid #dc3545",
-        });
-        obj.nextAll(".valid-input").css({
-            "display": "none",
-        });
-        obj.nextAll(".invalid-input").css({
-            "display": "block",
-        });
-        obj.nextAll(".invalid-feedback").css({
-            "display": "block",
-        });
+        obj.removeClass("valid-pattern").addClass("invalid-pattern");
+        obj.nextAll(".valid-input").hide();
+        obj.nextAll(".invalid-input").show();
+        obj.nextAll(".invalid-feedback").show();
     }
 }
 
 // ライブラリから銀行情報を入力したときに正しくバリデーションがかからないので、預金種目をクリックした時にチェックする
 $(() => {
     $("input[name=deposit_Form]").on("click", () => {
-        $("input[name=bankCode_Form]").addClass("pattern-required");
-        $("input[name=bankName_Form]").addClass("no-blank");
-        $("input[name=branchCode_Form]").addClass("pattern-required");
-        $("input[name=branchName_Form]").addClass("no-blank");
-        $("input[name=bankCode_Form]").blur(function () {pattern_validate($(this));});
-        $("input[name=bankCode_Form]").blur();
-        $("input[name=bankName_Form]").blur(blank_validate);
-        $("input[name=bankName_Form]").blur();
-        $("input[name=branchCode_Form]").blur(function () {pattern_validate($(this));});
-        $("input[name=branchCode_Form]").blur();
-        $("input[name=branchName_Form]").blur(blank_validate);
-        $("input[name=branchName_Form]").blur();
+        $("input[name=bankCode_Form]").addClass("pattern-required")
+            .blur(function () {pattern_validate($(this));})
+            .blur();
+
+        $("input[name=bankName_Form]").addClass("no-blank")
+            .blur(blank_validate)
+            .blur();
+
+        $("input[name=branchCode_Form]").addClass("pattern-required")
+            .blur(function () {pattern_validate($(this));})
+            .blur();
+
+        $("input[name=branchName_Form]").addClass("no-blank")
+            .blur(blank_validate)
+            .blur();
     });
 });
 
@@ -210,31 +171,15 @@ $(() => {
     $(".bank-info").blur(function() {
         const pattern = new RegExp($(this).attr("pattern"));
         if (pattern.test($(this).val())) {
-            $(this).css({
-                "border": "1px solid #28a745",
-            });
-            $(this).nextAll(".valid-input").css({
-                "display": "block",
-            });
-            $(this).nextAll(".invalid-input").css({
-                "display": "none",
-            });
-            $(this).nextAll(".invalid-feedback").css({
-                "display": "none",
-            });
+            $(this).removeClass("invalid-pattern").addClass("valid-pattern");
+            $(this).nextAll(".valid-input").show();
+            $(this).nextAll(".invalid-input").hide();
+            $(this).nextAll(".invalid-feedback").hide();
         } else {
-            $(this).css({
-                "border": "1px solid #dc3545",
-            });
-            $(this).nextAll(".valid-input").css({
-                "display": "none",
-            });
-            $(this).nextAll(".invalid-input").css({
-                "display": "block",
-            });
-            $(this).nextAll(".invalid-feedback").css({
-                "display": "block",
-            });
+            $(this).removeClass("valid-pattern").addClass("invalid-pattern");
+            $(this).nextAll(".valid-input").hide();
+            $(this).nextAll(".invalid-input").show();
+            $(this).nextAll(".invalid-feedback").hide();
         }
     });
 });
@@ -259,11 +204,11 @@ $(() => {
 
         // ブランクチェックなど
         if(!this.form.reportValidity()) {
-            $("#report-validity").css({display: "inline"});
+            $("#report-validity").show();
             return;
         }
 
-        $("#report-validity").css({display: "none"});
+        $("#report-validity").hide();
 
         find.definePolyfill();
 
@@ -294,8 +239,8 @@ $(() => {
 
         // 多重送信防止
         showSending("送信中...");
-        $("#send").html("送信中...");
-        $("#send").prop("disabled", true);
+        $("#send").text("送信中...")
+            .prop("disabled", true);
 
         // データ送信。kintone用のデータ変換はfirebase側
         $.ajax({
@@ -316,8 +261,8 @@ $(() => {
                 // 失敗時はアラートを出すだけ。ページ遷移しない。フォームの入力内容もそのまま
                 console.error(JSON.stringify(data));
                 hideSending();
-                $("#send").html("送信");
-                $("#send").prop("disabled", false);
+                $("#send").text("送信")
+                    .prop("disabled", false);
                 alert(`登録に失敗しました。\n${data.responseJSON.message}`);
             });
     });
