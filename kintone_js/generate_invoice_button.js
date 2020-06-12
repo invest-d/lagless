@@ -385,7 +385,7 @@ const dateFns = require("date-fns");
             const ymd_array = (record[fieldPayDate_APPLY]["value"]).split("-").map((n) => Number(n));
             return new Date(ymd_array[0], ymd_array[1]-1, ymd_array[2]);
         });
-        const latest_date = new Date(Math.max(...(detail_payment_dates.map((dt) => dt.getTime()))));
+        const latest_date = new Date(Math.max(...detail_payment_dates));
         const send_date = {
             text: `${latest_date.getFullYear()}年${latest_date.getMonth() + 1}月${latest_date.getDate()}日`,
             alignment: "right",
