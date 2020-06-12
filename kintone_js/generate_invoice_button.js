@@ -20,6 +20,9 @@ const id_logo = require("./images/id_logo.png");
 const holiday_jp = require("@holiday-jp/holiday_jp");
 const dateFns = require("date-fns");
 
+const dayjs = require("dayjs");
+dayjs.locale("ja");
+
 (function() {
     "use strict";
 
@@ -381,13 +384,10 @@ const dateFns = require("date-fns");
 
         // 振込依頼書に記載する日付。Y年M月D日
         // 支払明細の申込レコードの中で、最も遅い支払日を採用する
-        const detail_payment_dates =  parent_record.detail_records.map((record) => {
-            const ymd_array = (record[fieldPayDate_APPLY]["value"]).split("-").map((n) => Number(n));
-            return new Date(ymd_array[0], ymd_array[1]-1, ymd_array[2]);
-        });
-        const latest_date = new Date(Math.max(...detail_payment_dates));
+        const detail_payment_dates =  parent_record.detail_records.map((record) => dayjs(record[fieldPayDate_APPLY]["value"]));
+        const latest_date = dayjs(Math.max(...detail_payment_dates));
         const send_date = {
-            text: `${latest_date.getFullYear()}年${latest_date.getMonth() + 1}月${latest_date.getDate()}日`,
+            text: latest_date.format("YYYY年M月D日"),
             alignment: "right",
             fontSize: 10
         };
