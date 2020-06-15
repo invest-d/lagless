@@ -1,6 +1,7 @@
 /*
     Version 1.2
-    処理対象レコードの状態を「支払実行済み」から「クラウドサイン承認済み」に変更
+    処理対象レコードの状態を「支払実行済み」から「クラウドサイン承認済み」に変更。
+    振込依頼書の目視確認が完了しているかどうかを、状態フィールドではなく専用のチェックボックスを使って管理するように変更。
 
     Version 1.1
     振込依頼書をPDF形式で作成し、kintoneの添付ファイルフィールドに保存する。
@@ -81,6 +82,7 @@ dayjs.locale("ja");
     const tableFieldReceivableIV_COLLECT = "receivableIV";
     const fieldInvoicePdf_COLLECT = "invoicePdf";
     const fieldHandleForHolidays_COLLECT = "handleForHolidays";
+    const fieldConfirmStatusInvoice_COLLECT = "confirmStatusInvoice";
 
     const APP_ID_APPLY = APP_ID.APPLY;
     const fieldRecordId_APPLY = "$id";
@@ -164,7 +166,7 @@ dayjs.locale("ja");
                     throw new Error("振込依頼書の添付中にエラーが発生しました。");
                 });
 
-            alert(`${completed_count}件 振込依頼書の作成が完了しました。\n\nそれぞれのレコードの添付ファイルを確認したのち、\nレコード詳細画面の確認OKボタンを押してください。\n確認OKになったレコードの振込依頼書が自動的に送信されます。`);
+            alert(`${completed_count}件 振込依頼書の作成が完了しました。\n\nそれぞれのレコードの添付ファイルを目視で確認したのち、\nレコード詳細画面の振込依頼書確認OKチェックボックスをオンにして保存してください。`);
 
         } catch(err) {
             alert(err);
@@ -760,6 +762,10 @@ dayjs.locale("ja");
                                         "fileKey": upload_resp.fileKey
                                     }
                                 ]
+                            },
+                            // 新規作成した振込依頼書について、目視確認が未完了の状態に戻す
+                            [fieldConfirmStatusInvoice_COLLECT]: {
+                                "value": []
                             }
                             // 状態フィールドは振込依頼書の目視確認がOKで送信が確定した段階になってから、子レコードと一緒に変更する
                         }
