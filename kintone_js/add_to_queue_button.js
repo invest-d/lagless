@@ -10,40 +10,78 @@
     振込依頼書作成処理をもう一度実行した時に、状態が取り残されたままの子たちの中で新たな親が出来てしまうのを防ぐため。
 */
 
+const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
+
+const APP_ID = ((app_id) => {
+    switch(app_id) {
+    // 今開いてるのが開発版の回収アプリの場合
+    case 160:
+        return {
+            APPLY: 159,
+            COLLECT: 160
+        };
+
+    // 本番の回収アプリの場合
+    case 162:
+        return {
+            APPLY: 161,
+            COLLECT: 162
+        };
+    default:
+        console.warn(`Unknown app: ${app_id}`);
+    }
+})(kintone.app.getId());
+
+const APP_ID_COLLECT = APP_ID.COLLECT;
+const fieldStatus_COLLECT = "collectStatus";
+const fieldRecordId_COLLECT = "レコード番号";
+const fieldConstructorId_COLLECT = "constructionShopId";
+const fieldClosingDate_COLLECT = "closingDate";
+
+export function getParentAndChildCollectRecords(record) {
+    console.log("親子レコードを全て取得する。");
+    // 親レコードと①工務店ID、②締め日の二つが両方とも等しいレコードを子レコードとする。親自身も取得対象に含める。
+    const constructor_id = record[fieldConstructorId_COLLECT]["value"];
+    const closing_date = record[fieldClosingDate_COLLECT]["value"];
+
+    const get_body = {
+        "app": APP_ID_COLLECT,
+        "fields": [fieldRecordId_COLLECT],
+        "query": `${fieldConstructorId_COLLECT} = "${constructor_id}" and ${fieldClosingDate_COLLECT} = "${closing_date}"`
+    };
+
+    console.log(get_body);
+
+    return kintoneRecord.getRecords(get_body);
+}
+
+export function updateStatus(records, status) {
+    const ids = records.map((r) => r[fieldRecordId_COLLECT]["value"]);
+
+    const put_body = {
+        "app": APP_ID_COLLECT,
+        "records": ids.map((id) => {
+            return {
+                "id": id,
+                "record": {
+                    [fieldStatus_COLLECT]: {
+                        "value": status
+                    }
+                }
+            };
+        })
+    };
+
+    return kintoneRecord.updateRecords(put_body);
+}
+
 (function() {
     "use strict";
 
-    const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
-
-    const APP_ID = ((app_id) => {
-        switch(app_id) {
-        // 今開いてるのが開発版の回収アプリの場合
-        case 160:
-            return {
-                APPLY: 159,
-                COLLECT: 160
-            };
-
-        // 本番の回収アプリの場合
-        case 162:
-            return {
-                APPLY: 161,
-                COLLECT: 162
-            };
-        default:
-            console.warn(`Unknown app: ${app_id}`);
-        }
-    })(kintone.app.getId());
-
-    const APP_ID_COLLECT = APP_ID.COLLECT;
-    const fieldRecordId_COLLECT = "レコード番号";
     const fieldParentCollectRecord_COLLECT = "parentCollectRecord";
     const fieldInvoicePdf_COLLECT = "invoicePdf";
-    const fieldStatus_COLLECT = "collectStatus";
     const statusNotReadyToSend_COLLECT = "クラウドサイン承認済み";
     const statusReadyToSend_COLLECT = "振込依頼書送信可";
-    const fieldConstructorId_COLLECT = "constructionShopId";
-    const fieldClosingDate_COLLECT = "closingDate";
     const tableInvoiceTargets_COLLECT = "invoiceTargets";
     const tableFieldRecordId_COLLECT = "applyRecordNoIV";
     const fieldConfirmStatus_COLLECT ="confirmStatusInvoice";
@@ -115,7 +153,7 @@
                     throw new Error(`この親レコードに関連する子レコードの取得中にエラーが発生しました。\n\nエラーログ：${err}`);
                 });
 
-            await updateStatusReady(collects_resp.records)
+            await updateStatus(collects_resp.records, statusReadyToSend_COLLECT)
                 .catch((err) => {
                     throw new Error(`親子レコードの状態フィールドの更新中にエラーが発生しました。\n\nエラーログ：${err}`);
                 });
@@ -126,43 +164,6 @@
         } catch(err) {
             alert(err);
         }
-    }
-
-    function getParentAndChildCollectRecords(record) {
-        console.log("親子レコードを全て取得する。");
-        // 親レコードと①工務店ID、②締め日の二つが両方とも等しいレコードを子レコードとする。親自身も取得対象に含める。
-        const constructor_id = record[fieldConstructorId_COLLECT]["value"];
-        const closing_date = record[fieldClosingDate_COLLECT]["value"];
-
-        const get_body = {
-            "app": APP_ID_COLLECT,
-            "fields": [fieldRecordId_COLLECT],
-            "query": `${fieldConstructorId_COLLECT} = "${constructor_id}" and ${fieldClosingDate_COLLECT} = "${closing_date}"`
-        };
-
-        console.log(get_body);
-
-        return kintoneRecord.getRecords(get_body);
-    }
-
-    function updateStatusReady(records) {
-        const ids = records.map((r) => r[fieldRecordId_COLLECT]["value"]);
-
-        const put_body = {
-            "app": APP_ID_COLLECT,
-            "records": ids.map((id) => {
-                return {
-                    "id": id,
-                    "record": {
-                        [fieldStatus_COLLECT]: {
-                            "value": statusReadyToSend_COLLECT
-                        }
-                    }
-                };
-            })
-        };
-
-        return kintoneRecord.updateRecords(put_body);
     }
 
     function getApplies(apply_ids) {
