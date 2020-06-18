@@ -69,3 +69,7 @@
 .invalid-pattern {
     border: 1px solid #dc3545;
 }
+
+.strong {
+    font-weight: 700;
+}

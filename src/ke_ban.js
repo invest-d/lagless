@@ -12,21 +12,8 @@ import "url-search-params-polyfill";
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 import * as find from "./defineFindPolyfill";
 
-// URLの商品名によってフォームの見た目を変更する
-$(() => {
-    const product_name = getUrlParam("product");
-    let css_path = "./styles/form_lagless.css";
-    switch (product_name) {
-    case "dandori":
-        css_path = "./styles/form_dandori.css";
-        break;
-    case "renove":
-        css_path = "./styles/form_renove.css";
-        break;
-    // それ以外はlaglessとする
-    }
-    $("#product-css").attr("href", css_path);
-});
+import dayjs from "dayjs";
+dayjs.locale("ja");
 
 // URLの工務店IDパラメータを引き継ぐ
 $(() => {
@@ -89,7 +76,14 @@ function cancelValidation(objects) {
 // 日付入力欄でカレンダーからの入力を可能にする
 $(() => {
     flatpickr.l10ns.ja.firstDayOfWeek = 0;
-    flatpickr("#closingDay", {
+    flatpickr("#closingDayFrom", {
+        "dateFormat": "Y-m-d",
+        "locale": "ja"
+    });
+});
+$(() => {
+    flatpickr.l10ns.ja.firstDayOfWeek = 0;
+    flatpickr("#closingDayTo", {
         "dateFormat": "Y-m-d",
         "locale": "ja"
     });
@@ -144,6 +138,10 @@ function pattern_validate(obj, blank_allowed) {
         obj.nextAll(".invalid-input").show();
         obj.nextAll(".invalid-feedback").show();
     }
+}
+
+functinon past_validate(obj) {
+
 }
 
 // ライブラリから銀行情報を入力したときに正しくバリデーションがかからないので、預金種目をクリックした時にチェックする

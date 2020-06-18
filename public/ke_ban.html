@@ -13,7 +13,7 @@
   <script src="./rollbar/rollbar.js"></script>
   <!-- /rollbar -->
 
-  <script src="./ke-ban.js" charset="UTF-8"></script>
+  <script src="./ke_ban.js" charset="UTF-8"></script>
 
   <!-- Bootstrap -->
   <link rel="stylesheet" href="./css/bootstrap.min.css">
@@ -27,7 +27,7 @@
   <script src="https://zipaddr.github.io/bankautob.js" charset="UTF-8"></script>
 
   <!-- URLパラメータによって変更するCSS -->
-  <link rel="stylesheet" type="text/css" href="./styles/form_lagless.css" id="product-css">
+  <link rel="stylesheet" type="text/css" href="./styles/form_ke_ban.css" id="product-css">
   <!-- /CSS -->
 
   <!-- 郵便番号から住所自動入力 -->
@@ -53,16 +53,19 @@
 
 
       <div class="form-group">
-        <h2>お申込みフォーム</h2>
+        <h2>前払いお申込みフォーム</h2>
 
         <p name="only_first">
-          早期支払いをご希望の方は、お手元に運転免許証をご用意いただいた上で<br>
-          下記のフォームよりお申込みください。</p>
+          ＜お申込み必要書類＞</p>
+        <ul>
+          <li><span class="strong">運転免許証</span></li>
+          <li><span class="strong">配達集計精算書（日報報告で既にご提出済の場合は不要です）</span></li>
+        </ul>
 
         <p>お申込みフォームの入力でお困りの際は、下記連絡先までお気軽にお電話ください。</p>
 
         <p>運営：インベストデザイン株式会社<br>
-          （各種ペイメントサービスの事務局を担っております）<br>
+          メール：<a href="mailto:lagless+keban@invest-d.com">lagless+keban@invest-d.com</a><br>
           電話番号 ： <a href="tel:03-6261-6818">03-6261-6818</a> <br>
           受付時間 ： 10：00～17：00 <br>
           定休日 ： 土・日・祝</p>
@@ -271,77 +274,49 @@
 
 
       <div class="form-group pt-5">
-        <h2>■ 対象債権内容（件名・税込金額）■</h2>
-        <p>※早期支払をご希望の請求書データをご添付ください。<br>
-          　携帯で撮った請求書の写真でも構いません。<br>
-          　請求書が複数枚に渡る場合は、一つのファイルにまとめて頂きますようお願いいたします。</p>
-        <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。<br>
-          　（運営：インベストデザイン株式会社　<a href="tel:03-6261-6818">03-6261-6818</a>）</p>
-        <p>※【該当の方のみ】<br>
-          協力会費のお支払が必要な場合は、各発注企業さまの取り扱い方法に従い手続きいたします（請求書の合計金額から協力会費を差し引かせていただきます）</p>
+        <h2>■ 前払い対象債権内容 ■</h2>
+        <p>※前払いをご希望の方は、配達集計精算書のご提出が必須となります。<br>
+          　業務日報報告で精算書をご提出されていない場合は、別途メールで送付をお願いします。<br>
+          　送付先アドレス：<a href="mailto:lagless+keban@invest-d.com">lagless+keban@invest-d.com</a></p>
       </div>
 
 
-      <!-- 請求先企業名 -->
-      <div class="form-group">
-        <label for="billingCompany">請求先企業名（発注者名）</label>
-        <span class="badge badge-danger">必須</span>
-        <input type="text" class="form-control no-blank"
-          name="billingCompany" id="billingCompany" required/>
-        <span class="fas fa-check valid-status-icon valid-input"></span>
-        <span class="fas fa-times valid-status-icon invalid-input"></span>
-        <div class="invalid-feedback">入力してください。</div>
-      </div>
-      <!-- /請求先企業名 -->
-
-
-      <!-- 請求書の締日 -->
-      <div class="form-group" id="closingDayGroup">
-        <label for="closingDay">請求書の締日（早期支払対象となる締日）</label>
+      <!-- 請求書の締日From -->
+      <div class="form-group" id="closingDayFromGroup">
+        <label for="closingDayFrom">前払いを希望する稼働期間（開始日）</label>
         <span class="badge badge-danger">必須</span>
         <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
-          <input type="text" class="form-control bg-white pattern-required"
-          name="closingDay" id="closingDay" required
+          <input type="text" class="form-control bg-white pattern-required past-required"
+          name="closingDayFrom" id="closingDayFrom" required
           maxlength="10" pattern="\d{4}-\d{2}-\d{2}">
           <span class="fas fa-check valid-status-icon valid-input"></span>
           <span class="fas fa-times valid-status-icon invalid-input"></span>
           <div class="invalid-feedback">年-月-日の正しい形式で入力してください。</div>
         </div>
       </div>
-      <!-- /請求書の締日 -->
+      <!-- /請求書の締日From -->
 
 
-      <!-- 請求書データ -->
-      <div class="form-group">
-        <label for="invoice">請求書データ</label>
+      <!-- 請求書の締日To -->
+      <div class="form-group" id="closingDayToGroup">
+        <label for="closingDayTo">前払いを希望する稼働期間（終了日）</label>
         <span class="badge badge-danger">必須</span>
-        <input type="file" class="form-control-file p-2 border rounded no-blank"
-          name="invoice" id="invoice" required/>
-        <span class="fas fa-check valid-status-icon-file valid-input"></span>
-        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
-        <div class="invalid-feedback">添付してください</div>
+        <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
+          <input type="text" class="form-control bg-white pattern-required past-required"
+          name="closingDayTo" id="closingDayTo" required
+          maxlength="10" pattern="\d{4}-\d{2}-\d{2}">
+          <span class="fas fa-check valid-status-icon valid-input"></span>
+          <span class="fas fa-times valid-status-icon invalid-input"></span>
+          <div class="invalid-feedback">年-月-日の正しい形式で入力してください。</div>
+        </div>
       </div>
-      <!-- /請求書データ -->
-
-
-      <!-- 対象債権合計金額 -->
-      <div class="form-group">
-        <label for="applicationAmount">対象債権合計金額（税込）</label>
-        <span class="badge badge-danger">必須</span>
-        <input type="text" class="form-control pattern-required"
-          name="applicationAmount" id="applicationAmount" required
-          pattern="[0-9]+"/>
-        <span class="fas fa-check valid-status-icon valid-input"></span>
-        <span class="fas fa-times valid-status-icon invalid-input"></span>
-        <div class="invalid-feedback">半角数字のみ入力してください（コンマ等は不要です）</div>
-      </div>
-      <!-- /対象債権合計金額 -->
+      <!-- /請求書の締日To -->
 
 
       <div class="form-group pt-5" name="only_first">
         <h2>■ お客さま口座情報 ■</h2>
         <p>支払い口座情報をご記入ください。<br>
-          （個人事業主様は代表者名の口座をご指定下さい)</p>
+          （個人事業主様は<span class="strong">代表者名の口座</span>をご指定下さい)</p>
       </div>
 
 
