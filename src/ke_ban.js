@@ -140,10 +140,6 @@ function pattern_validate(obj, blank_allowed) {
     }
 }
 
-functinon past_validate(obj) {
-
-}
-
 // ライブラリから銀行情報を入力したときに正しくバリデーションがかからないので、預金種目をクリックした時にチェックする
 $(() => {
     $("input[name=deposit_Form]").on("click", () => {
@@ -241,28 +237,29 @@ $(() => {
             .prop("disabled", true);
 
         // データ送信。kintone用のデータ変換はfirebase側
-        $.ajax({
-            type: "POST",
-            enctype: "multipart/form-data",
-            url: "https://us-central1-lagless.cloudfunctions.net/send_apply",
-            dataType: "json",
-            data: form_data,
-            cache: false,
-            processData: false,
-            contentType: false
-        })
-            .done((data) => {
-                // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
-                window.location.href = String(data["redirect"]);
-            })
-            .fail((data) => {
-                // 失敗時はアラートを出すだけ。ページ遷移しない。フォームの入力内容もそのまま
-                console.error(JSON.stringify(data));
-                hideSending();
-                $("#send").text("送信")
-                    .prop("disabled", false);
-                alert(`登録に失敗しました。\n${data.responseJSON.message}`);
-            });
+        // $.ajax({
+        //     type: "POST",
+        //     enctype: "multipart/form-data",
+        //     url: "https://us-central1-lagless.cloudfunctions.net/send_apply",
+        //     dataType: "json",
+        //     data: form_data,
+        //     cache: false,
+        //     processData: false,
+        //     contentType: false
+        // })
+        //     .done((data) => {
+        //         // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
+        //         window.location.href = String(data["redirect"]);
+        //     })
+        //     .fail((data) => {
+        //         // 失敗時はアラートを出すだけ。ページ遷移しない。フォームの入力内容もそのまま
+        //         console.error(JSON.stringify(data));
+        //         hideSending();
+        //         $("#send").text("送信")
+        //             .prop("disabled", false);
+        //         alert(`登録に失敗しました。\n${data.responseJSON.message}`);
+        //     });
+        alert("送信機能は現在開発中です");
     });
 });
 
