@@ -110,11 +110,11 @@ export function updateStatus(records, status) {
     }
 
     function createAddToQueueButton(record) {
-        const addToQueue = document.createElement("button");
-        addToQueue.id = "addToQueue";
-        addToQueue.innerText = "振込依頼書を送信待ち状態にする";
-        addToQueue.addEventListener("click", clickAddToQueue.bind(null, record));
-        return addToQueue;
+        const button = document.createElement("button");
+        button.id = "addToQueue";
+        button.innerText = "振込依頼書を送信待ち状態にする";
+        button.addEventListener("click", clickAddToQueue.bind(null, record));
+        return button;
     }
 
     async function clickAddToQueue(record) {

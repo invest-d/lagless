@@ -11,26 +11,25 @@
 (function () {
     "use strict";
 
-    const fieldStatus = "collectStatus";
-    const statusReadyToSend = "振込依頼書送信可";
+    const FIELD_STATUS = "collectStatus";
+    const STATUS_DICT = {
+        "ReadyToSend": "振込依頼書送信可"
+    };
 
-    kintone.events.on(`app.record.edit.change.${fieldStatus}`, (event) => {
-        const status = event.record[fieldStatus]["value"];
-        if (status === statusReadyToSend) {
-            return showError(event);
+    kintone.events.on(`app.record.edit.change.${FIELD_STATUS}`, (event) => {
+        const status = event.record[FIELD_STATUS]["value"];
+        if (status === STATUS_DICT.ReadyToSend) {
+            // errorをセットして、このフィールドの編集処理をキャンセルする
+            event.record[FIELD_STATUS].error = "振込依頼書を送信する場合、レコード詳細画面のボタンから処理してください。";
+            return event;
         }
     });
 
-    kintone.events.on(`app.record.index.edit.change.${fieldStatus}`, (event) => {
-        const status = event.record[fieldStatus]["value"];
-        if (status === statusReadyToSend) {
-            return showError(event);
+    kintone.events.on(`app.record.index.edit.change.${FIELD_STATUS}`, (event) => {
+        const status = event.record[FIELD_STATUS]["value"];
+        if (status === STATUS_DICT.ReadyToSend) {
+            event.record[FIELD_STATUS].error = "振込依頼書を送信する場合、レコード詳細画面のボタンから処理してください。";
+            return event;
         }
     });
-
-    function showError(event) {
-        event.record[fieldStatus].error = "振込依頼書を送信する場合、レコード詳細画面のボタンから処理してください。";
-
-        return event;
-    }
 })();
