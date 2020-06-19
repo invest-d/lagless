@@ -12,9 +12,6 @@ import "url-search-params-polyfill";
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 import * as find from "./defineFindPolyfill";
 
-import dayjs from "dayjs";
-dayjs.locale("ja");
-
 // URLの工務店IDパラメータを引き継ぐ
 $(() => {
     const id_key = "c";
