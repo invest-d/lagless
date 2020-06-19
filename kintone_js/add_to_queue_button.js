@@ -158,7 +158,7 @@ export function updateStatus(records, status) {
                     throw new Error(`親子レコードの状態フィールドの更新中にエラーが発生しました。\n\nエラーログ：${err}`);
                 });
 
-            alert(`親子レコードの状態を${statusReadyToSend_COLLECT}に更新しました。\nこの後は自動でメールが送信されます。\n\nメール送信の際にはinfoのアドレスにもCcが送信されます。10分経っても送信されない場合はシステム管理者にご連絡ください。`);
+            alert(`親子レコードの状態を${statusReadyToSend_COLLECT}に更新しました。\nこの後は自動でメールが送信されます。\n\n10分経っても送信されない場合はシステム管理者にご連絡ください。`);
             alert("レコード一覧画面に戻ります。");
             window.location.href = `/k/${APP_ID_COLLECT}/`;
         } catch(err) {
