@@ -64,18 +64,17 @@ function cancelValidation(objects) {
 
 // 日付入力欄でカレンダーからの入力を可能にする
 $(() => {
-    flatpickr.l10ns.ja.firstDayOfWeek = 0;
-    flatpickr("#closingDayFrom", {
+    const today = new Date();
+    const config = {
         "dateFormat": "Y-m-d",
-        "locale": "ja"
-    });
+        "locale": "ja",
+        "maxDate": `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+    };
+    flatpickr.l10ns.ja.firstDayOfWeek = 0;
+    flatpickr("#closingDayFrom", config);
+    flatpickr("#closingDayTo", config);
 });
 $(() => {
-    flatpickr.l10ns.ja.firstDayOfWeek = 0;
-    flatpickr("#closingDayTo", {
-        "dateFormat": "Y-m-d",
-        "locale": "ja"
-    });
 });
 
 // コントロール未入力のまま次に行こうとしたら警告を出す
