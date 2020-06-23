@@ -1,0 +1,9 @@
+#header-logo {
+    background-image: url('../images/keban_site_top.jpg');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* 画像ファイルの縦横に合わせる */
+    max-width: 960px;
+    height: 258px;
+}

@@ -2,12 +2,16 @@
     "env": {
         "browser": true,
         "es2017": true,
+        "node": true,
         "jquery": true
     },
     "extends": "eslint:recommended",
     "globals": {
         "kintone": false,
         "kintoneJSSDK": false
+    },
+    "parserOptions": {
+        "sourceType": "module"
     },
     "rules": {
         "indent": [
