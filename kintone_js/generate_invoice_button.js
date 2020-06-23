@@ -1,4 +1,8 @@
 /*
+    Version 1.2
+    処理対象レコードの状態を「支払実行済み」から「クラウドサイン承認済み」に変更。
+    振込依頼書の目視確認が完了しているかどうかを、状態フィールドではなく専用のチェックボックスを使って管理するように変更。
+
     Version 1.1
     振込依頼書をPDF形式で作成し、kintoneの添付ファイルフィールドに保存する。
 
@@ -64,7 +68,7 @@ dayjs.locale("ja");
     const fieldCollectableAmount_COLLECT = "scheduledCollectableAmount";
     const fieldAccount_COLLECT = "account";
     const fieldStatus_COLLECT = "collectStatus";
-    const statusPaid_COLLECT = "支払実行済み";
+    const statusApproved_COLLECT = "クラウドサイン承認済み";
     const fieldParentCollectRecord_COLLECT = "parentCollectRecord";
     const statusParent_COLLECT = "true";
     const fieldTotalBilledAmount_COLLECT = "totalBilledAmount";
@@ -78,6 +82,7 @@ dayjs.locale("ja");
     const tableFieldReceivableIV_COLLECT = "receivableIV";
     const fieldInvoicePdf_COLLECT = "invoicePdf";
     const fieldHandleForHolidays_COLLECT = "handleForHolidays";
+    const fieldConfirmStatusInvoice_COLLECT = "confirmStatusInvoice";
 
     const APP_ID_APPLY = APP_ID.APPLY;
     const fieldRecordId_APPLY = "$id";
@@ -112,7 +117,7 @@ dayjs.locale("ja");
 
     // ボタンクリック時の処理を定義
     async function clickGenerateInvoice() {
-        const clicked_ok = confirm("支払実行済みのレコードに対して、振込依頼書を作成しますか？");
+        const clicked_ok = confirm(`${statusApproved_COLLECT}のレコードに対して、振込依頼書を作成しますか？`);
         if (!clicked_ok) {
             alert("処理は中断されました。");
             return;
@@ -122,20 +127,19 @@ dayjs.locale("ja");
         this.innerText = "振込依頼書を作成中...";
 
         try {
-            // 状態が支払実行済みのレコードを取得
-            const paid = await getPaidRecords()
+            const target = await getTargetRecords()
                 .catch((err) => {
                     console.error(err);
-                    throw new Error("支払実行済みの回収レコードの取得中にエラーが発生しました。");
+                    throw new Error(`${statusApproved_COLLECT}の回収レコードの取得中にエラーが発生しました。`);
                 });
 
-            if (paid.records.length === 0) {
-                alert("支払実行済みのレコードはありませんでした。");
+            if (target.records.length === 0) {
+                alert(`${statusApproved_COLLECT}のレコードはありませんでした。`);
                 return;
             }
 
             // updateのための、明細や金額を集約したあとの親レコード配列を取得
-            const parents = getAggregatedParentRecords(paid.records);
+            const parents = getAggregatedParentRecords(target.records);
 
             // Update
             const update_body = {
@@ -162,7 +166,7 @@ dayjs.locale("ja");
                     throw new Error("振込依頼書の添付中にエラーが発生しました。");
                 });
 
-            alert(`${completed_count}件 振込依頼書の作成が完了しました。\n\nそれぞれのレコードの添付ファイルを確認したのち、\nレコード詳細画面の確認OKボタンを押してください。\n確認OKになったレコードの振込依頼書が自動的に送信されます。`);
+            alert(`${completed_count}件 振込依頼書の作成が完了しました。\n\nそれぞれのレコードの添付ファイルを目視で確認したのち、\nレコード詳細画面の振込依頼書確認OKチェックボックスをオンにして保存してください。`);
 
         } catch(err) {
             alert(err);
@@ -171,8 +175,8 @@ dayjs.locale("ja");
         }
     }
 
-    function getPaidRecords() {
-        console.log("回収アプリから支払実行済みのレコードを全て取得する");
+    function getTargetRecords() {
+        console.log(`回収アプリから${statusApproved_COLLECT}のレコードを全て取得する`);
 
         const request_body = {
             "app": APP_ID_COLLECT,
@@ -193,16 +197,16 @@ dayjs.locale("ja");
                 tableCloudSignApplies_COLLECT,
                 tableInvoiceTargets_COLLECT
             ],
-            "query": `${fieldStatus_COLLECT} in ("${statusPaid_COLLECT}")`
+            "query": `${fieldStatus_COLLECT} in ("${statusApproved_COLLECT}")`
         };
 
         return kintone.api(kintone.api.url("/k/v1/records", true), "GET", request_body);
     }
 
-    function getAggregatedParentRecords(paid_records) {
-        console.log("支払い済みレコードを締日と工務店IDごとにまとめ、明細の情報を親に集約する");
+    function getAggregatedParentRecords(records) {
+        console.log("振込依頼書作成対象のレコードを締日と工務店IDごとにまとめ、明細の情報を親に集約する");
         // まず工務店IDと締日だけ全て抜き出す
-        const key_pairs = paid_records.map((record) => {
+        const key_pairs = records.map((record) => {
             return {
                 [fieldConstructionShopId_COLLECT]: record[fieldConstructionShopId_COLLECT]["value"],
                 [fieldClosingDate_COLLECT]: record[fieldClosingDate_COLLECT]["value"]
@@ -225,7 +229,7 @@ dayjs.locale("ja");
         // 親レコード更新用のオブジェクトを作成
         const update_targets = unique_key_pairs.map((pair) => {
             // 振込依頼書をまとめるべき回収レコードを配列としてグループ化
-            const invoice_group = paid_records.filter((record) => {
+            const invoice_group = records.filter((record) => {
                 return record[fieldConstructionShopId_COLLECT]["value"] === pair[fieldConstructionShopId_COLLECT]
                 && record[fieldClosingDate_COLLECT]["value"] === pair[fieldClosingDate_COLLECT];
             });
@@ -285,7 +289,7 @@ dayjs.locale("ja");
     }
 
     async function generateInvoices() {
-        // 支払実行済みの親レコードを全て取得
+        // 親レコードを全て取得
         const get_parents = {
             "app": APP_ID_COLLECT,
             "fields": [
@@ -302,7 +306,7 @@ dayjs.locale("ja");
                 fieldMailToInvest_COLLECT,
                 fieldHandleForHolidays_COLLECT
             ],
-            "query": `${fieldStatus_COLLECT} in ("${statusPaid_COLLECT}") and ${fieldParentCollectRecord_COLLECT} in ("${statusParent_COLLECT}")`
+            "query": `${fieldStatus_COLLECT} in ("${statusApproved_COLLECT}") and ${fieldParentCollectRecord_COLLECT} in ("${statusParent_COLLECT}")`
         };
         const target_parents = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_parents);
 
@@ -758,6 +762,10 @@ dayjs.locale("ja");
                                         "fileKey": upload_resp.fileKey
                                     }
                                 ]
+                            },
+                            // 新規作成した振込依頼書について、目視確認が未完了の状態に戻す
+                            [fieldConfirmStatusInvoice_COLLECT]: {
+                                "value": []
                             }
                             // 状態フィールドは振込依頼書の目視確認がOKで送信が確定した段階になってから、子レコードと一緒に変更する
                         }
