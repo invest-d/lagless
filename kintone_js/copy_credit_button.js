@@ -30,7 +30,7 @@
     const recordNo_KOMUTEN = "レコード番号";
     const customerCode_KOMUTEN = "customerCode";
     const creditFacility_KOMUTEN = "creditFacility";
-    const fieldGetCreditNextTime_KOMUTEN = "getCreditFacility";
+    const fieldNextCheckStatus_KOMUTEN = "nextCheckStatus";
     const statusGetCredit_KOMUTEN = "次回、与信枠を取得する";
 
     const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
@@ -159,7 +159,7 @@
         const body_exams = {
             "app": APP_ID_KOMUTEN,
             "fields": [recordNo_KOMUTEN, customerCode_KOMUTEN],
-            "query": `${fieldGetCreditNextTime_KOMUTEN} in ("${statusGetCredit_KOMUTEN}")`,
+            "query": `${fieldNextCheckStatus_KOMUTEN} in ("${statusGetCredit_KOMUTEN}")`,
             "seek": true
         };
         const komuten_info = await kintoneRecord.getAllRecordsByQuery(body_exams);
