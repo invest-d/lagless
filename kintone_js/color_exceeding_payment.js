@@ -30,27 +30,5 @@ dayjs.locale("ja");
                 element.style.backgroundColor = exceeding_color;
             }
         });
-
-        console.log("done");
-
-        // const payment_date_column = kintone.app.getFieldElements("paymentDate");
-
-        // for (let i = 0; i < payment_date_column.length; i++) {
-        //     const record = event.records[i];
-
-
-
-        //     switch (record["状態"]["value"]) {
-        //     case "未処理":
-        //         status_column[i].style.backgroundColor = bgColor_mishori;
-        //         break;
-        //     case "支払予定明細FAX送信待ち":
-        //         status_column[i].style.backgroundColor = bgColor_need_fax;
-        //         break;
-        //     case "債権譲渡登記取得待ち":
-        //         status_column[i].style.backgroundColor = bgColor_waiting_receivables;
-        //         break;
-        //     }
-        // }
     });
 })();
