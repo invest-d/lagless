@@ -12,7 +12,8 @@ module.exports = {
         output_csv: "./output_csv.js",
         generate_invoice_button: "./generate_invoice_button.js",
         add_to_queue_button: "./add_to_queue_button.js",
-        unsend_invoice_button: "./unsend_invoice_button.js"
+        unsend_invoice_button: "./unsend_invoice_button.js",
+        color_exceeding_payment: "./color_exceeding_payment.js"
     },
 
     // ファイルの出力設定
