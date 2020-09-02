@@ -31,7 +31,7 @@
     const customerCode_KOMUTEN = "customerCode";
     const creditFacility_KOMUTEN = "creditFacility";
     const fieldNextCheckStatus_KOMUTEN = "nextCheckStatus";
-    const statusGetCredit_KOMUTEN = "次回、与信枠を取得する";
+    const statusGetCredit_KOMUTEN = "与信枠を審査・取得する";
 
     const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
