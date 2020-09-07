@@ -42,26 +42,26 @@
         }
 
         await fetchBank(request_json)
-            .catch(err => {
+            .catch((err) => {
                 console.error(err);
                 throw new Error("銀行情報の取得中にエラーが発生しました");
             });
 
         if ("branch" in request_json) {
-            return data.banks.find(bank => bank.code == request_json.bank).branches.find(branch => branch.code == request_json.branch).kana;
+            return data.banks.find((bank) => bank.code == request_json.bank).branches.find((branch) => branch.code == request_json.branch).kana;
         }
         else {
-            return data.banks.find(bank => bank.code == request_json.bank).kana;
+            return data.banks.find((bank) => bank.code == request_json.bank).kana;
         }
     }
 
     async function fetchBank(request_json) {
         // 銀行情報がキャッシュされていない場合のみ、fetchを行って追加でキャッシュする
-        if (data.banks.some(bank => bank.code == request_json.bank)) {
+        if (data.banks.some((bank) => bank.code == request_json.bank)) {
             return;
         }
 
-        const res = await fetch("https://us-central1-lagless.cloudfunctions.net/zengin?bank=" + request_json.bank);
+        const res = await fetch(`https://us-central1-lagless.cloudfunctions.net/zengin?bank=${request_json.bank}`);
         const result = await res.json();
         data.banks.push(result.banks[0]);
     }
@@ -115,7 +115,7 @@
         }
     }
 
-    kintone.events.on("app.record.index.show", function(event) {
+    kintone.events.on("app.record.index.show", (event) => {
         // コントロールの重複作成防止チェック
         if (document.getElementById("outputCsv") !== null) {
             return;
@@ -127,7 +127,7 @@
     });
 
     function createButtonOutputCsv() {
-        let outputCsv = document.createElement("button");
+        const outputCsv = document.createElement("button");
         outputCsv.id = "outputCsv";
         outputCsv.innerText = "SMBC向け振込データをダウンロード";
         outputCsv.addEventListener("click", clickOutputCsv);
@@ -147,7 +147,7 @@
         const payment_date = prompt("YYYY-MM-DDの形式で支払日を入力してください。\n例：2020-01-23");
         const pattern = /^\d{4}-\d{2}-\d{2}$/;
         if (!pattern.test(payment_date)) {
-            alert("入力形式が正しくありませんでした。\n入力した値：" + payment_date);
+            alert(`入力形式が正しくありませんでした。\n入力した値：${payment_date}`);
             return;
         }
 
@@ -158,12 +158,12 @@
         // 支払元口座のそれぞれについて、該当するレコードを取得→加工→CSVファイルに保存
         await kintone.Promise.all(requester_accounts.map(async (account) => {
             const target = await getKintoneRecords(account, payment_date, only_undownloaded)
-                .catch(err => {
+                .catch((err) => {
                     console.error(err);
                     alert(`支払元口座：${account}のデータを取得中にエラーが発生しました。\n${err.message}`);
                 });
 
-            console.log("target_applies: account of "  + account);
+            console.log(`target_applies: account of ${account}`);
             console.log(target.records);
 
             if (target.records.length === 0) {
@@ -185,7 +185,7 @@
     }
 
     function getKintoneRecords(account, target_date, only_undownloaded) {
-        console.log("申込レコード一覧から、CSVファイルへの出力対象レコードを取得する。対象口座：" + account);
+        console.log(`申込レコード一覧から、CSVファイルへの出力対象レコードを取得する。対象口座：${account}`);
 
         const in_query = (only_undownloaded)
             ? `("${statusReady_APPLY}")`
@@ -215,8 +215,8 @@
     async function generateCsvData(account, applies, payment_date) {
         console.log("取得したレコードをCSVファイルに変換する。");
 
-        let csv_content = [];
-        const csv_format = (col => `"${col}"`);
+        const csv_content = [];
+        const csv_format = ((col) => `"${col}"`);
 
         // YYYY-MM-DDをMMDDに変換
         const pay_date_mmdd = payment_date.split("-")[1] + payment_date.split("-")[2];
@@ -260,9 +260,9 @@
 
     async function getDataRecords(kintone_records) {
         return await kintone.Promise.all(kintone_records.map(async (kintone_record) => {
-            const bank_code_to = ("0000" + kintone_record[fieldBankCode_APPLY]["value"]).slice(-4);
+            const bank_code_to = (`0000${kintone_record[fieldBankCode_APPLY]["value"]}`).slice(-4);
             const bank_name_to = addPadding(await getBankKana({bank: bank_code_to}), 15);
-            const branch_code_to = ("000" + kintone_record[fieldBranchCode_APPLY]["value"]).slice(-3);
+            const branch_code_to = (`000${kintone_record[fieldBranchCode_APPLY]["value"]}`).slice(-3);
             const branch_name_to = addPadding(await getBankKana({bank: bank_code_to, branch: branch_code_to}), 15);
             const deposit_to = (kintone_record[fieldDepositType_APPLY]["value"] === "普通")
                 ? "1"
@@ -409,7 +409,7 @@
         let converted_han = "";
 
         for (let i = 0; i < input_string.length; i++){
-            let input_char = input_string.charAt(i);
+            const input_char = input_string.charAt(i);
             if (hankaku_array.includes(input_char)) {
                 // 元々半角文字だったらそのまま使う
                 converted_han += input_char;
