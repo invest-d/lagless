@@ -24,6 +24,7 @@
     const fieldAccountNumber_APPLY           = "accountNumber";
     const fieldAccountName_APPLY             = "accountName";
     const fieldTransferAmount_APPLY          = "transferAmount";
+    const fieldTransferAmountLate_APPLY      = "transferAmount_late";
     const fieldStatus_APPLY                  = "状態";
     const statusReady_APPLY                  = "振込前確認完了";
     const statusDone_APPLY                   = "振込データ出力済";
@@ -31,6 +32,8 @@
     const fieldPaymentAccount_APPLY          = "paymentAccount";
     const fieldNeedAcquireRegistration_APPLY = "登記の取得";
     const statusNeedAcquire_APPLY            = "取得要";
+    const fieldPaymentTiming_APPLY           = "paymentTiming";
+    const statusPaymentLate_APPLY            = "遅払い";
     const requester_accounts = [
         "ID",
         "LAGLESS"
@@ -195,13 +198,15 @@
         const request_body = {
             "app": APP_ID_APPLY,
             "fields": [
+                fieldPaymentTiming_APPLY,
                 fieldRecordId_APPLY,
                 fieldBankCode_APPLY,
                 fieldBranchCode_APPLY,
                 fieldDepositType_APPLY,
                 fieldAccountNumber_APPLY,
                 fieldAccountName_APPLY,
-                fieldTransferAmount_APPLY
+                fieldTransferAmount_APPLY,
+                fieldTransferAmountLate_APPLY
             ],
             "query": `${fieldStatus_APPLY} in ${in_query}
                     and ${fieldNeedAcquireRegistration_APPLY} not in ("${statusNeedAcquire_APPLY}")
@@ -269,7 +274,7 @@
                 : "2";
             const account_number_to = kintone_record[fieldAccountNumber_APPLY]["value"];
             const account_name_to = addPadding(kintone_record[fieldAccountName_APPLY]["value"], 30);
-            const amount_of_money = kintone_record[fieldTransferAmount_APPLY]["value"];
+            const amount_of_money = getAmountByTiming(kintone_record);
 
             return [
                 "2",               //データ区分：データレコード
@@ -289,6 +294,16 @@
                 ""                 //識別コード：不使用
             ];
         }));
+    }
+
+    function getAmountByTiming(record) {
+        // 早払いの申込か遅払いの申込かによって、早払い時の振込金額フィールドを使うか遅払い時の振込金額フィールドを使うかを分岐する
+        if (record[fieldPaymentTiming_APPLY]["value"] === statusPaymentLate_APPLY) {
+            return record[fieldTransferAmountLate_APPLY]["value"];
+        } else {
+            // "早払い"の場合と、旧サービスを使っている場合は"未設定"の場合もあるのでelseで対応
+            return record[fieldTransferAmount_APPLY]["value"];
+        }
     }
 
     function getTrailerRecord(kintone_records) {
