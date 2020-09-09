@@ -8,57 +8,90 @@ $(() => {
     }
 
     if(location.protocol == "file:") {
-        show({
-            "工務店正式名称": "ほげほげ工務店",
-            "cost": "3.85%",
-            "yield": "1%",
-            "transfer_fee": "100円(税抜)",
-            "original": "翌月末",
-            "mail": "d-p@invest-d.com",
-            "form_2": "https://form.run/@dandolipayment-1-2",
-            "link": "https://www.dandoli-payment.com",
-            "pattern": "",
-            "form_1": "https://form.run/@dandolipayment-1-1",
-            "closing": "20日",
-            "lag": "40日",
-            "service": "ラグレス",//"ダンドリペイメント",
-            "effect": "30日",
-            "limit": "なし",
-            "id": "100",
-            "deadline": "24日",
-            "early": "当月末",
-            "schedule": [
-                {
-                    "closing": "2019-11-20",
-                    "deadline": "2019-11-22",
-                    "late": "2020-01-31",
-                    "early": "2019-11-30"
-                },
-                {
-                    "closing": "2020-12-20",
-                    "deadline": "2020-12-22",
-                    "late": "2021-03-31",
-                    "early": "2020-12-31"
-                }
-            ],
+        show( {
+            "cost": "9.99%",
+            "yield": "1.11%",
+            "original": "翌々月10日",
+            "mail": "hogehoge@invest-d.com",
+            "link": "",
+            "pattern": "25-10B",
+            "工務店正式名称": "株式会社サンプル工務店3",
+            "closing": "25日",
+            "lag": "45日",
+            "transfer_fee": "275円（税込）",
+            "service": "ラグレス",
             "default_pay_date_list": [
                 {
-                    "closing_date": "2020-04-30",
-                    "default_pay_date": "2020-05-25"
+                    "closing_date": "2020-07-25",
+                    "default_pay_date": "2020-09-10"
                 },
                 {
-                    "closing_date": "2020-05-31",
-                    "default_pay_date": "2020-06-25"
+                    "closing_date": "2020-08-25",
+                    "default_pay_date": "2020-10-10"
                 },
                 {
-                    "closing_date": "2020-06-30",
-                    "default_pay_date": "2020-07-24"
+                    "closing_date": "2020-09-25",
+                    "default_pay_date": "2020-11-10"
                 },
                 {
-                    "closing_date": "2020-12-20",
-                    "default_pay_date": "2021-01-15"
+                    "closing_date": "2020-10-25",
+                    "default_pay_date": "2020-12-10"
+                },
+                {
+                    "closing_date": "2020-11-25",
+                    "default_pay_date": "2021-01-10"
+                },
+                {
+                    "closing_date": "2020-12-25",
+                    "default_pay_date": "2021-02-10"
+                },
+                {
+                    "closing_date": "2021-01-25",
+                    "default_pay_date": "2021-03-10"
                 }
             ],
+            "effect": "30日",
+            "limit": "なし",
+            "deadline": "翌月3日",
+            "early": "翌月10日",
+            "schedule": [
+                {
+                    "closing": "2020-07-25",
+                    "late": "2020-10-07",
+                    "deadline": "2020-08-03",
+                    "early": "2020-08-07"
+                },
+                {
+                    "closing": "2020-08-25",
+                    "late": "2020-11-07",
+                    "deadline": "2020-09-03",
+                    "early": "2020-09-10"
+                },
+                {
+                    "closing": "2020-09-25",
+                    "late": "2020-12-07",
+                    "deadline": "2020-10-05",
+                    "early": "2020-10-12"
+                },
+                {
+                    "closing": "2020-10-25",
+                    "late": "2021-01-07",
+                    "deadline": "2020-11-03",
+                    "early": "2020-11-10"
+                },
+                {
+                    "closing": "2020-11-25",
+                    "late": "2021-02-07",
+                    "deadline": "2020-12-03",
+                    "early": "2020-12-10"
+                },
+                {
+                    "closing": "2020-12-25",
+                    "late": "2021-03-07",
+                    "deadline": "2021-01-04",
+                    "early": "2021-01-12"
+                }
+            ]
         }, param);
         setTimeout(() => {
             $("#content").show();
