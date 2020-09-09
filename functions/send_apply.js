@@ -72,10 +72,15 @@ function postToKintone(req, res) {
                 file_uploads.push(upload);
             }
         });
+
+        // 添付ファイル以外の項目の処理
         busboy.on("field", (fieldname, val, fieldnameTruncated, valTruncated) => {
+            // フォームへの入力値valを、kintoneアプリに入る形に整えつつrecordオブジェクトに渡す
             record[fieldname]= {"value": val};
         });
-        busboy.on("finish", () => {
+
+        // フォームからの送信内容を全て読み取った後の処理
+        busboy.on("finish", async () => {
             // ファイルアップロードが全て終わってから、kintoneへのレコード登録を行う。
             Promise.all(file_uploads)
                 .then((results) => {
@@ -103,17 +108,16 @@ function postToKintone(req, res) {
                     // kintoneへの登録開始
                     // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
                     const API_TOKEN = `${env.api_token_record},${process.env.api_token_komuten}`;
-                    postRecord(env.app_id, API_TOKEN, sendObj)
-                        .then((response) => {
-                            resolve({
-                                status: response.status,
-                                redirect_to: env.success_redirect_to
-                            });
-                        })
+                    const kintone_post_response = await postRecord(env.app_id, API_TOKEN, sendObj)
                         .catch((err) => {
-                            console.error(`kintoneレコード登録エラー：${JSON.stringify(err)}`);
+                            console.error(`kintoneレコード登録エラー：${err}`);
                             reject(err);
                         });
+
+                    resolve({
+                        status: kintone_post_response.status,
+                        redirect_to: env.success_redirect_to
+                    });
                 });
         });
 
