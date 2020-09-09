@@ -127,6 +127,11 @@ const show = function(client, param) {
     $(".yield").text(client.yield);
     $(".transfer_fee").text(client.transfer_fee);
     $(".limit").text(client.limit);
+    if (["0", "なし"].some((s) => (client.limit).includes(s))) {
+        $(".limit-precaution").text("");
+    } else {
+        $(".limit-precaution").text(`早払い年間利用回数制限${client.limit}。`);
+    }
     $(`.cond-${mode}`).show();
     $(".form_1").attr("href", `./apply.html?user=new&c=${param.c}&product=${mode}`);
     $(".form_2").attr("href", `./apply.html?user=existing&c=${param.c}&product=${mode}`);
