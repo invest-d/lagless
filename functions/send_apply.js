@@ -38,14 +38,8 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                     console.error(mimetype);
                     reject({status: 406, message: `添付ファイルは ${allowMimeTypes.map((t) => t.split("/")[1])} のいずれかの形式で送信してください。`});
                 } else {
-                    const form = new FormData();
                     const ext = String(mimetype).split("/")[1];
-
-                    form.append("file", file, `${fieldname}.${ext}`);
-                    const headers = Object.assign(form.getHeaders(), {
-                        "X-Cybozu-API-Token": env.api_token_files
-                    });
-                    axios.post("https://investdesign.cybozu.com/k/v1/file.json", form, { headers })
+                    uploadToKintone(env.api_token_files, file, `${fieldname}.${ext}`)
                         .then((result) => {
                             resolve({
                                 "fieldname": fieldname,
@@ -96,18 +90,7 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
                 // kintoneへの登録開始
                 // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
                 const API_TOKEN = `${env.api_token_record},${process.env.api_token_komuten}`;
-
-                const BASE_URL = "https://investdesign.cybozu.com/k/v1/record.json";
-                const BASIC = `Basic ${API_TOKEN}`;
-
-                const headers = {
-                    "Host": `investdesign.cybozu.com:${env.app_id}`,
-                    "X-Cybozu-API-Token": API_TOKEN,
-                    "Authorization": BASIC,
-                    "Content-Type": "application/json",
-                };
-
-                axios.post(BASE_URL, sendObj, { headers })
+                postRecord(env.app_id, API_TOKEN, sendObj)
                     .then((response) => {
                         res.status(response.status).json({
                             "redirect": env.success_redirect_to
@@ -121,6 +104,29 @@ exports.send_apply = functions.https.onRequest(async (req, res) => {
     });
     busboy.end(req.rawBody);
 });
+
+function uploadToKintone(token, attachment, filename) {
+    const form = new FormData();
+
+    form.append("file", attachment, filename);
+    const headers = Object.assign(form.getHeaders(), {
+        "X-Cybozu-API-Token": token
+    });
+
+    return axios.post("https://investdesign.cybozu.com/k/v1/file.json", form, { headers });
+}
+
+function postRecord(app_id, token, payload) {
+    // kintoneのアプリに新規レコードを登録する
+    const headers = {
+        "Host": `investdesign.cybozu.com:${app_id}`,
+        "X-Cybozu-API-Token": token,
+        "Authorization": `Basic ${token}`,
+        "Content-Type": "application/json",
+    };
+
+    return axios.post("https://investdesign.cybozu.com/k/v1/record.json", payload, { headers });
+}
 
 function respond_error(res, err) {
     const res_status = ("status" in err) ? err.status : 500;
