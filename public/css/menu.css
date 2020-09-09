@@ -1,5 +1,11 @@
 /* スマホ用 */
 @media (max-width: 767.98px) {
+    .cond-lagless > img,
+    .cond-dandori > img,
+    .cond-renove > img {
+        max-width: 100%;
+    }
+
     div.button-large {
         width: 100%;
         height: 3.6rem;
@@ -15,7 +21,12 @@
         font-size: 3.6vw;
     }
 
+    .liquid-text.ratio-information { font-size: 2.5vw; }
+    .liquid-text.pay-due-fontsize { font-size: 3.5vw; }
     .liquid-text.standard { font-size: 3.5vw; }
+    .pay-title {
+        font-size: 7vw;
+    }
 }
 
 /* PC用 */
@@ -34,6 +45,11 @@
         border-radius: 8px;
         font-size: 120%;
     }
+
+    .liquid-text.ratio-information { font-size: 90%; }
+    .pay-title {
+        font-size: 2.5rem;
+    }
 }
 
 /* 共通 */
@@ -47,6 +63,11 @@
 
 .button-small > a {
     line-height: 3rem;
+}
+
+.used-times {
+    font-size: 130%;
+    font-weight: 400;
 }
 
 .cond-lagless,
@@ -82,3 +103,5 @@ a.act:hover, a.form:hover {
 
 .schedule_closing { text-decoration: underline; }
 .ratio { color: #f00; }
+.pay-due-date { text-decoration: underline; }
+.pay-type { text-decoration: underline; }

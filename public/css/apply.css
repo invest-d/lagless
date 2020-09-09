@@ -1,3 +1,11 @@
+#logo-div {
+    height: 200px;
+}
+
+#header-logo {
+    max-width: 100%;
+}
+
 @media (min-width: 800px) {
     .container {
     max-width: 750px;
