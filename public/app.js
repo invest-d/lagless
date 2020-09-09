@@ -97,6 +97,9 @@ const show = function(client, param) {
     $(`.cond-${mode}`).show();
     $(".form_1").attr("href", `./apply.html?user=new&c=${param.c}&product=${mode}`);
     $(".form_2").attr("href", `./apply.html?user=existing&c=${param.c}&product=${mode}`);
+    // 遅払い用
+    $(".form_3").attr("href", `./apply.html?user=new&c=${param.c}&product=${mode}&t=late`);
+    $(".form_4").attr("href", `./apply.html?user=existing&c=${param.c}&product=${mode}&t=late`);
     if(client.link) {
         $(".link").attr("href", client.link).text(client.link);
         $(".link").parents("div").show();
