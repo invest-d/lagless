@@ -8,7 +8,8 @@ module.exports = {
     devtool:"eval-source-map",
     entry: {
         apply: "./src/apply.js",
-        ke_ban: "./src/ke_ban.js"
+        ke_ban: "./src/ke_ban.js",
+        menu: "./src/menu.js"
     },
     output: {
         filename: "[name].js",

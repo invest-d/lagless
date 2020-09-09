@@ -5,18 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>お申し込みページ</title>
     <script src="./rollbar/rollbar.js"></script>
-    <script
-      src="https://code.jquery.com/jquery-3.4.1.min.js"
-      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-      crossorigin="anonymous"></script>
-    <script src="app.js"></script>
-    <script>
-      function select_skip() {
-          $('#menu').hide();
-          $('#skip').show();
-          return false;
-      }
-    </script>
+    <script src="menu.js"></script>
     <link rel="stylesheet" href="./css/menu.css">
   </head>
   <body>
@@ -46,7 +35,7 @@
       <br />
 
       <div style="text-align: center;">
-        <a href="#" onclick="select_skip()"><button class="act skip">通常払い</button></a>
+        <a href="#" class="skip"><button class="act skip">通常払い</button></a>
         <div class="act_description">
           <span class="schedule_default"></span>に受取
           <div class="ratio_information">手数料: <span class="ratio">±0%</span></div>

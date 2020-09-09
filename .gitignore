@@ -66,5 +66,6 @@ node_modules/
 kintone_js/dist/
 public/apply.js
 public/ke_ban.js
+public/menu.js
 public/css/bootstrap.min.css
 public/css/flatpickr.min.css
