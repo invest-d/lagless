@@ -10,8 +10,13 @@ import "url-search-params-polyfill";
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 import * as find from "./defineFindPolyfill";
 
-// URLの商品名によってフォームの見た目を変更する
+// URLパラメータを引き継いでkintoneに送信できるようにする
 $(() => {
+    // 工務店ID
+    const construction_shop_id = getUrlParam("c");
+    $("#constructionShopId").val(construction_shop_id);
+
+    // 商品ロゴ
     const product_name = getUrlParam("product");
     let css_path = "./styles/form_lagless.css";
     switch (product_name) {
@@ -24,14 +29,6 @@ $(() => {
     // それ以外はlaglessとする
     }
     $("#product-css").attr("href", css_path);
-});
-
-// URLの工務店IDパラメータを引き継ぐ
-$(() => {
-    const id_key = "c";
-    const id_val = getUrlParam(id_key);
-
-    $("#constructionShopId").val(id_val);
 });
 
 // URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする
