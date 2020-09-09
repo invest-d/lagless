@@ -1,12 +1,40 @@
 import "../public/app";
+import { getUrlParam } from "./apply.js";
 
 $(() => {
+    displayByParameter();
+
     $(".skip_button").on("click", select_skip);
     $(".early_button").on("click", select_early);
     $(".late_button").on("click", select_late);
     $(".confirm_button").on("click", select_confirm);
     $(".back_button").on("click", back_to_top);
 });
+
+function displayByParameter() {
+    // URLパラメータ"d"によって、開いたときの画面を変更する
+    const display = getUrlParam("d");
+
+    switch (display) {
+    case "menu":
+        // htmlメールから開いたとき→3種のボタンを押したときの画面を既に開く
+        back_to_top();
+        break;
+    case "skip":
+        // htmlメール以外から開いたとき→3種のボタンの画面を表示
+        select_skip();
+        break;
+    case "early":
+        select_early();
+        break;
+    case "late":
+        select_late();
+        break;
+    default:
+        // 3種ボタンの画面を表示する
+        back_to_top();
+    }
+}
 
 const hidable_divisions = [
     "#menu",

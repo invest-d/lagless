@@ -54,7 +54,7 @@ $(() => {
 });
 
 // URLから指定したパラメータを取得する
-function getUrlParam(param_name) {
+export function getUrlParam(param_name) {
     const params = new URLSearchParams(window.location.search);
     return params.get(param_name);
 }
