@@ -31,9 +31,20 @@ $(() => {
     } else {
         $("#header-logo").attr("src", `images/${logo_productname}.png`);
     }
+
+    // 支払いタイミング
+    const payment_timing = ((timing) => {
+        if (timing === "late") {
+            return "late";
+        } else {
+            // パラメータ無しの場合も早払いとする
+            return "early";
+        }
+    })(getUrlParam("t"));
+    $("#paymentTiming").val(payment_timing);
 });
 
-// URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする
+// URLのパラメータによって初回のフォームの見た目を変更する
 $(() => {
     const key = "user";
     const val = getUrlParam(key);
@@ -49,6 +60,15 @@ $(() => {
     } else {
     // 初回申込みフォーム
     // 特に変更する必要はない
+    }
+
+    const payment_timing = getUrlParam("t");
+    if (payment_timing === "late") {
+        // 遅払い
+        $("span.timing").text("遅払い");
+    } else {
+        // 早払い
+        $("span.timing").text("早払い");
     }
 });
 

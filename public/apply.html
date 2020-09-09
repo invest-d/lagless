@@ -54,10 +54,10 @@
 
 
       <div class="form-group">
-        <h2>お申込みフォーム</h2>
+        <h2><span class="timing"></span>お申込みフォーム</h2>
 
         <p name="only_first">
-          早期支払いをご希望の方は、お手元に運転免許証をご用意いただいた上で<br>
+          <span class="timing">早払い</span>をご希望の方は、お手元に運転免許証をご用意いただいた上で<br>
           下記のフォームよりお申込みください。</p>
 
         <p>お申込みフォームの入力でお困りの際は、下記連絡先までお気軽にお電話ください。</p>
@@ -273,7 +273,7 @@
 
       <div class="form-group pt-5">
         <h2>■ 対象債権内容（件名・税込金額）■</h2>
-        <p>※早期支払をご希望の請求書データをご添付ください。<br>
+        <p>※<span class="timing">早払い</span>をご希望の請求書データをご添付ください。<br>
           　携帯で撮った請求書の写真でも構いません。<br>
           　請求書が複数枚に渡る場合は、一つのファイルにまとめて頂きますようお願いいたします。</p>
         <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。<br>
@@ -298,7 +298,7 @@
 
       <!-- 請求書の締日 -->
       <div class="form-group" id="closingDayGroup">
-        <label for="closingDay">請求書の締日（早期支払対象となる締日）</label>
+        <label for="closingDay">請求書の締日（<span class="timing">早払い</span>対象となる締日）</label>
         <span class="badge badge-danger">必須</span>
         <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
           <input type="text" class="form-control bg-white pattern-required"
@@ -523,6 +523,10 @@
 
       <!-- URLの工務店IDパラメータを引き継ぐ -->
       <input type="hidden" value="" name="constructionShopId" id="constructionShopId"/>
+
+
+      <!-- URLの支払いタイミングパラメータを引き継ぐ -->
+      <input type="hidden" value="" name="paymentTiming" id="paymentTiming"/>
 
 
       <div class="form-group">
