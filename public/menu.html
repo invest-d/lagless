@@ -7,89 +7,258 @@
     <script src="./rollbar/rollbar.js"></script>
     <script src="menu.js"></script>
     <link rel="stylesheet" href="./css/menu.css">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
   </head>
-  <body>
-    <div id="error" style="display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: #ccc; padding-top: 30%; text-align: center;"></div>
-    <div id="content" style="display: none;">
-      <div class="logo cond-lagless"><img src="images/lagless-v2.png"></div>
-      <div class="logo cond-dandori"><img src="images/dandori-v2.png"></div>
-      <div class="logo cond-renove"><img src="images/renove-v2.png"></div>
+  <body style="background-color: #f3f3f3;">
+    <div id="content">
 
-      <div style="text-align: center;">
-        <span class="工務店正式名称"></span>様の<br />
-        <span class="schedule_closing"></span>締め<br />
-        お仕事のお支払い
+      <!-- 問い合わせ以外の本文 -->
+      <div class="container">
+
+        <!-- 登録されていない工務店を参照したとき -->
+        <div id="error" style="display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: #ccc; padding-top: 30%; text-align: center;"></div>
+
+        <!-- ロゴ -->
+        <div class="row">
+          <div class="col-lg-8 col mx-auto bg-white border rounded-lg p-3">
+            <div class="text-center cond-lagless"><img src="images/lagless-v2.png"></div>
+            <div class="text-center cond-dandori"><img src="images/dandori-v2.png"></div>
+            <div class="text-center cond-renove"><img src="images/renove-v2.png"></div>
+          </div>
+        </div>
+        <!-- /ロゴ -->
+
+        <!-- 本文 -->
+        <div class="row" id="menu">
+
+          <!-- 白枠 -->
+          <div class="col-lg-8 col mx-auto bg-white border rounded-lg p-3">
+
+            <!-- 工務店名と支払スケジュール -->
+            <div class="row">
+              <div class="col">
+                <div class="text-center mb-4">
+                  <span class="工務店正式名称 lead font-weight-bold"></span>様の<br />
+                  <span class="schedule_closing"></span>締め<br />
+                  お仕事のお支払い
+                </div>
+
+                <div class="text-center mb-4">
+                  ●ご希望の受け取りタイミングを選択してください●
+                </div>
+
+                <div class="text-center mb-4">
+                  <span class="border border-dark p-2">
+                    申込期限: <span class="schedule_deadline"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <!-- /工務店名と支払スケジュール -->
+
+            <!-- 通常払い -->
+            <div class="row mx-auto py-3">
+              <div class="col text-center button-small">
+                <a href="#" class="skip_button liquid-text act act_button">通常払い</a>
+              </div>
+              <div class="col-8 my-auto">
+                <div>
+                  <span class="schedule_default"></span>に受け取り
+                </div>
+                <div>
+                  （通常の金額が支払われます）
+                </div>
+              </div>
+            </div>
+            <!-- /通常払い -->
+
+            <!-- 早払い -->
+            <div class="row mx-auto py-3">
+              <div class="col text-center button-small">
+                <a href="#" class="early_button liquid-text act act_button">早払い</a>
+              </div>
+              <div class="col-8 my-auto">
+                <div>
+                  <span class="schedule_early"></span>に受け取り
+                </div>
+                <div>
+                  （通常の金額から<span class="cost ratio"></span>割引で支払われます）
+                </div>
+              </div>
+            </div>
+            <!-- /早払い -->
+
+            <!-- 遅払い -->
+            <div class="row mx-auto py-3">
+              <div class="col text-center button-small">
+                <a href="#" class="late_button liquid-text act act_button">遅払い</a>
+              </div>
+              <div class="col-8 my-auto">
+                <div>
+                  <span class="schedule_late"></span>に受け取り
+                </div>
+                <div>
+                  （通常の金額から<span class="yield ratio"></span>割増で支払われます）
+                </div>
+              </div>
+            </div>
+            <!-- /遅払い -->
+
+            <!-- 注意事項 -->
+            <div class="row">
+              <div class="col-md-10 col mx-auto p-3 small">
+                ※選択されなかった場合は「通常払い」となります。また、「通常払い」の場合は発注企業様よりお支払いされます。<br />
+                ※早払い・遅払いを選択された場合は、インベストデザイン（株）よりお支払いされます（振込手数料<span class="transfer_fee"></span>はお客様負担となります）<br />
+                ※早払い年間利用回数制限●回。早払い・遅払いは予算枠をオーバーした場合、受付ができかねます。<br />
+                ※請求書の金額から協力会費のお支払いが必要な場合は、発注企業様の取り扱いに従い手続きいたします。
+              </div>
+            </div>
+            <!-- 注意事項 -->
+
+          </div>
+          <!-- /白枠 -->
+
+        </div>
+        <!-- /本文 -->
+
+        <!-- 通常払いを選んだときの確認画面 -->
+        <div id="confirm" class="row d-none">
+          <div class="col-lg-8 col-sm col text-center mx-auto bg-white border rounded-lg py-5">
+            <div class="row">
+              <div class="col-md-6 col-sm col mx-auto">
+                <div class="mb-3">
+                  「通常払い」を選択しました。<br />
+                  よろしいですか？
+                </div>
+
+                <div class="row text-center">
+                  <div class="col-5 mx-auto button-small">
+                    <a href="#" class="confirm_button liquid-text act act_button">OK</a>
+                  </div>
+                  <div class="col-5 mx-auto button-small">
+                    <a href="#" class="back_button liquid-text act act_button">戻る</a>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /通常払いを選んだときの確認画面 -->
+
+        <!-- 通常払いを確定したときの画面 -->
+        <div id="skip_confirmed" class="row d-none">
+          <div class="col-lg-8 col-sm col mx-auto bg-white border rounded-lg py-5">
+            <div class="row">
+              <div class="col-md-8 col-sm col mx-auto mb-3">
+                お申込みありがとうございます。 <br />
+                <br />
+                <strong>今回のご請求分については、発注企業様から通常の支払日にお支払いされる予定でございます。</strong> <br />
+                <br />
+                今後ともよろしくお願いいたします。
+              </div>
+            </div>
+
+            <div class="row text-center">
+              <div class="col-5 mx-auto button-small">
+                <a href="#" class="back_button liquid-text act act_button">戻る</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <!-- /通常払いを確定したときの画面 -->
+
+        <!-- 早払いを選んだときの画面 -->
+        <div id="early" class="row d-none">
+          <div class="col-lg-8 col-sm col mx-auto bg-white border rounded-lg py-5">
+            <div class="row">
+              <div class="col-sm col">
+                <h3 class="text-center mb-5">早払いご利用申込みページ</h3>
+                <h4 class="text-center">
+                  これまでの<span class="service">（商品名）</span><br />
+                  ご利用回数を選択してください。
+                </h4>
+              </div>
+            </div>
+
+            <div class="row text-center mb-5">
+              <div class="col-6 mx-auto">
+                <a href="./apply.html" class="form_1 liquid-text act act_button">初めてのご利用</a>
+              </div>
+              <div class="col-6 mx-auto">
+                <a href="./apply.html" class="form_2 liquid-text act act_button">初めてではない<br />（2回目以降）</a>
+              </div>
+            </div>
+
+            <div class="row text-center">
+              <div class="col-5 mx-auto button-small">
+                <a href="#" class="back_button liquid-text act act_button">戻る</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /早払いを選んだときの画面 -->
+
+        <!-- 遅払いを選んだときの画面 -->
+        <div id="late" class="row d-none">
+          <div class="col-lg-8 col-sm col mx-auto bg-white border rounded-lg py-5">
+            <div class="row">
+              <div class="col-sm col">
+                <h3 class="text-center mb-5">遅払いご利用申込みページ</h3>
+                <h4 class="text-center">
+                  これまでの<span class="service">（商品名）</span><br />
+                  ご利用回数を選択してください。
+                </h4>
+              </div>
+            </div>
+
+            <div class="row text-center mb-5">
+              <div class="col-6 mx-auto">
+                <a href="./apply.html" class="form_3 liquid-text act act_button">初めてのご利用</a>
+              </div>
+              <div class="col-6 mx-auto">
+                <a href="./apply.html" class="form_4 liquid-text act act_button">初めてではない<br />（2回目以降）</a>
+              </div>
+            </div>
+
+            <div class="row text-center">
+              <div class="col-5 mx-auto button-small">
+                <a href="#" class="back_button liquid-text act act_button">戻る</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /遅払いを選んだときの画面 -->
+
       </div>
+      <!-- /問い合わせ以外の本文 -->
 
-      <div id="menu">
-      <br />
-      <br />
-      <div style="text-align: center; font-size: 80%; white-space: nowrap;">
-        ●ご希望の受取りタイミングを選択してください●
-      </div>
-
-      <br />
-      <div style="text-align: center; margin: 1ex;"><span class="framed">
-        申込期限: <span class="schedule_deadline"></span>
-      </span></div>
-      <br />
-
-      <div style="text-align: center;">
-        <a href="#" class="skip"><button class="act skip">通常払い</button></a>
-        <div class="act_description">
-          <span class="schedule_default"></span>に受取
-          <div class="ratio_information">手数料: <span class="ratio">±0%</span></div>
+      <!-- 問い合わせ先 -->
+      <div class="container-fluid">
+        <div class="row">
+          <div class="bg-dark mx-auto text-center text-light p-md-5 col-sm col p-sm-3 p-3" style="font-size: 80%;">
+            <div class="mb-3">
+              ■お問い合わせ先■
+            </div>
+            <div class="mb-3">
+              【<span class="service">ラグレス</span>事務局】 <br />
+              運営会社：インベストデザイン株式会社 <br />
+              メール：<u><a href="" class="mail text-white">@invest-d.com</a></u> <br />
+              電話：<u><a href="tel:03-6261-6818" class="text-white">03-6261-6818</a></u> <br />
+              電話時間 ：10：00～17：00 <br />
+              定休日：土・日・祝
+            </div>
+            <div>
+              配信停止は<u><a href="https://i-d.biz/unsubscribe" class="text-white">こちら</a></u>
+            </div>
+          </div>
         </div>
       </div>
+      <!-- /問い合わせ先 -->
 
-      <div style="text-align: center;">
-      <a href="https://form.run/@info-7879"><button class="act">早払い</button></a>
-      <div class="act_description">
-        <span class="schedule_early"></span>に受取
-        <div class="ratio_information">手数料: <span class="ratio">-<span class="cost"></span></span></div>
-      </div>
-      </div>
-
-      <div style="text-align: center;">
-      <a href="https://form.run/@info-7879"><button class="act">遅払い</button></a>
-        <div class="act_description">
-          <span class="schedule_late"></span>に受取
-          <div class="ratio_information">手数料: <span class="ratio">+<span class="yield"></span></span></div>
-        </div>
-      </div>
-
-      <br />
-      <br />
-      <div style="max-width: 500px; margin-left: auto; margin-right: auto; font-size: 80%;">
-        ※振込手数料<span class="transfer_fee"></span>はお客様負担になります。 <br />
-        ※年間利用回数制限 <span class="limit"></span> <br />
-        ※【該当の方のみ】協力会費のお支払いが必要な場合は、各発注企業様の取り扱い方法に従い手続きいたします。
-      </div>
-      </div>
-
-    <div id="skip" style="display: none; max-width: 500px; margin-left: auto; margin-right: auto;">
-      <br />
-      お申込みありがとうございます。 <br />
-      <br />
-      <strong>今回のご請求分については、発注企業様から通常の支払日にお支払いされる予定でございます。</strong> <br />
-      <br />
-      今後ともよろしくお願いいたします。
-    </div>
-
-      <br />
-      <br />
-      <div class="center" style="border: 1px solid #000; max-width: 500px; margin-left: auto; margin-right: auto; padding: 24px;">
-        <div style="text-align: left;">■お問い合わせ先■</div>
-        【<span class="service">ラグレス</span>事務局】 <br />
-        運営会社：インベストデザイン株式会社 <br />
-        メール：<a href="" class="mail">@invest-d.com</a> <br />
-        電話：03-6261-6818 <br />
-        電話時間 ：10：00～17：00 <br />
-        定休日：土・日・祝 <br />
-        <br />
-        <div>配信停止は<a href="https://i-d.biz/unsubscribe">こちら</a></div>
-      </div>
-    </div>
     </div>
 
   </body>
