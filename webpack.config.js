@@ -1,5 +1,6 @@
 const CopyFilePlugin = require("copy-webpack-plugin");
 const path = require("path");
+const webpack = require("webpack");
 
 module.exports = {
     name: "lagless",
@@ -42,6 +43,10 @@ module.exports = {
                 }
             ],
             { copyUnmodified: true }
-        )
+        ),
+        new webpack.ProvidePlugin({
+            $: "jquery",
+            jQuery: "jquery"
+        })
     ]
 };
