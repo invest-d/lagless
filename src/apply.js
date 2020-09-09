@@ -18,17 +18,19 @@ $(() => {
 
     // 商品ロゴ
     const product_name = getUrlParam("product");
-    let css_path = "./styles/form_lagless.css";
-    switch (product_name) {
-    case "dandori":
-        css_path = "./styles/form_dandori.css";
-        break;
-    case "renove":
-        css_path = "./styles/form_renove.css";
-        break;
-    // それ以外はlaglessとする
+    const logo_productname = ((product_name) => {
+        if (product_name) {
+            return product_name;
+        } else {
+            return "lagless";
+        }
+    })(product_name);
+    // 早払いと遅払いで使うロゴを変更する
+    if (getUrlParam("t") === "late") {
+        $("#header-logo").attr("src", `images/${logo_productname}-v2.png`);
+    } else {
+        $("#header-logo").attr("src", `images/${logo_productname}.png`);
     }
-    $("#product-css").attr("href", css_path);
 });
 
 // URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする

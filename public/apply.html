@@ -29,10 +29,6 @@
   <!-- 銀行をサジェスト表示 -->
   <script src="https://zipaddr.github.io/bankautob.js" charset="UTF-8"></script>
 
-  <!-- URLパラメータによって変更するCSS -->
-  <link rel="stylesheet" type="text/css" href="./styles/form_lagless.css" id="product-css">
-  <!-- /CSS -->
-
   <!-- 郵便番号から住所自動入力 -->
   <script src="https://ajaxzip3.github.io/ajaxzip3.js" charset="UTF-8"></script>
 </head>
@@ -48,11 +44,13 @@
     method="POST" id="form_id" enctype="multipart/form-data">
 
 
-      <!-- header -->
-      <div class="form-group">
-        <div class="col-12 mb--md-4 mx-auto" id="header-logo"></div>
+      <!-- ロゴ -->
+      <div id="logo-div" class="form-row">
+        <div class="col text-center my-auto">
+          <img src="images/lagless.png" alt="" id="header-logo">
+        </div>
       </div>
-      <!-- /header -->
+      <!-- /ロゴ -->
 
 
       <div class="form-group">
