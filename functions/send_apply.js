@@ -29,12 +29,8 @@ function postToKintone(req, res) {
 
         // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
         const env = new Environ(req.headers.referer);
-
         setCORS(env, res);
 
-        console.log("フォームデータ受信");
-        const sendObj = {};
-        sendObj.app = env.app_id;
         const record = {};
 
         const busboy = new Busboy({ headers: req.headers });
@@ -98,6 +94,8 @@ function postToKintone(req, res) {
                     delete record["agree"];
 
                     // sendObjと結合してkintoneにレコード登録可能な形に整える
+                    const sendObj = {};
+                    sendObj.app = env.app_id;
                     sendObj["record"] = record;
                     console.log("generate sendObj completed.");
                     console.log(JSON.stringify(sendObj));
@@ -118,6 +116,7 @@ function postToKintone(req, res) {
                         });
                 });
         });
+
         busboy.end(req.rawBody);
     });
 }
