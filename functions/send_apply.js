@@ -76,23 +76,14 @@ function postToKintone(req, res) {
                     });
                 } else if (!has_zero_filesize && is_valid_mimetype) {
                     // 受け付け可能なファイルを想定。kintoneへのファイルアップロード状況をpromiseとして生成
-                    const upload = new Promise((resolve, reject) => {
-                        const ext = String(mimetype).split("/")[1];
-                        uploadToKintone(env.api_token_files, file, `${fieldname}.${ext}`)
-                            .then((result) => {
-                                resolve({
-                                    "fieldname": fieldname,
-                                    "value": [{"fileKey": result.data.fileKey}]
-                                });
-                            })
-                            .catch((err) => {
-                                console.error("file upload error.");
-                                console.error(err);
-                                reject({status: 500, message: "不明なエラーが発生しました。"});
-                            });
-                    });
-
-                    file_uploads.push(upload);
+                    const ext = String(mimetype).split("/")[1];
+                    file_uploads.push(uploadToKintone(env.api_token_files, attachment, `${fieldname}.${ext}`)
+                        .then((resp) => {
+                            return {
+                                "fieldname": fieldname,
+                                "value": [{"fileKey": resp.data.fileKey}]
+                            };
+                        }));
                 }
             });
         });
