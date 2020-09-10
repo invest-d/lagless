@@ -63,11 +63,7 @@ function postToKintone(req, res) {
                                 reject({status: 500, message: "不明なエラーが発生しました。"});
                             });
                     }
-                })
-                    .catch((err) => {
-                        console.error(`kintoneファイルアップロードエラー：${JSON.stringify(err)}`);
-                        reject(err);
-                    });
+                });
 
                 file_uploads.push(upload);
             }
@@ -82,43 +78,47 @@ function postToKintone(req, res) {
         // フォームからの送信内容を全て読み取った後の処理
         busboy.on("finish", async () => {
             // ファイルアップロードが全て終わってから、kintoneへのレコード登録を行う。
-            Promise.all(file_uploads)
-                .then((results) => {
-                    results.forEach((result) => { record[result["fieldname"]] = {"value": result["value"]}; });
-
-                    // 預金種目を日本語に変換。この情報をサーバに送信しない場合（＝既存ユーザの場合）もあるので、そのときは変換もなし
-                    if (Object.prototype.hasOwnProperty.call(record, "deposit_Form")) {
-                        const ja_deposit_type = (record["deposit_Form"]["value"] === "ordinary")
-                            ? "普通"
-                            : "当座";
-
-                        record["deposit_Form"] = {"value": ja_deposit_type};
-                    }
-
-                    // 不要な要素を削除
-                    delete record["agree"];
-
-                    // sendObjと結合してkintoneにレコード登録可能な形に整える
-                    const sendObj = {};
-                    sendObj.app = env.app_id;
-                    sendObj["record"] = record;
-                    console.log("generate sendObj completed.");
-                    console.log(JSON.stringify(sendObj));
-
-                    // kintoneへの登録開始
-                    // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
-                    const API_TOKEN = `${env.api_token_record},${process.env.api_token_komuten}`;
-                    const kintone_post_response = await postRecord(env.app_id, API_TOKEN, sendObj)
-                        .catch((err) => {
-                            console.error(`kintoneレコード登録エラー：${err}`);
-                            reject(err);
-                        });
-
-                    resolve({
-                        status: kintone_post_response.status,
-                        redirect_to: env.success_redirect_to
-                    });
+            const results = await Promise.all(file_uploads)
+                .catch((err) => {
+                    console.error(`kintoneファイルアップロードエラー：${err}`);
+                    busboy.end();
+                    reject({status: 500, message: "不明なエラーが発生しました。"});
                 });
+
+            results.forEach((result) => { record[result["fieldname"]] = {"value": result["value"]}; });
+
+            // 預金種目を日本語に変換。この情報をサーバに送信しない場合（＝既存ユーザの場合）もあるので、そのときは変換もなし
+            if (Object.prototype.hasOwnProperty.call(record, "deposit_Form")) {
+                const ja_deposit_type = (record["deposit_Form"]["value"] === "ordinary")
+                    ? "普通"
+                    : "当座";
+
+                record["deposit_Form"] = {"value": ja_deposit_type};
+            }
+
+            // 不要な要素を削除
+            delete record["agree"];
+
+            // sendObjと結合してkintoneにレコード登録可能な形に整える
+            const sendObj = {};
+            sendObj.app = env.app_id;
+            sendObj["record"] = record;
+            console.log("generate sendObj completed.");
+            console.log(JSON.stringify(sendObj));
+
+            // kintoneへの登録開始
+            // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
+            const API_TOKEN = `${env.api_token_record},${process.env.api_token_komuten}`;
+            const kintone_post_response = await postRecord(env.app_id, API_TOKEN, sendObj)
+                .catch((err) => {
+                    console.error(`kintoneレコード登録エラー：${err}`);
+                    reject(err);
+                });
+
+            resolve({
+                status: kintone_post_response.status,
+                redirect_to: env.success_redirect_to
+            });
         });
 
         busboy.end(req.rawBody);
