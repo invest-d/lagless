@@ -291,8 +291,8 @@
 
         // 1年間に1件も申込がない場合はupdated_dateは無い
         const query = (updated_date)
-            ? `${fieldNumberOfApplication_KYORYOKU} > 0 and ${fieldUpdatedDate_KYORYOKU} < "${updated_date}"`
-            : `${fieldNumberOfApplication_KYORYOKU} > 0`;
+            ? `(${fieldNumberOfApplication_KYORYOKU} > 0 or ${fieldNumberOfApplication_late_KYORYOKU} > 0) and ${fieldUpdatedDate_KYORYOKU} < "${updated_date}"`
+            : `${fieldNumberOfApplication_KYORYOKU} > 0 or ${fieldNumberOfApplication_late_KYORYOKU} > 0`;
 
         const request_body = {
             "app": APP_ID_KYORYOKU,
@@ -320,6 +320,9 @@
                     },
                     "record": {
                         [fieldNumberOfApplication_KYORYOKU]: {
+                            "value": 0
+                        },
+                        [fieldNumberOfApplication_late_KYORYOKU]: {
                             "value": 0
                         }
                     }
