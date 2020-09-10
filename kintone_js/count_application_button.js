@@ -27,10 +27,15 @@
     const fieldStatus_APPLY = "状態";
     const statusPaid_APPLY = "実行完了";
     const fieldPaymentDate = "paymentDate";
+    const fieldTiming_APPLY = "paymentTiming";
+    const statusLate_APPLY = "遅払い";
+    const statusEarly_APPLY = "早払い";
+    const statusUndefined_APPLY = "未設定";
 
     const APP_ID_KYORYOKU = 88; // 開発・本番とも共通のため固定
     const fieldKyoryokuId_KYORYOKU = "支払企業No_";
     const fieldNumberOfApplication_KYORYOKU = "numberOfApplication";
+    const fieldNumberOfApplication_late_KYORYOKU = "numberOfApplication_late";
     const fieldUpdatedDate_KYORYOKU = "updatedDate";
 
     const APP_ID_CONSTRUCTION = 96;
@@ -116,7 +121,8 @@
             "fields": [
                 fieldKyoryokuId_APPLY,
                 fieldConstructionShopId_APPLY,
-                fieldClosingDay_APPLY
+                fieldClosingDay_APPLY,
+                fieldTiming_APPLY
             ],
             "query": `${fieldKyoryokuId_APPLY} != "" and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}") and ${fieldPaymentDate} >= "${getFormattedDate(getOneYearAgoToday())}"`,
             "seek": true
@@ -190,18 +196,25 @@
             const to_date = new Date();
             to_date.setHours(0, 0, 0, 0);
 
-            // 申込レコードの中から、協力会社IDと請求書の締日でfilter。そのレコード数が申込期限
-            const count = target_applies
+            // 申込レコードの中から、協力会社IDと請求書の締日でfilter。申込回数の対象となるレコードを抽出する。
+            const countables = target_applies
                 .filter((rec) => {
                     const closing_date = getDateFromYYYYMMDD(rec[fieldClosingDay_APPLY]["value"]);
 
                     return rec[fieldKyoryokuId_APPLY]["value"] === kyoryoku_id
                     && closing_date >= from_date
                     && closing_date <= to_date;
-                })
-                .length;
+                });
 
-            counts[kyoryoku_id] = count;
+            // 対象レコードの中で、早払いと遅払いの回数を個別に集計する
+            const late_count = countables.filter((r) => r[fieldTiming_APPLY]["value"] === statusLate_APPLY).length;
+            // 値が「未設定」のものも「早払い」としてカウントが必要。（新ラグレス未導入時のレコードのため）
+            const early_count = countables.filter((r) => r[fieldTiming_APPLY]["value"] === statusEarly_APPLY || r[fieldTiming_APPLY]["value"] === statusUndefined_APPLY).length;
+
+            counts[kyoryoku_id] = {
+                early: early_count,
+                late: late_count
+            };
         }
 
         return counts;
@@ -233,7 +246,10 @@
                         },
                         "record": {
                             [fieldNumberOfApplication_KYORYOKU]: {
-                                "value": count
+                                "value": count.early
+                            },
+                            [fieldNumberOfApplication_late_KYORYOKU]: {
+                                "value": count.late
                             }
                         }
                     };
