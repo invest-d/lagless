@@ -307,8 +307,9 @@
     }
 
     function getTrailerRecord(kintone_records) {
-        const total_amount = kintone_records.reduce((amount, record) => {
-            return amount + Number(record[fieldTransferAmount_APPLY]["value"]);
+        const total_amount = kintone_records.reduce((total, record) => {
+            const amount = getAmountByTiming(record);
+            return total + Number(amount);
         }, 0);
 
         return [
