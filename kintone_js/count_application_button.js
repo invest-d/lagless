@@ -51,7 +51,7 @@
     const fieldPattern_PATTERN = "pattern";
     const fieldDeadline_PATTERN = "deadline";
 
-    const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
+    const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
     kintone.events.on("app.record.index.show", (event) => {
         if (needShowButton()) {
@@ -84,7 +84,7 @@
                 });
 
             // カウントするために工務店の情報が必要になるので取得
-            const construction_shop_ids = Array.from(new Set(target_applies.records.map((record) => record[fieldConstructionShopId_APPLY]["value"])));
+            const construction_shop_ids = Array.from(new Set(target_applies.map((record) => record[fieldConstructionShopId_APPLY]["value"])));
             const construction_shops = await getConstructionShops(construction_shop_ids)
                 .catch((err) => {
                     console.error(err);
@@ -92,7 +92,7 @@
                 });
 
             // 支払パターンの情報も必要になるので取得
-            const target_patterns = Array.from(new Set(construction_shops.records.map((rec) => rec[fieldPattern_CONSTRUCTION]["value"])));
+            const target_patterns = Array.from(new Set(construction_shops.map((rec) => rec[fieldPattern_CONSTRUCTION]["value"])));
             const patterns = await getPaymentPatterns(target_patterns)
                 .catch((err) => {
                     console.error(err);
@@ -100,7 +100,7 @@
                 });
 
             // 協力会社ごとにカウント条件に当てはまる申込だけをカウント
-            const count_result = await countByKyoryokuId(target_applies.records, construction_shops.records, patterns.records);
+            const count_result = await countByKyoryokuId(target_applies, construction_shops, patterns);
 
             const update_records_num = await updateKyoryokuMaster(count_result)
                 .catch((err) => {
@@ -120,7 +120,6 @@
     function getAppliesLastYear() {
         console.log("直近1年間に実行完了している申込レコードを全て取得する");
 
-        // 過去1年間のレコードを取得するため、件数が多くなることを想定。seek: true
         const request_body = {
             "app": APP_ID_APPLY,
             "fields": [
@@ -129,11 +128,10 @@
                 fieldClosingDay_APPLY,
                 fieldTiming_APPLY
             ],
-            "query": `${fieldKyoryokuId_APPLY} != "" and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}") and ${fieldPaymentDate} >= "${getFormattedDate(getOneYearAgoToday())}"`,
-            "seek": true
+            "condition": `${fieldKyoryokuId_APPLY} != "" and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}") and ${fieldPaymentDate} >= "${getFormattedDate(getOneYearAgoToday())}"`
         };
 
-        return kintoneRecord.getAllRecordsByQuery(request_body);
+        return client.record.getAllRecords(request_body);
     }
 
     function getConstructionShops(ids) {
@@ -145,10 +143,10 @@
                 fieldId_CONSTRUCTION,
                 fieldPattern_CONSTRUCTION
             ],
-            "query": `${fieldId_CONSTRUCTION} in ("${ids.join("\",\"")}")`
+            "condition": `${fieldId_CONSTRUCTION} in ("${ids.join("\",\"")}")`
         };
 
-        return kintoneRecord.getAllRecordsByQuery(request_body);
+        return client.record.getAllRecords(request_body);
     }
 
     function getPaymentPatterns(target_patterns) {
@@ -161,10 +159,10 @@
                 fieldPattern_PATTERN,
                 fieldDeadline_PATTERN
             ],
-            "query": `${fieldDeadline_PATTERN} >= TODAY() and ${fieldPattern_PATTERN} in ("${target_patterns.join("\",\"")}")`
+            "condition": `${fieldDeadline_PATTERN} >= TODAY() and ${fieldPattern_PATTERN} in ("${target_patterns.join("\",\"")}")`
         };
 
-        return kintoneRecord.getAllRecordsByQuery(request_body);
+        return client.record.getAllRecords(request_body);
     }
 
     async function countByKyoryokuId(target_applies, construction_shops, patterns) {
@@ -261,8 +259,8 @@
                 })
             };
 
-            const update_resp = await kintoneRecord.updateAllRecords(request_body);
-            console.log(`直近1年間に申し込みのあった${update_resp.results[0].records.length}社の協力会社について更新完了。`);
+            const update_resp = await client.record.updateAllRecords(request_body);
+            console.log(`直近1年間に申し込みのあった${update_resp.records.length}社の協力会社について更新完了。`);
             console.log("更新済みIDの一覧");
             console.log(Object.keys(counted_by_kyoryoku_id));
 
@@ -273,13 +271,13 @@
             // 直前の更新対象かどうかは、協力会社マスタの更新日時フィールドで判定する。
 
             // 更新日時を知るため、先ほど更新した協力会社IDのレコードを全件取得。その中で最も更新日時が古いものを採用。
-            const updated = await kintoneRecord.getAllRecordsByQuery({
+            const updated = await client.record.getAllRecords({
                 "app": APP_ID_KYORYOKU,
-                "query": `${fieldKyoryokuId_KYORYOKU} in ("${Object.keys(counted_by_kyoryoku_id).join("\",\"")}") order by ${fieldUpdatedDate_KYORYOKU} asc`,
+                "condition": `${fieldKyoryokuId_KYORYOKU} in ("${Object.keys(counted_by_kyoryoku_id).join("\",\"")}") order by ${fieldUpdatedDate_KYORYOKU} asc`,
                 "fields": [fieldUpdatedDate_KYORYOKU]
             });
 
-            updated_date = updated.records[0][fieldUpdatedDate_KYORYOKU]["value"];
+            updated_date = updated[0][fieldUpdatedDate_KYORYOKU]["value"];
         }
 
         const zero_target_records = await getZeroTargetRecords(updated_date);
@@ -302,22 +300,22 @@
         const request_body = {
             "app": APP_ID_KYORYOKU,
             "fields": [fieldKyoryokuId_KYORYOKU, fieldUpdatedDate_KYORYOKU],
-            "query": query,
+            "condition": query,
             "seek": true
         };
 
-        return kintoneRecord.getAllRecordsByQuery(request_body);
+        return client.record.getAllRecords(request_body);
     }
 
     async function updateToZeroCount(zero_target_records) {
-        if (zero_target_records.records.length === 0) {
+        if (zero_target_records.length === 0) {
             // 更新対象なしのままupdateしようとするとエラーになる
             return 0;
         }
 
         const request_body = {
             "app": APP_ID_KYORYOKU,
-            "records": zero_target_records.records.map((record) => {
+            "records": zero_target_records.map((record) => {
                 return {
                     "updateKey": {
                         "field": fieldKyoryokuId_KYORYOKU,
@@ -335,8 +333,8 @@
             })
         };
 
-        const update_resp = await kintoneRecord.updateAllRecords(request_body);
-        return update_resp.results[0].records.length;
+        const update_resp = await client.record.updateAllRecords(request_body);
+        return update_resp.records.length;
     }
 
     function getOneYearAgoToday() {
