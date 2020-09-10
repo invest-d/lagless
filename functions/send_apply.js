@@ -36,19 +36,47 @@ function postToKintone(req, res) {
         const busboy = new Busboy({ headers: req.headers });
         const allowMimeTypes = ["application/pdf", "image/jpeg", "image/png"];
         const file_uploads = [];
+
+        let postable = true;
+
+        // 申込フォームから送信した添付ファイルの処理
         busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
-            // 請求書データ等のファイルアップロード
-            if (String(mimetype) === "application/octet-stream") {
-                // 添付ファイルが未入力の場合（application/octet-stream）はスルー
-                // 未入力はそもそもフォームでバリデーションをかけているが、2回目以降のフォームの場合は運転免許証画像の欄が未入力のまま送信されてくる。スルーでよい。
-                file.resume();
-            } else {
-                const upload = new Promise((resolve, reject) => {
-                    if (!allowMimeTypes.includes(mimetype.toLocaleLowerCase())) {
-                        console.error("unexpected mimetype.");
-                        console.error(mimetype);
-                        reject({status: 406, message: `添付ファイルは ${allowMimeTypes.map((t) => t.split("/")[1])} のいずれかの形式で送信してください。`});
-                    } else {
+            const is_valid_mimetype = allowMimeTypes.includes(mimetype.toLocaleLowerCase());
+
+            const buffer = [];
+            file.on("data", (chunk) => {
+                buffer.push(Buffer.from(chunk));
+            });
+
+            file.on("end", () => {
+                const attachment = Buffer.concat(buffer);
+                const has_zero_filesize = (attachment.length === 0);
+
+                if (has_zero_filesize && !is_valid_mimetype) {
+                    // 2回目以降のフォームからの送信を想定。入力しなくて良い添付ファイルの項目があるため、サーバー側でもその項目を無視して次のfileの読み取りに進む
+                    file.resume();
+                } else if (has_zero_filesize && is_valid_mimetype) {
+                    // 何かしら有効なファイルを添付しようとしたが、何らかの理由でファイルサイズがゼロの場合を想定。エラー
+                    postable = false;
+                    file.resume();
+                    busboy.end();
+                    reject({
+                        status: 400,
+                        message: "添付ファイルを読み取れませんでした。ファイルが破損していないか確認し、もう一度お試しください。"
+                    });
+                } else if (!has_zero_filesize && !is_valid_mimetype) {
+                    // ファイルを添付しようとしたが、業務上受け付けできる形式（pdf/jpg/png）ではなかった場合を想定。エラー
+                    postable = false;
+                    console.error(`unexpected mimetype: ${mimetype}.`);
+                    file.resume();
+                    busboy.end();
+                    reject({
+                        status: 400,
+                        message: `添付ファイルは ${allowMimeTypes.map((t) => t.split("/")[1])} のいずれかの形式で送信してください。`
+                    });
+                } else if (!has_zero_filesize && is_valid_mimetype) {
+                    // 受け付け可能なファイルを想定。kintoneへのファイルアップロード状況をpromiseとして生成
+                    const upload = new Promise((resolve, reject) => {
                         const ext = String(mimetype).split("/")[1];
                         uploadToKintone(env.api_token_files, file, `${fieldname}.${ext}`)
                             .then((result) => {
@@ -62,11 +90,11 @@ function postToKintone(req, res) {
                                 console.error(err);
                                 reject({status: 500, message: "不明なエラーが発生しました。"});
                             });
-                    }
-                });
+                    });
 
-                file_uploads.push(upload);
-            }
+                    file_uploads.push(upload);
+                }
+            });
         });
 
         // 添付ファイル以外の項目の処理
@@ -77,48 +105,50 @@ function postToKintone(req, res) {
 
         // フォームからの送信内容を全て読み取った後の処理
         busboy.on("finish", async () => {
-            // ファイルアップロードが全て終わってから、kintoneへのレコード登録を行う。
-            const results = await Promise.all(file_uploads)
-                .catch((err) => {
-                    console.error(`kintoneファイルアップロードエラー：${err}`);
-                    busboy.end();
-                    reject({status: 500, message: "不明なエラーが発生しました。"});
+            if (postable) {
+                // ファイルアップロードが全て終わってから、kintoneへのレコード登録を行う。
+                const results = await Promise.all(file_uploads)
+                    .catch((err) => {
+                        console.error(`kintoneファイルアップロードエラー：${err}`);
+                        busboy.end();
+                        reject({status: 500, message: "不明なエラーが発生しました。"});
+                    });
+
+                results.forEach((result) => { record[result["fieldname"]] = {"value": result["value"]}; });
+
+                // 預金種目を日本語に変換。この情報をサーバに送信しない場合（＝既存ユーザの場合）もあるので、そのときは変換もなし
+                if (Object.prototype.hasOwnProperty.call(record, "deposit_Form")) {
+                    const ja_deposit_type = (record["deposit_Form"]["value"] === "ordinary")
+                        ? "普通"
+                        : "当座";
+
+                    record["deposit_Form"] = {"value": ja_deposit_type};
+                }
+
+                // 不要な要素を削除
+                delete record["agree"];
+
+                // sendObjと結合してkintoneにレコード登録可能な形に整える
+                const sendObj = {};
+                sendObj.app = env.app_id;
+                sendObj["record"] = record;
+                console.log("generate sendObj completed.");
+                console.log(JSON.stringify(sendObj));
+
+                // kintoneへの登録開始
+                // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
+                const API_TOKEN = `${env.api_token_record},${process.env.api_token_komuten}`;
+                const kintone_post_response = await postRecord(env.app_id, API_TOKEN, sendObj)
+                    .catch((err) => {
+                        console.error(`kintoneレコード登録エラー：${err}`);
+                        reject(err);
+                    });
+
+                resolve({
+                    status: kintone_post_response.status,
+                    redirect_to: env.success_redirect_to
                 });
-
-            results.forEach((result) => { record[result["fieldname"]] = {"value": result["value"]}; });
-
-            // 預金種目を日本語に変換。この情報をサーバに送信しない場合（＝既存ユーザの場合）もあるので、そのときは変換もなし
-            if (Object.prototype.hasOwnProperty.call(record, "deposit_Form")) {
-                const ja_deposit_type = (record["deposit_Form"]["value"] === "ordinary")
-                    ? "普通"
-                    : "当座";
-
-                record["deposit_Form"] = {"value": ja_deposit_type};
             }
-
-            // 不要な要素を削除
-            delete record["agree"];
-
-            // sendObjと結合してkintoneにレコード登録可能な形に整える
-            const sendObj = {};
-            sendObj.app = env.app_id;
-            sendObj["record"] = record;
-            console.log("generate sendObj completed.");
-            console.log(JSON.stringify(sendObj));
-
-            // kintoneへの登録開始
-            // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
-            const API_TOKEN = `${env.api_token_record},${process.env.api_token_komuten}`;
-            const kintone_post_response = await postRecord(env.app_id, API_TOKEN, sendObj)
-                .catch((err) => {
-                    console.error(`kintoneレコード登録エラー：${err}`);
-                    reject(err);
-                });
-
-            resolve({
-                status: kintone_post_response.status,
-                redirect_to: env.success_redirect_to
-            });
         });
 
         busboy.end(req.rawBody);
