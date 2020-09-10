@@ -116,6 +116,15 @@ function postToKintone(req, res) {
                     record["deposit_Form"] = {"value": ja_deposit_type};
                 }
 
+                // 支払タイミングを日本語に変換
+                if (Object.prototype.hasOwnProperty.call(record, "paymentTiming")) {
+                    const ja_payment_timing = (record["paymentTiming"]["value"] === "late")
+                        ? "遅払い"
+                        : "早払い";
+
+                    record["paymentTiming"] = {"value": ja_payment_timing};
+                }
+
                 // 不要な要素を削除
                 delete record["agree"];
 
