@@ -76,19 +76,15 @@ dayjs.locale("ja");
     const tableFieldApplyRecordNoCS_COLLECT = "applyRecordNoCS";
     const tableFieldApplicantOfficialNameCS_COLLECT = "applicantOfficialNameCS";
     const tableFieldReceivableCS_COLLECT = "receivableCS";
+    const tableFieldPaymentDateCS_COLLECT = "paymentDateCS";
     const tableInvoiceTargets_COLLECT = "invoiceTargets";
     const tableFieldApplyRecordNoIV_COLLECT = "applyRecordNoIV";
     const tableFieldApplicantOfficialNameIV_COLLECT = "applicantOfficialNameIV";
     const tableFieldReceivableIV_COLLECT = "receivableIV";
+    const tableFieldPaymentDateIV_COLLECT = "paymentDateIV";
     const fieldInvoicePdf_COLLECT = "invoicePdf";
     const fieldHandleForHolidays_COLLECT = "handleForHolidays";
     const fieldConfirmStatusInvoice_COLLECT = "confirmStatusInvoice";
-
-    const APP_ID_APPLY = APP_ID.APPLY;
-    const fieldRecordId_APPLY = "$id";
-    const fieldPayDestName_APPLY = "支払先正式名称";
-    const fieldPayDate_APPLY = "paymentDate";
-    const fieldReceivables_APPLY = "totalReceivables";
 
     const orange = "#ff9a33";
     const white = "#ffffff";
@@ -260,6 +256,9 @@ dayjs.locale("ja");
                                 [tableFieldApplicantOfficialNameIV_COLLECT]: {
                                     "value": sub_rec["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"]
                                 },
+                                [tableFieldPaymentDateIV_COLLECT]: {
+                                    "value": sub_rec["value"][tableFieldPaymentDateCS_COLLECT]["value"]
+                                },
                                 [tableFieldReceivableIV_COLLECT]: {
                                     "value": sub_rec["value"][tableFieldReceivableCS_COLLECT]["value"]
                                 }
@@ -315,8 +314,6 @@ dayjs.locale("ja");
 
         const attachment_pdfs = [];
         for(const parent_record of target_parents.records) {
-            const details_resp = await getDetailRows(parent_record);
-            parent_record.detail_records = details_resp.records;
             const invoice_doc = generateInvoiceDocument(parent_record);
             const file_name = `${parent_record[fieldConstructionShopName_COLLECT]["value"]}様用 支払明細書兼振込依頼書${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分.pdf`;
 
@@ -388,7 +385,7 @@ dayjs.locale("ja");
 
         // 振込依頼書に記載する日付。Y年M月D日
         // 支払明細の申込レコードの中で、最も遅い支払日を採用する
-        const detail_payment_dates =  parent_record.detail_records.map((record) => dayjs(record[fieldPayDate_APPLY]["value"]));
+        const detail_payment_dates =  parent_record["invoiceTargets"]["value"].map((record) => dayjs(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]));
         const latest_date = dayjs(Math.max(...detail_payment_dates));
         const send_date = {
             text: latest_date.format("YYYY年M月D日"),
@@ -582,7 +579,7 @@ dayjs.locale("ja");
         const detail_table_body = [];
         detail_table_body.push(detail_header_row);
 
-        const detail_doc = getDetailDoc(parent_record.detail_records);
+        const detail_doc = getDetailDoc(parent_record["invoiceTargets"]["value"]);
         detail_table_body.push(...detail_doc);
 
         const sum_title = JSON.parse(JSON.stringify(detail_title_template));
@@ -616,20 +613,6 @@ dayjs.locale("ja");
         return doc;
     }
 
-    function getDetailRows(parent_record) {
-        // 支払日等を申込アプリから取得。支払日以外は既に親レコードの中に持ってるけど、どうせ取るなら全部取ってしまうことにした
-        const get_apply = {
-            "app": APP_ID_APPLY,
-            "fields": [
-                fieldPayDestName_APPLY,
-                fieldPayDate_APPLY,
-                fieldReceivables_APPLY
-            ],
-            "query": `${fieldRecordId_APPLY} in ("${parent_record[tableInvoiceTargets_COLLECT]["value"].map((apply) => apply["value"][tableFieldApplyRecordNoIV_COLLECT]["value"]).join("\",\"")}")`
-        };
-        return kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_apply);
-    }
-
     function getDetailDoc(detail_records) {
         const detail_value_template = {
             text: "",
@@ -644,15 +627,15 @@ dayjs.locale("ja");
             row_num.borderColor = [white, black, orange, black];
 
             const paid_dist = JSON.parse(JSON.stringify(detail_value_template));
-            paid_dist.text = record[fieldPayDestName_APPLY]["value"];
+            paid_dist.text = record["value"][tableFieldApplicantOfficialNameIV_COLLECT]["value"];
             paid_dist.alignment = "left";
 
             const paid_date = JSON.parse(JSON.stringify(detail_value_template));
-            paid_date.text = formatYMD(record[fieldPayDate_APPLY]["value"]);
+            paid_date.text = formatYMD(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]);
             paid_date.alignment = "left";
 
             const paid_amount = JSON.parse(JSON.stringify(detail_value_template));
-            paid_amount.text = addComma(record[fieldReceivables_APPLY]["value"]);
+            paid_amount.text = addComma(record["value"][tableFieldReceivableIV_COLLECT]["value"]);
             paid_amount.alignment = "right";
             paid_amount.borderColor = [orange, black, white, black];
 

@@ -56,6 +56,7 @@
     const tableFieldApplyRecordNoCS = "applyRecordNoCS";
     const tableFieldApplicantOfficialNameCS = "applicantOfficialNameCS";
     const tableFieldReceivableCS = "receivableCS";
+    const tableFieldPaymentDateCS = "paymentDateCS";
     const tableFieldAttachmentFileKeyCS = "attachmentFileKeyCS";
 
     const APP_ID_KOMUTEN = 96;
@@ -242,6 +243,9 @@
                                     },
                                     [tableFieldReceivableCS] : {
                                         "value": record[fieldTotalReceivables_APPLY]["value"]
+                                    },
+                                    [tableFieldPaymentDateCS]: {
+                                        "value": record[fieldPaymentDate_APPLY]["value"]
                                     },
                                     [tableFieldAttachmentFileKeyCS]: {
                                         "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
