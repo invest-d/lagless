@@ -11,11 +11,14 @@
     const fieldConstructionShopId_KOMUTEN = "id";
     const fieldCustomerCode_KOMUTEN = "customerCode";
     const fieldCollectableAmount_KOMUTEN = "uncollectedAmount";
+    const fieldCollectableAmount_late_KOMUTEN = "uncollectedAmount_late";
 
     const APP_ID_COLLECT = kintone.app.getId();
     const fieldConstructionShopId_COLLECT = "constructionShopId";
     const fieldCustomerCode_COLLECT = "customerCode";
-    const fieldCollectableAmount_COLLECT = "scheduledCollectableAmount";
+    const fieldTableCloudSign_COLLECT = "cloudSignApplies";
+    const tableFieldReceivableCS_COLLECT = "receivableCS";
+    const tableFieldPaymentTimingCS_COLLECT = "paymentTimingCS";
     const fieldStatus_COLLECT = "collectStatus";
     const statusCollected_COLLECT = "回収済み";
     const statusRejected_COLLECT = "クラウドサイン却下・再作成待ち";
@@ -105,7 +108,7 @@
             "fields": [
                 fieldConstructionShopId_COLLECT,
                 fieldCustomerCode_COLLECT,
-                fieldCollectableAmount_COLLECT
+                fieldTableCloudSign_COLLECT
             ],
             "query": `${fieldStatus_COLLECT} not in ("${statusCollected_COLLECT}", "${statusRejected_COLLECT}") order by レコード番号 asc`
         };
@@ -127,19 +130,36 @@
         });
 
         // ①工務店ID、②取引企業Noごとの未回収金額の合計、という2つの情報を持つオブジェクトを作っていく。
-        // まず各取引企業Noごとに、{取引企業No: 合計金額}のオブジェクトを作る。
+        // まず各取引企業Noごとに、{取引企業No: {合計金額}}のオブジェクトを作る。
         const sum_by_customers = {};
         for (const customer_code of unique_customers) {
-            const total_collectable = collectable_records.reduce((total, record) => {
-                if (record[fieldCustomerCode_COLLECT]["value"] === customer_code) {
-                    return total + Number(record[fieldCollectableAmount_COLLECT]["value"]);
-                }
-                else {
-                    return total + 0;
-                }
-            }, 0);
+            const total_by_customer = {
+                early: 0,
+                late: 0
+            };
 
-            sum_by_customers[customer_code] = total_collectable;
+            collectable_records
+                .filter((record) => record[fieldCustomerCode_COLLECT]["value"] === customer_code)
+                .forEach((record) => {
+                    // 一つの回収レコード内にあるサブテーブルで小計
+                    const subtotal = {
+                        early: 0,
+                        late: 0
+                    };
+
+                    record[fieldTableCloudSign_COLLECT]["value"].forEach((row) => {
+                        if (row["value"][tableFieldPaymentTimingCS_COLLECT]["value"] === "遅払い") {
+                            subtotal.late += Number(row["value"][tableFieldReceivableCS_COLLECT]["value"]);
+                        } else {
+                            subtotal.early += Number(row["value"][tableFieldReceivableCS_COLLECT]["value"]);
+                        }
+                    });
+
+                    total_by_customer.early += subtotal.early;
+                    total_by_customer.late += subtotal.late;
+                });
+
+            sum_by_customers[customer_code] = total_by_customer;
         }
 
         // 次に、取引企業Noに対応する工務店IDの組み合わせを取得する。
@@ -150,7 +170,8 @@
         const sum_by_constructors = komuten_customer_pairs.records.map((pair) => {
             return {
                 [fieldConstructionShopId_COLLECT]: pair[fieldConstructionShopId_KOMUTEN]["value"],
-                [fieldCollectableAmount_COLLECT]: sum_by_customers[pair[fieldCustomerCode_KOMUTEN]["value"]]
+                early: sum_by_customers[pair[fieldCustomerCode_KOMUTEN]["value"]].early,
+                late: sum_by_customers[pair[fieldCustomerCode_KOMUTEN]["value"]].late
             };
         });
 
@@ -184,7 +205,10 @@
                     },
                     "record": {
                         [fieldCollectableAmount_KOMUTEN]: {
-                            "value": sum[fieldCollectableAmount_COLLECT]
+                            "value": sum.early
+                        },
+                        [fieldCollectableAmount_late_KOMUTEN]: {
+                            "value": sum.late
                         }
                     }
                 };
@@ -204,7 +228,7 @@
         const body_remaining_collectable = {
             "app": APP_ID_KOMUTEN,
             "fields": [fieldConstructionShopId_KOMUTEN],
-            "query": `$id not in ${in_query} and ${fieldCollectableAmount_KOMUTEN} > 0`
+            "query": `$id not in ${in_query} and (${fieldCollectableAmount_KOMUTEN} > 0 or ${fieldCollectableAmount_late_KOMUTEN} > 0)`
         };
         const komuten_records = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", body_remaining_collectable);
 
@@ -219,6 +243,9 @@
                     },
                     "record": {
                         [fieldCollectableAmount_KOMUTEN]: {
+                            "value": 0
+                        },
+                        [fieldCollectableAmount_late_KOMUTEN]: {
                             "value": 0
                         }
                     }
