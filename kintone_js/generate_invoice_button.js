@@ -442,11 +442,12 @@ dayjs.locale("ja");
                     text: `${contact_company}\n`,
                     bold: true
                 },
-                "東京都千代田区一番町15番地1\n",
-                "一番町ファーストビル6階\n",
+                "東京都千代田区神田神保町三丁目\n",
+                "5番地 住友不動産九段下ビル7F\n",
                 `Mail:${mail}\n`,
                 "TEL:03-6261-6818\n"
             ],
+            fontSize: 7,
             border: [false]
         };
 
