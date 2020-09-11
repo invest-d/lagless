@@ -770,18 +770,18 @@ dayjs.locale("ja");
         return count;
     }
 
-    const convertBlobToBase64 = blob => new Promise((resolve, reject) => {
+    const convertBlobToBase64 = (blob) => new Promise((resolve, reject) => {
         const reader = new FileReader;
         reader.onerror = reject;
         reader.onload = () => {
-            resolve(reader.result.replace(/^data:text\/plain;([^,]+)?base64,/, ''));
+            resolve(reader.result.replace(/^data:text\/plain;([^,]+)?base64,/, ""));
         };
-        reader.readAsDataURL(blob)
+        reader.readAsDataURL(blob);
     });
 
     async function build_font() {
-        const make_url = name => {
-            return "https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/fonts%2F" + name + "?alt=media";
+        const make_url = (name) => {
+            return `https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/fonts%2F${  name  }?alt=media`;
         };
 
         if (pdfMake.vfs && pdfMake.vfs["Koruri-Light.ttf"] && pdfMake.vfs["Koruri-Bold.ttf"]) {
@@ -791,28 +791,28 @@ dayjs.locale("ja");
 
         await Promise.all([
             fetch(make_url("Koruri-Light.ttf"))
-            .then(response => response.blob())
-            .then(convertBlobToBase64),
+                .then((response) => response.blob())
+                .then(convertBlobToBase64),
             fetch(make_url("Koruri-Bold.ttf"))
-            .then(response => response.blob())
-            .then(convertBlobToBase64),
+                .then((response) => response.blob())
+                .then(convertBlobToBase64),
         ])
-        .then(result => {
-            pdfMake.vfs = {
+            .then((result) => {
+                pdfMake.vfs = {
                 // base64よりあとのdata部分だけが必要
-                "Koruri-Light.ttf": result[0].split("base64,")[1],
-                "Koruri-Bold.ttf": result[1].split("base64,")[1],
-            };
-            pdfMake.fonts = {
-                [PDF_FONT_NAME]: {
-                    normal: "Koruri-Light.ttf",
-                    bold: "Koruri-Bold.ttf",
-                }
-            };
-        })
-        .catch((err) => {
-            console.log(err);
-            throw new Error("フォントのダウンロード・設定中にエラーが発生しました。");
-        });
+                    "Koruri-Light.ttf": result[0].split("base64,")[1],
+                    "Koruri-Bold.ttf": result[1].split("base64,")[1],
+                };
+                pdfMake.fonts = {
+                    [PDF_FONT_NAME]: {
+                        normal: "Koruri-Light.ttf",
+                        bold: "Koruri-Bold.ttf",
+                    }
+                };
+            })
+            .catch((err) => {
+                console.log(err);
+                throw new Error("フォントのダウンロード・設定中にエラーが発生しました。");
+            });
     }
 })();
