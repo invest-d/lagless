@@ -17,9 +17,6 @@
 const pdfMake = require("pdfmake");
 const PDF_FONT_NAME = "Koruri";
 
-// PDF内で使う画像
-const id_logo = require("./images/id_logo.png");
-
 // 祝日判定ライブラリ
 const holiday_jp = require("@holiday-jp/holiday_jp");
 const dateFns = require("date-fns");
@@ -427,8 +424,9 @@ dayjs.locale("ja");
             margin: [0, 5, 25, 0]
         };
 
-        const logo = {
-            image: id_logo.default,
+        // 改行で空白のスペースを作り出す
+        const logo_space = {
+            text: "\n\n\n\n",
             width: 50,
             border: [false],
             alignment: "center"
@@ -458,7 +456,7 @@ dayjs.locale("ja");
                 // autoの列はセルを塗りつぶして擬似的に縦のラインを作るためのもの
                 widths: ["75%", "auto", "25%"],
                 body: [
-                    [letter_body, {text: "", border: [false]},                    logo         ],
+                    [letter_body, {text: "", border: [false]},                    logo_space   ],
                     [{},          {text: "", border: [false], fillColor: orange}, invoice_from ]
                 ]
             }
