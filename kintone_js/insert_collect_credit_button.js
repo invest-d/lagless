@@ -40,6 +40,7 @@
     const fieldClosingDay_APPLY = "closingDay";
     const fieldApplicant_APPLY = "支払先正式名称";
     const fieldTotalReceivables_APPLY = "totalReceivables";
+    const fieldPaymentTiming_APPLY = "paymentTiming";
     const fieldPaymentDate_APPLY = "paymentDate";
     const fieldCollectId_APPLY = "collectId";
     const fieldInvoice_APPLY = "invoice";
@@ -56,6 +57,7 @@
     const tableFieldApplyRecordNoCS = "applyRecordNoCS";
     const tableFieldApplicantOfficialNameCS = "applicantOfficialNameCS";
     const tableFieldReceivableCS = "receivableCS";
+    const tableFieldPaymentTimingCS = "paymentTimingCS";
     const tableFieldPaymentDateCS = "paymentDateCS";
     const tableFieldAttachmentFileKeyCS = "attachmentFileKeyCS";
 
@@ -140,6 +142,7 @@
                 fieldClosingDay_APPLY,
                 fieldApplicant_APPLY,
                 fieldTotalReceivables_APPLY,
+                fieldPaymentTiming_APPLY,
                 fieldPaymentDate_APPLY,
                 fieldInvoice_APPLY
             ],
@@ -243,6 +246,9 @@
                                     },
                                     [tableFieldReceivableCS] : {
                                         "value": record[fieldTotalReceivables_APPLY]["value"]
+                                    },
+                                    [tableFieldPaymentTimingCS] : {
+                                        "value": record[fieldPaymentTiming_APPLY]["value"]
                                     },
                                     [tableFieldPaymentDateCS]: {
                                         "value": record[fieldPaymentDate_APPLY]["value"]

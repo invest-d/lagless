@@ -74,11 +74,13 @@ dayjs.locale("ja");
     const fieldTotalBilledAmount_COLLECT = "totalBilledAmount";
     const tableCloudSignApplies_COLLECT = "cloudSignApplies";
     const tableFieldApplyRecordNoCS_COLLECT = "applyRecordNoCS";
+    const tableFieldPaymentTimingCS_COLLECT = "paymentTimingCS";
     const tableFieldApplicantOfficialNameCS_COLLECT = "applicantOfficialNameCS";
     const tableFieldReceivableCS_COLLECT = "receivableCS";
     const tableFieldPaymentDateCS_COLLECT = "paymentDateCS";
     const tableInvoiceTargets_COLLECT = "invoiceTargets";
     const tableFieldApplyRecordNoIV_COLLECT = "applyRecordNoIV";
+    const tableFieldPaymentTimingIV_COLLECT = "paymentTimingIV";
     const tableFieldApplicantOfficialNameIV_COLLECT = "applicantOfficialNameIV";
     const tableFieldReceivableIV_COLLECT = "receivableIV";
     const tableFieldPaymentDateIV_COLLECT = "paymentDateIV";
@@ -256,11 +258,14 @@ dayjs.locale("ja");
                                 [tableFieldApplicantOfficialNameIV_COLLECT]: {
                                     "value": sub_rec["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"]
                                 },
-                                [tableFieldPaymentDateIV_COLLECT]: {
-                                    "value": sub_rec["value"][tableFieldPaymentDateCS_COLLECT]["value"]
-                                },
                                 [tableFieldReceivableIV_COLLECT]: {
                                     "value": sub_rec["value"][tableFieldReceivableCS_COLLECT]["value"]
+                                },
+                                [tableFieldPaymentTimingIV_COLLECT]: {
+                                    "value": sub_rec["value"][tableFieldPaymentTimingCS_COLLECT]["value"]
+                                },
+                                [tableFieldPaymentDateIV_COLLECT]: {
+                                    "value": sub_rec["value"][tableFieldPaymentDateCS_COLLECT]["value"]
                                 }
                             }
                         };
@@ -410,7 +415,7 @@ dayjs.locale("ja");
             text: [
                 "拝啓　時下ますますご清栄のこととお慶び申し上げます。\n",
                 "平素は格別のご高配を賜り厚く御礼申し上げます。\n",
-                "さて、下記のとおり早期支払を実行いたしましたのでご案内いたします。\n",
+                `さて、下記のとおり${product_name}のお申込み受付をいたしましたのでご案内いたします。\n`,
                 `つきましては、${product_name}利用分の合計金額を、お支払期限までに下記振込先口座へお振込み頂きますよう、お願い申し上げます。\n`,
                 "ご不明な点などがございましたら、下記連絡先までお問い合わせください。\n",
                 "今後ともどうぞ宜しくお願いいたします。\n",
@@ -568,13 +573,22 @@ dayjs.locale("ja");
         const paid_dist_title = JSON.parse(JSON.stringify(detail_title_template));
         paid_dist_title.text = "支払先";
 
+        const paid_timing_title = JSON.parse(JSON.stringify(detail_title_template));
+        paid_timing_title.text = "支払タイミング";
+
         const paid_date_title = JSON.parse(JSON.stringify(detail_title_template));
-        paid_date_title.text = "早期支払日";
+        paid_date_title.text = "支払日";
 
         const paid_amount_title = JSON.parse(JSON.stringify(detail_title_template));
         paid_amount_title.text = "金額（税込：円）";
 
-        const detail_header_row = [row_num_title , paid_dist_title, paid_date_title, paid_amount_title];
+        const detail_header_row = [
+            row_num_title,
+            paid_dist_title,
+            paid_timing_title,
+            paid_date_title,
+            paid_amount_title
+        ];
 
         const detail_table_body = [];
         detail_table_body.push(detail_header_row);
@@ -594,12 +608,18 @@ dayjs.locale("ja");
         };
 
         const blank_cell = {text: "", border: [false]};
-        const sum_row = [ blank_cell, blank_cell, sum_title, sum_amount ];
+        const sum_row = [
+            blank_cell,
+            blank_cell,
+            blank_cell,
+            sum_title,
+            sum_amount
+        ];
         detail_table_body.push(sum_row);
 
         const detail_table = {
             table: {
-                widths: ["5%", "45%", "20%", "30%"],
+                widths: ["5%", "32%", "16%", "17%", "30%"],
                 headerRows: 1,
                 body: detail_table_body
             },
@@ -630,6 +650,16 @@ dayjs.locale("ja");
             paid_dist.text = record["value"][tableFieldApplicantOfficialNameIV_COLLECT]["value"];
             paid_dist.alignment = "left";
 
+            const paid_timing = JSON.parse(JSON.stringify(detail_value_template));
+            paid_timing.text = ((timing) => {
+                if (timing === "遅払い") {
+                    return timing;
+                } else {
+                    return "早払い";
+                }
+            })(record["value"][tableFieldPaymentTimingIV_COLLECT]["value"]);
+            paid_timing.alignment = "left";
+
             const paid_date = JSON.parse(JSON.stringify(detail_value_template));
             paid_date.text = formatYMD(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]);
             paid_date.alignment = "left";
@@ -639,7 +669,7 @@ dayjs.locale("ja");
             paid_amount.alignment = "right";
             paid_amount.borderColor = [orange, black, white, black];
 
-            return [row_num, paid_dist, paid_date, paid_amount];
+            return [row_num, paid_dist, paid_timing, paid_date, paid_amount];
         });
 
         // 明細は15行以上。15行より少ない場合は余白行を作り、15行以上の場合は明細の数のまま
@@ -657,7 +687,7 @@ dayjs.locale("ja");
             const blank_cell = {text: "", borderColor: [orange, black, orange, black]};
             const blank_cell_right_edge = {text: "", borderColor: [orange, black, white, black]};
 
-            details.push([row_num, following_are_blank, blank_cell, blank_cell_right_edge]);
+            details.push([row_num, following_are_blank, blank_cell, blank_cell, blank_cell_right_edge]);
 
             for (let i = details.length; i < 15; i++) {
                 const row_num = JSON.parse(JSON.stringify(detail_value_template));
@@ -665,7 +695,7 @@ dayjs.locale("ja");
                 row_num.alignment = "right";
                 row_num.borderColor = [white, black, orange, black];
 
-                details.push([row_num, blank_cell, blank_cell, blank_cell_right_edge]);
+                details.push([row_num, blank_cell, blank_cell, blank_cell, blank_cell_right_edge]);
             }
         }
 
