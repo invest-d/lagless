@@ -179,8 +179,19 @@ function postRecord(app_id, token, payload) {
 }
 
 function respond_error(res, err) {
-    const res_status = ("status" in err) ? err.status : 500;
-    const res_msg = ("message" in err) ? err.message : "サーバーエラーが発生しました。";
+    let res_status;
+    let res_msg;
+
+    if ("status" in err) {
+        // errの内容を優先して返す
+        res_status = err.status;
+        res_msg = ("message" in err) ? err.message : "サーバーエラーが発生しました。";
+    } else {
+        // errの内容は返さず、一般的なメッセージを返す
+        res_status = 500;
+        res_msg = "サーバーエラーが発生しました。";
+    }
+
     res.status(res_status).json({message: res_msg});
 }
 
