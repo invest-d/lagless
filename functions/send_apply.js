@@ -141,7 +141,10 @@ function postToKintone(req, res) {
                 const kintone_post_response = await postRecord(env.app_id, API_TOKEN, sendObj)
                     .catch((err) => {
                         console.error(`kintoneレコード登録エラー：${err}`);
-                        reject(err);
+                        reject({
+                            status: 500,
+                            message: "サーバーエラーが発生しました"
+                        });
                     });
 
                 resolve({
