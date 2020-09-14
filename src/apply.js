@@ -26,22 +26,15 @@ $(() => {
         }
     })(product_name);
     // 早払いと遅払いで使うロゴを変更する
-    if (getUrlParam("t") === "late") {
+    const timing = getPaymentTiming();
+    if (timing === "late") {
         $("#header-logo").attr("src", `images/${logo_productname}-v2.png`);
     } else {
         $("#header-logo").attr("src", `images/${logo_productname}.png`);
     }
 
     // 支払いタイミング
-    const payment_timing = ((timing) => {
-        if (timing === "late") {
-            return "late";
-        } else {
-            // パラメータ無しの場合も早払いとする
-            return "early";
-        }
-    })(getUrlParam("t"));
-    $("#paymentTiming").val(payment_timing);
+    $("#paymentTiming").val(timing);
 });
 
 // URLのパラメータによって初回のフォームの見た目を変更する
@@ -62,15 +55,22 @@ $(() => {
     // 特に変更する必要はない
     }
 
-    const payment_timing = getUrlParam("t");
-    if (payment_timing === "late") {
-        // 遅払い
+    if (getPaymentTiming() === "late") {
         $("span.timing").text("遅払い");
     } else {
-        // 早払い
         $("span.timing").text("早払い");
     }
 });
+
+function getPaymentTiming() {
+    const timing = getUrlParam("t");
+    if (timing === "late") {
+        return "late";
+    } else {
+        // パラメータ無しの場合も早払いとする
+        return "early";
+    }
+}
 
 // URLから指定したパラメータを取得する
 export function getUrlParam(param_name) {
