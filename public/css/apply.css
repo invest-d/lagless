@@ -6,6 +6,30 @@
     max-width: 100%;
 }
 
+img.lagless-v1-logo {
+    content: url("../images/lagless.png");
+}
+
+img.lagless-v2-logo {
+    content: url("../images/lagless-v2.png");
+}
+
+img.dandori-v1-logo {
+    content: url("../images/dandori.png");
+}
+
+img.dandori-v2-logo {
+    content: url("../images/dandori-v2.png");
+}
+
+img.renove-v1-logo {
+    content: url("../images/renove.png");
+}
+
+img.renove-v2-logo {
+    content: url("../images/renove-v2.png");
+}
+
 @media (min-width: 800px) {
     .container {
     max-width: 750px;

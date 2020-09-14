@@ -27,11 +27,14 @@ $(() => {
     })(product_name);
     // 早払いと遅払いで使うロゴを変更する
     const timing = getPaymentTiming();
-    if (timing === "late") {
-        $("#header-logo").attr("src", `images/${logo_productname}-v2.png`);
-    } else {
-        $("#header-logo").attr("src", `images/${logo_productname}.png`);
-    }
+    const version = ((timing) => {
+        if (timing === "late") {
+            return "v2";
+        } else {
+            return "v1";
+        }
+    })(timing);
+    $("#header-logo").addClass(`${logo_productname}-${version}-logo`);
 
     // 支払いタイミング
     $("#paymentTiming").val(timing);
