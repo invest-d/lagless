@@ -25,10 +25,10 @@ function postToKintone(req, res) {
             });
         }
 
-        console.log(`requested from ${String(req.headers.referer)}`);
+        console.log(`requested from ${String(req.hostname)}`);
 
         // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
-        const env = new Environ(req.headers.referer);
+        const env = new Environ(req.hostname);
         setCORS(env, res);
 
         const record = {};
@@ -192,35 +192,23 @@ function setCORS(env, res){
 }
 
 class Environ {
-    constructor(referer) {
-        this.host = extractHostDomain(referer);
-
-        if (this.host === process.env.form_dev) {
+    constructor(host) {
+        if (host === process.env.form_dev) {
             // 開発環境
             this.app_id = process.env.app_id_apply_dev;
             this.api_token_record = process.env.api_token_apply_record_dev;
             this.api_token_files = process.env.api_token_apply_files_dev;
-            this.success_redirect_to = `https://${this.host}/apply_complete.html`;
-        } else if (this.host === process.env.form_prod) {
+            this.success_redirect_to = `https://${host}/apply_complete.html`;
+        } else if (host === process.env.form_prod) {
             // 本番環境
             this.app_id = process.env.app_id_apply_prod;
             this.api_token_record = process.env.api_token_apply_record_prod;
             this.api_token_files = process.env.api_token_apply_files_prod;
-            this.success_redirect_to = `https://${this.host}/apply_complete.html`;
+            this.success_redirect_to = `https://${host}/apply_complete.html`;
         }
         else {
             // それ以外
-            throw new Error(`invalid host: ${ this.host}`);
+            throw new Error(`invalid host: ${host}`);
         }
     }
-}
-
-function extractHostDomain(url) {
-    // スラッシュで区切ってドメイン部分とポート番号を抜き出す
-    const domain_and_port = (url.indexOf("://") > -1)
-        ? url.split("/")[2]
-        : url.split("/")[0];
-
-    // ドメイン部分だけ抜き出す
-    return domain_and_port.split(":")[0];
 }
