@@ -28,7 +28,16 @@ function postToKintone(req, res) {
         console.log(`requested from ${String(req.hostname)}`);
 
         // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
-        const env = new Environ(req.hostname);
+        let env;
+        try {
+            env = new Environ(req.hostname);
+        } catch (e) {
+            console.error(e);
+            return reject({
+                status: 400,
+                message: "無効なリクエストです"
+            });
+        }
         setCORS(env, res);
 
         const record = {};
@@ -223,8 +232,7 @@ class Environ {
             this.api_token_record = process.env.api_token_apply_record_prod;
             this.api_token_files = process.env.api_token_apply_files_prod;
             this.success_redirect_to = `https://${host}/apply_complete.html`;
-        }
-        else {
+        } else {
             // それ以外
             throw new Error(`invalid host: ${host}`);
         }
