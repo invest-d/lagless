@@ -1,7 +1,9 @@
 import "@fortawesome/fontawesome-free/js/solid";
 
 import "../public/app";
-import { getUrlParam } from "./apply.js";
+
+import "url-search-params-polyfill";
+const params = new URLSearchParams(window.location.search);
 
 $(() => {
     displayByParameter();
@@ -34,7 +36,7 @@ $(() => {
 
 function displayByParameter() {
     // URLパラメータ"d"によって、開いたときの画面を変更する
-    const display = getUrlParam("d");
+    const display = params.get("d");
 
     switch (display) {
     case "menu":

@@ -6,6 +6,7 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/l10n/ja.js";
 
 import "url-search-params-polyfill";
+const params = new URLSearchParams(window.location.search);
 
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 import * as find from "./defineFindPolyfill";
@@ -13,11 +14,11 @@ import * as find from "./defineFindPolyfill";
 // URLパラメータを引き継いでkintoneに送信できるようにする
 $(() => {
     // 工務店ID
-    const construction_shop_id = getUrlParam("c");
+    const construction_shop_id = params.get("c");
     $("#constructionShopId").val(construction_shop_id);
 
     // 商品ロゴ
-    const product_name = getUrlParam("product");
+    const product_name = params.get("product");
     const logo_productname = ((product_name) => {
         if (product_name) {
             return product_name;
@@ -43,7 +44,7 @@ $(() => {
 // URLのパラメータによって初回のフォームの見た目を変更する
 $(() => {
     const key = "user";
-    const val = getUrlParam(key);
+    const val = params.get(key);
     if (val === "existing") {
     // 2回目以降の申込みフォーム
     // 初回のみ必須入力の項目を非表示にする
@@ -66,19 +67,13 @@ $(() => {
 });
 
 function getPaymentTiming() {
-    const timing = getUrlParam("t");
+    const timing = params.get("t");
     if (timing === "late") {
         return "late";
     } else {
         // パラメータ無しの場合も早払いとする
         return "early";
     }
-}
-
-// URLから指定したパラメータを取得する
-export function getUrlParam(param_name) {
-    const params = new URLSearchParams(window.location.search);
-    return params.get(param_name);
 }
 
 // 2回目以降申込みフォームで不要なコントロールの必須チェックを外してフォームから非表示にする
@@ -125,7 +120,7 @@ $(() => {
     // 2-1. 2回目以降フォームであればblur時にブランクならOK判定
     // 2-2. 2回目以降フォームであればblur時に非ブランクならパターンマッチのvalidate
     $(".pattern-required-on-modified").blur(function() {
-        pattern_validate($(this), getUrlParam("user") === "existing");
+        pattern_validate($(this), params.get("user") === "existing");
     });
 });
 
