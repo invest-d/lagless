@@ -19,7 +19,7 @@ exports.send_apply = functions.https.onRequest((req, res) => {
 function postToKintone(req, res) {
     return new Promise((resolve, reject) => {
         if (req.method != "POST") {
-            reject({
+            return reject({
                 status: 405,
                 message: "Method Not Allowed"
             });
@@ -64,7 +64,7 @@ function postToKintone(req, res) {
                     postable = false;
                     file.resume();
                     busboy.end();
-                    reject({
+                    return reject({
                         status: 400,
                         message: "添付ファイルを読み取れませんでした。ファイルが破損していないか確認し、もう一度お試しください。"
                     });
@@ -74,7 +74,7 @@ function postToKintone(req, res) {
                     console.error(`unexpected mimetype: ${mimetype}.`);
                     file.resume();
                     busboy.end();
-                    reject({
+                    return reject({
                         status: 400,
                         message: `添付ファイルは ${Object.keys(validMimeTypes)} のいずれかの形式で送信してください。`
                     });
