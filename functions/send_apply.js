@@ -34,14 +34,18 @@ function postToKintone(req, res) {
         const record = {};
 
         const busboy = new Busboy({ headers: req.headers });
-        const allowMimeTypes = ["application/pdf", "image/jpeg", "image/png"];
+        const validMimeTypes = {
+            "application/pdf": "pdf",
+            "image/jpeg": "jpg",
+            "image/png": "png"
+        };
         const file_uploads = [];
 
         let postable = true;
 
         // 申込フォームから送信した添付ファイルの処理
         busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
-            const is_valid_mimetype = allowMimeTypes.includes(mimetype.toLocaleLowerCase());
+            const is_valid_mimetype = Object.keys(validMimeTypes).includes(mimetype.toLocaleLowerCase());
 
             const buffer = [];
             file.on("data", (chunk) => {
@@ -72,11 +76,11 @@ function postToKintone(req, res) {
                     busboy.end();
                     reject({
                         status: 400,
-                        message: `添付ファイルは ${allowMimeTypes.map((t) => t.split("/")[1])} のいずれかの形式で送信してください。`
+                        message: `添付ファイルは ${Object.keys(validMimeTypes)} のいずれかの形式で送信してください。`
                     });
                 } else if (!has_zero_filesize && is_valid_mimetype) {
                     // 受け付け可能なファイルを想定。kintoneへのファイルアップロード状況をpromiseとして生成
-                    const ext = String(mimetype).split("/")[1];
+                    const ext = validMimeTypes[mimetype.toLocaleLowerCase()];
                     file_uploads.push(uploadToKintone(env.api_token_files, attachment, `${fieldname}.${ext}`)
                         .then((resp) => {
                             return {
