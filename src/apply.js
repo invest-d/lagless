@@ -5,6 +5,8 @@ import "bootstrap";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/l10n/ja.js";
 
+import $ from "jquery";
+
 import "url-search-params-polyfill";
 const params = new URLSearchParams(window.location.search);
 

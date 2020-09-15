@@ -1,6 +1,6 @@
 import "@fortawesome/fontawesome-free/js/solid";
 
-import "../public/app";
+import $ from "jquery";
 
 import "url-search-params-polyfill";
 const params = new URLSearchParams(window.location.search);

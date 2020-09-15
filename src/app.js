@@ -1,3 +1,5 @@
+import $ from "jquery";
+
 $(() => {
     const query = location.search;
     const param = { };
