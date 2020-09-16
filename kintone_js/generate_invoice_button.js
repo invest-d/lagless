@@ -319,11 +319,26 @@ dayjs.locale("ja");
         };
         const target_parents = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_parents);
 
+        const get_constructors = {
+            "app": 96
+        };
+        const constructors = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_constructors);
+
         // フォント設定
         await build_font();
 
         const attachment_pdfs = [];
         for(const parent_record of target_parents.records) {
+            // 回収レコードに遅払い日数フィールドを紐づける
+            const constructor = constructors.records.find((r) => r["id"]["value"] === parent_record["constructionShopId"]["value"]);
+            if (!constructor) {
+                // ダイアログを表示するが、他のPDFは引き続き作成を試みる
+                alert(`工務店レコードが見つかりませんでした。回収レコードID: ${parent_record["$id"]["value"]}`);
+                continue;
+            }
+
+            parent_record["daysLater"] = { "value": constructor["daysLater"]["value"] };
+
             const invoice_doc = generateInvoiceDocument(parent_record);
             const file_name = `${parent_record[fieldConstructionShopName_COLLECT]["value"]}様用 支払明細書兼振込依頼書${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分.pdf`;
 
@@ -343,10 +358,23 @@ dayjs.locale("ja");
         // pdfmakeのライブラリ用のオブジェクトを生成する。
         const product_name = parent_record[fieldProductName_COLLECT]["value"];
         const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
+        const version = ((days_later) => {
+            if (Number.isInteger(days_later) && Number(days_later) > 0) {
+                return "V2";
+            } else {
+                return "V1";
+            }
+        })(parent_record["daysLater"]["value"]);
         const contact_company = {
-            "ID": "インベストデザイン株式会社",
-            "LAGLESS": "ラグレス合同会社"
-        }[parent_record[fieldAccount_COLLECT]["value"]];
+            "ID": {
+                "V1": "インベストデザイン株式会社",
+                "V2": "ラグレス2合同会社"
+            },
+            "LAGLESS": {
+                "V1": "ラグレス合同会社",
+                "V2": "ラグレス合同会社"
+            }
+        }[parent_record[fieldAccount_COLLECT]["value"]][version];
 
         if (!contact_company) {
             throw new Error(`不明な支払元口座です: ${parent_record[fieldAccount_COLLECT]["value"]}`);
