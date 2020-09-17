@@ -60,6 +60,8 @@ dayjs.locale("ja");
         "LAGLESS": "三井住友銀行　神田支店\n普通預金　3 4 0 9 1 3 4\nラグレス（ド，マスターコウザ"
     };
 
+    const APP_ID_CONSTRUCTOR = 96;
+
     const APP_ID_COLLECT = APP_ID.COLLECT;
     const fieldRecordId_COLLECT = "レコード番号";
     const fieldDeadline_COLLECT = "deadline";
@@ -320,7 +322,7 @@ dayjs.locale("ja");
         const target_parents = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_parents);
 
         const get_constructors = {
-            "app": 96
+            "app": APP_ID_CONSTRUCTOR
         };
         const constructors = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_constructors);
 
