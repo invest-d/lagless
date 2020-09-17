@@ -164,6 +164,12 @@ function postToKintone(req, res) {
                     status: kintone_post_response.status,
                     redirect_to: env.success_redirect_to
                 });
+            } else {
+                // 念のためのreject
+                reject({
+                    status: 500,
+                    message: "サーバーエラーが発生しました"
+                });
             }
         });
 
