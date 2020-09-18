@@ -226,13 +226,14 @@ function setCORS(env, res){
 
 class Environ {
     constructor(host) {
-        if (host === process.env.form_dev) {
+        this.host = host;
+        if (this.host === process.env.form_dev) {
             // 開発環境
             this.app_id = process.env.app_id_apply_dev;
             this.api_token_record = process.env.api_token_apply_record_dev;
             this.api_token_files = process.env.api_token_apply_files_dev;
             this.success_redirect_to = `https://${host}/apply_complete.html`;
-        } else if (host === process.env.form_prod) {
+        } else if (this.host === process.env.form_prod) {
             // 本番環境
             this.app_id = process.env.app_id_apply_prod;
             this.api_token_record = process.env.api_token_apply_record_prod;
