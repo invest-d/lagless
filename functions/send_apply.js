@@ -221,7 +221,7 @@ function respond_error(res, err) {
 // 開発or本番以外のドメインからのリクエストはそもそもenvをインスタンス化出来ないのでチェックしない
 function setCORS(env, res){
     // リクエスト元が開発版のフォームなら開発版のドメインを、本番のフォームなら本番のドメインを設定。
-    res.set("Access-Control-Allow-Origin",`https://${env.host}`);
+    res.set("Access-Control-Allow-Origin",`${env.host}`);
 }
 
 class Environ {
@@ -232,16 +232,16 @@ class Environ {
             this.app_id = process.env.app_id_apply_dev;
             this.api_token_record = process.env.api_token_apply_record_dev;
             this.api_token_files = process.env.api_token_apply_files_dev;
-            this.success_redirect_to = `https://${host}/apply_complete.html`;
+            this.success_redirect_to = `${this.host}/apply_complete.html`;
         } else if (this.host === process.env.form_prod) {
             // 本番環境
             this.app_id = process.env.app_id_apply_prod;
             this.api_token_record = process.env.api_token_apply_record_prod;
             this.api_token_files = process.env.api_token_apply_files_prod;
-            this.success_redirect_to = `https://${host}/apply_complete.html`;
+            this.success_redirect_to = `${this.host}/apply_complete.html`;
         } else {
             // それ以外
-            throw new Error(`invalid host: ${host}`);
+            throw new Error(`invalid host: ${this.host}`);
         }
     }
 }
