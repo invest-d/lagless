@@ -25,12 +25,12 @@ function postToKintone(req, res) {
             });
         }
 
-        console.log(`requested from ${String(req.hostname)}`);
+        console.log(`requested from ${String(req.headers.origin)}`);
 
         // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
         let env;
         try {
-            env = new Environ(req.hostname);
+            env = new Environ(req.headers.origin);
         } catch (e) {
             console.error(e);
             return reject({
