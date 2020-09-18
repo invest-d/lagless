@@ -1,4 +1,8 @@
 /*
+    Version 2
+    申込レコードから、新たに挿入する回収レコードへと転記するフィールドの中に
+    支払タイミングと支払日のフィールドを追加
+
     Version 1
     申込みアプリ(159)のレコードを、工務店と締日ごとに金額をまとめ、回収アプリ(160)に新規レコードとして挿入する。
 
@@ -40,6 +44,7 @@
     const fieldClosingDay_APPLY = "closingDay";
     const fieldApplicant_APPLY = "支払先正式名称";
     const fieldTotalReceivables_APPLY = "totalReceivables";
+    const fieldPaymentTiming_APPLY = "paymentTiming";
     const fieldPaymentDate_APPLY = "paymentDate";
     const fieldCollectId_APPLY = "collectId";
     const fieldInvoice_APPLY = "invoice";
@@ -56,13 +61,15 @@
     const tableFieldApplyRecordNoCS = "applyRecordNoCS";
     const tableFieldApplicantOfficialNameCS = "applicantOfficialNameCS";
     const tableFieldReceivableCS = "receivableCS";
+    const tableFieldPaymentTimingCS = "paymentTimingCS";
+    const tableFieldPaymentDateCS = "paymentDateCS";
     const tableFieldAttachmentFileKeyCS = "attachmentFileKeyCS";
 
     const APP_ID_KOMUTEN = 96;
     const fieldConstructionShopId_KOMUTEN = "id";
     const fieldOriginalPaymentDate_KOMUTEN = "original";
 
-    const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
+    const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
     kintone.events.on("app.record.index.show", (event) => {
         if (needShowButton()) {
@@ -100,28 +107,28 @@
                     throw new Error("申込みレコードの取得中にエラーが発生しました。");
                 });
 
-            if (insert_targets.records.length <= 0) {
+            if (insert_targets.length <= 0) {
                 alert("状態が 支払予定明細送付済 かつ\n回収IDが 未入力 のレコードは存在しませんでした。\n回収アプリのレコードを作り直したい場合は、\n回収アプリのレコード詳細画面から\n「回収レコード削除」ボタンを押してください。");
                 return;
             }
 
             // 取得したレコードを元に、回収アプリにレコードを追加する。
-            const inserted_ids = await insertCollectRecords(insert_targets.records)
+            const inserted_ids = await insertCollectRecords(insert_targets)
                 .catch((err) => {
                     console.error(err);
                     throw new Error("回収アプリへのレコード挿入中にエラーが発生しました。");
                 });
 
             // 回収アプリのレコード番号を、申込みレコードに紐付ける
-            const updated_apply = await assignCollectIdsToApplies(insert_targets.records, inserted_ids)
+            const updated_apply = await assignCollectIdsToApplies(insert_targets, inserted_ids)
                 .catch((err) => {
                     console.error(err);
                     throw new Error("回収アプリにはレコードを作成できましたが、\n申込みレコードとの紐付け中にエラーが発生しました。");
                 });
             console.log("update completed.");
-            console.log(updated_apply.results[0].records);
+            console.log(updated_apply);
 
-            alert(`${updated_apply.results[0].records.length}件 の申込みレコードを回収アプリに登録しました。`);
+            alert(`${updated_apply.records.length}件 の申込みレコードを回収アプリに登録しました。`);
             alert("ページを更新します。");
             window.location.reload();
         } catch(err) {
@@ -139,14 +146,14 @@
                 fieldClosingDay_APPLY,
                 fieldApplicant_APPLY,
                 fieldTotalReceivables_APPLY,
+                fieldPaymentTiming_APPLY,
                 fieldPaymentDate_APPLY,
                 fieldInvoice_APPLY
             ],
-            "query": `${fieldStatus_APPLY} in ("${statusReady_APPLY}") and ${fieldCollectId_APPLY} = ""`, //回収IDブランク
-            "seek": true
+            "condition": `${fieldStatus_APPLY} in ("${statusReady_APPLY}") and ${fieldCollectId_APPLY} = ""` //回収IDブランク
         };
 
-        return kintoneRecord.getAllRecordsByQuery(request_body);
+        return client.record.getAllRecords(request_body);
     }
 
     async function insertCollectRecords(insert_targets_array) {
@@ -185,15 +192,14 @@
         const body_komuten_payment_date = {
             "app": APP_ID_KOMUTEN,
             "fields": [fieldConstructionShopId_KOMUTEN, fieldOriginalPaymentDate_KOMUTEN],
-            "query": `${fieldConstructionShopId_KOMUTEN} in ("${key_pairs.map((pair) => pair[fieldConstructionShopId_APPLY]).join('","')}")`,
-            "seek": true
+            "condition": `${fieldConstructionShopId_KOMUTEN} in ("${key_pairs.map((pair) => pair[fieldConstructionShopId_APPLY]).join('","')}")`
         };
 
-        const komuten = await kintoneRecord.getAllRecordsByQuery(body_komuten_payment_date);
+        const komuten = await client.record.getAllRecords(body_komuten_payment_date);
 
         // {工務店ID: 通常支払日}のオブジェクトを作る
         const komuten_info = {};
-        komuten.records.forEach((komuten_record) => {
+        komuten.forEach((komuten_record) => {
             komuten_info[komuten_record[fieldConstructionShopId_KOMUTEN]["value"]] = komuten_record[fieldOriginalPaymentDate_KOMUTEN]["value"];
         });
 
@@ -245,6 +251,12 @@
                                     [tableFieldReceivableCS] : {
                                         "value": record[fieldTotalReceivables_APPLY]["value"]
                                     },
+                                    [tableFieldPaymentTimingCS] : {
+                                        "value": record[fieldPaymentTiming_APPLY]["value"]
+                                    },
+                                    [tableFieldPaymentDateCS]: {
+                                        "value": record[fieldPaymentDate_APPLY]["value"]
+                                    },
                                     [tableFieldAttachmentFileKeyCS]: {
                                         "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
                                     }
@@ -259,9 +271,9 @@
         // INSERT実行
         console.log("insert request body is");
         console.log(request_body);
-        const resp = await kintoneRecord.addAllRecords(request_body);
-        // idsは文字列型のレコード番号の配列
-        return resp.results[0].ids;
+        const resp = await client.record.addAllRecords(request_body);
+        // 新規作成されたレコードID一覧を返す
+        return resp.records.map((r) => r.id);
     }
 
     // YYYY-MM-DDの日付書式と'翌月15日'などの文字列から、締め日をYYYY-MM-DDにして返す
@@ -302,16 +314,16 @@
         const body_new_collects = {
             "app": APP_ID_COLLECT,
             "fields": [fieldRecordId_COLLECT, fieldConstructionShopId_COLLECT, fieldClosingDate_COLLECT],
-            "query": `${fieldRecordId_COLLECT} in ${in_query}`
+            "condition": `${fieldRecordId_COLLECT} in ${in_query}`
         };
-        const inserted_collects = await kintoneRecord.getAllRecordsByQuery(body_new_collects);
+        const inserted_collects = await client.record.getAllRecords(body_new_collects);
 
         // 申込みレコードがどの回収レコードに紐づいているかわかるように、回収IDフィールドに回収レコードのレコード番号をセットする
         const body_add_collect_id = {
             "app": APP_ID_APPLY,
             "records": applies.map((apply) => {
                 // どの回収レコードにまとめられているかを特定
-                const collect_dist_record = inserted_collects.records.find((collect) => {
+                const collect_dist_record = inserted_collects.find((collect) => {
                     // 工務店IDの一致
                     return apply[fieldConstructionShopId_APPLY]["value"] === collect[fieldConstructionShopId_COLLECT]["value"]
                     // 締日の一致
@@ -328,6 +340,6 @@
                 };
             })
         };
-        return kintoneRecord.updateAllRecords(body_add_collect_id);
+        return client.record.updateAllRecords(body_add_collect_id);
     }
 })();

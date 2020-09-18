@@ -1,4 +1,12 @@
 /*
+    Version 2
+    遅払いの申込が入ってくる場合にも対応。
+    - 文面を一部更新
+    - 支払明細のテーブルにフィールドを追加し、支払タイミングを出力するようになった
+    インベストデザインの企業ロゴを削除
+    住所更新
+    以上の変更は、遅払いを利用しない場合にも適用される。
+
     Version 1.2
     処理対象レコードの状態を「支払実行済み」から「クラウドサイン承認済み」に変更。
     振込依頼書の目視確認が完了しているかどうかを、状態フィールドではなく専用のチェックボックスを使って管理するように変更。
@@ -16,9 +24,6 @@
 // PDF生成ライブラリ
 const pdfMake = require("pdfmake");
 const PDF_FONT_NAME = "Koruri";
-
-// PDF内で使う画像
-const id_logo = require("./images/id_logo.png");
 
 // 祝日判定ライブラリ
 const holiday_jp = require("@holiday-jp/holiday_jp");
@@ -55,6 +60,8 @@ dayjs.locale("ja");
         "LAGLESS": "三井住友銀行　神田支店\n普通預金　3 4 0 9 1 3 4\nラグレス（ド，マスターコウザ"
     };
 
+    const APP_ID_CONSTRUCTOR = 96;
+
     const APP_ID_COLLECT = APP_ID.COLLECT;
     const fieldRecordId_COLLECT = "レコード番号";
     const fieldDeadline_COLLECT = "deadline";
@@ -74,21 +81,19 @@ dayjs.locale("ja");
     const fieldTotalBilledAmount_COLLECT = "totalBilledAmount";
     const tableCloudSignApplies_COLLECT = "cloudSignApplies";
     const tableFieldApplyRecordNoCS_COLLECT = "applyRecordNoCS";
+    const tableFieldPaymentTimingCS_COLLECT = "paymentTimingCS";
     const tableFieldApplicantOfficialNameCS_COLLECT = "applicantOfficialNameCS";
     const tableFieldReceivableCS_COLLECT = "receivableCS";
+    const tableFieldPaymentDateCS_COLLECT = "paymentDateCS";
     const tableInvoiceTargets_COLLECT = "invoiceTargets";
     const tableFieldApplyRecordNoIV_COLLECT = "applyRecordNoIV";
+    const tableFieldPaymentTimingIV_COLLECT = "paymentTimingIV";
     const tableFieldApplicantOfficialNameIV_COLLECT = "applicantOfficialNameIV";
     const tableFieldReceivableIV_COLLECT = "receivableIV";
+    const tableFieldPaymentDateIV_COLLECT = "paymentDateIV";
     const fieldInvoicePdf_COLLECT = "invoicePdf";
     const fieldHandleForHolidays_COLLECT = "handleForHolidays";
     const fieldConfirmStatusInvoice_COLLECT = "confirmStatusInvoice";
-
-    const APP_ID_APPLY = APP_ID.APPLY;
-    const fieldRecordId_APPLY = "$id";
-    const fieldPayDestName_APPLY = "支払先正式名称";
-    const fieldPayDate_APPLY = "paymentDate";
-    const fieldReceivables_APPLY = "totalReceivables";
 
     const orange = "#ff9a33";
     const white = "#ffffff";
@@ -262,6 +267,12 @@ dayjs.locale("ja");
                                 },
                                 [tableFieldReceivableIV_COLLECT]: {
                                     "value": sub_rec["value"][tableFieldReceivableCS_COLLECT]["value"]
+                                },
+                                [tableFieldPaymentTimingIV_COLLECT]: {
+                                    "value": sub_rec["value"][tableFieldPaymentTimingCS_COLLECT]["value"]
+                                },
+                                [tableFieldPaymentDateIV_COLLECT]: {
+                                    "value": sub_rec["value"][tableFieldPaymentDateCS_COLLECT]["value"]
                                 }
                             }
                         };
@@ -310,13 +321,26 @@ dayjs.locale("ja");
         };
         const target_parents = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_parents);
 
+        const get_constructors = {
+            "app": APP_ID_CONSTRUCTOR
+        };
+        const constructors = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_constructors);
+
         // フォント設定
         await build_font();
 
         const attachment_pdfs = [];
         for(const parent_record of target_parents.records) {
-            const details_resp = await getDetailRows(parent_record);
-            parent_record.detail_records = details_resp.records;
+            // 回収レコードに遅払い日数フィールドを紐づける
+            const constructor = constructors.records.find((r) => r["id"]["value"] === parent_record["constructionShopId"]["value"]);
+            if (!constructor) {
+                // ダイアログを表示するが、他のPDFは引き続き作成を試みる
+                alert(`工務店レコードが見つかりませんでした。回収レコードID: ${parent_record["$id"]["value"]}`);
+                continue;
+            }
+
+            parent_record["daysLater"] = { "value": constructor["daysLater"]["value"] };
+
             const invoice_doc = generateInvoiceDocument(parent_record);
             const file_name = `${parent_record[fieldConstructionShopName_COLLECT]["value"]}様用 支払明細書兼振込依頼書${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分.pdf`;
 
@@ -336,10 +360,23 @@ dayjs.locale("ja");
         // pdfmakeのライブラリ用のオブジェクトを生成する。
         const product_name = parent_record[fieldProductName_COLLECT]["value"];
         const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
+        const version = ((days_later) => {
+            if (Number.isInteger(days_later) && Number(days_later) > 0) {
+                return "V2";
+            } else {
+                return "V1";
+            }
+        })(parent_record["daysLater"]["value"]);
         const contact_company = {
-            "ID": "インベストデザイン株式会社",
-            "LAGLESS": "ラグレス合同会社"
-        }[parent_record[fieldAccount_COLLECT]["value"]];
+            "ID": {
+                "V1": "インベストデザイン株式会社",
+                "V2": "ラグレス2合同会社"
+            },
+            "LAGLESS": {
+                "V1": "ラグレス合同会社",
+                "V2": "ラグレス合同会社"
+            }
+        }[parent_record[fieldAccount_COLLECT]["value"]][version];
 
         if (!contact_company) {
             throw new Error(`不明な支払元口座です: ${parent_record[fieldAccount_COLLECT]["value"]}`);
@@ -388,7 +425,7 @@ dayjs.locale("ja");
 
         // 振込依頼書に記載する日付。Y年M月D日
         // 支払明細の申込レコードの中で、最も遅い支払日を採用する
-        const detail_payment_dates =  parent_record.detail_records.map((record) => dayjs(record[fieldPayDate_APPLY]["value"]));
+        const detail_payment_dates =  parent_record["invoiceTargets"]["value"].map((record) => dayjs(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]));
         const latest_date = dayjs(Math.max(...detail_payment_dates));
         const send_date = {
             text: latest_date.format("YYYY年M月D日"),
@@ -413,7 +450,7 @@ dayjs.locale("ja");
             text: [
                 "拝啓　時下ますますご清栄のこととお慶び申し上げます。\n",
                 "平素は格別のご高配を賜り厚く御礼申し上げます。\n",
-                "さて、下記のとおり早期支払を実行いたしましたのでご案内いたします。\n",
+                `さて、下記のとおり${product_name}のお申込み受付をいたしましたのでご案内いたします。\n`,
                 `つきましては、${product_name}利用分の合計金額を、お支払期限までに下記振込先口座へお振込み頂きますよう、お願い申し上げます。\n`,
                 "ご不明な点などがございましたら、下記連絡先までお問い合わせください。\n",
                 "今後ともどうぞ宜しくお願いいたします。\n",
@@ -425,8 +462,9 @@ dayjs.locale("ja");
             margin: [0, 5, 25, 0]
         };
 
-        const logo = {
-            image: id_logo.default,
+        // 改行で空白のスペースを作り出す
+        const logo_space = {
+            text: "\n\n\n\n",
             width: 50,
             border: [false],
             alignment: "center"
@@ -440,11 +478,12 @@ dayjs.locale("ja");
                     text: `${contact_company}\n`,
                     bold: true
                 },
-                "東京都千代田区一番町15番地1\n",
-                "一番町ファーストビル6階\n",
+                "東京都千代田区神田神保町三丁目\n",
+                "5番地 住友不動産九段下ビル7F\n",
                 `Mail:${mail}\n`,
                 "TEL:03-6261-6818\n"
             ],
+            fontSize: 7,
             border: [false]
         };
 
@@ -455,7 +494,7 @@ dayjs.locale("ja");
                 // autoの列はセルを塗りつぶして擬似的に縦のラインを作るためのもの
                 widths: ["75%", "auto", "25%"],
                 body: [
-                    [letter_body, {text: "", border: [false]},                    logo         ],
+                    [letter_body, {text: "", border: [false]},                    logo_space   ],
                     [{},          {text: "", border: [false], fillColor: orange}, invoice_from ]
                 ]
             }
@@ -571,18 +610,27 @@ dayjs.locale("ja");
         const paid_dist_title = JSON.parse(JSON.stringify(detail_title_template));
         paid_dist_title.text = "支払先";
 
+        const paid_timing_title = JSON.parse(JSON.stringify(detail_title_template));
+        paid_timing_title.text = "支払タイミング";
+
         const paid_date_title = JSON.parse(JSON.stringify(detail_title_template));
-        paid_date_title.text = "早期支払日";
+        paid_date_title.text = "支払日";
 
         const paid_amount_title = JSON.parse(JSON.stringify(detail_title_template));
         paid_amount_title.text = "金額（税込：円）";
 
-        const detail_header_row = [row_num_title , paid_dist_title, paid_date_title, paid_amount_title];
+        const detail_header_row = [
+            row_num_title,
+            paid_dist_title,
+            paid_timing_title,
+            paid_date_title,
+            paid_amount_title
+        ];
 
         const detail_table_body = [];
         detail_table_body.push(detail_header_row);
 
-        const detail_doc = getDetailDoc(parent_record.detail_records);
+        const detail_doc = getDetailDoc(parent_record["invoiceTargets"]["value"]);
         detail_table_body.push(...detail_doc);
 
         const sum_title = JSON.parse(JSON.stringify(detail_title_template));
@@ -597,12 +645,18 @@ dayjs.locale("ja");
         };
 
         const blank_cell = {text: "", border: [false]};
-        const sum_row = [ blank_cell, blank_cell, sum_title, sum_amount ];
+        const sum_row = [
+            blank_cell,
+            blank_cell,
+            blank_cell,
+            sum_title,
+            sum_amount
+        ];
         detail_table_body.push(sum_row);
 
         const detail_table = {
             table: {
-                widths: ["5%", "45%", "20%", "30%"],
+                widths: ["5%", "32%", "16%", "17%", "30%"],
                 headerRows: 1,
                 body: detail_table_body
             },
@@ -614,20 +668,6 @@ dayjs.locale("ja");
         doc.content.push(bar);
 
         return doc;
-    }
-
-    function getDetailRows(parent_record) {
-        // 支払日等を申込アプリから取得。支払日以外は既に親レコードの中に持ってるけど、どうせ取るなら全部取ってしまうことにした
-        const get_apply = {
-            "app": APP_ID_APPLY,
-            "fields": [
-                fieldPayDestName_APPLY,
-                fieldPayDate_APPLY,
-                fieldReceivables_APPLY
-            ],
-            "query": `${fieldRecordId_APPLY} in ("${parent_record[tableInvoiceTargets_COLLECT]["value"].map((apply) => apply["value"][tableFieldApplyRecordNoIV_COLLECT]["value"]).join("\",\"")}")`
-        };
-        return kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_apply);
     }
 
     function getDetailDoc(detail_records) {
@@ -644,19 +684,29 @@ dayjs.locale("ja");
             row_num.borderColor = [white, black, orange, black];
 
             const paid_dist = JSON.parse(JSON.stringify(detail_value_template));
-            paid_dist.text = record[fieldPayDestName_APPLY]["value"];
+            paid_dist.text = record["value"][tableFieldApplicantOfficialNameIV_COLLECT]["value"];
             paid_dist.alignment = "left";
 
+            const paid_timing = JSON.parse(JSON.stringify(detail_value_template));
+            paid_timing.text = ((timing) => {
+                if (timing === "遅払い") {
+                    return timing;
+                } else {
+                    return "早払い";
+                }
+            })(record["value"][tableFieldPaymentTimingIV_COLLECT]["value"]);
+            paid_timing.alignment = "left";
+
             const paid_date = JSON.parse(JSON.stringify(detail_value_template));
-            paid_date.text = formatYMD(record[fieldPayDate_APPLY]["value"]);
+            paid_date.text = formatYMD(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]);
             paid_date.alignment = "left";
 
             const paid_amount = JSON.parse(JSON.stringify(detail_value_template));
-            paid_amount.text = addComma(record[fieldReceivables_APPLY]["value"]);
+            paid_amount.text = addComma(record["value"][tableFieldReceivableIV_COLLECT]["value"]);
             paid_amount.alignment = "right";
             paid_amount.borderColor = [orange, black, white, black];
 
-            return [row_num, paid_dist, paid_date, paid_amount];
+            return [row_num, paid_dist, paid_timing, paid_date, paid_amount];
         });
 
         // 明細は15行以上。15行より少ない場合は余白行を作り、15行以上の場合は明細の数のまま
@@ -674,7 +724,7 @@ dayjs.locale("ja");
             const blank_cell = {text: "", borderColor: [orange, black, orange, black]};
             const blank_cell_right_edge = {text: "", borderColor: [orange, black, white, black]};
 
-            details.push([row_num, following_are_blank, blank_cell, blank_cell_right_edge]);
+            details.push([row_num, following_are_blank, blank_cell, blank_cell, blank_cell_right_edge]);
 
             for (let i = details.length; i < 15; i++) {
                 const row_num = JSON.parse(JSON.stringify(detail_value_template));
@@ -682,7 +732,7 @@ dayjs.locale("ja");
                 row_num.alignment = "right";
                 row_num.borderColor = [white, black, orange, black];
 
-                details.push([row_num, blank_cell, blank_cell, blank_cell_right_edge]);
+                details.push([row_num, blank_cell, blank_cell, blank_cell, blank_cell_right_edge]);
             }
         }
 
@@ -787,18 +837,18 @@ dayjs.locale("ja");
         return count;
     }
 
-    const convertBlobToBase64 = blob => new Promise((resolve, reject) => {
+    const convertBlobToBase64 = (blob) => new Promise((resolve, reject) => {
         const reader = new FileReader;
         reader.onerror = reject;
         reader.onload = () => {
-            resolve(reader.result.replace(/^data:text\/plain;([^,]+)?base64,/, ''));
+            resolve(reader.result.replace(/^data:text\/plain;([^,]+)?base64,/, ""));
         };
-        reader.readAsDataURL(blob)
+        reader.readAsDataURL(blob);
     });
 
     async function build_font() {
-        const make_url = name => {
-            return "https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/fonts%2F" + name + "?alt=media";
+        const make_url = (name) => {
+            return `https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/fonts%2F${  name  }?alt=media`;
         };
 
         if (pdfMake.vfs && pdfMake.vfs["Koruri-Light.ttf"] && pdfMake.vfs["Koruri-Bold.ttf"]) {
@@ -808,28 +858,28 @@ dayjs.locale("ja");
 
         await Promise.all([
             fetch(make_url("Koruri-Light.ttf"))
-            .then(response => response.blob())
-            .then(convertBlobToBase64),
+                .then((response) => response.blob())
+                .then(convertBlobToBase64),
             fetch(make_url("Koruri-Bold.ttf"))
-            .then(response => response.blob())
-            .then(convertBlobToBase64),
+                .then((response) => response.blob())
+                .then(convertBlobToBase64),
         ])
-        .then(result => {
-            pdfMake.vfs = {
+            .then((result) => {
+                pdfMake.vfs = {
                 // base64よりあとのdata部分だけが必要
-                "Koruri-Light.ttf": result[0].split("base64,")[1],
-                "Koruri-Bold.ttf": result[1].split("base64,")[1],
-            };
-            pdfMake.fonts = {
-                [PDF_FONT_NAME]: {
-                    normal: "Koruri-Light.ttf",
-                    bold: "Koruri-Bold.ttf",
-                }
-            };
-        })
-        .catch((err) => {
-            console.log(err);
-            throw new Error("フォントのダウンロード・設定中にエラーが発生しました。");
-        });
+                    "Koruri-Light.ttf": result[0].split("base64,")[1],
+                    "Koruri-Bold.ttf": result[1].split("base64,")[1],
+                };
+                pdfMake.fonts = {
+                    [PDF_FONT_NAME]: {
+                        normal: "Koruri-Light.ttf",
+                        bold: "Koruri-Bold.ttf",
+                    }
+                };
+            })
+            .catch((err) => {
+                console.log(err);
+                throw new Error("フォントのダウンロード・設定中にエラーが発生しました。");
+            });
     }
 })();
