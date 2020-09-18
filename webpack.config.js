@@ -6,8 +6,10 @@ module.exports = {
     mode: "development",
     devtool:"eval-source-map",
     entry: {
+        app: "./src/app.js",
         apply: "./src/apply.js",
-        ke_ban: "./src/ke_ban.js"
+        ke_ban: "./src/ke_ban.js",
+        menu: "./src/menu.js"
     },
     output: {
         filename: "[name].js",

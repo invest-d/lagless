@@ -8,38 +8,45 @@ import "flatpickr/dist/l10n/ja.js";
 import $ from "jquery";
 
 import "url-search-params-polyfill";
+const params = new URLSearchParams(window.location.search);
 
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 import * as find from "./defineFindPolyfill";
 
-// URLの商品名によってフォームの見た目を変更する
+// URLパラメータを引き継いでkintoneに送信できるようにする
 $(() => {
-    const product_name = getUrlParam("product");
-    let css_path = "./styles/form_lagless.css";
-    switch (product_name) {
-    case "dandori":
-        css_path = "./styles/form_dandori.css";
-        break;
-    case "renove":
-        css_path = "./styles/form_renove.css";
-        break;
-    // それ以外はlaglessとする
-    }
-    $("#product-css").attr("href", css_path);
+    // 工務店ID
+    const construction_shop_id = params.get("c");
+    $("#constructionShopId").val(construction_shop_id);
+
+    // 商品ロゴ
+    const product_name = params.get("product");
+    const logo_productname = ((product_name) => {
+        if (product_name) {
+            return product_name;
+        } else {
+            return "lagless";
+        }
+    })(product_name);
+    // 早払いと遅払いで使うロゴを変更する
+    const timing = getPaymentTiming();
+    const version = ((timing) => {
+        if (timing === "late") {
+            return "v2";
+        } else {
+            return "v1";
+        }
+    })(timing);
+    $("#header-logo").addClass(`${logo_productname}-${version}-logo`);
+
+    // 支払いタイミング
+    $("#paymentTiming").val(timing);
 });
 
-// URLの工務店IDパラメータを引き継ぐ
-$(() => {
-    const id_key = "c";
-    const id_val = getUrlParam(id_key);
-
-    $("#constructionShopId").val(id_val);
-});
-
-// URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする
+// URLのパラメータによって初回のフォームの見た目を変更する
 $(() => {
     const key = "user";
-    const val = getUrlParam(key);
+    const val = params.get(key);
     if (val === "existing") {
     // 2回目以降の申込みフォーム
     // 初回のみ必須入力の項目を非表示にする
@@ -53,12 +60,22 @@ $(() => {
     // 初回申込みフォーム
     // 特に変更する必要はない
     }
+
+    if (getPaymentTiming() === "late") {
+        $("span.timing").text("遅払い");
+    } else {
+        $("span.timing").text("早払い");
+    }
 });
 
-// URLから指定したパラメータを取得する
-function getUrlParam(param_name) {
-    const params = new URLSearchParams(window.location.search);
-    return params.get(param_name);
+function getPaymentTiming() {
+    const timing = params.get("t");
+    if (timing === "late") {
+        return "late";
+    } else {
+        // パラメータ無しの場合も早払いとする
+        return "early";
+    }
 }
 
 // 2回目以降申込みフォームで不要なコントロールの必須チェックを外してフォームから非表示にする
@@ -105,7 +122,7 @@ $(() => {
     // 2-1. 2回目以降フォームであればblur時にブランクならOK判定
     // 2-2. 2回目以降フォームであればblur時に非ブランクならパターンマッチのvalidate
     $(".pattern-required-on-modified").blur(function() {
-        pattern_validate($(this), getUrlParam("user") === "existing");
+        pattern_validate($(this), params.get("user") === "existing");
     });
 });
 
