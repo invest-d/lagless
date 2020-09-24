@@ -273,7 +273,8 @@
             // 更新日時を知るため、先ほど更新した協力会社IDのレコードを全件取得。その中で最も更新日時が古いものを採用。
             const updated = await client.record.getAllRecords({
                 "app": APP_ID_KYORYOKU,
-                "condition": `${fieldKyoryokuId_KYORYOKU} in ("${Object.keys(counted_by_kyoryoku_id).join("\",\"")}") order by ${fieldUpdatedDate_KYORYOKU} asc`,
+                "condition": `${fieldKyoryokuId_KYORYOKU} in ("${Object.keys(counted_by_kyoryoku_id).join("\",\"")}")`,
+                "orderBy": `${fieldUpdatedDate_KYORYOKU} asc`,
                 "fields": [fieldUpdatedDate_KYORYOKU]
             });
 
