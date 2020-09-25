@@ -25,10 +25,15 @@
     const fieldRecordId_COLLECT = "$id";
     const fieldStatus_COLLECT = "collectStatus";
     const statusReadyToGenerate_COLLECT = "クラウドサイン作成待ち";
+    const fieldConstructorId_COLLECT = "constructionShopId";
     const fieldAccount_COLLECT = "account";
     const fieldSendDate_COLLECT = "cloudSignSendDate";
     const fieldClosing_COLLECT = "closingDate";
     const fieldSubtableCS_COLLECT = "cloudSignApplies";
+
+    const APP_ID_CONSTRUCTOR = "96";
+    const fieldConstructorId_CONSTRUCTOR = "id";
+    const fieldCorporateId_CONSTRUCTOR = "customerCode";
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
@@ -73,8 +78,16 @@
             const targets = await getTargetRecords()
                 .catch((err) => {
                     console.error(err);
-                    throw new Error("レコードの取得中にエラーが発生しました。");
+                    throw new Error("回収レコードの取得中にエラーが発生しました。");
                 });
+
+            const constructor_ids = Array.from(new Set(targets.map((record) => record[fieldConstructorId_COLLECT]["value"])));
+            const corporate_ids_by_constructor = await getCorporateIdsByConstructor(constructor_ids)
+                .catch((err) => {
+                    console.error(err);
+                    throw new Error("工務店レコードの取得中にエラーが発生しました。");
+                });
+            console.log(corporate_ids_by_constructor);
 
             for (const record of targets) {
                 if (!record[fieldSendDate_COLLECT]["value"]) {
@@ -102,12 +115,35 @@
                 fieldAccount_COLLECT,
                 fieldSendDate_COLLECT,
                 fieldClosing_COLLECT,
-                fieldSubtableCS_COLLECT
+                fieldSubtableCS_COLLECT,
+                fieldConstructorId_COLLECT
             ],
             "condition": `${fieldStatus_COLLECT} in ("${statusReadyToGenerate_COLLECT}")`
         };
 
         return client.record.getAllRecords(request_body);
+    }
+
+    async function getCorporateIdsByConstructor(constructor_ids) {
+        const ids = constructor_ids.map((id) => `"${id}"`).join(",");
+
+        const request_body = {
+            "app": APP_ID_CONSTRUCTOR,
+            "fields":[
+                fieldConstructorId_CONSTRUCTOR,
+                fieldCorporateId_CONSTRUCTOR
+            ],
+            "condition": `${fieldConstructorId_CONSTRUCTOR} in (${ids})`,
+        };
+
+        const records = await client.record.getAllRecords(request_body);
+
+        const result = {};
+        for (const record of records) {
+            result[record[fieldConstructorId_CONSTRUCTOR]["value"]] = record[fieldCorporateId_CONSTRUCTOR]["value"];
+        }
+
+        return result;
     }
 
 })();
