@@ -22,6 +22,7 @@
     })(kintone.app.getId());
 
     const APP_ID_COLLECT = APP_ID.COLLECT;
+    const fieldRecordId_COLLECT = "$id";
     const fieldStatus_COLLECT = "collectStatus";
     const statusReadyToGenerate_COLLECT = "クラウドサイン作成待ち";
     const fieldAccount_COLLECT = "account";
@@ -67,6 +68,7 @@
             return;
         }
 
+        const blank_date_ids = [];
         try {
             const targets = await getTargetRecords()
                 .catch((err) => {
@@ -74,10 +76,19 @@
                     throw new Error("レコードの取得中にエラーが発生しました。");
                 });
 
-            console.log(JSON.stringify(targets));
+            for (const record of targets) {
+                if (!record[fieldSendDate_COLLECT]["value"]) {
+                    blank_date_ids.push(record[fieldRecordId_COLLECT]["value"]);
+                    continue;
+                }
+            }
         } catch(err) {
             alert(err);
         } finally {
+            if (blank_date_ids.length > 0) {
+                alert("クラウドサイン送信日時を入力していないため、次のレコード番号のレコードは処理されませんでした：\n\n"
+                    + `${blank_date_ids.join(", ")}`);
+            }
             this.innerText = text_ready;
         }
     }
@@ -87,6 +98,7 @@
         const request_body = {
             "app": APP_ID_COLLECT,
             "fields":[
+                fieldRecordId_COLLECT,
                 fieldAccount_COLLECT,
                 fieldSendDate_COLLECT,
                 fieldClosing_COLLECT,
