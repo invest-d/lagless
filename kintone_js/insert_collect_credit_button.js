@@ -57,7 +57,7 @@
     const fieldClosingDate_COLLECT = "closingDate";
     const fieldDeadline_COLLECT = "deadline";
     const fieldStatus_COLLECT = "collectStatus";
-    const statusDefault_COLLECT = "クラウドサイン送信待ち";
+    const statusDefault_COLLECT = "クラウドサイン作成待ち";
     const fieldScheduledCollectableAmount_COLLECT = "scheduledCollectableAmount";
     const tableCloudSignApplies_COLLECT = "cloudSignApplies";
     const tableFieldApplyRecordNoCS = "applyRecordNoCS";
