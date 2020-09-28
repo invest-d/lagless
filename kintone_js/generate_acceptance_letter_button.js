@@ -35,6 +35,13 @@
     const fieldConstructorId_CONSTRUCTOR = "id";
     const fieldCorporateId_CONSTRUCTOR = "customerCode";
 
+    const APP_ID_CORPORATE = "28";
+    const fieldRecordId_CORPORATE = "$id";
+    const fieldCorporateName_CORPORATE = "法人名・屋号";
+    const fieldAddress_CORPORATE = "住所_本店";
+    const fieldCeoTitle_CORPORATE = "代表者名_役職";
+    const fieldCeoName_CORPORATE = "代表者名";
+
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
     kintone.events.on("app.record.index.show", (event) => {
@@ -87,7 +94,13 @@
                     console.error(err);
                     throw new Error("工務店レコードの取得中にエラーが発生しました。");
                 });
-            console.log(corporate_ids_by_constructor);
+
+            const corporates_by_id = await getCorporateRecordsByRecordId(Object.values(corporate_ids_by_constructor))
+                .catch((err) => {
+                    console.error(err);
+                    throw new Error("取引企業管理レコードの取得中にエラーが発生しました。");
+                });
+            console.log(corporates_by_record_id);
 
             for (const record of targets) {
                 if (!record[fieldSendDate_COLLECT]["value"]) {
@@ -141,6 +154,33 @@
         const result = {};
         for (const record of records) {
             result[record[fieldConstructorId_CONSTRUCTOR]["value"]] = record[fieldCorporateId_CONSTRUCTOR]["value"];
+        }
+
+        return result;
+    }
+
+    async function getCorporateRecordsByRecordId(corporate_ids) {
+        // corporate_idsには重複の可能性がある（支払サイトが複数あるなどで、複数の工務店IDが同一の取引企業を指す場合がある）
+        const unique_corporate_ids = Array.from(new Set(corporate_ids));
+        const quoted_ids = unique_corporate_ids.map((id) => `"${id}"`).join(",");
+
+        const request_body = {
+            "app": APP_ID_CORPORATE,
+            "fields":[
+                fieldRecordId_CORPORATE,
+                fieldCorporateName_CORPORATE,
+                fieldAddress_CORPORATE,
+                fieldCeoTitle_CORPORATE,
+                fieldCeoName_CORPORATE
+            ],
+            "condition": `${fieldRecordId_CORPORATE} in (${quoted_ids})`,
+        };
+
+        const records = await client.record.getAllRecords(request_body);
+
+        const result = {};
+        for (const record of records) {
+            result[record[fieldRecordId_CORPORATE]["value"]] = record;
         }
 
         return result;
