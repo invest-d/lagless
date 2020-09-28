@@ -305,6 +305,7 @@ dayjs.locale("ja");
             "app": APP_ID_COLLECT,
             "fields": [
                 fieldRecordId_COLLECT,
+                fieldConstructionShopId_COLLECT,
                 fieldConstructionShopName_COLLECT,
                 fieldCeoTitle_COLLECT,
                 fieldCeo_COLLECT,
@@ -332,7 +333,7 @@ dayjs.locale("ja");
         const attachment_pdfs = [];
         for(const parent_record of target_parents.records) {
             // 回収レコードに遅払い日数フィールドを紐づける
-            const constructor = constructors.records.find((r) => r["id"]["value"] === parent_record["constructionShopId"]["value"]);
+            const constructor = constructors.records.find((r) => r["id"]["value"] === parent_record[fieldConstructionShopId_COLLECT]["value"]);
             if (!constructor) {
                 // ダイアログを表示するが、他のPDFは引き続き作成を試みる
                 alert(`工務店レコードが見つかりませんでした。回収レコードID: ${parent_record["$id"]["value"]}`);
