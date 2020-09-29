@@ -1,3 +1,9 @@
+// PDF生成ライブラリ
+const pdfMake = require("pdfmake");
+const PDF_FONT_NAME = "Koruri";
+
+import { build_font } from "./generate_invoice_button";
+
 (function() {
     "use strict";
 
@@ -30,6 +36,7 @@
     const fieldSendDate_COLLECT = "cloudSignSendDate";
     const fieldClosing_COLLECT = "closingDate";
     const fieldSubtableCS_COLLECT = "cloudSignApplies";
+    const fieldAcceptanceLetterPdf_COLLECT = "cloudSignPdf";
 
     const APP_ID_CONSTRUCTOR = "96";
     const fieldConstructorId_CONSTRUCTOR = "id";
@@ -100,14 +107,44 @@
                     console.error(err);
                     throw new Error("取引企業管理レコードの取得中にエラーが発生しました。");
                 });
-            console.log(corporates_by_record_id);
 
+            // フォント設定
+            await build_font();
+
+            const file_processes = [];
             for (const record of targets) {
                 if (!record[fieldSendDate_COLLECT]["value"]) {
                     blank_date_ids.push(record[fieldRecordId_COLLECT]["value"]);
                     continue;
                 }
+
+                // 各レコードについてPDFドキュメントを生成する
+                const letter_doc = generateInvoiceDocument();
+
+                // PDFドキュメントをBlobデータに変換・アップロードする
+                const file_process = new Promise((resolve) => {
+                    pdfMake.createPdf(letter_doc).getBlob(async (blob) => {
+                        const letter = {
+                            "id": record[fieldRecordId_COLLECT]["value"],
+                            "name": "test_pdf_data.pdf",
+                            "data": blob
+                        };
+
+                        await attachPdf(letter)
+                            .catch((err) => {
+                                console.error(err);
+                                throw new Error("債権譲渡承諾書の添付中にエラーが発生しました。");
+                            });
+
+                        resolve();
+                    });
+                });
+
+                file_processes.push(file_process);
             }
+
+            await Promise.all(file_processes);
+            alert(`${file_processes.length}件 債権譲渡承諾書の作成が完了し、各レコードの添付ファイルとして保存しました。\n\n内容の目視確認は別途実施してください。`);
         } catch(err) {
             alert(err);
         } finally {
@@ -184,6 +221,56 @@
         }
 
         return result;
+    }
+
+    function generateInvoiceDocument() {
+        const doc = {
+            content: [],
+            pageSize: "A4",
+            pageMargins: [55, 30, 55, 30],
+            defaultStyle: {
+                font: PDF_FONT_NAME,
+                fontSize: 8,
+                lineHeight: 1.2,
+            }
+        };
+
+        const send_date = {
+            text: "YYYY年M月D日",
+            alignment: "right"
+        };
+        doc.content.push(send_date);
+
+        // 文書のタイトル
+        const title = {
+            text: "債権譲渡承諾書",
+            fontSize: 14,
+            bold: true,
+            alignment: "center",
+            margin: [0, 15, 0, 0]
+        };
+        doc.content.push(title);
+
+        return doc;
+    }
+
+    async function attachPdf(letter) {
+        console.log("債権譲渡承諾書ファイルをアップロードし、レコードに添付する。");
+        const { fileKey } = await client.file.uploadFile({
+            file: letter
+        });
+
+        const attach_pdf_body = {
+            "app": APP_ID_COLLECT,
+            "id": letter.id,
+            "record": {
+                [fieldAcceptanceLetterPdf_COLLECT]: {
+                    "value": [{ fileKey }]
+                }
+            }
+        };
+
+        client.record.updateRecord(attach_pdf_body);
     }
 
 })();
