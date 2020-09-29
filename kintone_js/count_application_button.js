@@ -294,9 +294,10 @@
         console.log("直前に更新されていないのに申込み回数が1回以上の協力会社レコードを取得する");
 
         // 1年間に1件も申込がない場合はupdated_dateは無い
-        const query = (updated_date)
-            ? `(${fieldNumberOfApplication_KYORYOKU} > 0 or ${fieldNumberOfApplication_late_KYORYOKU} > 0) and ${fieldUpdatedDate_KYORYOKU} < "${updated_date}"`
-            : `${fieldNumberOfApplication_KYORYOKU} > 0 or ${fieldNumberOfApplication_late_KYORYOKU} > 0`;
+        let query = `${fieldNumberOfApplication_KYORYOKU} > 0 or ${fieldNumberOfApplication_late_KYORYOKU} > 0`;
+        if (updated_date) {
+            query = `(${query}) and  ${fieldUpdatedDate_KYORYOKU} < "${updated_date}"`;
+        }
 
         const request_body = {
             "app": APP_ID_KYORYOKU,
