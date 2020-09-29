@@ -224,32 +224,179 @@ import { build_font } from "./generate_invoice_button";
     }
 
     function generateInvoiceDocument() {
+        const gray = "#888888";
+        const white = "#FFFFFF";
+
         const doc = {
             content: [],
             pageSize: "A4",
-            pageMargins: [55, 30, 55, 30],
+            pageMargins: [ 55, 55 ],
+            styles: {
+                tableHeader: {
+                    bold: true,
+                    fillColor: gray,
+                    color: white,
+                    alignment: "center",
+                }
+            },
             defaultStyle: {
                 font: PDF_FONT_NAME,
-                fontSize: 8,
+                fontSize: 11,
                 lineHeight: 1.2,
             }
         };
 
         const send_date = {
-            text: "YYYY年M月D日",
+            text: "2020/10/5",
             alignment: "right"
         };
         doc.content.push(send_date);
 
-        // 文書のタイトル
+        const recipient = {
+            text: "債権譲受人 ラグレス2合同会社 御中"
+        };
+        doc.content.push(recipient);
+
+        const sender_title = {
+            text: "債務者（支払企業）",
+            margin: [230, 0, 0, 0]
+        };
+        doc.content.push(sender_title);
+
+        const sender = {
+            text: [
+                "株式会社テスト工務店\n",
+                "京都府京都市上京区智恵光院通り芦山寺上る西入る西社町55番地55\n",
+                "代表取締役 石田峻輝"
+            ],
+            margin: [242, 0, 0, 0]
+        };
+        doc.content.push(sender);
+
         const title = {
             text: "債権譲渡承諾書",
-            fontSize: 14,
+            fontSize: 16,
             bold: true,
             alignment: "center",
-            margin: [0, 15, 0, 0]
+            margin: [0, 25, 0, 0]
         };
         doc.content.push(title);
+
+        const letter_body = {
+            text: [
+                "　当社は、下記リストに記載の当社に対する対象債権の債権譲渡につき、異議なく承諾し、"
+                + "対象債権の全部又は一部の支払を拒絶することができる事由"
+                + "（対象債権の無効・取消、弁済・免除・相殺等の抗弁、"
+                + "原契約における義務違反・担保責任に基づく対象債権の減額・原契約の解除を含みます）に基づき、"
+                + "対象債権の全部又は一部の協力企業に対する支払を拒絶し得る一切の抗弁権を、放棄します。\n",
+                "　下記の金額については、ラグレス2合同会社にお支払いいたします。"
+            ],
+            preserveLeadingSpaces: true,
+            margin: [0, 15, 0, 0]
+        };
+        doc.content.push(letter_body);
+
+        const list_title = {
+            text: [
+                "＜債権譲渡希望者リスト＞\n",
+                "対象となる締日：2020年9月30日\n\n",
+                "※対象債権内容の詳細は、別途添付の請求書に記載しております。"
+            ],
+            margin: [0, 15, 0, 0]
+        };
+        doc.content.push(list_title);
+
+        const receivables_table = {
+            table: {
+                headerRows: 1,
+                widths: [ "6%", "21%", "12%", "15%", "18%", "13%", "15%" ],
+                // 行の高さはヘッダー行のみ少し高くする
+                heights: (row) => (row === 0) ? 30 : 10,
+                body: []
+            },
+            layout: {
+                // 明細行どうしの境界線のみ細くする
+                hLineWidth: (i, node) => (i > 1 && i < node.table.body.length) ? 0.5 : 1,
+                vLineWidth: (i, node) => 1
+            }
+        };
+
+        const header_row = [
+            {
+                text: "No.",
+                style: "tableHeader",
+                fontSize: 10,
+                margin: [ 0, 10, 0, 0 ]
+            },
+            {
+                text: "協力会社名\n（対象債権譲渡企業）",
+                style: "tableHeader",
+                fontSize: 8,
+                margin: [ 0, 6, 0, 0 ]
+            },
+            {
+                text: "支払\nタイミング",
+                style: "tableHeader",
+                fontSize: 10,
+                margin: [ 0, 2, 0, 0 ]
+            },
+            {
+                text: "支払予定日",
+                style: "tableHeader",
+                fontSize: 10,
+                margin: [ 0, 10, 0, 0 ]
+            },
+            {
+                text: "請求書金額\n（税込）",
+                style: "tableHeader",
+                fontSize: 10,
+                margin: [ 0, 2, 0, 0 ]
+            },
+            {
+                text: "差引額\n（協力会費・\n立替金等）",
+                style: "tableHeader",
+                fontSize: 7,
+                margin: [ 0, 0, 0, 0 ]
+            },
+            {
+                text: "債権譲渡の\n対象となる金額",
+                style: "tableHeader",
+                fontSize: 8,
+                margin: [ 0, 6, 0, 0 ]
+            }
+        ];
+        receivables_table.table.body.push(header_row);
+
+        const sample_detail_row = [
+            {text: "1", alignment: "right"},
+            {text: "company 1", alignment: "left"},
+            {text: "早払い", alignment: "left"},
+            {text: "2020/8/10", alignment: "right"},
+            {text: "110,000", alignment: "right"},
+            {text: "1,000", alignment: "right"},
+            {text: "109,000", alignment: "right"}
+        ];
+        // ディープコピーしてダミーの明細行を10行作る
+        for (let i = 0; i < 10; i++) {
+            receivables_table.table.body.push(JSON.parse(JSON.stringify(sample_detail_row)));
+        }
+        doc.content.push(receivables_table);
+
+        const total_block = {
+            table: {
+                widths: [ "*", "24%", "20%" ],
+                heights: 10,
+                body: [
+                    [
+                        {text: "", border: [false, false, false, false]},
+                        {text: "合計金額", style: "tableHeader"},
+                        {text: "439,000 円", alignment: "right"}
+                    ]
+                ]
+            },
+            margin: [ 0, 5, 0, 0 ]
+        };
+        doc.content.push(total_block);
 
         return doc;
     }
