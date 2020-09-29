@@ -1,8 +1,5 @@
 // PDF生成ライブラリ
-const pdfMake = require("pdfmake");
-const PDF_FONT_NAME = "Koruri";
-
-import { build_font } from "./generate_invoice_button";
+import { pdfMake } from "./pdfMake_util";
 
 (function() {
     "use strict";
@@ -107,9 +104,6 @@ import { build_font } from "./generate_invoice_button";
                     console.error(err);
                     throw new Error("取引企業管理レコードの取得中にエラーが発生しました。");
                 });
-
-            // フォント設定
-            await build_font();
 
             const file_processes = [];
             for (const record of targets) {
@@ -240,7 +234,7 @@ import { build_font } from "./generate_invoice_button";
                 }
             },
             defaultStyle: {
-                font: PDF_FONT_NAME,
+                font: pdfMake.builded_font,
                 fontSize: 11,
                 lineHeight: 1.2,
             }
