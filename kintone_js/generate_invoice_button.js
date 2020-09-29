@@ -23,6 +23,7 @@
 
 // PDF生成ライブラリ
 import { pdfMake } from "./pdfMake_util";
+import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
 
 // 祝日判定ライブラリ
 const holiday_jp = require("@holiday-jp/holiday_jp");
@@ -357,23 +358,7 @@ dayjs.locale("ja");
         // pdfmakeのライブラリ用のオブジェクトを生成する。
         const product_name = parent_record[fieldProductName_COLLECT]["value"];
         const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
-        const version = ((days_later) => {
-            if (Number.isInteger(days_later) && Number(days_later) > 0) {
-                return "V2";
-            } else {
-                return "V1";
-            }
-        })(parent_record["daysLater"]["value"]);
-        const contact_company = {
-            "ID": {
-                "V1": "インベストデザイン株式会社",
-                "V2": "ラグレス2合同会社"
-            },
-            "LAGLESS": {
-                "V1": "ラグレス合同会社",
-                "V2": "ラグレス合同会社"
-            }
-        }[parent_record[fieldAccount_COLLECT]["value"]][version];
+        const contact_company = get_contractor_name(parent_record[fieldAccount_COLLECT]["value"], parent_record["daysLater"]["value"])
 
         if (!contact_company) {
             throw new Error(`不明な支払元口座です: ${parent_record[fieldAccount_COLLECT]["value"]}`);
@@ -685,13 +670,7 @@ dayjs.locale("ja");
             paid_dist.alignment = "left";
 
             const paid_timing = JSON.parse(JSON.stringify(detail_value_template));
-            paid_timing.text = ((timing) => {
-                if (timing === "遅払い") {
-                    return timing;
-                } else {
-                    return "早払い";
-                }
-            })(record["value"][tableFieldPaymentTimingIV_COLLECT]["value"]);
+            paid_timing.text = get_display_payment_timing(record["value"][tableFieldPaymentTimingIV_COLLECT]["value"]);
             paid_timing.alignment = "left";
 
             const paid_date = JSON.parse(JSON.stringify(detail_value_template));
@@ -754,17 +733,6 @@ dayjs.locale("ja");
 
         return date;
     };
-
-    function formatYMD(yyyy_mm_dd) {
-        // Numberでキャストしてゼロ埋めされているのを取り除く
-        const date = String(yyyy_mm_dd).split("-");
-        return `${String(Number(date[0]))}年${String(Number(date[1]))}月${String(Number(date[2]))}日`;
-    }
-
-    function addComma(num) {
-        // 数字に3桁区切りのコンマを挿入した文字列を返す。整数のみ考慮
-        return String(num).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
-    }
 
     async function uploadInvoices(invoices) {
         console.log("生成した振込依頼書を各レコードに添付する");
