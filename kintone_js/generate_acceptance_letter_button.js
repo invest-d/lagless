@@ -1,3 +1,10 @@
+/*
+    Version 1
+    回収アプリのレコード1つにつき、債権譲渡承諾書のpdfファイルを1つ生成してレコードの当該フィールドに添付する。
+    債権譲渡承諾書に記載する明細行の内容は、回収レコード内にあるサブテーブル「クラウドサイン対象の申込レコード一覧」から生成する。
+    債権譲渡承諾書に承諾する工務店の企業名などの情報は、法人登記の情報（取引企業管理アプリ）を取得して表示する。
+*/
+
 // PDF生成ライブラリ
 import { pdfMake } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
