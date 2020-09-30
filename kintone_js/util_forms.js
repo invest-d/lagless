@@ -11,7 +11,7 @@ export function addComma(num) {
 
 export function get_contractor_name(account, days_later) {
     let version = "";
-    if (Number.isInteger(days_later) && Number(days_later) > 0) {
+    if (Number.isInteger(Number(days_later)) && Number(days_later) > 0) {
         version = "V2";
     } else {
         version = "V1";
