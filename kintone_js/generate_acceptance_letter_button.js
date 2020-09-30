@@ -32,6 +32,7 @@ import { pdfMake } from "./pdfMake_util";
     const fieldAccount_COLLECT = "account";
     const fieldSendDate_COLLECT = "cloudSignSendDate";
     const fieldClosing_COLLECT = "closingDate";
+    const fieldDaysLater_COLLECT = "daysLater";
     const fieldSubtableCS_COLLECT = "cloudSignApplies";
     const fieldAcceptanceLetterPdf_COLLECT = "cloudSignPdf";
 
@@ -160,7 +161,8 @@ import { pdfMake } from "./pdfMake_util";
                 fieldSendDate_COLLECT,
                 fieldClosing_COLLECT,
                 fieldSubtableCS_COLLECT,
-                fieldConstructorId_COLLECT
+                fieldConstructorId_COLLECT,
+                fieldDaysLater_COLLECT
             ],
             "condition": `${fieldStatus_COLLECT} in ("${statusReadyToGenerate_COLLECT}")`
         };
