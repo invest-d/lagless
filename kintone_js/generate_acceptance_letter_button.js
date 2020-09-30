@@ -252,7 +252,15 @@ dayjs.locale("ja");
         const gray = "#888888";
         const white = "#FFFFFF";
 
+        const contractor_name = get_contractor_name(record[fieldAccount_COLLECT]["value"], record[fieldDaysLater_COLLECT]["value"]);
         const doc = {
+            info: {
+                title: `譲渡対象債権リスト（${corporate_info[fieldCorporateName_CORPORATE]["value"]}様）`,
+                author: contractor_name,
+                subject: `${dayjs(record[fieldClosing_COLLECT]["value"]).format("YYYY年M月D日")}締め分`,
+                creator: contractor_name,
+                producer: contractor_name,
+            },
             content: [],
             pageSize: "A4",
             pageMargins: [ 55, 55 ],
@@ -277,7 +285,6 @@ dayjs.locale("ja");
         };
         doc.content.push(send_date);
 
-        const contractor_name = get_contractor_name(record[fieldAccount_COLLECT]["value"], record[fieldDaysLater_COLLECT]["value"]);
         const recipient = {
             text: `債権譲受人 ${contractor_name} 御中`
         };
