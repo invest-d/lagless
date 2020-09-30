@@ -1,5 +1,9 @@
 // PDF生成ライブラリ
 import { pdfMake } from "./pdfMake_util";
+import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
+
+const dayjs = require("dayjs");
+dayjs.locale("ja");
 
 (function() {
     "use strict";
@@ -34,6 +38,13 @@ import { pdfMake } from "./pdfMake_util";
     const fieldClosing_COLLECT = "closingDate";
     const fieldDaysLater_COLLECT = "daysLater";
     const fieldSubtableCS_COLLECT = "cloudSignApplies";
+    const tableFieldCustomerName_COLLECT = "applicantOfficialNameCS";
+    const tableFieldPaymentTiming_COLLECT = "paymentTimingCS";
+    const tableFieldPaymentDate_COLLECT = "paymentDateCS";
+    const tableFieldInvoiceAmount_COLLECT = "invoiceAmountCS";
+    const tableFieldMemberFee_COLLECT = "membershipFeeCS";
+    const tableFieldReceivableAmount_COLLECT = "receivableCS";
+    const fieldTotalAmount_COLLECT = "scheduledCollectableAmount";
     const fieldAcceptanceLetterPdf_COLLECT = "cloudSignPdf";
 
     const APP_ID_CONSTRUCTOR = "96";
@@ -94,17 +105,24 @@ import { pdfMake } from "./pdfMake_util";
                 });
 
             const constructor_ids = Array.from(new Set(targets.map((record) => record[fieldConstructorId_COLLECT]["value"])));
-            const corporate_ids_by_constructor = await getCorporateIdsByConstructor(constructor_ids)
+
+            const corporate_ids_by_constructor_id = await getCorporateIdsByConstructorId(constructor_ids)
                 .catch((err) => {
                     console.error(err);
                     throw new Error("工務店レコードの取得中にエラーが発生しました。");
                 });
 
-            const corporates_by_id = await getCorporateRecordsByRecordId(Object.values(corporate_ids_by_constructor))
+            const corporates_by_id = await getCorporateRecordsByRecordId(Object.values(corporate_ids_by_constructor_id))
                 .catch((err) => {
                     console.error(err);
                     throw new Error("取引企業管理レコードの取得中にエラーが発生しました。");
                 });
+
+            // 工務店IDから取引企業管理レコードの情報を呼び出せるようにする
+            const corporates_by_constructor_id = {};
+            for (const constructor_id of constructor_ids) {
+                corporates_by_constructor_id[constructor_id] = corporates_by_id[corporate_ids_by_constructor_id[constructor_id]];
+            }
 
             const file_processes = [];
             for (const record of targets) {
@@ -114,14 +132,16 @@ import { pdfMake } from "./pdfMake_util";
                 }
 
                 // 各レコードについてPDFドキュメントを生成する
-                const letter_doc = generateInvoiceDocument();
+                const corporate_info = corporates_by_constructor_id[record[fieldConstructorId_COLLECT]["value"]]
+                const letter_doc = generateInvoiceDocument(record, corporate_info);
 
                 // PDFドキュメントをBlobデータに変換・アップロードする
                 const file_process = new Promise((resolve) => {
                     pdfMake.createPdf(letter_doc).getBlob(async (blob) => {
+                        const filename_closing = dayjs(record[fieldClosing_COLLECT]["value"]).format("YYYY年M月D日");
                         const letter = {
                             "id": record[fieldRecordId_COLLECT]["value"],
-                            "name": "test_pdf_data.pdf",
+                            "name": `${filename_closing}締め分 対象債権リスト（${corporate_info[fieldCorporateName_CORPORATE]["value"]}様）.pdf`,
                             "data": blob
                         };
 
@@ -141,6 +161,7 @@ import { pdfMake } from "./pdfMake_util";
             await Promise.all(file_processes);
             alert(`${file_processes.length}件 債権譲渡承諾書の作成が完了し、各レコードの添付ファイルとして保存しました。\n\n内容の目視確認は別途実施してください。`);
         } catch(err) {
+            console.error(err);
             alert(err);
         } finally {
             if (blank_date_ids.length > 0) {
@@ -158,6 +179,7 @@ import { pdfMake } from "./pdfMake_util";
             "fields":[
                 fieldRecordId_COLLECT,
                 fieldAccount_COLLECT,
+                fieldTotalAmount_COLLECT,
                 fieldSendDate_COLLECT,
                 fieldClosing_COLLECT,
                 fieldSubtableCS_COLLECT,
@@ -170,7 +192,7 @@ import { pdfMake } from "./pdfMake_util";
         return client.record.getAllRecords(request_body);
     }
 
-    async function getCorporateIdsByConstructor(constructor_ids) {
+    async function getCorporateIdsByConstructorId(constructor_ids) {
         const ids = constructor_ids.map((id) => `"${id}"`).join(",");
 
         const request_body = {
@@ -219,7 +241,7 @@ import { pdfMake } from "./pdfMake_util";
         return result;
     }
 
-    function generateInvoiceDocument() {
+    function generateInvoiceDocument(record, corporate_info) {
         const gray = "#888888";
         const white = "#FFFFFF";
 
@@ -243,13 +265,14 @@ import { pdfMake } from "./pdfMake_util";
         };
 
         const send_date = {
-            text: "2020/10/5",
+            text: formatYMD(record[fieldSendDate_COLLECT]["value"]),
             alignment: "right"
         };
         doc.content.push(send_date);
 
+        const contractor_name = get_contractor_name(record[fieldAccount_COLLECT]["value"], record[fieldDaysLater_COLLECT]["value"]);
         const recipient = {
-            text: "債権譲受人 ラグレス2合同会社 御中"
+            text: `債権譲受人 ${contractor_name} 御中`
         };
         doc.content.push(recipient);
 
@@ -261,9 +284,9 @@ import { pdfMake } from "./pdfMake_util";
 
         const sender = {
             text: [
-                "株式会社テスト工務店\n",
-                "京都府京都市上京区智恵光院通り芦山寺上る西入る西社町55番地55\n",
-                "代表取締役 石田峻輝"
+                `${corporate_info[fieldCorporateName_CORPORATE]["value"]}\n`,
+                `${corporate_info[fieldAddress_CORPORATE]["value"]}\n`,
+                `${corporate_info[fieldCeoTitle_CORPORATE]["value"]} ${corporate_info[fieldCeoName_CORPORATE]["value"]}`
             ],
             margin: [242, 0, 0, 0]
         };
@@ -285,7 +308,7 @@ import { pdfMake } from "./pdfMake_util";
                 + "（対象債権の無効・取消、弁済・免除・相殺等の抗弁、"
                 + "原契約における義務違反・担保責任に基づく対象債権の減額・原契約の解除を含みます）に基づき、"
                 + "対象債権の全部又は一部の協力企業に対する支払を拒絶し得る一切の抗弁権を、放棄します。\n",
-                "　下記の金額については、ラグレス2合同会社にお支払いいたします。"
+                `　下記の金額については、${contractor_name}にお支払いいたします。`
             ],
             preserveLeadingSpaces: true,
             margin: [0, 15, 0, 0]
@@ -295,7 +318,7 @@ import { pdfMake } from "./pdfMake_util";
         const list_title = {
             text: [
                 "＜債権譲渡希望者リスト＞\n",
-                "対象となる締日：2020年9月30日\n\n",
+                `対象となる締日：${formatYMD(record[fieldClosing_COLLECT]["value"])}\n\n`,
                 "※対象債権内容の詳細は、別途添付の請求書に記載しております。"
             ],
             margin: [0, 15, 0, 0]
@@ -363,19 +386,57 @@ import { pdfMake } from "./pdfMake_util";
         ];
         receivables_table.table.body.push(header_row);
 
-        const sample_detail_row = [
-            {text: "1", alignment: "right"},
-            {text: "company 1", alignment: "left"},
-            {text: "早払い", alignment: "left"},
-            {text: "2020/8/10", alignment: "right"},
-            {text: "110,000", alignment: "right"},
-            {text: "1,000", alignment: "right"},
-            {text: "109,000", alignment: "right"}
-        ];
-        // ディープコピーしてダミーの明細行を10行作る
-        for (let i = 0; i < 10; i++) {
-            receivables_table.table.body.push(JSON.parse(JSON.stringify(sample_detail_row)));
-        }
+        const get_receivable_details = (record) => {
+            const target_applies = record[fieldSubtableCS_COLLECT]["value"];
+            const display_details = target_applies.map((apply, index) => {
+                // 1行目に「1」と表示
+                const row = index + 1;
+
+                return [
+                    {text: String(row),                                                                          alignment: "right"},
+                    {text: apply["value"][tableFieldCustomerName_COLLECT]["value"],                              alignment: "left"},
+                    {text: get_display_payment_timing(apply["value"][tableFieldPaymentTiming_COLLECT]["value"]), alignment: "left"},
+                    {text: dayjs(apply["value"][tableFieldPaymentDate_COLLECT]["value"]).format("YYYY/M/D"),     alignment: "right"},
+                    {text: addComma(apply["value"][tableFieldInvoiceAmount_COLLECT]["value"]),                   alignment: "right"},
+                    {text: addComma(apply["value"][tableFieldMemberFee_COLLECT]["value"]),                       alignment: "right"},
+                    {text: addComma(apply["value"][tableFieldReceivableAmount_COLLECT]["value"]),                alignment: "right"}
+                ];
+            });
+
+            // PDFには明細行を最低でも10行以上表示する。つまり、下記のような処理となる。
+            if (target_applies.length < 10) {
+                // 申込が10行未満の場合：
+                // 1. 「以下余白」の行を追加し、
+                display_details.push([
+                    {text: String(display_details.length + 1), alignment: "right"},
+                    {text: "以下余白",                         alignment: "left"},
+                    {text: ""},
+                    {text: ""},
+                    {text: ""},
+                    {text: ""},
+                    {text: ""}
+                ]);
+
+                // 2. 尚且つ明細行が10行になるまで空行を追加する。
+                for (let now_rows = display_details.length; now_rows < 10; now_rows++) {
+                    display_details.push([
+                        {text: String(now_rows + 1), alignment: "right"},
+                        {text: ""},
+                        {text: ""},
+                        {text: ""},
+                        {text: ""},
+                        {text: ""},
+                        {text: ""},
+                    ]);
+                }
+            }
+            // 申込が10行以上の場合：
+            // 特に何もしない。「以下余白」の行や空行も表示せず、PDFの2ページ目以降に11行目以降を表示する。
+            return display_details;
+        };
+        const receivable_details = get_receivable_details(record);
+
+        receivables_table.table.body = receivables_table.table.body.concat(receivable_details);
         doc.content.push(receivables_table);
 
         const total_block = {
@@ -386,7 +447,7 @@ import { pdfMake } from "./pdfMake_util";
                     [
                         {text: "", border: [false, false, false, false]},
                         {text: "合計金額", style: "tableHeader"},
-                        {text: "439,000 円", alignment: "right"}
+                        {text: `${addComma(record[fieldTotalAmount_COLLECT]["value"])} 円`, alignment: "right"}
                     ]
                 ]
             },
