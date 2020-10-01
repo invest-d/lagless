@@ -3,8 +3,7 @@ const path = require("path");
 
 module.exports = {
     name: "lagless",
-    mode: "development",
-    devtool:"eval-source-map",
+    mode: "production",
     entry: {
         app: "./src/app.js",
         apply: "./src/apply.js",
