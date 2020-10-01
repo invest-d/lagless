@@ -1,6 +1,8 @@
 // PDF生成ライブラリ
 export const pdfMake = require("pdfmake");
-const PDF_FONT_NAME = "Koruri";
+export const PDF_FONTS = {
+    default: "default"
+};
 
 const convertBlobToBase64 = (blob) => new Promise((resolve, reject) => {
     const reader = new FileReader;
@@ -36,7 +38,7 @@ const build_font = async () => {
                 "Koruri-Bold.ttf": result[1].split("base64,")[1],
             };
             pdfMake.fonts = {
-                [PDF_FONT_NAME]: {
+                [PDF_FONTS.default]: {
                     normal: "Koruri-Light.ttf",
                     bold: "Koruri-Bold.ttf",
                 }
@@ -50,5 +52,4 @@ const build_font = async () => {
 
 (() => {
     build_font();
-    pdfMake.built_font = PDF_FONT_NAME;
 })();

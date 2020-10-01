@@ -6,7 +6,7 @@
 */
 
 // PDF生成ライブラリ
-import { pdfMake } from "./pdfMake_util";
+import { pdfMake, PDF_FONTS } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
 
 const dayjs = require("dayjs");
@@ -273,7 +273,7 @@ dayjs.locale("ja");
                 }
             },
             defaultStyle: {
-                font: pdfMake.built_font,
+                font: PDF_FONTS.default,
                 fontSize: 11,
                 lineHeight: 1.2,
             }
