@@ -376,7 +376,7 @@ dayjs.locale("ja");
             pageSize: "A4",
             pageMargins: [55, 30, 55, 30],
             defaultStyle: {
-                font: pdfMake.builded_font,
+                font: pdfMake.built_font,
                 fontSize: 8,
                 lineHeight: 1.2,
             }

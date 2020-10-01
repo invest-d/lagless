@@ -273,7 +273,7 @@ dayjs.locale("ja");
                 }
             },
             defaultStyle: {
-                font: pdfMake.builded_font,
+                font: pdfMake.built_font,
                 fontSize: 11,
                 lineHeight: 1.2,
             }

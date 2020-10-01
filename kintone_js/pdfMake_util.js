@@ -50,5 +50,5 @@ const build_font = async () => {
 
 (() => {
     build_font();
-    pdfMake.builded_font = PDF_FONT_NAME;
+    pdfMake.built_font = PDF_FONT_NAME;
 })();
