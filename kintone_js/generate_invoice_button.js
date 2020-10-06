@@ -327,7 +327,7 @@ dayjs.locale("ja");
         };
         const constructors = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_constructors);
 
-        await build_font();
+        await build_font("default");
 
         const attachment_pdfs = [];
         for(const parent_record of target_parents.records) {
@@ -378,7 +378,7 @@ dayjs.locale("ja");
             pageSize: "A4",
             pageMargins: [55, 30, 55, 30],
             defaultStyle: {
-                font: PDF_FONTS.default,
+                font: PDF_FONTS.default.family_name,
                 fontSize: 8,
                 lineHeight: 1.2,
             }

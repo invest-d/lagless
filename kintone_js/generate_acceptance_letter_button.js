@@ -131,7 +131,7 @@ dayjs.locale("ja");
                 corporates_by_constructor_id[constructor_id] = corporates_by_id[corporate_ids_by_constructor_id[constructor_id]];
             }
 
-            await build_font();
+            await build_font("default");
 
             const file_processes = [];
             for (const record of targets) {
@@ -275,7 +275,7 @@ dayjs.locale("ja");
                 }
             },
             defaultStyle: {
-                font: PDF_FONTS.default,
+                font: PDF_FONTS.default.family_name,
                 fontSize: 11,
                 lineHeight: 1.2,
             }
