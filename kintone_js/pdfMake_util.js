@@ -1,5 +1,5 @@
 // PDF生成ライブラリ
-export const pdfMake = require("pdfmake");
+window.pdfMake = require("pdfmake");
 export const PDF_FONTS = {
     default: "default"
 };
@@ -13,12 +13,12 @@ const convertBlobToBase64 = (blob) => new Promise((resolve, reject) => {
     reader.readAsDataURL(blob);
 });
 
-const build_font = async () => {
+export const build_font = async () => {
     const make_url = (name) => {
         return `https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/fonts%2F${  name  }?alt=media`;
     };
 
-    if (pdfMake.vfs && pdfMake.vfs["Koruri-Light.ttf"] && pdfMake.vfs["Koruri-Bold.ttf"]) {
+    if (window.pdfMake.vfs && window.pdfMake.vfs["Koruri-Light.ttf"] && window.pdfMake.vfs["Koruri-Bold.ttf"]) {
         console.log("フォントをダウンロード済みのため、設定をスキップします");
         return;
     }
@@ -32,12 +32,12 @@ const build_font = async () => {
             .then(convertBlobToBase64),
     ])
         .then((result) => {
-            pdfMake.vfs = {
+            window.pdfMake.vfs = {
             // base64よりあとのdata部分だけが必要
                 "Koruri-Light.ttf": result[0].split("base64,")[1],
                 "Koruri-Bold.ttf": result[1].split("base64,")[1],
             };
-            pdfMake.fonts = {
+            window.pdfMake.fonts = {
                 [PDF_FONTS.default]: {
                     normal: "Koruri-Light.ttf",
                     bold: "Koruri-Bold.ttf",
@@ -49,7 +49,3 @@ const build_font = async () => {
             throw new Error("フォントのダウンロード・設定中にエラーが発生しました。");
         });
 };
-
-(() => {
-    build_font();
-})();

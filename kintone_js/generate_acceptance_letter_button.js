@@ -6,7 +6,7 @@
 */
 
 // PDF生成ライブラリ
-import { pdfMake, PDF_FONTS } from "./pdfMake_util";
+import { PDF_FONTS, build_font } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
 
 const dayjs = require("dayjs");
@@ -131,6 +131,8 @@ dayjs.locale("ja");
                 corporates_by_constructor_id[constructor_id] = corporates_by_id[corporate_ids_by_constructor_id[constructor_id]];
             }
 
+            await build_font();
+
             const file_processes = [];
             for (const record of targets) {
                 if (!record[fieldSendDate_COLLECT]["value"]) {
@@ -144,7 +146,7 @@ dayjs.locale("ja");
 
                 // PDFドキュメントをBlobデータに変換・アップロードする
                 const file_process = new Promise((resolve) => {
-                    pdfMake.createPdf(letter_doc).getBlob(async (blob) => {
+                    window.pdfMake.createPdf(letter_doc).getBlob(async (blob) => {
                         const filename_closing = dayjs(record[fieldClosing_COLLECT]["value"]).format("YYYY年M月D日");
                         const letter = {
                             "id": record[fieldRecordId_COLLECT]["value"],
