@@ -22,7 +22,7 @@
 */
 
 // PDF生成ライブラリ
-import { PDF_FONTS, build_font, pdfMake } from "./pdfMake_util";
+import { createPdf, PDF_FONTS } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
 
 // 祝日判定ライブラリ
@@ -347,7 +347,7 @@ dayjs.locale("ja");
             attachment_pdfs.push({
                 "id": parent_record[fieldRecordId_COLLECT]["value"],
                 "file_name": file_name,
-                "doc_generator": pdfMake.createPdf(invoice_doc)
+                "doc_generator": createPdf(invoice_doc)
             });
         }
 

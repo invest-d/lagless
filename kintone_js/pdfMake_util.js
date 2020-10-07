@@ -1,5 +1,5 @@
 // PDF生成ライブラリ
-export const pdfMake = require("pdfmake");
+const pdfMake = require("pdfmake");
 
 // フォントは各ファミリーごとに4種類の定義が必要
 // https://pdfmake.github.io/docs/0.1/fonts/custom-fonts-client-side/vfs/
@@ -25,7 +25,7 @@ const convertBlobToBase64 = (blob) => new Promise((resolve, reject) => {
     reader.readAsDataURL(blob);
 });
 
-export const build_font = async (key) => {
+const build_font = async (key) => {
     const make_url = (name) => {
         return `https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/fonts%2F${  name  }?alt=media`;
     };
@@ -77,6 +77,7 @@ export const build_font = async (key) => {
         });
 };
 
-(async () => {
-    await build_font("default");
-})();
+export const createPdf = async (doc) => {
+    await build_font(doc.defaultStyle.font);
+    return await pdfMake.createPdf(doc);
+};
