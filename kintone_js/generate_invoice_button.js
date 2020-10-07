@@ -22,7 +22,7 @@
 */
 
 // PDF生成ライブラリ
-import { PDF_FONTS, build_font } from "./pdfMake_util";
+import { PDF_FONTS, build_font, pdfMake } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
 
 // 祝日判定ライブラリ
@@ -327,8 +327,6 @@ dayjs.locale("ja");
         };
         const constructors = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_constructors);
 
-        await build_font("default");
-
         const attachment_pdfs = [];
         for(const parent_record of target_parents.records) {
             // 回収レコードに遅払い日数フィールドを紐づける
@@ -349,7 +347,7 @@ dayjs.locale("ja");
             attachment_pdfs.push({
                 "id": parent_record[fieldRecordId_COLLECT]["value"],
                 "file_name": file_name,
-                "doc_generator": window.pdfMake.createPdf(invoice_doc)
+                "doc_generator": pdfMake.createPdf(invoice_doc)
             });
         }
 

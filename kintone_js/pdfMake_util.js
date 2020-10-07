@@ -1,8 +1,6 @@
 // PDF生成ライブラリ
-window.pdfMake = require("pdfmake");
-if (!("vfs" in window.pdfMake)) {
-    window.pdfMake.vfs = {};
-}
+export const pdfMake = require("pdfmake");
+
 // フォントは各ファミリーごとに4種類の定義が必要
 // https://pdfmake.github.io/docs/0.1/fonts/custom-fonts-client-side/vfs/
 // > You should define all 4 components (even if they all point to the same font file).
@@ -32,7 +30,11 @@ export const build_font = async (key) => {
         return `https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/fonts%2F${  name  }?alt=media`;
     };
 
-    const is_font_loaded = Object.values(PDF_FONTS[key]["family"]).every((name) => name in window.pdfMake.vfs);
+    if (!("vfs" in pdfMake)) {
+        pdfMake.vfs = {};
+    }
+
+    const is_font_loaded = Object.values(PDF_FONTS[key]["family"]).every((name) => name in pdfMake.vfs);
     if (is_font_loaded) {
         console.log(`フォント "${key}" をダウンロード済みのため、設定をスキップします`);
         return;
@@ -63,9 +65,9 @@ export const build_font = async (key) => {
                 [PDF_FONTS[key]["family"]["italics"]]:     italics.split("base64,")[1],
                 [PDF_FONTS[key]["family"]["bolditalics"]]: bolditalics.split("base64,")[1],
             };
-            Object.assign(window.pdfMake.vfs, new_vfs);
+            Object.assign(pdfMake.vfs, new_vfs);
 
-            window.pdfMake.fonts = {
+            pdfMake.fonts = {
                 [PDF_FONTS[key]["family_name"]]: PDF_FONTS[key]["family"]
             };
         })
@@ -74,3 +76,7 @@ export const build_font = async (key) => {
             throw new Error("フォントのダウンロード・設定中にエラーが発生しました。");
         });
 };
+
+(async () => {
+    await build_font("default");
+})();
