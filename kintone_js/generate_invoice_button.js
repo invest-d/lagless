@@ -376,7 +376,7 @@ dayjs.locale("ja");
             pageSize: "A4",
             pageMargins: [55, 30, 55, 30],
             defaultStyle: {
-                font: PDF_FONTS.default.family_name,
+                font: PDF_FONTS.default.name,
                 fontSize: 8,
                 lineHeight: 1.2,
             }

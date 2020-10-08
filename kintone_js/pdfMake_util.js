@@ -6,7 +6,7 @@ const pdfMake = require("pdfmake");
 // > You should define all 4 components (even if they all point to the same font file).
 export const PDF_FONTS = {
     default: {
-        family_name: "Koruri",
+        name: "default",
         family: {
             normal:      "Koruri-Light.ttf",
             bold:        "Koruri-Bold.ttf",
@@ -68,7 +68,7 @@ const build_font = async (key) => {
             Object.assign(pdfMake.vfs, new_vfs);
 
             pdfMake.fonts = {
-                [PDF_FONTS[key]["family_name"]]: PDF_FONTS[key]["family"]
+                [PDF_FONTS[key]["name"]]: PDF_FONTS[key]["family"]
             };
         })
         .catch((err) => {
