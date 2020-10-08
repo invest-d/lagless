@@ -37,31 +37,22 @@ const build_font = async (key) => {
         return;
     }
 
-    // Object.values(obj)だと配列の順序が保証されないようなので、一つずつ記述する
-    const font_requests = [
-        fetch(make_url(PDF_FONTS[key]["normal"]))
-            .then((response) => response.blob())
-            .then(convertBlobToBase64),
-        fetch(make_url(PDF_FONTS[key]["bold"]))
-            .then((response) => response.blob())
-            .then(convertBlobToBase64),
-        fetch(make_url(PDF_FONTS[key]["italics"]))
-            .then((response) => response.blob())
-            .then(convertBlobToBase64),
-        fetch(make_url(PDF_FONTS[key]["bolditalics"]))
-            .then((response) => response.blob())
-            .then(convertBlobToBase64)
-    ];
+    // 同じファイルを重複してリクエストしないよう、Setでフォント名の重複を取り除く
+    const font_requests = Array.from(new Set(Object.values(PDF_FONTS[key])))
+        .map((name) => {
+            return fetch(make_url(name))
+                .then((response) => response.blob())
+                .then(convertBlobToBase64)
+                .then((b) => { return {"base64": b, "name": name}; });
+        });
 
     await Promise.all(font_requests)
-        .then(([normal, bold, italics, bolditalics]) => {
-            const new_vfs = {
+        .then((results) => {
+            const new_vfs = {};
+            for (const family of Object.keys(PDF_FONTS[key])) {
                 // base64よりあとのdata部分だけが必要
-                [PDF_FONTS[key]["normal"]]:      normal.split("base64,")[1],
-                [PDF_FONTS[key]["bold"]]:        bold.split("base64,")[1],
-                [PDF_FONTS[key]["italics"]]:     italics.split("base64,")[1],
-                [PDF_FONTS[key]["bolditalics"]]: bolditalics.split("base64,")[1],
-            };
+                new_vfs[PDF_FONTS[key][family]] = results.find((r) => r.name === PDF_FONTS[key][family]).base64.split("base64,")[1];
+            }
             Object.assign(pdfMake.vfs, new_vfs);
 
             pdfMake.fonts = {
