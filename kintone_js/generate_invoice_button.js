@@ -22,7 +22,7 @@
 */
 
 // PDF生成ライブラリ
-import { PDF_FONTS, build_font, pdfMake } from "./pdfMake_util";
+import { createPdf, PDF_FONTS } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
 
 // 祝日判定ライブラリ
@@ -343,11 +343,12 @@ dayjs.locale("ja");
             const file_name = `${parent_record[fieldConstructionShopName_COLLECT]["value"]}様用 支払明細書兼振込依頼書${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分.pdf`;
 
             console.log("作成した振込依頼書をPDF形式で生成");
+            const generator = await createPdf(invoice_doc);
             // 添付先のレコード番号と添付するファイルをオブジェクトにして返す
             attachment_pdfs.push({
                 "id": parent_record[fieldRecordId_COLLECT]["value"],
                 "file_name": file_name,
-                "doc_generator": pdfMake.createPdf(invoice_doc)
+                "doc_generator": generator
             });
         }
 
@@ -376,7 +377,7 @@ dayjs.locale("ja");
             pageSize: "A4",
             pageMargins: [55, 30, 55, 30],
             defaultStyle: {
-                font: PDF_FONTS.default.family_name,
+                font: PDF_FONTS.default.name,
                 fontSize: 8,
                 lineHeight: 1.2,
             }

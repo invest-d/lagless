@@ -6,7 +6,7 @@
 */
 
 // PDF生成ライブラリ
-import { PDF_FONTS, pdfMake } from "./pdfMake_util";
+import { createPdf, PDF_FONTS } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
 
 const dayjs = require("dayjs");
@@ -141,10 +141,11 @@ dayjs.locale("ja");
                 // 各レコードについてPDFドキュメントを生成する
                 const corporate_info = corporates_by_constructor_id[record[fieldConstructorId_COLLECT]["value"]]
                 const letter_doc = generateInvoiceDocument(record, corporate_info);
+                const generator = await createPdf(letter_doc);
 
                 // PDFドキュメントをBlobデータに変換・アップロードする
                 const file_process = new Promise((resolve) => {
-                    pdfMake.createPdf(letter_doc).getBlob(async (blob) => {
+                    generator.getBlob(async (blob) => {
                         const filename_closing = dayjs(record[fieldClosing_COLLECT]["value"]).format("YYYY年M月D日");
                         const letter = {
                             "id": record[fieldRecordId_COLLECT]["value"],
@@ -273,7 +274,7 @@ dayjs.locale("ja");
                 }
             },
             defaultStyle: {
-                font: PDF_FONTS.default.family_name,
+                font: PDF_FONTS.default.name,
                 fontSize: 11,
                 lineHeight: 1.2,
             }
