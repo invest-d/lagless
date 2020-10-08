@@ -31,6 +31,10 @@ const build_font = async (key) => {
         pdfMake.vfs = {};
     }
 
+    if (!("fonts" in pdfMake)) {
+        pdfMake.fonts = {};
+    }
+
     const is_font_loaded = Object.values(PDF_FONTS[key]).every((name) => name in pdfMake.vfs);
     if (is_font_loaded) {
         console.log(`フォント "${key}" をダウンロード済みのため、設定をスキップします`);
@@ -55,9 +59,7 @@ const build_font = async (key) => {
             }
             Object.assign(pdfMake.vfs, new_vfs);
 
-            pdfMake.fonts = {
-                [key]: PDF_FONTS[key]
-            };
+            pdfMake["fonts"][key] = PDF_FONTS[key];
         })
         .catch((err) => {
             console.log(err);
