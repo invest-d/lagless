@@ -64,6 +64,7 @@ const fields = [
     "form_1", "form_2", "link", "mail",
     "closing", "deadline", "early", "original", "lag", "effect",
     "default_pay_date_list",
+    "支払元口座",
 ].join(",");
 
 const fetch_service = function(env) {
