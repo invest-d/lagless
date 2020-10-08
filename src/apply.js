@@ -12,6 +12,7 @@ const params = new URLSearchParams(window.location.search);
 
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 import * as find from "./defineFindPolyfill";
+find.definePolyfill();
 
 import { get_kintone_data } from "./app";
 
@@ -242,8 +243,6 @@ $(() => {
         }
 
         $("#report-validity").hide();
-
-        find.definePolyfill();
 
         // 添付ファイルのファイルサイズが大きすぎるとサーバーエラーになるため、送信できないようにする。
         const FILE_SIZE_LIMIT = 4 * Math.pow(1024, 2);
