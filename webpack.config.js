@@ -1,5 +1,6 @@
 const CopyFilePlugin = require("copy-webpack-plugin");
 const path = require("path");
+const webpack = require("webpack");
 
 module.exports = (env, argv) => {
     const IS_DEVELOPMENT = argv.mode === "development";
@@ -48,7 +49,10 @@ module.exports = (env, argv) => {
                     }
                 ],
                 { copyUnmodified: true }
-            )
+            ),
+            new webpack.ProvidePlugin({
+                Promise: "es6-promise",
+            }),
         ]
     };
 };

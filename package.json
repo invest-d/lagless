@@ -12,6 +12,7 @@
     "copy-webpack-plugin": "^5.1.1",
     "date-with-offset": "^1.0.1",
     "encoding-japanese": "^1.0.30",
+    "es6-promise": "^4.2.8",
     "firebase": "^7.8.2",
     "flatpickr": "^4.6.3",
     "form-data": "^3.0.0",
