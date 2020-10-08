@@ -6,7 +6,7 @@
 */
 
 // PDF生成ライブラリ
-import { createPdf, PDF_FONTS } from "./pdfMake_util";
+import { createPdf } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
 
 const dayjs = require("dayjs");
@@ -274,7 +274,7 @@ dayjs.locale("ja");
                 }
             },
             defaultStyle: {
-                font: PDF_FONTS.default.name,
+                font: "Koruri",
                 fontSize: 11,
                 lineHeight: 1.2,
             }

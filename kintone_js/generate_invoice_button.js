@@ -22,7 +22,7 @@
 */
 
 // PDF生成ライブラリ
-import { createPdf, PDF_FONTS } from "./pdfMake_util";
+import { createPdf } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
 
 // 祝日判定ライブラリ
@@ -377,7 +377,7 @@ dayjs.locale("ja");
             pageSize: "A4",
             pageMargins: [55, 30, 55, 30],
             defaultStyle: {
-                font: PDF_FONTS.default.name,
+                font: "Koruri",
                 fontSize: 8,
                 lineHeight: 1.2,
             }

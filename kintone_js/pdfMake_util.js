@@ -5,14 +5,11 @@ const pdfMake = require("pdfmake");
 // https://pdfmake.github.io/docs/0.1/fonts/custom-fonts-client-side/vfs/
 // > You should define all 4 components (even if they all point to the same font file).
 export const PDF_FONTS = {
-    default: {
-        name: "default",
-        family: {
-            normal:      "Koruri-Light.ttf",
-            bold:        "Koruri-Bold.ttf",
-            italics:     "Koruri-Light.ttf",
-            bolditalics: "Koruri-Bold.ttf"
-        }
+    Koruri: {
+        normal:      "Koruri-Light.ttf",
+        bold:        "Koruri-Bold.ttf",
+        italics:     "Koruri-Light.ttf",
+        bolditalics: "Koruri-Bold.ttf"
     }
 };
 
@@ -34,7 +31,7 @@ const build_font = async (key) => {
         pdfMake.vfs = {};
     }
 
-    const is_font_loaded = Object.values(PDF_FONTS[key]["family"]).every((name) => name in pdfMake.vfs);
+    const is_font_loaded = Object.values(PDF_FONTS[key]).every((name) => name in pdfMake.vfs);
     if (is_font_loaded) {
         console.log(`フォント "${key}" をダウンロード済みのため、設定をスキップします`);
         return;
@@ -42,16 +39,16 @@ const build_font = async (key) => {
 
     // Object.values(obj)だと配列の順序が保証されないようなので、一つずつ記述する
     const font_requests = [
-        fetch(make_url(PDF_FONTS[key]["family"]["normal"]))
+        fetch(make_url(PDF_FONTS[key]["normal"]))
             .then((response) => response.blob())
             .then(convertBlobToBase64),
-        fetch(make_url(PDF_FONTS[key]["family"]["bold"]))
+        fetch(make_url(PDF_FONTS[key]["bold"]))
             .then((response) => response.blob())
             .then(convertBlobToBase64),
-        fetch(make_url(PDF_FONTS[key]["family"]["italics"]))
+        fetch(make_url(PDF_FONTS[key]["italics"]))
             .then((response) => response.blob())
             .then(convertBlobToBase64),
-        fetch(make_url(PDF_FONTS[key]["family"]["bolditalics"]))
+        fetch(make_url(PDF_FONTS[key]["bolditalics"]))
             .then((response) => response.blob())
             .then(convertBlobToBase64)
     ];
@@ -60,15 +57,15 @@ const build_font = async (key) => {
         .then(([normal, bold, italics, bolditalics]) => {
             const new_vfs = {
                 // base64よりあとのdata部分だけが必要
-                [PDF_FONTS[key]["family"]["normal"]]:      normal.split("base64,")[1],
-                [PDF_FONTS[key]["family"]["bold"]]:        bold.split("base64,")[1],
-                [PDF_FONTS[key]["family"]["italics"]]:     italics.split("base64,")[1],
-                [PDF_FONTS[key]["family"]["bolditalics"]]: bolditalics.split("base64,")[1],
+                [PDF_FONTS[key]["normal"]]:      normal.split("base64,")[1],
+                [PDF_FONTS[key]["bold"]]:        bold.split("base64,")[1],
+                [PDF_FONTS[key]["italics"]]:     italics.split("base64,")[1],
+                [PDF_FONTS[key]["bolditalics"]]: bolditalics.split("base64,")[1],
             };
             Object.assign(pdfMake.vfs, new_vfs);
 
             pdfMake.fonts = {
-                [PDF_FONTS[key]["name"]]: PDF_FONTS[key]["family"]
+                [key]: PDF_FONTS[key]
             };
         })
         .catch((err) => {
