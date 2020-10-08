@@ -22,8 +22,8 @@
 */
 
 // PDF生成ライブラリ
-const pdfMake = require("pdfmake");
-const PDF_FONT_NAME = "Koruri";
+import { createPdf } from "./pdfMake_util";
+import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
 
 // 祝日判定ライブラリ
 const holiday_jp = require("@holiday-jp/holiday_jp");
@@ -327,9 +327,6 @@ dayjs.locale("ja");
         };
         const constructors = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_constructors);
 
-        // フォント設定
-        await build_font();
-
         const attachment_pdfs = [];
         for(const parent_record of target_parents.records) {
             // 回収レコードに遅払い日数フィールドを紐づける
@@ -346,11 +343,12 @@ dayjs.locale("ja");
             const file_name = `${parent_record[fieldConstructionShopName_COLLECT]["value"]}様用 支払明細書兼振込依頼書${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分.pdf`;
 
             console.log("作成した振込依頼書をPDF形式で生成");
+            const generator = await createPdf(invoice_doc);
             // 添付先のレコード番号と添付するファイルをオブジェクトにして返す
             attachment_pdfs.push({
                 "id": parent_record[fieldRecordId_COLLECT]["value"],
                 "file_name": file_name,
-                "doc_generator": pdfMake.createPdf(invoice_doc)
+                "doc_generator": generator
             });
         }
 
@@ -361,23 +359,7 @@ dayjs.locale("ja");
         // pdfmakeのライブラリ用のオブジェクトを生成する。
         const product_name = parent_record[fieldProductName_COLLECT]["value"];
         const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
-        const version = ((days_later) => {
-            if (Number.isInteger(days_later) && Number(days_later) > 0) {
-                return "V2";
-            } else {
-                return "V1";
-            }
-        })(parent_record["daysLater"]["value"]);
-        const contact_company = {
-            "ID": {
-                "V1": "インベストデザイン株式会社",
-                "V2": "ラグレス2合同会社"
-            },
-            "LAGLESS": {
-                "V1": "ラグレス合同会社",
-                "V2": "ラグレス合同会社"
-            }
-        }[parent_record[fieldAccount_COLLECT]["value"]][version];
+        const contact_company = get_contractor_name(parent_record[fieldAccount_COLLECT]["value"], parent_record["daysLater"]["value"])
 
         if (!contact_company) {
             throw new Error(`不明な支払元口座です: ${parent_record[fieldAccount_COLLECT]["value"]}`);
@@ -395,7 +377,7 @@ dayjs.locale("ja");
             pageSize: "A4",
             pageMargins: [55, 30, 55, 30],
             defaultStyle: {
-                font: PDF_FONT_NAME,
+                font: "Koruri",
                 fontSize: 8,
                 lineHeight: 1.2,
             }
@@ -689,13 +671,7 @@ dayjs.locale("ja");
             paid_dist.alignment = "left";
 
             const paid_timing = JSON.parse(JSON.stringify(detail_value_template));
-            paid_timing.text = ((timing) => {
-                if (timing === "遅払い") {
-                    return timing;
-                } else {
-                    return "早払い";
-                }
-            })(record["value"][tableFieldPaymentTimingIV_COLLECT]["value"]);
+            paid_timing.text = get_display_payment_timing(record["value"][tableFieldPaymentTimingIV_COLLECT]["value"]);
             paid_timing.alignment = "left";
 
             const paid_date = JSON.parse(JSON.stringify(detail_value_template));
@@ -758,17 +734,6 @@ dayjs.locale("ja");
 
         return date;
     };
-
-    function formatYMD(yyyy_mm_dd) {
-        // Numberでキャストしてゼロ埋めされているのを取り除く
-        const date = String(yyyy_mm_dd).split("-");
-        return `${String(Number(date[0]))}年${String(Number(date[1]))}月${String(Number(date[2]))}日`;
-    }
-
-    function addComma(num) {
-        // 数字に3桁区切りのコンマを挿入した文字列を返す。整数のみ考慮
-        return String(num).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
-    }
 
     async function uploadInvoices(invoices) {
         console.log("生成した振込依頼書を各レコードに添付する");
@@ -836,51 +801,5 @@ dayjs.locale("ja");
 
         await kintone.Promise.all(processes);
         return count;
-    }
-
-    const convertBlobToBase64 = (blob) => new Promise((resolve, reject) => {
-        const reader = new FileReader;
-        reader.onerror = reject;
-        reader.onload = () => {
-            resolve(reader.result.replace(/^data:text\/plain;([^,]+)?base64,/, ""));
-        };
-        reader.readAsDataURL(blob);
-    });
-
-    async function build_font() {
-        const make_url = (name) => {
-            return `https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/fonts%2F${  name  }?alt=media`;
-        };
-
-        if (pdfMake.vfs && pdfMake.vfs["Koruri-Light.ttf"] && pdfMake.vfs["Koruri-Bold.ttf"]) {
-            console.log("フォントをダウンロード済みのため、設定をスキップします");
-            return;
-        }
-
-        await Promise.all([
-            fetch(make_url("Koruri-Light.ttf"))
-                .then((response) => response.blob())
-                .then(convertBlobToBase64),
-            fetch(make_url("Koruri-Bold.ttf"))
-                .then((response) => response.blob())
-                .then(convertBlobToBase64),
-        ])
-            .then((result) => {
-                pdfMake.vfs = {
-                // base64よりあとのdata部分だけが必要
-                    "Koruri-Light.ttf": result[0].split("base64,")[1],
-                    "Koruri-Bold.ttf": result[1].split("base64,")[1],
-                };
-                pdfMake.fonts = {
-                    [PDF_FONT_NAME]: {
-                        normal: "Koruri-Light.ttf",
-                        bold: "Koruri-Bold.ttf",
-                    }
-                };
-            })
-            .catch((err) => {
-                console.log(err);
-                throw new Error("フォントのダウンロード・設定中にエラーが発生しました。");
-            });
     }
 })();

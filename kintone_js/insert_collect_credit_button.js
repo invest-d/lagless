@@ -43,6 +43,8 @@
     const fieldConstructionShopId_APPLY = "constructionShopId";
     const fieldClosingDay_APPLY = "closingDay";
     const fieldApplicant_APPLY = "支払先正式名称";
+    const fieldInvoiceAmount_APPLY = "applicationAmount";
+    const fieldMemberFee_APPLY = "membership_fee";
     const fieldTotalReceivables_APPLY = "totalReceivables";
     const fieldPaymentTiming_APPLY = "paymentTiming";
     const fieldPaymentDate_APPLY = "paymentDate";
@@ -55,11 +57,13 @@
     const fieldClosingDate_COLLECT = "closingDate";
     const fieldDeadline_COLLECT = "deadline";
     const fieldStatus_COLLECT = "collectStatus";
-    const statusDefault_COLLECT = "クラウドサイン送信待ち";
+    const statusDefault_COLLECT = "クラウドサイン作成待ち";
     const fieldScheduledCollectableAmount_COLLECT = "scheduledCollectableAmount";
     const tableCloudSignApplies_COLLECT = "cloudSignApplies";
     const tableFieldApplyRecordNoCS = "applyRecordNoCS";
     const tableFieldApplicantOfficialNameCS = "applicantOfficialNameCS";
+    const tableFieldInvoiceAmountCS = "invoiceAmountCS";
+    const tableFieldMemberFeeCS = "membershipFeeCS";
     const tableFieldReceivableCS = "receivableCS";
     const tableFieldPaymentTimingCS = "paymentTimingCS";
     const tableFieldPaymentDateCS = "paymentDateCS";
@@ -145,6 +149,8 @@
                 fieldConstructionShopId_APPLY,
                 fieldClosingDay_APPLY,
                 fieldApplicant_APPLY,
+                fieldInvoiceAmount_APPLY,
+                fieldMemberFee_APPLY,
                 fieldTotalReceivables_APPLY,
                 fieldPaymentTiming_APPLY,
                 fieldPaymentDate_APPLY,
@@ -247,6 +253,12 @@
                                     },
                                     [tableFieldApplicantOfficialNameCS]: {
                                         "value": record[fieldApplicant_APPLY]["value"]
+                                    },
+                                    [tableFieldInvoiceAmountCS] : {
+                                        "value": record[fieldInvoiceAmount_APPLY]["value"]
+                                    },
+                                    [tableFieldMemberFeeCS] : {
+                                        "value": record[fieldMemberFee_APPLY]["value"]
                                     },
                                     [tableFieldReceivableCS] : {
                                         "value": record[fieldTotalReceivables_APPLY]["value"]
