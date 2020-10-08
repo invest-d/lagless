@@ -79,5 +79,5 @@ const build_font = async (key) => {
 
 export const createPdf = async (doc) => {
     await build_font(doc.defaultStyle.font);
-    return await pdfMake.createPdf(doc);
+    return await pdfMake.createPdf(doc, null, pdfMake.fonts, pdfMake.vfs);
 };
