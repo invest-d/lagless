@@ -343,11 +343,12 @@ dayjs.locale("ja");
             const file_name = `${parent_record[fieldConstructionShopName_COLLECT]["value"]}様用 支払明細書兼振込依頼書${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分.pdf`;
 
             console.log("作成した振込依頼書をPDF形式で生成");
+            const generator = await createPdf(invoice_doc);
             // 添付先のレコード番号と添付するファイルをオブジェクトにして返す
             attachment_pdfs.push({
                 "id": parent_record[fieldRecordId_COLLECT]["value"],
                 "file_name": file_name,
-                "doc_generator": createPdf(invoice_doc)
+                "doc_generator": generator
             });
         }
 

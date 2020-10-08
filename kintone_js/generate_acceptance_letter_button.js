@@ -141,10 +141,11 @@ dayjs.locale("ja");
                 // 各レコードについてPDFドキュメントを生成する
                 const corporate_info = corporates_by_constructor_id[record[fieldConstructorId_COLLECT]["value"]]
                 const letter_doc = generateInvoiceDocument(record, corporate_info);
+                const generator = await createPdf(letter_doc);
 
                 // PDFドキュメントをBlobデータに変換・アップロードする
                 const file_process = new Promise((resolve) => {
-                    createPdf(letter_doc).getBlob(async (blob) => {
+                    generator.getBlob(async (blob) => {
                         const filename_closing = dayjs(record[fieldClosing_COLLECT]["value"]).format("YYYY年M月D日");
                         const letter = {
                             "id": record[fieldRecordId_COLLECT]["value"],
