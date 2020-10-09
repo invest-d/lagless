@@ -101,10 +101,7 @@ $(() => {
         return;
     }
 
-    const target = "https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/data.json?alt=media";
-    $.ajax({
-        url: target
-    }).then((resp) => {
+    get_kintone_data().then((resp) => {
         if(resp[param.c]) {
             show(resp[param.c], param);
             $("#content").show();
@@ -113,6 +110,11 @@ $(() => {
         }
     });
 });
+
+export const get_kintone_data = () => {
+    const target = "https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/data.json?alt=media";
+    return $.ajax({ url: target });
+};
 
 const format_date = function(str) {
     const t = new Date(str);

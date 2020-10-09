@@ -1,5 +1,6 @@
 const CopyFilePlugin = require("copy-webpack-plugin");
 const path = require("path");
+const webpack = require("webpack");
 
 module.exports = (env, argv) => {
     const IS_DEVELOPMENT = argv.mode === "development";
@@ -26,7 +27,8 @@ module.exports = (env, argv) => {
                     use: {
                         loader: "babel-loader",
                         options: {
-                            presets: ["@babel/preset-env"]
+                            presets: ["@babel/preset-env"],
+                            plugins: ["@babel/plugin-transform-runtime"],
                         }
                     }
                 }
@@ -47,7 +49,10 @@ module.exports = (env, argv) => {
                     }
                 ],
                 { copyUnmodified: true }
-            )
+            ),
+            new webpack.ProvidePlugin({
+                Promise: "es6-promise",
+            }),
         ]
     };
 };

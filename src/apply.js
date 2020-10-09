@@ -12,6 +12,9 @@ const params = new URLSearchParams(window.location.search);
 
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 import * as find from "./defineFindPolyfill";
+find.definePolyfill();
+
+import { get_kintone_data } from "./app";
 
 // URLパラメータを引き継いでkintoneに送信できるようにする
 $(() => {
@@ -66,6 +69,20 @@ $(() => {
     } else {
         $("span.timing").text("早払い");
     }
+});
+
+// URLのcパラメータによって利用規約へのリンクを変更する
+$(async () => {
+    const resp = await get_kintone_data();
+    const constructor_id = params.get("c");
+
+    // どこかで必要な情報が足りなかった場合でも、terms-3の方にリンクさせる
+    let url = "https://www.lag-less.com/terms-3";
+    if (constructor_id && (constructor_id in resp) && (resp[constructor_id]["支払元口座"] === "LAGLESS")) {
+        url = "https://invest-design.wixsite.com/lag-less/terms";
+    }
+
+    $("#terms").attr("onclick", `window.open('${url}', '_blank')`);
 });
 
 function getPaymentTiming() {
@@ -226,8 +243,6 @@ $(() => {
         }
 
         $("#report-validity").hide();
-
-        find.definePolyfill();
 
         // 添付ファイルのファイルサイズが大きすぎるとサーバーエラーになるため、送信できないようにする。
         const FILE_SIZE_LIMIT = 4 * Math.pow(1024, 2);
