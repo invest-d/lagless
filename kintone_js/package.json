@@ -5,7 +5,8 @@
   "main": "output_csv.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx webpack --config webpack.config.js"
+    "build": "webpack --mode production --config webpack.config.js",
+    "build-d": "webpack --mode development --config webpack.config.js"
   },
   "keywords": [],
   "author": "",
