@@ -110,7 +110,7 @@
                 });
 
             // 協力会社ごとにカウント条件に当てはまる申込だけをカウント
-            const [count_result, ignored_records] = await countByKyoryokuId(target_applies, construction_shops, patterns);
+            const {count_result, ignored_records} = await countByKyoryokuId(target_applies, construction_shops, patterns);
 
             const update_records_num = await updateKyoryokuMaster(count_result)
                 .catch((err) => {
@@ -263,7 +263,10 @@
             };
         }
 
-        return [counts, ignored_records];
+        return {
+            count_result: counts,
+            ignored_records: ignored_records
+        };
     }
 
     function getDateFromYYYYMMDD(yyyy_mm_dd) {
