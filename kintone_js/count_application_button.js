@@ -27,6 +27,7 @@
 
     const APP_ID_APPLY = kintone.app.getId();
     const fieldKyoryokuId_APPLY = "ルックアップ";
+    const fieldKyoryokuName_APPLY = "支払先正式名称";
     const fieldConstructionShopId_APPLY = "constructionShopId";
     const fieldClosingDay_APPLY = "closingDay";
     const fieldStatus_APPLY = "状態";
@@ -53,6 +54,10 @@
     const fieldDeadline_PATTERN = "deadline";
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
+
+    const IGNORE_CONSTRUCTOR_IDS = {
+        "500": "株式会社GIG"
+    };
 
     kintone.events.on("app.record.index.show", (event) => {
         if (needShowButton()) {
@@ -101,7 +106,7 @@
                 });
 
             // 協力会社ごとにカウント条件に当てはまる申込だけをカウント
-            const count_result = await countByKyoryokuId(target_applies, construction_shops, patterns);
+            const [count_result, ignored_records] = await countByKyoryokuId(target_applies, construction_shops, patterns);
 
             const update_records_num = await updateKyoryokuMaster(count_result)
                 .catch((err) => {
@@ -111,6 +116,12 @@
 
             console.log(`${update_records_num  } records updated.`);
             alert(`${update_records_num  }件 の協力会社の申込み回数を更新しました。`);
+            if (ignored_records.length) {
+                const message = ignored_records
+                    .map((ignored) => `協力会社ID：${ignored.kyoryoku_id}、協力会社名：${ignored.kyoryoku_name}（工務店ID：${ignored.constructor_id}、工務店名：${ignored.constructor_name}）`)
+                    .join("\n");
+                alert(`次の協力会社からの申込は、回数をカウントしない例外にあたるため、カウントをスキップしました。\n\n${message}`);
+            }
             alert("ページを更新します。");
             window.location.reload();
         } catch(err) {
@@ -125,6 +136,7 @@
             "app": APP_ID_APPLY,
             "fields": [
                 fieldKyoryokuId_APPLY,
+                fieldKyoryokuName_APPLY,
                 fieldConstructionShopId_APPLY,
                 fieldClosingDay_APPLY,
                 fieldTiming_APPLY
@@ -174,6 +186,7 @@
         console.log("協力会社IDごとに回数をカウントする");
 
         const counts = {};
+        const ignored_records = [];
         // 協力会社IDごとにループ
         const kyoryoku_ids = new Set(target_applies.map((rec) => rec[fieldKyoryokuId_APPLY]["value"]));
         for (const kyoryoku_id of kyoryoku_ids) {
@@ -182,6 +195,17 @@
             const construction_id = apply[fieldConstructionShopId_APPLY]["value"];
 
             const construction_shop = construction_shops.find((rec) => rec[fieldId_CONSTRUCTION]["value"] === construction_id);
+
+            if (IGNORE_CONSTRUCTOR_IDS[construction_id]) {
+                // カウント対象外
+                ignored_records.push({
+                    constructor_id: construction_id,
+                    constructor_name: construction_shop[fieldName_CONSTRUCTION]["value"],
+                    kyoryoku_id: kyoryoku_id,
+                    kyoryoku_name: apply[fieldKyoryokuName_APPLY]["value"]
+                });
+                continue;
+            }
 
             // 工務店に対応する直近の支払パターンを取得
             const constructor_patterns = patterns.filter((rec) => rec[fieldPattern_PATTERN]["value"] === construction_shop[fieldPattern_CONSTRUCTION]["value"]);
@@ -235,7 +259,7 @@
             };
         }
 
-        return counts;
+        return [counts, ignored_records];
     }
 
     function getDateFromYYYYMMDD(yyyy_mm_dd) {
