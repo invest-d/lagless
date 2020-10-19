@@ -176,7 +176,9 @@
         const kyoryoku_ids = new Set(target_applies.map((rec) => rec[fieldKyoryokuId_APPLY]["value"]));
         for (const kyoryoku_id of kyoryoku_ids) {
             // 協力会社に対応する工務店を取得
-            const construction_id = target_applies.find((rec) => rec[fieldKyoryokuId_APPLY]["value"] === kyoryoku_id)[fieldConstructionShopId_APPLY]["value"];
+            const apply = target_applies.find((rec) => rec[fieldKyoryokuId_APPLY]["value"] === kyoryoku_id);
+            const construction_id = apply[fieldConstructionShopId_APPLY]["value"];
+
             const construction_shop = construction_shops.find((rec) => rec[fieldId_CONSTRUCTION]["value"] === construction_id);
 
             // 工務店に対応する直近の支払パターンを取得
