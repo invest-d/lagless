@@ -45,6 +45,7 @@
 
     const APP_ID_CONSTRUCTION = 96;
     const fieldId_CONSTRUCTION = "id";
+    const fieldName_CONSTRUCTION = "工務店正式名称";
     const fieldPattern_CONSTRUCTION = "pattern";
 
     const APP_ID_PATTERN = 95;
@@ -141,6 +142,7 @@
             "app": APP_ID_CONSTRUCTION,
             "fields": [
                 fieldId_CONSTRUCTION,
+                fieldName_CONSTRUCTION,
                 fieldPattern_CONSTRUCTION
             ],
             "condition": `${fieldId_CONSTRUCTION} in ("${ids.join("\",\"")}")`
@@ -182,17 +184,28 @@
             const construction_shop = construction_shops.find((rec) => rec[fieldId_CONSTRUCTION]["value"] === construction_id);
 
             // 工務店に対応する直近の支払パターンを取得
-            const pattern = patterns
-                .filter((rec) => rec[fieldPattern_PATTERN]["value"] === construction_shop[fieldPattern_CONSTRUCTION]["value"])
-                .reduce((provisional, current) => {
-                    // 支払パターンフィールドの値が同じレコードの中で、申込期限が最も過去のもの
-                    const prov_date = getDateFromYYYYMMDD(provisional[fieldDeadline_PATTERN]["value"]);
-                    const curr_date = getDateFromYYYYMMDD(current[fieldDeadline_PATTERN]["value"]);
+            const constructor_patterns = patterns.filter((rec) => rec[fieldPattern_PATTERN]["value"] === construction_shop[fieldPattern_CONSTRUCTION]["value"]);
 
-                    return (prov_date < curr_date)
-                        ? provisional
-                        : current;
-                });
+            if (!constructor_patterns.length) {
+                const input_pattern = construction_shop[fieldPattern_CONSTRUCTION]["value"]
+                    ? construction_shop[fieldPattern_CONSTRUCTION]["value"]
+                    : "(空欄)";
+
+                alert("工務店マスタに入力している支払パターンが、支払パターンマスタに見つかりませんでした。\n"
+                    + "工務店マスタの入力を正しく修正するか、支払パターンマスタにレコードを追加してください。\n\n"
+                    + `工務店ID：${construction_id}、工務店名：${construction_shop[fieldName_CONSTRUCTION]["value"]}、入力値：${input_pattern}`);
+                continue;
+            }
+
+            const pattern = constructor_patterns.reduce((provisional, current) => {
+                // 支払パターンフィールドの値が同じレコードの中で、申込期限が最も過去のもの
+                const prov_date = getDateFromYYYYMMDD(provisional[fieldDeadline_PATTERN]["value"]);
+                const curr_date = getDateFromYYYYMMDD(current[fieldDeadline_PATTERN]["value"]);
+
+                return (prov_date < curr_date)
+                    ? provisional
+                    : current;
+            });
 
             // 直近の支払パターンの申込期限の1年前をFromとする
             const last_year = Number(pattern[fieldDeadline_PATTERN]["value"].split("-")[0]) - 1;
