@@ -57,6 +57,20 @@ dayjs.locale("ja");
     }
 
     async function clickButton() {
+        const clicked_ok = confirm(`「${statusReady_COLLECT}」の各レコードについて、クラウドサインの下書きを作成しますか？\n\n`
+            + "・SMBCクラウドサインに債権譲渡承諾の下書きを作成します（発射はしません）。\n"
+            + "・作成した下書きは「クラウドサインURL」フィールドから確認できます。\n\n"
+            + "※先に「債権譲渡承諾書PDFファイル」フィールドにPDFファイルを添付してください。添付ファイルの無いレコードは作成に失敗します\n"
+            + "※請求書ファイルは各申込レコードの請求書フィールドの添付ファイルから取得して利用します。回収レコードに添付する必要はありません。");
+
+        if (!clicked_ok) {
+            alert("処理は中断されました。");
+            return;
+        }
+
+        const text_ready = this.innerText;
+        this.innerText = "作成中...";
+
         try {
             const client_id = await get_client_id();
             const token = await get_cloudSign_token(client_id);
@@ -68,6 +82,8 @@ dayjs.locale("ja");
         } catch (err) {
             console.error(err);
             alert(err);
+        } finally {
+            this.innerText = text_ready;
         }
     }
 
