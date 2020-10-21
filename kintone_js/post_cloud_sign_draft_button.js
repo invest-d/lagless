@@ -1,6 +1,8 @@
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
+import { get_contractor_name } from "./util_forms";
+
 (function() {
     "use strict";
     const CLOUDSIGN_API_SERVER = "https://api.cloudsign.jp";
@@ -26,6 +28,12 @@ dayjs.locale("ja");
     const fieldConstructorId_CONSTRUCTOR = "id";
     const fieldCustomerId_CONSTRUCTOR = "customerCode";
     const tableParticipants_CONSTRUCTOR = "participants";
+    const tableFieldParticipantOrder_CONSTRUCTOR = "participantOrder";
+    const tableFieldParticipantEmail_CONSTRUCTOR = "participantEmail";
+    const tableFieldParticipantCompany_CONSTRUCTOR = "participantCompany";
+    const tableFieldParticipantTitle_CONSTRUCTOR = "participantTitle";
+    const tableFieldParticipantName_CONSTRUCTOR = "participantName";
+    const tableFieldParticipantBorder_CONSTRUCTOR = "participantBorder";
     const tableReportees_CONSTRUCTOR = "reportees";
 
     const APP_ID_CUSTOMER = "28";
@@ -77,7 +85,10 @@ dayjs.locale("ja");
 
             const target_records = await get_target_records();
             for (const record of target_records) {
+                // 各レコードについて、一連の処理が失敗しても次のレコードの処理を行う
                 const posted_document = await post_cloudSign_document(token, record);
+
+                await post_document_participants(token, posted_document.id, record);
             }
         } catch (err) {
             console.error(err);
@@ -139,6 +150,110 @@ dayjs.locale("ja");
         const response = await request_post_API_with_urlencoded(token, url, params);
         const result = await response.json();
         return result;
+    };
+
+    const post_document_participants = async (token, document_id, record) => {
+        const url = `${CLOUDSIGN_API_SERVER}/documents/${document_id}/participants`;
+
+        const get_cloudSign_offerers = () => {
+            // インベストデザイン等、身内の従業員を回付先として定義する
+            const offerers = [];
+
+            offerers.push({
+                "email": "inomata@invest-d.com",
+                "name": "猪俣 和貴",
+                // それぞれのorganizationはcontractorによらず固定
+                "organization": "インベストデザイン株式会社",
+                "language_code": "ja"
+            });
+
+            offerers.push({
+                "email": "takada@invest-d.com",
+                "name": "代表取締役　髙田 悠一",
+                "organization": "インベストデザイン株式会社",
+                "language_code": "ja"
+            });
+
+            const contractor = get_contractor_name(record[fieldAccount_COLLECT]["value"], record[fieldDaysLater_COLLECT]["value"]);
+            if (contractor === "ラグレス合同会社") {
+                offerers.push({
+                    "email": "h.kanemoto@shine-artist.com",
+                    "name": "田口勝富 様",
+                    "organization": "ラグレス合同会社　代表社員　ラグレス一般社団法人　職務執行者",
+                    "language_code": "ja"
+                });
+            }
+
+            return offerers;
+        };
+        const participants = get_cloudSign_offerers();
+
+        const accepters = get_filtered_subtable(record["constructor_record"][tableParticipants_CONSTRUCTOR]["value"]);
+
+        // 数値型「回付順」フィールドの値が小さい順に並べ替える
+        accepters.sort((a, b) => {
+            const order_a = a["value"][tableFieldParticipantOrder_CONSTRUCTOR]["value"] === ""
+                ? 0
+                : Number(a["value"][tableFieldParticipantOrder_CONSTRUCTOR]["value"]);
+
+            const order_b = b["value"][tableFieldParticipantOrder_CONSTRUCTOR]["value"] === ""
+                ? 0
+                : Number(b["value"][tableFieldParticipantOrder_CONSTRUCTOR]["value"]);
+
+            return order_a - order_b;
+        });
+
+        // APIのリクエストに使えるよう、kintoneの保存内容を整える
+        accepters.forEach((row) => {
+            const accepter = row["value"];
+
+            // borderは、債権譲渡契約の価格が一定以上の大きさの場合にのみ決裁フローに入るための設定
+            const border = accepter[tableFieldParticipantBorder_CONSTRUCTOR]["value"] === ""
+                ? 0
+                : Number(accepter[tableFieldParticipantBorder_CONSTRUCTOR]["value"]);
+
+            if (border > Number(record[fieldCloudSignAmount_COLLECT]["value"])) {
+                // 価格が小さいので決裁フローに入らない
+                return;
+            }
+
+            // 敬称を追加
+            let name = `${accepter[tableFieldParticipantName_CONSTRUCTOR]["value"]} 様`;
+
+            // 役職があれば追加
+            if (accepter.hasOwnProperty(tableFieldParticipantTitle_CONSTRUCTOR)
+                && accepter[tableFieldParticipantTitle_CONSTRUCTOR]["value"] !== "") {
+                name = `${accepter[tableFieldParticipantTitle_CONSTRUCTOR]["value"]}　${name}`;
+            }
+
+            // 回付者の配列に追加していく
+            participants.push({
+                "email": accepter[tableFieldParticipantEmail_CONSTRUCTOR]["value"],
+                "name": name,
+                "organization": accepter[tableFieldParticipantCompany_CONSTRUCTOR]["value"],
+                "language_code": "ja"
+            });
+        });
+
+        for (const participant of participants) {
+            // 回付者が複数いたとしても、一度のAPIリクエストにつき一人しか追加できない
+            const params = {
+                "email": participant.email,
+                "name": participant.name,
+                "organization": participant.organization,
+                "language_code": participant.language_code,
+            };
+
+            // 回付者として登録する順番が重要なので、ループの外でPromise.allなどはせず、毎回awaitする
+            await request_post_API_with_urlencoded(token, url, params);
+        }
+
+        return Promise.resolve();
+    };
+
+    const get_filtered_subtable = (table) => {
+        // kintoneの見かけ上は何も登録されていないように見えて、全フィールド空文字のサブテーブル行が登録されている場合があるため、その行を弾く
+        return table.filter((row) => Object.values(row["value"]).some((field) => field["value"] !== ""));
     };
 
     const get_target_records = async () => {
