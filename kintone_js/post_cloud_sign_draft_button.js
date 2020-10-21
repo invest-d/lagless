@@ -21,6 +21,8 @@ import { get_contractor_name } from "./util_forms";
     const fieldCloudSignAmount_COLLECT = "scheduledCollectableAmount";
     const fieldAcceptanceLetter_COLLECT = "cloudSignPdf";
     const tableCloudSignApplies_COLLECT = "cloudSignApplies";
+    const tableFieldAttachmentFileKey_COLLECT = "attachmentFileKeyCS";
+    const tableFieldApplicantOfficialNameCS_COLLECT = "applicantOfficialNameCS";
     const fieldAccount_COLLECT = "account";
     const fieldDaysLater_COLLECT = "daysLater";
 
@@ -94,6 +96,7 @@ import { get_contractor_name } from "./util_forms";
 
                 await post_document_participants(token, posted_document.id, record);
                 await post_document_reportees(token, posted_document.id, record);
+                await attach_files(token, posted_document.id, record);
             }
         } catch (err) {
             console.error(err);
@@ -291,6 +294,66 @@ import { get_contractor_name } from "./util_forms";
         }
 
         return Promise.all(adding_reportee);
+    };
+
+    const createFormData = (data) => {
+        const form = new FormData();
+        Object
+            .keys(data)
+            .forEach((key) => form.append(key, data[key]));
+        return form;
+    };
+
+    const attach_files = async (token, document_id, record) => {
+        const download_files_as_arrayBuffer = async (record) => {
+            // ①回収レコードから債権譲渡承諾書PDFファイルをダウンロードする。
+            // ②回収レコードに紐づく申込レコードから、それぞれの請求書PDFファイルをダウンロードする。
+            // ③1番および2番のデータを配列にして返す。インデックス0が債権譲渡承諾書、1以降が請求書
+            // 制限事項：申込レコードに添付してあるファイルはPDFファイルであることを前提とする。
+
+            const acceptance_letter = {
+                name: record[fieldAcceptanceLetter_COLLECT]["value"][0]["name"],
+                fileKey: record[fieldAcceptanceLetter_COLLECT]["value"][0]["fileKey"]
+            };
+            const invoices = record[tableCloudSignApplies_COLLECT]["value"].map((row) => {
+                const applicant = row["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"];
+                const closing_date = record[fieldClosingDate_COLLECT]["value"];
+                return {
+                    name: `${dayjs(closing_date).format("YYYY年M月D日")}締め分請求書（${applicant}様）.pdf`,
+                    fileKey: row["value"][tableFieldAttachmentFileKey_COLLECT]["value"]
+                };
+            });
+            const targets = [acceptance_letter].concat(invoices);
+
+            const download_processes = targets.map(async (obj) => {
+                const data = await client.file.downloadFile({ fileKey: obj.fileKey });
+                return {
+                    name: obj.name,
+                    data: data
+                };
+            });
+            return Promise.all(download_processes);
+        };
+        const file_buffers = await download_files_as_arrayBuffer(record);
+
+        const url = `${CLOUDSIGN_API_SERVER}/documents/${document_id}/files`;
+        // 最初に債権譲渡承諾書を添付するのが重要なので、一つずつawaitする
+        for (const buffer of file_buffers) {
+            const file = new File([ buffer.data ], buffer.name, { type: "application/pdf" });
+            const params = {
+                name: buffer.name,
+                uploadfile: file
+            };
+            // form-dataで送信する
+            await fetch(url, {
+                method: "POST",
+                headers: {
+                    "accept": "application/json",
+                    "Authorization": `${token.token_type} ${token.access_token}`
+                },
+                body: createFormData(params)
+            });
+        }
     };
 
     const get_filtered_subtable = (table) => {
