@@ -35,6 +35,10 @@ import { get_contractor_name } from "./util_forms";
     const tableFieldParticipantName_CONSTRUCTOR = "participantName";
     const tableFieldParticipantBorder_CONSTRUCTOR = "participantBorder";
     const tableReportees_CONSTRUCTOR = "reportees";
+    const tableFieldReporteeEmail_CONSTRUCTOR = "reporteeEmail";
+    const tableFieldReporteeCompany_CONSTRUCTOR = "reporteeCompany";
+    const tableFieldReporteeTitle_CONSTRUCTOR = "reporteeTitle";
+    const tableFieldReporteeName_CONSTRUCTOR = "reporteeName";
 
     const APP_ID_CUSTOMER = "28";
     const fieldCustomerId_CUSTOMER = "レコード番号";
@@ -89,6 +93,7 @@ import { get_contractor_name } from "./util_forms";
                 const posted_document = await post_cloudSign_document(token, record);
 
                 await post_document_participants(token, posted_document.id, record);
+                await post_document_reportees(token, posted_document.id, record);
             }
         } catch (err) {
             console.error(err);
@@ -249,6 +254,43 @@ import { get_contractor_name } from "./util_forms";
         }
 
         return Promise.resolve();
+    };
+
+    const post_document_reportees = async (token, document_id, record) => {
+        const url = `${CLOUDSIGN_API_SERVER}/documents/${document_id}/reportees`;
+
+        const adding_reportee = [];
+
+        const reportees = get_filtered_subtable(record["constructor_record"][tableReportees_CONSTRUCTOR]["value"]);
+        // 共有先は先方のメールアドレスを想定しているため、敬称を追加
+        reportees.forEach((row) => {
+            const reportee = row["value"];
+
+            let name = `${reportee[tableFieldReporteeName_CONSTRUCTOR]["value"]} 様`;
+
+            // 役職があれば追加
+            if (reportee.hasOwnProperty(tableFieldReporteeTitle_CONSTRUCTOR)
+                && reportee[tableFieldReporteeTitle_CONSTRUCTOR]["value"] !== "") {
+                name = `${reportee[tableFieldReporteeTitle_CONSTRUCTOR]["value"]}　${name}`;
+            }
+
+            // 最後に元のプロパティの値に上書きする
+            reportee[tableFieldReporteeName_CONSTRUCTOR]["value"] = name;
+        });
+
+        for (const row of reportees) {
+            // 共有先が複数いたとしても、一度のAPIリクエストにつき一人しか追加できない
+            const reportee = row["value"];
+            const params = {
+                "email": reportee[tableFieldReporteeEmail_CONSTRUCTOR]["value"],
+                "name": reportee[tableFieldReporteeName_CONSTRUCTOR]["value"],
+                "organization": reportee[tableFieldReporteeCompany_CONSTRUCTOR]["value"]
+            };
+
+            adding_reportee.push(request_post_API_with_urlencoded(token, url, params));
+        }
+
+        return Promise.all(adding_reportee);
     };
 
     const get_filtered_subtable = (table) => {
