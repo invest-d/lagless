@@ -202,7 +202,7 @@ import { get_contractor_name } from "./util_forms";
     const post_cloudSign_document = async (token, record) => {
         const url = `${CLOUDSIGN_API_SERVER}/documents`;
         const customer_name = record["customer_record"][fieldCustomerName_CUSTOMER]["value"];
-        const title = `（テスト用）${dayjs(record[fieldClosingDate_COLLECT]["value"]).format("YYYY年M月D日")}締め分 債権譲渡承諾書（${customer_name}）`;
+        const title = `${dayjs(record[fieldClosingDate_COLLECT]["value"]).format("YYYY年M月D日")}締め分 債権譲渡承諾書（${customer_name}）`;
         const params = {
             "title": title,
             "note": customer_name,
