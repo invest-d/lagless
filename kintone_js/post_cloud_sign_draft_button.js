@@ -202,7 +202,7 @@ import { get_contractor_name } from "./util_forms";
     const post_cloudSign_document = async (token, record) => {
         const url = `${CLOUDSIGN_API_SERVER}/documents`;
         const customer_name = record["customer_record"][fieldCustomerName_CUSTOMER]["value"];
-        const title = `${dayjs(record[fieldClosingDate_COLLECT]["value"]).format("YYYY年M月D日")}締め分 債権譲渡承諾書（${customer_name}）`;
+        const title = `${dayjs(record[fieldClosingDate_COLLECT]["value"]).format("YYYY年M月D日")}締め分 債権譲渡承諾書（${customer_name} 様）`;
         const params = {
             "title": title,
             "note": customer_name,
@@ -278,8 +278,8 @@ import { get_contractor_name } from "./util_forms";
                 return;
             }
 
-            // 敬称を追加
-            let name = `${accepter[tableFieldParticipantName_CONSTRUCTOR]["value"]} 様`;
+            // 回付者への[様]等の敬称は、回付依頼のメールで勝手に追加される。従って不要
+            let name = `${accepter[tableFieldParticipantName_CONSTRUCTOR]["value"]}`;
 
             // 役職があれば追加
             if (accepter.hasOwnProperty(tableFieldParticipantTitle_CONSTRUCTOR)
@@ -318,11 +318,11 @@ import { get_contractor_name } from "./util_forms";
         const adding_reportee = [];
 
         const reportees = get_filtered_subtable(record["constructor_record"][tableReportees_CONSTRUCTOR]["value"]);
-        // 共有先は先方のメールアドレスを想定しているため、敬称を追加
+        // 敬称は自動的に追加される
         reportees.forEach((row) => {
             const reportee = row["value"];
 
-            let name = `${reportee[tableFieldReporteeName_CONSTRUCTOR]["value"]} 様`;
+            let name = `${reportee[tableFieldReporteeName_CONSTRUCTOR]["value"]}`;
 
             // 役職があれば追加
             if (reportee.hasOwnProperty(tableFieldReporteeTitle_CONSTRUCTOR)
