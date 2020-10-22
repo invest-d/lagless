@@ -16,6 +16,7 @@ import { get_contractor_name } from "./util_forms";
     const fieldRecordId_COLLECT = "レコード番号";
     const fieldCollectStatus_COLLECT = "collectStatus";
     const statusReady_COLLECT = "クラウドサイン作成待ち";
+    const statusCreated_COLLECT = "クラウドサイン発射待ち";
     const fieldConstructorId_COLLECT = "constructionShopId";
     const fieldClosingDate_COLLECT = "closingDate";
     const fieldCloudSignAmount_COLLECT = "scheduledCollectableAmount";
@@ -120,6 +121,9 @@ import { get_contractor_name } from "./util_forms";
                         should_update_records.push({
                             id: record[fieldRecordId_COLLECT]["value"],
                             record: {
+                                [fieldCollectStatus_COLLECT]: {
+                                    "value": statusCreated_COLLECT
+                                },
                                 [fieldCloudSignUrl_COLLECT]: {
                                     "value": posted_url
                                 }
@@ -138,7 +142,7 @@ import { get_contractor_name } from "./util_forms";
             }
 
             await Promise.all(generating_documents);
-            const succeeded_records = await update_cloudSign_url(should_update_records);
+            const succeeded_records = await update_suceeded_records(should_update_records);
 
             alert(`${succeeded_records.length}件のレコードについて、クラウドサインの下書き作成を完了しました。\n`
                 + "作成した下書きは、各レコードの「クラウドサインURL」から確認してください。");
@@ -508,7 +512,7 @@ import { get_contractor_name } from "./util_forms";
         return collect_records;
     };
 
-    const update_cloudSign_url = async (update_records) => {
+    const update_suceeded_records = async (update_records) => {
         const body = {
             app: APP_ID_COLLECT,
             records: update_records
