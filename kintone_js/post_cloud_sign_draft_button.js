@@ -92,26 +92,35 @@ import { get_contractor_name } from "./util_forms";
 
             const target_records = await get_target_records();
             const should_update_records = [];
+            const generating_documents = [];
             for (const record of target_records) {
                 // 各レコードについて、一連の処理が失敗しても次のレコードの処理を行う
                 const posted_document = await post_cloudSign_document(token, record);
 
-                await post_document_participants(token, posted_document.id, record);
-                await post_document_reportees(token, posted_document.id, record);
-                await attach_files(token, posted_document.id, record);
+                const api_requests = [
+                    post_document_participants(token, posted_document.id, record),
+                    post_document_reportees(token, posted_document.id, record),
+                    attach_files(token, posted_document.id, record),
+                ];
 
-                // 作成した書類へのURLをkintoneのレコードに保存し、状態フィールドを更新する。
-                const posted_url = `https://www.cloudsign.jp/document/${posted_document.id}/summary`;
-                should_update_records.push({
-                    id: record[fieldRecordId_COLLECT]["value"],
-                    record: {
-                        [fieldCloudSignUrl_COLLECT]: {
-                            "value": posted_url
-                        }
-                    }
-                });
+                const process = Promise.all(api_requests)
+                    .then(() => {
+                        // 作成した書類へのURLをkintoneのレコードに保存し、状態フィールドを更新する。
+                        const posted_url = `https://www.cloudsign.jp/document/${posted_document.id}/summary`;
+                        should_update_records.push({
+                            id: record[fieldRecordId_COLLECT]["value"],
+                            record: {
+                                [fieldCloudSignUrl_COLLECT]: {
+                                    "value": posted_url
+                                }
+                            }
+                        });
+                    });
+
+                generating_documents.push(process);
             }
 
+            await Promise.all(generating_documents);
             const succeeded_records = await update_cloudSign_url(should_update_records);
 
             alert(`${succeeded_records.length}件のレコードについて、クラウドサインの下書き作成を完了しました。\n`
