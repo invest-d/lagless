@@ -10,7 +10,7 @@ import { get_contractor_name } from "./util_forms";
 
     const APP_ID_LOGIN = "61";
     const cloud_sign_record_id = "54";
-    const fieldID_LOGIN = "ID";
+    const fieldClientId_LOGIN = "パスワード";
 
     const APP_ID_COLLECT = kintone.app.getId();
     const fieldRecordId_COLLECT = "レコード番号";
@@ -171,7 +171,7 @@ import { get_contractor_name } from "./util_forms";
             id: cloud_sign_record_id
         };
         const result = await client.record.getRecord(body);
-        return result["record"][fieldID_LOGIN]["value"];
+        return result["record"][fieldClientId_LOGIN]["value"];
     };
 
     const get_cloudSign_token = async (client_id) => {
