@@ -50,5 +50,8 @@ exports.helloWorld = functions.https.onRequest(async (req, res) => {
 //申込みフォームから送信されたデータをfirebaseで受け取り、kintoneに送信する
 exports.send_apply = require("./send_apply").send_apply;
 
+// クラウドサインWeb APIのアクセストークンを取得する
+exports.fetch_cloudSign_token = require("./fetch_cloudSign_token").fetch_cloudSign_token;
+
 // WFIの申し込みフォームからの送信
 exports.ke_ban_form = require("./ke_ban_form").ke_ban_form;
