@@ -91,11 +91,21 @@ import { get_contractor_name } from "./util_forms";
             const token = await get_cloudSign_token(client_id);
 
             const target_records = await get_target_records();
+            const failed_collect_ids = [];
             const should_update_records = [];
             const generating_documents = [];
             for (const record of target_records) {
                 // 各レコードについて、一連の処理が失敗しても次のレコードの処理を行う
-                const posted_document = await post_cloudSign_document(token, record);
+                const posted_document = await post_cloudSign_document(token, record)
+                    .catch((err) => {
+                        console.error(err);
+                        failed_collect_ids.push(record[fieldRecordId_COLLECT]["value"]);
+                        return null;
+                    });
+
+                if (!posted_document) {
+                    continue;
+                }
 
                 const api_requests = [
                     post_document_participants(token, posted_document.id, record),
@@ -115,6 +125,13 @@ import { get_contractor_name } from "./util_forms";
                                 }
                             }
                         });
+                    })
+                    .catch(async () => {
+                        // クラウドサインに書類を作成することに失敗した場合、作りかけの書類を削除
+                        await delete_document(token, posted_document.id);
+
+                        // 失敗したレコード番号を保持する
+                        failed_collect_ids.push(record[fieldRecordId_COLLECT]["value"]);
                     });
 
                 generating_documents.push(process);
@@ -125,6 +142,11 @@ import { get_contractor_name } from "./util_forms";
 
             alert(`${succeeded_records.length}件のレコードについて、クラウドサインの下書き作成を完了しました。\n`
                 + "作成した下書きは、各レコードの「クラウドサインURL」から確認してください。");
+
+            if (failed_collect_ids.length > 0) {
+                alert("処理に失敗したレコードがあります。\n\n"
+                    + `レコード番号：${failed_collect_ids.join(", ")}`);
+            }
         } catch (err) {
             console.error(err);
             alert(err);
@@ -381,6 +403,17 @@ import { get_contractor_name } from "./util_forms";
                 body: createFormData(params)
             });
         }
+    };
+
+    const delete_document = (token, document_id) => {
+        const url = `${CLOUDSIGN_API_SERVER}/documents/${document_id}`;
+        return fetch(url, {
+            method: "DELETE",
+            headers: {
+                "accept": "*/*",
+                "Authorization": `${token.token_type} ${token.access_token}`
+            }
+        });
     };
 
     const get_filtered_subtable = (table) => {
