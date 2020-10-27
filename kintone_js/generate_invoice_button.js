@@ -359,10 +359,18 @@ dayjs.locale("ja");
         // pdfmakeのライブラリ用のオブジェクトを生成する。
         const product_name = parent_record[fieldProductName_COLLECT]["value"];
         const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
-        const contact_company = get_contractor_name(parent_record[fieldAccount_COLLECT]["value"], parent_record["daysLater"]["value"])
-
-        if (!contact_company) {
-            throw new Error(`不明な支払元口座です: ${parent_record[fieldAccount_COLLECT]["value"]}`);
+        let contact_company;
+        try {
+            contact_company = get_contractor_name(parent_record[fieldAccount_COLLECT]["value"], parent_record["daysLater"]["value"]);
+        } catch (e) {
+            if (e instanceof TypeError) {
+                throw new Error("連絡先として表示する会社名を確定できませんでした。\n"
+                    + "【支払元口座】および【遅払い日数】を工務店マスタに正しく入力してください。\n\n"
+                    + `工務店ID：${parent_record[fieldConstructionShopId_COLLECT]["value"]}\n`
+                    + `工務店名：${parent_record[fieldConstructionShopName_COLLECT]["value"]}`);
+            } else {
+                throw new Error(`不明なエラーです。追加の情報：${e}`);
+            }
         }
 
         const doc = {
