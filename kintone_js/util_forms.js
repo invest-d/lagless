@@ -19,7 +19,7 @@ export function get_contractor_name(account, days_later) {
 
     return {
         "ID": {
-            "V1": "インベストデザイン株式会社",
+            "V1": "株式会社NID",
             "V2": "ラグレス2合同会社"
         },
         "LAGLESS": {
