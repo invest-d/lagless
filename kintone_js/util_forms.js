@@ -10,8 +10,9 @@ export function addComma(num) {
 }
 
 export function get_contractor_name(account, days_later) {
+    const is_available_late_payment = Number.isInteger(Number(days_later)) && Number(days_later) > 0;
     let version = "";
-    if (Number.isInteger(Number(days_later)) && Number(days_later) > 0) {
+    if (is_available_late_payment) {
         version = "V2";
     } else {
         version = "V1";
