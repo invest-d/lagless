@@ -553,7 +553,7 @@ dayjs.locale("ja");
         const account_value = JSON.parse(JSON.stringify(billing_value_template));
         account_value.text = ACCOUNTS[contact_company];
         account_value.rowSpan = 3;
-        account_value.fontSize = 9;
+        account_value.fontSize = 8;
         account_value.margin = [0, 14, 0, 0];
 
         const bill_table = {
