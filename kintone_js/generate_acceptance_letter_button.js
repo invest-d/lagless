@@ -40,6 +40,7 @@ dayjs.locale("ja");
     const fieldStatus_COLLECT = "collectStatus";
     const statusReadyToGenerate_COLLECT = "クラウドサイン作成待ち";
     const fieldConstructorId_COLLECT = "constructionShopId";
+    const fieldConstructorName_COLLECT = "constructionShopName";
     const fieldAccount_COLLECT = "account";
     const fieldSendDate_COLLECT = "cloudSignSendDate";
     const fieldClosing_COLLECT = "closingDate";
@@ -192,6 +193,7 @@ dayjs.locale("ja");
                 fieldClosing_COLLECT,
                 fieldSubtableCS_COLLECT,
                 fieldConstructorId_COLLECT,
+                fieldConstructorName_COLLECT,
                 fieldDaysLater_COLLECT
             ],
             "condition": `${fieldStatus_COLLECT} in ("${statusReadyToGenerate_COLLECT}")`
@@ -253,7 +255,24 @@ dayjs.locale("ja");
         const gray = "#888888";
         const white = "#FFFFFF";
 
-        const contractor_name = get_contractor_name(record[fieldAccount_COLLECT]["value"], record[fieldDaysLater_COLLECT]["value"]);
+        let contractor_name;
+        try {
+            contractor_name = get_contractor_name(
+                record[fieldAccount_COLLECT]["value"],
+                record[fieldDaysLater_COLLECT]["value"],
+                record[fieldConstructorId_COLLECT]["value"]
+            );
+        } catch (e) {
+            if (e instanceof TypeError) {
+                throw new Error("債権譲受人として表示する会社名を確定できませんでした。\n"
+                    + "【支払元口座】および【遅払い日数】を工務店マスタに正しく入力してください。\n\n"
+                    + `工務店ID：${record[fieldConstructorId_COLLECT]["value"]}\n`
+                    + `工務店名：${record[fieldConstructorName_COLLECT]["value"]}`);
+            } else {
+                throw new Error(`不明なエラーです。追加の情報：${e}`);
+            }
+        }
+
         const doc = {
             info: {
                 title: `譲渡対象債権リスト（${corporate_info[fieldCorporateName_CORPORATE]["value"]}様）`,

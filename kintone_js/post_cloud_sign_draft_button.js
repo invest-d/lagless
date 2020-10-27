@@ -18,6 +18,7 @@ import { get_contractor_name } from "./util_forms";
     const statusReady_COLLECT = "クラウドサイン作成待ち";
     const statusCreated_COLLECT = "クラウドサイン発射待ち";
     const fieldConstructorId_COLLECT = "constructionShopId";
+    const fieldConstructorName_COLLECT = "constructionShopName";
     const fieldClosingDate_COLLECT = "closingDate";
     const fieldCloudSignAmount_COLLECT = "scheduledCollectableAmount";
     const fieldAcceptanceLetter_COLLECT = "cloudSignPdf";
@@ -235,7 +236,23 @@ import { get_contractor_name } from "./util_forms";
                 "language_code": "ja"
             });
 
-            const contractor = get_contractor_name(record[fieldAccount_COLLECT]["value"], record[fieldDaysLater_COLLECT]["value"]);
+            let contractor;
+            try {
+                contractor = get_contractor_name(
+                    record[fieldAccount_COLLECT]["value"],
+                    record[fieldDaysLater_COLLECT]["value"],
+                    record[fieldConstructorId_COLLECT]["value"]
+                );
+            } catch (e) {
+                if (e instanceof TypeError) {
+                    throw new Error("会社名を確定できませんでした。\n"
+                        + "【支払元口座】および【遅払い日数】を工務店マスタに正しく入力してください。\n\n"
+                        + `工務店ID：${record[fieldConstructorId_COLLECT]["value"]}\n`
+                        + `工務店名：${record[fieldConstructorName_COLLECT]["value"]}`);
+                } else {
+                    throw new Error(`不明なエラーです。追加の情報：${e}`);
+                }
+            }
             if (contractor === "ラグレス合同会社") {
                 offerers.push({
                     "email": "h.kanemoto@shine-artist.com",
@@ -433,6 +450,7 @@ import { get_contractor_name } from "./util_forms";
                 fields: [
                     fieldRecordId_COLLECT,
                     fieldConstructorId_COLLECT,
+                    fieldConstructorName_COLLECT,
                     fieldClosingDate_COLLECT,
                     fieldCloudSignAmount_COLLECT,
                     fieldAcceptanceLetter_COLLECT,
