@@ -365,7 +365,11 @@ dayjs.locale("ja");
         const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
         let contact_company;
         try {
-            contact_company = get_contractor_name(parent_record[fieldAccount_COLLECT]["value"], parent_record["daysLater"]["value"]);
+            contact_company = get_contractor_name(
+                parent_record[fieldAccount_COLLECT]["value"],
+                parent_record[fieldDaysLater_COLLECT]["value"],
+                parent_record[fieldConstructionShopId_COLLECT]["value"]
+            );
         } catch (e) {
             if (e instanceof TypeError) {
                 throw new Error("連絡先として表示する会社名を確定できませんでした。\n"
