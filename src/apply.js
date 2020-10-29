@@ -264,7 +264,8 @@ $(() => {
         }
 
         // 添付ファイルのファイルサイズが大きすぎるとサーバーエラーになるため、送信できないようにする。
-        const FILE_SIZE_LIMIT = 4 * Math.pow(1024, 2);
+        // functionsからkintoneに送信するリクエストボディの50MB制限に合わせる。36MB * 4/3 = 48MB
+        const FILE_SIZE_LIMIT = 36 * Math.pow(1024, 2);
         const over_input = inputs.find((input) => input.files[0].size >= FILE_SIZE_LIMIT);
         if (over_input !== undefined) {
             // alertに表示するため、inputに対応するラベルを取得
@@ -289,7 +290,8 @@ $(() => {
 
         try {
             const uploaded_filenames = await upload_attachment_files(inputs);
-            console.log(uploaded_filenames);
+            const result = await post_to_kintone(functions_post_data, uploaded_filenames);
+            window.location.href = String(result.redirect);
         } catch (err) {
             alert(err.message);
             hideSending();
@@ -297,6 +299,7 @@ $(() => {
                 .text("送信")
                 .prop("disabled", false);
         }
+        // 成功すればそのままページ遷移するため、hideSending()は必要ない
     });
 });
 
@@ -359,6 +362,37 @@ const upload_attachment_files = async (inputs) => {
             + "ご不便をおかけして申し訳ございません。時間を置いて再度お試し頂くか、下記連絡先にお問い合わせください。\n\n"
             + `${$("#contact").text()}`);
         });
+};
+
+const post_to_kintone = async (form_data, file_names) => {
+    return new Promise((resolve, reject) => {
+        // json形式で送信する
+        const input_data = {};
+        for (const [key, val] of form_data) {
+            input_data[key] = val;
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "https://us-central1-lagless.cloudfunctions.net/send_apply",
+            dataType: "json",
+            data: JSON.stringify({
+                process_type: "post",
+                fields: input_data,
+                file_names: file_names,
+            }),
+            cache: false,
+            processData: false,
+            contentType: false
+        })
+            .done((data) => resolve(data))
+            .fail((err) => {
+                console.error(err);
+                reject(new Error("申込の送信中にエラーが発生しました。\n"
+                    + "ご不便をおかけして申し訳ございません。時間を置いて再度お試し頂くか、下記連絡先にお問い合わせください。\n\n"
+                    + `${$("#contact").text()}`));
+            });
+    });
 };
 
 function isSafari() {
