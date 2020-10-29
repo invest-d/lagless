@@ -50,6 +50,14 @@ exports.send_apply = functions.https.onRequest((req, res) => {
         // kintoneのレコードの登録時に一緒にレコードの添付ファイルとして保存する
         post_apply_record(req_body, env)
             .then((post_succeed) => {
+                Promise.all(req_body.file_names.map((name) => delete_file(name)))
+                    .then(() => console.log("all tempolary files are successfully deleted."))
+                    .catch((name) => {
+                        console.warn(`Storageにファイルが残っています： ${name} `
+                            + "これはkintoneへの保存が済んでいるファイルなので、手動で削除してください。");
+                    });
+
+                // ファイル削除でエラーが出たとしてもレスポンスは続行
                 res.status(post_succeed.status).json({
                     "redirect": post_succeed.redirect_to
                 });
@@ -172,6 +180,18 @@ async function post_apply_record(req_body, env) {
         status: kintone_post_response.status,
         redirect_to: env.success_redirect_to
     };
+}
+
+async function delete_file(file_name) {
+    // kintoneにアップロードするため、Storageへ一時保存したファイルを削除する
+    const storage = new Storage();
+    const bucket = storage.bucket("lagless-apply");
+    await bucket.file(file_name).delete()
+        .catch((err) => {
+            console.warn(err);
+            throw new Error(file_name);
+        });
+    console.log(`file ${file_name} is successfully deleted.`);
 }
 
 function uploadToKintone(token, attachment, filename) {
