@@ -5,7 +5,30 @@ const FormData = require("form-data");
 const axios = require("axios");
 
 exports.send_apply = functions.https.onRequest((req, res) => {
-    postToKintone(req, res)
+    if (req.method != "POST") {
+        respond_error(res, {
+            status: 405,
+            message: "Method Not Allowed"
+        });
+        return;
+    }
+    console.log(`requested from ${String(req.headers.origin)}`);
+
+    // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
+    let env;
+    try {
+        env = new Environ(req.headers.origin);
+    } catch (e) {
+        console.error(e);
+        respond_error(res, {
+            status: 400,
+            message: "無効なリクエストです"
+        });
+        return;
+    }
+    setCORS(env, res);
+
+    postToKintone(req, env)
         .then((post_succeed) => {
             res.status(post_succeed.status).json({
                 "redirect": post_succeed.redirect_to
@@ -16,30 +39,8 @@ exports.send_apply = functions.https.onRequest((req, res) => {
         });
 });
 
-function postToKintone(req, res) {
+function postToKintone(req, env) {
     return new Promise((resolve, reject) => {
-        if (req.method != "POST") {
-            return reject({
-                status: 405,
-                message: "Method Not Allowed"
-            });
-        }
-
-        console.log(`requested from ${String(req.headers.origin)}`);
-
-        // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
-        let env;
-        try {
-            env = new Environ(req.headers.origin);
-        } catch (e) {
-            console.error(e);
-            return reject({
-                status: 400,
-                message: "無効なリクエストです"
-            });
-        }
-        setCORS(env, res);
-
         const record = {};
 
         const busboy = new Busboy({ headers: req.headers });
