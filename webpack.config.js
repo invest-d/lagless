@@ -9,7 +9,7 @@ module.exports = (env, argv) => {
         return {
             name: "lagless",
             mode: "development",
-            devtool: "eval-source-map",
+            devtool: "source-map",
             entry: {
                 app: "./src/app.js",
                 apply: "./src/apply.js",
