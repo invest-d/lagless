@@ -13,6 +13,7 @@ const params = new URLSearchParams(window.location.search);
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 import * as find from "./defineFindPolyfill";
 find.definePolyfill();
+import "formdata-polyfill";
 
 import { get_kintone_data } from "./app";
 
@@ -253,12 +254,24 @@ $(() => {
         // 各種添付ファイルチェック。既存ユーザのときは添付ファイルが必要ない項目があるので、それは無視する
         const inputs = $.makeArray($("input[type='file']").filter((i, elem) => $(elem).val() != ""));
 
+        // Object.valuesはIEでは使えないので回避
+        const extensions = Object.keys(VALID_MIME_TYPES).map((key) => VALID_MIME_TYPES[key]);
         // mimetypeをチェック
-        const invalid_input = inputs.find((input) => !(input.files[0].type in VALID_MIME_TYPES));
+        const invalid_input = inputs.find((input) => {
+            if (input.files[0].type) {
+                return !(input.files[0].type in VALID_MIME_TYPES);
+            } else {
+                // IEでは、少なくともPDFファイルの場合に input.files[0].type が空文字となる。参考： https://stackoverflow.com/questions/32849014/ie-11-and-ie-edge-get-file-type-failed
+                // 仕方ないのでファイル名を直接見る。
+                // includes()もIEでは使えない
+                return extensions.indexOf(input.files[0].name.split(".").slice(-1)[0]) === -1;
+            }
+        });
         if (invalid_input) {
+            const valid_list = extensions.join(", ");
             const label_text = $(`label[for='${invalid_input.id}']`).text();
             alert(`${label_text}のファイル形式の変更をお願いします。\n`
-                + `利用可能な形式は${Object.values(VALID_MIME_TYPES).join(", ")}です。\n\n`
+                + `利用可能な形式は${valid_list}です。\n\n`
                 + `現在のファイル形式：${$(invalid_input).val().split(".").slice(-1)[0]}`);
             return;
         }
