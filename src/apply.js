@@ -395,23 +395,6 @@ const post_to_kintone = async (form_data, file_names) => {
     });
 };
 
-function isSafari() {
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    if (userAgent.indexOf("msie") != -1 || userAgent.indexOf("trident") != -1) {
-    // ie
-    } else if (userAgent.indexOf("edge") != -1) {
-    // edge
-    } else if (userAgent.indexOf("chrome") != -1) {
-    // chrome
-    } else if (userAgent.indexOf("safari") != -1) {
-    // safari
-        return true;
-    }
-
-    // それ以外
-    return false;
-}
-
 function showSending(msg){
     // 引数なし（メッセージなし）を許容
     if( msg == undefined ){
