@@ -137,11 +137,11 @@ const show = function(client, param) {
         $(".limit-precaution").text(`早払い年間利用回数制限${client.limit}。`);
     }
     $(`.cond-${mode}`).show();
-    $(".form_1").attr("href", `./apply.html?user=new&c=${param.c}&product=${mode}`);
-    $(".form_2").attr("href", `./apply.html?user=existing&c=${param.c}&product=${mode}`);
+    $(".form_1").attr("href", `./apply.html?user=new&c=${param.c}&a=${param.a}&product=${mode}`); // param.aはURLに表示するだけなのでundefinedでも問題ない
+    $(".form_2").attr("href", `./apply.html?user=existing&c=${param.c}&a=${param.a}&product=${mode}`);
     // 遅払い用
-    $(".form_3").attr("href", `./apply.html?user=new&c=${param.c}&product=${mode}&t=late`);
-    $(".form_4").attr("href", `./apply.html?user=existing&c=${param.c}&product=${mode}&t=late`);
+    $(".form_3").attr("href", `./apply.html?user=new&c=${param.c}&a=${param.a}&product=${mode}&t=late`);
+    $(".form_4").attr("href", `./apply.html?user=existing&c=${param.c}&a=${param.a}&product=${mode}&t=late`);
     if(client.link) {
         $(".link").attr("href", client.link).text(client.link);
         $(".link").parents("div").show();
