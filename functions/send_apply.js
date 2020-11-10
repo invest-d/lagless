@@ -97,8 +97,6 @@ async function get_storage_signed_url(filename, content_type) {
 }
 
 async function post_apply_record(req_body, env) {
-    const record = {};
-
     // Storageからファイルをダウンロードしてkintoneへアップロードする
     const storage = new Storage();
     const bucket = storage.bucket("lagless-apply");
@@ -135,49 +133,55 @@ async function post_apply_record(req_body, env) {
     const kintone_uploads = req_body.file_names.map((name) => upload_to_kintone(env.api_token_files, name));
 
     const results = await Promise.all(kintone_uploads);
-    // ファイル名は`${kintoneフィールド名}_{タイムスタンプ}.ext`の形式なので_でsplit
-    const kintone_attachment_fields = req_body.file_names.map((name) => name.split("_")[0]);
-    for (const field of kintone_attachment_fields) {
-        // fileKeyをrecordオブジェクトに紐づける
-        record[field] = { value: results.find((r) => r.field_name === field).value };
-    }
+    // kintoneアプリにレコード作成
+    const get_posting_payload = (results) => {
+        const record = {};
 
-    // フォームの入力内容を読み取る
-    for (const key of Object.keys(req_body.fields)) {
-        record[key]= {"value": req_body.fields[key]};
-    }
+        // ファイル名は`${kintoneフィールド名}_{タイムスタンプ}.ext`の形式なので_でsplit
+        const kintone_attachment_fields = req_body.file_names.map((name) => name.split("_")[0]);
+        for (const field of kintone_attachment_fields) {
+            // fileKeyをrecordオブジェクトに紐づける
+            record[field] = { value: results.find((r) => r.field_name === field).value };
+        }
 
-    // 預金種目を日本語に変換。この情報をサーバに送信しない場合（＝既存ユーザの場合）もあるので、そのときは変換もなし
-    if (Object.prototype.hasOwnProperty.call(record, "deposit_Form")) {
-        const ja_deposit_type = (record["deposit_Form"]["value"] === "ordinary")
-            ? "普通"
-            : "当座";
+        // フォームの入力内容を読み取る
+        for (const key of Object.keys(req_body.fields)) {
+            record[key]= {"value": req_body.fields[key]};
+        }
 
-        record["deposit_Form"] = {"value": ja_deposit_type};
-    }
+        // 預金種目を日本語に変換。この情報をサーバに送信しない場合（＝既存ユーザの場合）もあるので、そのときは変換もなし
+        if (Object.prototype.hasOwnProperty.call(record, "deposit_Form")) {
+            const ja_deposit_type = (record["deposit_Form"]["value"] === "ordinary")
+                ? "普通"
+                : "当座";
 
-    // 支払タイミングを日本語に変換
-    if (Object.prototype.hasOwnProperty.call(record, "paymentTiming")) {
-        const ja_payment_timing = (record["paymentTiming"]["value"] === "late")
-            ? "遅払い"
-            : "早払い";
+            record["deposit_Form"] = {"value": ja_deposit_type};
+        }
 
-        record["paymentTiming"] = {"value": ja_payment_timing};
-    }
+        // 支払タイミングを日本語に変換
+        if (Object.prototype.hasOwnProperty.call(record, "paymentTiming")) {
+            const ja_payment_timing = (record["paymentTiming"]["value"] === "late")
+                ? "遅払い"
+                : "早払い";
 
-    // 不要な要素を削除
-    delete record["agree"];
+            record["paymentTiming"] = {"value": ja_payment_timing};
+        }
 
-    // kintoneへの登録が失敗した場合、最悪あとから手動でレコード登録できるようにログに残しておく
-    console.log("posting record is ...");
-    console.log(record);
+        // 不要な要素を削除
+        delete record["agree"];
 
-    const payload = {
-        app: env.app_id,
-        record: record
+        // kintoneへの登録が失敗した場合、最悪あとから手動でレコード登録できるようにログに残しておく
+        console.log("posting record is ...");
+        console.log(record);
+
+        return {
+            app: env.app_id,
+            record: record
+        };
     };
-    console.log("The payload is ready.");
-    console.log(payload);
+    const payload = get_posting_payload(results);
+
+    // kintoneへの登録
     // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
     const API_TOKEN = `${env.api_token_record},${process.env.api_token_komuten}`;
 
