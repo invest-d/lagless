@@ -277,14 +277,18 @@ $(() => {
         }
 
         // 添付ファイルのファイルサイズが大きすぎるとサーバーエラーになるため、送信できないようにする。
-        // functionsからkintoneに送信するリクエストボディの50MB制限に合わせる。36MB * 4/3 = 48MB
-        const FILE_SIZE_LIMIT = 36 * Math.pow(1024, 2);
+        // Storageからfunctionsに読み込んで処理するにあたり、1ファイルあたり10MB程度ならメモリ制限に引っ掛からず安定して処理できる模様
+        const FILE_SIZE_LIMIT = 10 * Math.pow(1024, 2);
         const over_input = inputs.find((input) => input.files[0].size >= FILE_SIZE_LIMIT);
         if (over_input !== undefined) {
             // alertに表示するため、inputに対応するラベルを取得
             const label_text = $(`label[for='${over_input.id}']`).text();
+            const over_filesize_mb = (over_input.files[0].size / Math.pow(1024, 2)).toPrecision(2);
             alert(`${label_text}のファイル容量を${FILE_SIZE_LIMIT / Math.pow(1024, 2)}MBより小さくしてください。\n`
-            + `現在のファイル容量：およそ${(over_input.files[0].size / Math.pow(1024, 2)).toPrecision(2)}MB`);
+            + `現在のファイル容量：およそ${over_filesize_mb}MB`);
+
+            // rollbarで補足可能にする
+            window.onerror(`申込フォームにおいて、添付ファイルサイズ制限による失敗がありました。ファイルサイズ：${over_filesize_mb}MB`, window.location.href);
             return;
         }
 
