@@ -251,7 +251,7 @@ $(() => {
 
         $("#report-validity").hide();
 
-        // 各種添付ファイルチェック。既存ユーザのときは添付ファイルが必要ない項目があるので、それは無視する
+        // 各種添付ファイルチェック。添付ファイルを入力していない項目は無視する
         const inputs = $.makeArray($("input[type='file']").filter((i, elem) => $(elem).val() != ""));
 
         // Object.valuesはIEでは使えないので回避
@@ -310,8 +310,8 @@ $(() => {
             } else {
                 end_point = `${end_point}/send_apply_dev`;
             }
-            const uploaded_filenames = await upload_attachment_files(inputs, end_point, env);
-            const result = await post_to_kintone(functions_post_data, uploaded_filenames, end_point);
+            const uploaded_files = await upload_attachment_files(inputs, end_point, env);
+            const result = await post_to_kintone(functions_post_data, uploaded_files, end_point);
             window.location.href = String(result.redirect);
         } catch (err) {
             alert(err.message);
@@ -372,11 +372,14 @@ const upload_attachment_files = async (inputs, end_point, env) => {
         // アップロードするファイルの数だけ、異なる署名付きURLが必要になる
         const signed_url = await get_signed_url(file_name, input.files[0].type, end_point);
         await upload_file(signed_url, input.files[0]);
-        return file_name;
+        return {
+            name: file_name,
+            mime_type: input.files[0].type,
+        };
     });
 
     return Promise.all(upload_processes)
-        .then((file_names) => file_names)
+        .then((files) => files)
         .catch((err) => {
             console.error(err);
             throw new Error("申込の送信中にエラーが発生しました。\n"
@@ -385,7 +388,7 @@ const upload_attachment_files = async (inputs, end_point, env) => {
         });
 };
 
-const post_to_kintone = async (form_data, file_names, end_point) => {
+const post_to_kintone = async (form_data, files, end_point) => {
     return new Promise((resolve, reject) => {
         // json形式で送信する
         const input_data = {};
@@ -400,7 +403,7 @@ const post_to_kintone = async (form_data, file_names, end_point) => {
             data: JSON.stringify({
                 process_type: "post",
                 fields: input_data,
-                file_names: file_names,
+                files: files,
             }),
             cache: false,
             processData: false,
