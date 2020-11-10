@@ -102,18 +102,37 @@ async function post_apply_record(req_body, env) {
     // Storageからファイルをダウンロードしてkintoneへアップロードする
     const storage = new Storage();
     const bucket = storage.bucket("lagless-apply");
-    const upload_to_kintone = async (file_name) => {
+    const upload_to_kintone = async (token, file_name) => {
         console.log(`getting ${file_name} from cloud storage ...`);
         const file = await bucket.file(file_name).download();
         console.log(`uploading ${file_name} to kintone ...`);
-        const resp = await uploadToKintone(env.api_token_files, file[0], file_name);
+        const upload = (token, attachment, filename) {
+            const form = new FormData();
+
+            form.append("file", attachment, filename);
+            const headers = Object.assign(form.getHeaders(), {
+                "X-Cybozu-API-Token": token
+            });
+
+            const config = {
+                method: "post",
+                url: "https://investdesign.cybozu.com/k/v1/file.json",
+                data: form,
+                headers: headers,
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity
+            };
+
+            return axios(config);
+        };
+        const resp = await upload(token, file[0], file_name);
         console.log(`uploaded ${file_name} to kintone successfully.`);
         return {
             "field_name": file_name.split("_")[0],
             "value": [{"fileKey": resp.data.fileKey}]
         };
     };
-    const kintone_uploads = req_body.file_names.map((name) => upload_to_kintone(name));
+    const kintone_uploads = req_body.file_names.map((name) => upload_to_kintone(env.api_token_files, name));
 
     const results = await Promise.all(kintone_uploads);
     // ファイル名は`${kintoneフィールド名}_{タイムスタンプ}.ext`の形式なので_でsplit
@@ -192,26 +211,6 @@ async function delete_file(file_name) {
             throw new Error(file_name);
         });
     console.log(`file ${file_name} is successfully deleted.`);
-}
-
-function uploadToKintone(token, attachment, filename) {
-    const form = new FormData();
-
-    form.append("file", attachment, filename);
-    const headers = Object.assign(form.getHeaders(), {
-        "X-Cybozu-API-Token": token
-    });
-
-    const config = {
-        method: "post",
-        url: "https://investdesign.cybozu.com/k/v1/file.json",
-        data: form,
-        headers: headers,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
-    };
-
-    return axios(config);
 }
 
 function postRecord(app_id, token, payload) {
