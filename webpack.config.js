@@ -54,6 +54,12 @@ module.exports = (env, argv) => {
                 new webpack.ProvidePlugin({
                     Promise: "es6-promise",
                 }),
+                new webpack.DefinePlugin({
+                    ENV: JSON.stringify({
+                        apply_endpoint: "https://us-central1-lagless.cloudfunctions.net/send_apply_dev",
+                        filename_suffix: "dev",
+                    }),
+                }),
             ]
         };
     } else {
@@ -104,6 +110,12 @@ module.exports = (env, argv) => {
                 ),
                 new webpack.ProvidePlugin({
                     Promise: "es6-promise",
+                }),
+                new webpack.DefinePlugin({
+                    ENV: JSON.stringify({
+                        apply_endpoint: "https://us-central1-lagless.cloudfunctions.net/send_apply",
+                        filename_suffix: "prod",
+                    }),
                 }),
             ]
         };

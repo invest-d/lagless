@@ -306,16 +306,8 @@ $(() => {
             .prop("disabled", true);
 
         try {
-            let end_point = "https://us-central1-lagless.cloudfunctions.net";
-            let env = "dev";
-            if (location.hostname === "payment.invest-d.com") {
-                end_point = `${end_point}/send_apply`;
-                env = "prod";
-            } else {
-                end_point = `${end_point}/send_apply_dev`;
-            }
-            const uploaded_files = await upload_attachment_files(inputs, end_point, env);
-            const result = await post_to_kintone(functions_post_data, uploaded_files, end_point);
+            const uploaded_files = await upload_attachment_files(inputs);
+            const result = await post_to_kintone(functions_post_data, uploaded_files);
             window.location.href = String(result.redirect);
         } catch (err) {
             alert(err.message);
@@ -328,7 +320,7 @@ $(() => {
     });
 });
 
-const upload_attachment_files = async (inputs, end_point, env) => {
+const upload_attachment_files = async (inputs) => {
     const get_signed_url = (file_name, mime_type, url) => {
         return new Promise((resolve, reject) => {
             $.ajax({
@@ -371,10 +363,10 @@ const upload_attachment_files = async (inputs, end_point, env) => {
         const ext = VALID_MIME_TYPES[input.files[0].type];
         const field_name = input.attributes.name.value;
         // 同じファイル名だと上書きするので、タイムスタンプで上書きを回避
-        const file_name = `${field_name}_${timestamp}${env}.${ext}`;
+        const file_name = `${field_name}_${timestamp}${ENV.filename_suffix}.${ext}`;
 
         // アップロードするファイルの数だけ、異なる署名付きURLが必要になる
-        const signed_url = await get_signed_url(file_name, input.files[0].type, end_point);
+        const signed_url = await get_signed_url(file_name, input.files[0].type, ENV.apply_endpoint);
         await upload_file(signed_url, input.files[0]);
         return {
             name: file_name,
@@ -392,7 +384,7 @@ const upload_attachment_files = async (inputs, end_point, env) => {
         });
 };
 
-const post_to_kintone = async (form_data, files, end_point) => {
+const post_to_kintone = async (form_data, files) => {
     return new Promise((resolve, reject) => {
         // json形式で送信する
         const input_data = {};
@@ -402,7 +394,7 @@ const post_to_kintone = async (form_data, files, end_point) => {
 
         $.ajax({
             type: "POST",
-            url: end_point,
+            url: ENV.apply_endpoint,
             dataType: "json",
             data: JSON.stringify({
                 process_type: "post",
