@@ -251,7 +251,7 @@ $(() => {
 
         $("#report-validity").hide();
 
-        // 各種添付ファイルチェック。既存ユーザのときは添付ファイルが必要ない項目があるので、それは無視する
+        // 各種添付ファイルチェック。添付ファイルを入力していない項目は無視する
         const inputs = $.makeArray($("input[type='file']").filter((i, elem) => $(elem).val() != ""));
 
         // Object.valuesはIEでは使えないので回避
@@ -277,14 +277,18 @@ $(() => {
         }
 
         // 添付ファイルのファイルサイズが大きすぎるとサーバーエラーになるため、送信できないようにする。
-        // functionsからkintoneに送信するリクエストボディの50MB制限に合わせる。36MB * 4/3 = 48MB
-        const FILE_SIZE_LIMIT = 36 * Math.pow(1024, 2);
+        // Storageからfunctionsに読み込んで処理するにあたり、1ファイルあたり10MB程度ならメモリ制限に引っ掛からず安定して処理できる模様
+        const FILE_SIZE_LIMIT = 10 * Math.pow(1024, 2);
         const over_input = inputs.find((input) => input.files[0].size >= FILE_SIZE_LIMIT);
         if (over_input !== undefined) {
             // alertに表示するため、inputに対応するラベルを取得
             const label_text = $(`label[for='${over_input.id}']`).text();
+            const over_filesize_mb = (over_input.files[0].size / Math.pow(1024, 2)).toPrecision(2);
             alert(`${label_text}のファイル容量を${FILE_SIZE_LIMIT / Math.pow(1024, 2)}MBより小さくしてください。\n`
-            + `現在のファイル容量：およそ${(over_input.files[0].size / Math.pow(1024, 2)).toPrecision(2)}MB`);
+            + `現在のファイル容量：およそ${over_filesize_mb}MB`);
+
+            // rollbarで補足可能にする
+            window.onerror(`申込フォームにおいて、添付ファイルサイズ制限による失敗がありました。ファイルサイズ：${over_filesize_mb}MB`, window.location.href);
             return;
         }
 
@@ -302,8 +306,8 @@ $(() => {
             .prop("disabled", true);
 
         try {
-            const uploaded_filenames = await upload_attachment_files(inputs);
-            const result = await post_to_kintone(functions_post_data, uploaded_filenames);
+            const uploaded_files = await upload_attachment_files(inputs);
+            const result = await post_to_kintone(functions_post_data, uploaded_files);
             window.location.href = String(result.redirect);
         } catch (err) {
             alert(err.message);
@@ -317,11 +321,11 @@ $(() => {
 });
 
 const upload_attachment_files = async (inputs) => {
-    const get_signed_url = (file_name, mime_type) => {
+    const get_signed_url = (file_name, mime_type, url) => {
         return new Promise((resolve, reject) => {
             $.ajax({
                 type: "POST",
-                url: "https://us-central1-lagless.cloudfunctions.net/send_apply",
+                url: url,
                 dataType: "json",
                 data: JSON.stringify({
                     process_type: "signed_url",
@@ -359,16 +363,19 @@ const upload_attachment_files = async (inputs) => {
         const ext = VALID_MIME_TYPES[input.files[0].type];
         const field_name = input.attributes.name.value;
         // 同じファイル名だと上書きするので、タイムスタンプで上書きを回避
-        const file_name = `${field_name}_${timestamp}.${ext}`;
+        const file_name = `${field_name}_${timestamp}${ENV.filename_suffix}.${ext}`;
 
         // アップロードするファイルの数だけ、異なる署名付きURLが必要になる
-        const signed_url = await get_signed_url(file_name, input.files[0].type);
+        const signed_url = await get_signed_url(file_name, input.files[0].type, ENV.apply_endpoint);
         await upload_file(signed_url, input.files[0]);
-        return file_name;
+        return {
+            name: file_name,
+            mime_type: input.files[0].type,
+        };
     });
 
     return Promise.all(upload_processes)
-        .then((file_names) => file_names)
+        .then((files) => files)
         .catch((err) => {
             console.error(err);
             throw new Error("申込の送信中にエラーが発生しました。\n"
@@ -377,7 +384,7 @@ const upload_attachment_files = async (inputs) => {
         });
 };
 
-const post_to_kintone = async (form_data, file_names) => {
+const post_to_kintone = async (form_data, files) => {
     return new Promise((resolve, reject) => {
         // json形式で送信する
         const input_data = {};
@@ -387,12 +394,12 @@ const post_to_kintone = async (form_data, file_names) => {
 
         $.ajax({
             type: "POST",
-            url: "https://us-central1-lagless.cloudfunctions.net/send_apply",
+            url: ENV.apply_endpoint,
             dataType: "json",
             data: JSON.stringify({
                 process_type: "post",
                 fields: input_data,
-                file_names: file_names,
+                files: files,
             }),
             cache: false,
             processData: false,

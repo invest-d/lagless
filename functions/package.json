@@ -12,6 +12,7 @@
     "node": "8"
   },
   "dependencies": {
+    "@google-cloud/pubsub": "^1.7.2",
     "@google-cloud/storage": "^4.3.1",
     "@sendgrid/mail": "^7.2.0",
     "axios": "^0.21.0",
@@ -20,6 +21,7 @@
     "firebase-functions": "^3.1.0",
     "form-data": "^3.0.0",
     "node-fetch": "^2.6.1",
+    "pdf-lib": "^1.11.2",
     "zengin-code": "^1.0.0-p20200331"
   },
   "devDependencies": {

@@ -1,7 +1,9 @@
 const functions = require("firebase-functions");
 const {Storage} = require("@google-cloud/storage");
 
-const FormData = require("form-data");
+const {PubSub} = require("@google-cloud/pubsub");
+const file_process_topic = "attach_apply_files";
+
 const axios = require("axios");
 
 exports.send_apply = functions.https.onRequest((req, res) => {
@@ -47,27 +49,42 @@ exports.send_apply = functions.https.onRequest((req, res) => {
     } else if (req_body.process_type === "post") {
         console.log("second: posting to kintone");
         // リクエストに含まれるファイル名をStorageからダウンロードし、
-        // kintoneのレコードの登録時に一緒にレコードの添付ファイルとして保存する
-        post_apply_record(req_body, env)
-            .then((post_succeed) => {
-                Promise.all(req_body.file_names.map((name) => delete_file(name)))
-                    .then(() => console.log("all tempolary files are successfully deleted."))
-                    .catch((name) => {
-                        console.warn(`Storageにファイルが残っています： ${name} `
-                            + "これはkintoneへの保存が済んでいるファイルなので、手動で削除してください。");
+        // kintoneのレコードの登録後にレコードの添付ファイルとして保存する
+        post_apply_record(req_body.fields, env)
+            .catch((err) => {
+                console.error(err);
+                // kintoneにレコード作成できなかったので、エラーレスポンスが必要
+                respond_error(res, err);
+            })
+            .then(async (post_succeed) => {
+                const pubsub = new PubSub();
+                const topic = pubsub.topic(file_process_topic);
+                const message = Buffer.from(JSON.stringify({
+                    env: env,
+                    files: req_body.files,
+                    record_id: post_succeed.id,
+                }), "utf8");
+                const message_id = await topic.publish(message)
+                    .catch((err) => {
+                        console.error(err);
+                        console.error("申込を受け付けましたが、請求書ファイル等の処理を完了できませんでした。\n"
+                            + `以下のファイルを手動でStorageからダウンロードして申込レコードID: ${post_succeed.id}に添付し、Storageから削除してください。\n`
+                            + `${req_body.files.map((file) => file.name)}`);
                     });
+                if (message_id) {
+                    console.log(`files are will be processed on published message: ${message_id}`);
+                }
 
-                // ファイル削除でエラーが出たとしてもレスポンスは続行
+                // ファイルの処理はPubSubに任せて、レスポンスを完了させる
                 res.status(post_succeed.status).json({
                     "redirect": post_succeed.redirect_to
                 });
             })
             .catch((err) => {
                 console.error(err);
-                // ファイル名をログに出しておき、後から手動でダウンロードできるようにする
                 console.error("Storageにアップロードされたままのファイルが残っています。");
-                console.error(req_body.file_names);
-                respond_error(res, err);
+                console.error(req_body.files.map((file) => file.name));
+                // kintoneにはレコード作成できている&&ファイルはStorageから手動ダウンロードしてどうにかすればいいので、レスポンスしない
             });
     } else {
         respond_error(res, {
@@ -90,79 +107,53 @@ async function get_storage_signed_url(filename, content_type) {
         .bucket("lagless-apply")
         .file(filename)
         .getSignedUrl(options);
-
-    console.log(url);
-
     return url;
 }
 
-async function post_apply_record(req_body, env) {
-    const record = {};
+async function post_apply_record(form_text_data, env) {
+    const get_posting_payload = (form_data, app_id) => {
+        const record = {};
 
-    // Storageからファイルをダウンロードしてkintoneへアップロードする
-    const storage = new Storage();
-    const bucket = storage.bucket("lagless-apply");
-    const upload_to_kintone = async (file_name) => {
-        console.log(`getting ${file_name} from cloud storage ...`);
-        const file = await bucket.file(file_name).download();
-        console.log(`uploading ${file_name} to kintone ...`);
-        const resp = await uploadToKintone(env.api_token_files, file[0], file_name);
-        console.log(`uploaded ${file_name} to kintone successfully.`);
+        // フォームの入力内容を読み取る
+        for (const key of Object.keys(form_data)) {
+            record[key]= {"value": form_data[key]};
+        }
+
+        // 預金種目を日本語に変換。この情報をサーバに送信しない場合（＝既存ユーザの場合）もあるので、そのときは変換もなし
+        if (Object.prototype.hasOwnProperty.call(record, "deposit_Form")) {
+            const ja_deposit_type = (record["deposit_Form"]["value"] === "ordinary")
+                ? "普通"
+                : "当座";
+
+            record["deposit_Form"] = {"value": ja_deposit_type};
+        }
+
+        // 支払タイミングを日本語に変換
+        if (Object.prototype.hasOwnProperty.call(record, "paymentTiming")) {
+            const ja_payment_timing = (record["paymentTiming"]["value"] === "late")
+                ? "遅払い"
+                : "早払い";
+
+            record["paymentTiming"] = {"value": ja_payment_timing};
+        }
+
+        // 不要な要素を削除
+        delete record["agree"];
+
+        // kintoneへの登録が失敗した場合、最悪あとから手動でレコード登録できるようにログに残しておく
+        console.log("posting record is ...");
+        console.log(record);
+
         return {
-            "field_name": file_name.split("_")[0],
-            "value": [{"fileKey": resp.data.fileKey}]
+            app: app_id,
+            record: record
         };
     };
-    const kintone_uploads = req_body.file_names.map((name) => upload_to_kintone(name));
-
-    const results = await Promise.all(kintone_uploads);
-    // ファイル名は`${kintoneフィールド名}_{タイムスタンプ}.ext`の形式なので_でsplit
-    const kintone_attachment_fields = req_body.file_names.map((name) => name.split("_")[0]);
-    for (const field of kintone_attachment_fields) {
-        // fileKeyをrecordオブジェクトに紐づける
-        record[field] = { value: results.find((r) => r.field_name === field).value };
-    }
-
-    // フォームの入力内容を読み取る
-    for (const key of Object.keys(req_body.fields)) {
-        record[key]= {"value": req_body.fields[key]};
-    }
-
-    // 預金種目を日本語に変換。この情報をサーバに送信しない場合（＝既存ユーザの場合）もあるので、そのときは変換もなし
-    if (Object.prototype.hasOwnProperty.call(record, "deposit_Form")) {
-        const ja_deposit_type = (record["deposit_Form"]["value"] === "ordinary")
-            ? "普通"
-            : "当座";
-
-        record["deposit_Form"] = {"value": ja_deposit_type};
-    }
-
-    // 支払タイミングを日本語に変換
-    if (Object.prototype.hasOwnProperty.call(record, "paymentTiming")) {
-        const ja_payment_timing = (record["paymentTiming"]["value"] === "late")
-            ? "遅払い"
-            : "早払い";
-
-        record["paymentTiming"] = {"value": ja_payment_timing};
-    }
-
-    // 不要な要素を削除
-    delete record["agree"];
-
-    // kintoneへの登録が失敗した場合、最悪あとから手動でレコード登録できるようにログに残しておく
-    console.log("posting record is ...");
-    console.log(record);
-
-    const payload = {
-        app: env.app_id,
-        record: record
-    };
-    console.log("The payload is ready.");
-    console.log(payload);
-    // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
-    const API_TOKEN = `${env.api_token_record},${process.env.api_token_komuten}`;
+    const payload = get_posting_payload(form_text_data, env.app_id);
 
     // kintoneへの登録
+    // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
+    const API_TOKEN = `${env.api_token_record},${process.env.api_token_komuten}`;
     const kintone_post_response = await postRecord(env.app_id, API_TOKEN, payload)
         .catch((err) => {
             console.error(`kintoneレコード登録エラー：${err}`);
@@ -178,40 +169,9 @@ async function post_apply_record(req_body, env) {
 
     return {
         status: kintone_post_response.status,
+        id: kintone_post_response.data.id,
         redirect_to: env.success_redirect_to
     };
-}
-
-async function delete_file(file_name) {
-    // kintoneにアップロードするため、Storageへ一時保存したファイルを削除する
-    const storage = new Storage();
-    const bucket = storage.bucket("lagless-apply");
-    await bucket.file(file_name).delete()
-        .catch((err) => {
-            console.warn(err);
-            throw new Error(file_name);
-        });
-    console.log(`file ${file_name} is successfully deleted.`);
-}
-
-function uploadToKintone(token, attachment, filename) {
-    const form = new FormData();
-
-    form.append("file", attachment, filename);
-    const headers = Object.assign(form.getHeaders(), {
-        "X-Cybozu-API-Token": token
-    });
-
-    const config = {
-        method: "post",
-        url: "https://investdesign.cybozu.com/k/v1/file.json",
-        data: form,
-        headers: headers,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
-    };
-
-    return axios(config);
 }
 
 function postRecord(app_id, token, payload) {
@@ -258,12 +218,14 @@ class Environ {
             this.app_id = process.env.app_id_apply_dev;
             this.api_token_record = process.env.api_token_apply_record_dev;
             this.api_token_files = process.env.api_token_apply_files_dev;
+            this.api_token_put = process.env.api_token_apply_put_dev;
             this.success_redirect_to = `${this.host}/apply_complete.html`;
         } else if (this.host === process.env.form_prod) {
             // 本番環境
             this.app_id = process.env.app_id_apply_prod;
             this.api_token_record = process.env.api_token_apply_record_prod;
             this.api_token_files = process.env.api_token_apply_files_prod;
+            this.api_token_put = process.env.api_token_apply_put_prod;
             this.success_redirect_to = `${this.host}/apply_complete.html`;
         } else {
             // それ以外

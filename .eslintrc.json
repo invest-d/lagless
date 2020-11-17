@@ -8,7 +8,8 @@
     "extends": "eslint:recommended",
     "globals": {
         "kintone": false,
-        "kintoneJSSDK": false
+        "kintoneJSSDK": false,
+        "ENV": false
     },
     "parserOptions": {
         "sourceType": "module"

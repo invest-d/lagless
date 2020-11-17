@@ -50,6 +50,10 @@ exports.helloWorld = functions.https.onRequest(async (req, res) => {
 //申込みフォームから送信されたデータをfirebaseで受け取り、kintoneに送信する
 exports.send_apply = require("./send_apply").send_apply;
 
+exports.send_apply_dev = require("./send_apply_dev").send_apply_dev;
+
+exports.attach_apply_files = require("./attach_apply_files").attach_apply_files;
+
 // クラウドサインWeb APIのアクセストークンを取得する
 exports.fetch_cloudSign_token = require("./fetch_cloudSign_token").fetch_cloudSign_token;
 
