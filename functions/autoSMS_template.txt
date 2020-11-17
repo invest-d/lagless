@@ -1,0 +1,39 @@
+このSMSはシステムからの自動返信です。
+                
+{company} 様
+
+{product_name}事務局です。
+この度は、{product_name}のお申込みありがとうございました。
+
+以下の内容でお申込みを受付いたしました。
+
+申し込み内容の精査完了後、支払予定明細をお送りします。
+
+-------------------------------
+▼お申込み内容▼
+-------------------------------
+貴社名： {company}
+電話番号： {phone}
+メールアドレス： {mail}
+郵便番号： {postalCode} 
+都道府県： {prefecture}
+住所： {address}
+番地等： {streetAddress}
+代表者名： {representative}
+
+請求先企業名： {billingCompany}
+請求書の締日： {closingDay}
+請求書データ： 提出済み
+対象債権合計金額： {applicationAmount}
+
+金融機関コード： {bankCode_Form}
+金融機関名： {bankName_Form}
+支店コード： {branchCode_Form}
+支店名： {branchName_Form}
+預金種目： {deposit_Form}
+口座番号： {accountNumber_Form}
+口座名義（カナ）： {accountName_Form}
+
+本人確認書類： 提出済み
+
+お申込み日時： {date_now}
