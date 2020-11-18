@@ -63,22 +63,11 @@ exports.send_apply = functions.https.onRequest((req, res) => {
             post_succeed.record["date_now"] = {"value": dateNow};
 
             // 既存の顧客の場合、預金項目のkeyがrecordに存在しないため空欄で追加する
-            if (!checkUser(post_succeed.record)) {
+            if (!isNewUser(post_succeed.record)) {
                 post_succeed.record["deposit_Form"] = {"value": ""};
             }
-
-            const number = post_succeed.record["phone"]["value"].replace(0, "+81");
-            let subject = "dandoliPay";
-            // 登録情報のメールアドレスが空欄の時のみ、SMSを送信
-            if (!post_succeed.record["mail"]["value"]) {
-                if (productName=="リノベ不動産Payment") subject = "renovePay";
-                if (productName=="ラグレス") subject = "lagless";
-                sendSMS(number, subject, replaceMail(SMS_text, post_succeed.record), (err, result) => {
-                    console.log("RESULTS: ",err,result);
-                });
-            }
-            else 
-            {
+            
+            if (post_succeed.record["mail"]["value"]) {
                 const options = {
                     host: "smtp.sendgrid.net", 
                     port: 587, 
@@ -99,6 +88,17 @@ exports.send_apply = functions.https.onRequest((req, res) => {
 
                 // 自動応答メール送信
                 sendMail(mail, options);
+
+            } else {
+                const number = post_succeed.record["phone"]["value"].replace(0, "+81");
+                let subject = "dandoliPay";
+                if (productName=="リノベ不動産Payment") subject = "renovePay";
+                if (productName=="ラグレス") subject = "lagless";
+
+                // 登録情報のメールアドレスが空欄の時のみ、SMSを送信
+                sendSMS(number, subject, replaceMail(SMS_text, post_succeed.record), (err, result) => {
+                    console.log("RESULTS: ",err,result);
+                });
             }
 
             res.status(post_succeed.status).json({
@@ -317,13 +317,13 @@ function respond_error(res, err) {
 // 開発or本番以外のドメインからのリクエストはそもそもenvをインスタンス化出来ないのでチェックしない
 function setCORS(env, res){
     // リクエスト元が開発版のフォームなら開発版のドメインを、本番のフォームなら本番のドメインを設定。
-    res.set("Access-Control-Allow-Origin","http://localhost:5000");
+    res.set("Access-Control-Allow-Origin",`${env.host}`);
 }
 
 class Environ {
     constructor(host) {
         this.host = host;
-        if (this.host === "http://localhost:5000") {
+        if (this.host === process.env.form_dev) {
             // 開発環境
             this.app_id = process.env.app_id_apply_dev;
             this.api_token_record = process.env.api_token_apply_record_dev;
@@ -352,7 +352,7 @@ function replaceMail(template, record) {
 
 // 本来はクエリパラメータで判断すべきだが、ブラウザによって挙動が違うため、
 // 預金種目の有無にて既存か新規の顧客か判断 (既存の顧客の場合、record内の預金項目のkeyがなくなる)
-function checkUser(record) {
+function isNewUser(record) {
     return Object.prototype.hasOwnProperty.call(record, "deposit_Form");
 }
 
