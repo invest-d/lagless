@@ -9,10 +9,6 @@
   <!-- 初回パラメータ：&user=new もしくはパラメータなし -->
   <!-- 2回目以降パラメータ :&user=existing -->
 
-  <!-- rollbar -->
-  <script src="./rollbar/rollbar.js"></script>
-  <!-- /rollbar -->
-
   <script src="./ke_ban.js" charset="UTF-8"></script>
 
   <!-- Bootstrap -->
@@ -27,8 +23,7 @@
   <!-- 銀行をサジェスト表示 -->
   <script src="https://zipaddr.github.io/bankautob.js" charset="UTF-8"></script>
 
-  <!-- URLパラメータによって変更するCSS -->
-  <link rel="stylesheet" type="text/css" href="./styles/form_ke_ban.css" id="product-css">
+  <link rel="stylesheet" type="text/css" href="./styles/ke_ban.css" id="product-css">
   <!-- /CSS -->
 
   <!-- 郵便番号から住所自動入力 -->
@@ -296,35 +291,17 @@
 
 
       <!-- 請求書の締日From -->
-      <div class="form-group" id="closingDayFromGroup">
-        <label for="closingDayFrom">前払いを希望する稼働日が含まれる期間（開始日）</label>
+      <div class="form-group" id="targetTermGroup">
+        <label for="targetTerm">前払いを希望する稼働日が含まれる期間</label>
         <span class="badge badge-danger">必須</span>
-        <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
-          <input type="text" class="form-control bg-white pattern-required past-required"
-          name="closingDayFrom" id="closingDayFrom" required
-          maxlength="10" pattern="\d{4}-\d{2}-\d{2}">
-          <span class="fas fa-check valid-status-icon valid-input"></span>
-          <span class="fas fa-times valid-status-icon invalid-input"></span>
-          <div class="invalid-feedback">年-月-日の正しい形式で入力してください。</div>
-        </div>
+        <select type="text" class="form-control no-blank"
+          name="targetTerm" id="targetTerm" required>
+        </select>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">選択してください。</div>
       </div>
       <!-- /請求書の締日From -->
-
-
-      <!-- 請求書の締日To -->
-      <div class="form-group" id="closingDayToGroup">
-        <label for="closingDayTo">前払いを希望する稼働日が含まれる期間（終了日）</label>
-        <span class="badge badge-danger">必須</span>
-        <div style="position: relative;"> <!-- relativeのdivで挟まないとDatePickerが1度しか出てこなくなる -->
-          <input type="text" class="form-control bg-white pattern-required past-required"
-          name="closingDayTo" id="closingDayTo" required
-          maxlength="10" pattern="\d{4}-\d{2}-\d{2}">
-          <span class="fas fa-check valid-status-icon valid-input"></span>
-          <span class="fas fa-times valid-status-icon invalid-input"></span>
-          <div class="invalid-feedback">年-月-日の正しい形式で入力してください。</div>
-        </div>
-      </div>
-      <!-- /請求書の締日To -->
 
 
       <div class="form-group pt-5" name="only_first">
