@@ -11,6 +11,7 @@
     "busboy": "^0.3.1",
     "copy-webpack-plugin": "^5.1.1",
     "date-with-offset": "^1.0.1",
+    "dayjs": "^1.9.6",
     "encoding-japanese": "^1.0.30",
     "es6-promise": "^4.2.8",
     "firebase": "^7.8.2",

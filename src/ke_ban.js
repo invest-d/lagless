@@ -1,3 +1,5 @@
+import "../public/rollbar/rollbar";
+
 import "@fortawesome/fontawesome-free";
 
 import "bootstrap";
@@ -11,6 +13,126 @@ import "url-search-params-polyfill";
 
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 import * as find from "./defineFindPolyfill";
+
+import dayjs from "dayjs";
+import "dayjs/locale/ja";
+dayjs.locale("ja");
+import isBetween from "dayjs/plugin/isBetween";
+dayjs.extend(isBetween);
+
+// フォームを開いた時点において、前払対象になる期間を確定する
+$(() => {
+    // 前払い可能な期間は原則的に5日ごとの区切り。
+    // 1日～5日、6日～10日、……、月末のみ26日～月末日。
+    // 前払い可能な期間の開始日の翌日から終了日の翌営業日までが申込期間。
+    // ページを開く度に前払い期間と申込期間のテーブルを用意する。
+    // 現在の日付が当てはまっている申込期間の数だけ前払い期間のドロップダウンを生成する。
+
+    // 現在の日付が属する五十日について、開始日と終了日を求める
+    const today = dayjs();
+    const terms = {
+        prev: {
+            pay: {
+                start: null,
+                end: null
+            },
+            apply: {
+                start: null,
+                end: null
+            }
+        },
+        now: {
+            pay: {
+                start: null,
+                end: null
+            },
+            apply: {
+                start: null,
+                end: null
+            }
+        },
+        next: {
+            pay: {
+                start: null,
+                end: null
+            },
+            apply: {
+                start: null,
+                end: null
+            }
+        }
+    };
+
+    const get_pay_term_start_date = (target_date) => {
+        let start_date = target_date;
+        while (start_date.date() % 5 !== 1) {
+            start_date = start_date.subtract(1, "day");
+        }
+        return start_date;
+    };
+    const get_pay_term_end_date = (target_date) => {
+        if (get_pay_term_start_date(target_date).date() === 26) {
+            // 最終タームの場合、前払い対象の終了日は月末
+            return target_date.endOf("month");
+        } else {
+            let end_date = target_date;
+            while (end_date.date() % 5 !== 0) {
+                end_date = end_date.add(1, "day");
+            }
+            return end_date;
+        }
+    };
+
+    terms.now.pay.start = get_pay_term_start_date(today);
+    terms.now.pay.end = get_pay_term_end_date(today);
+
+    // 現在の五十日の直前の五十日について、開始日と終了日を求める
+    terms.prev.pay.start = get_pay_term_start_date(terms.now.pay.start.subtract(1, "day"));
+    terms.prev.pay.end = get_pay_term_end_date(terms.now.pay.start.subtract(1, "day"));
+
+    // 現在の五十日の直後の五十日について、開始日と終了日を求める
+    terms.next.pay.start = get_pay_term_start_date(terms.now.pay.end.add(1, "day"));
+    terms.next.pay.end = get_pay_term_end_date(terms.now.pay.end.add(1, "day"));
+
+    // それぞれの五十日について、申込可能期間を求める
+    // 申込可能期間の開始日は常に五十日の開始日の翌日になる
+    terms.prev.apply.start = terms.prev.pay.start.add(1, "day");
+    terms.now.apply.start = terms.now.pay.start.add(1, "day");
+    terms.next.apply.start = terms.next.pay.start.add(1, "day");
+    // 申込可能期間の終了日は五十日の終了日の翌営業日
+    const get_next_business_date = (target_date) => {
+        let next_date = target_date.add(1, "day");
+        while([0, 6].includes(next_date.day())) {
+            next_date = next_date.add(1, "day");
+        }
+        return next_date;
+    };
+    terms.prev.apply.end = get_next_business_date(terms.prev.pay.end);
+    terms.now.apply.end = get_next_business_date(terms.now.pay.end);
+    terms.next.apply.end = get_next_business_date(terms.next.pay.end);
+
+    // 現在の日付がどの申込期間に入っているかを判定して、選択肢に加えていく
+    const selectable = [];
+    if (today.isBetween(terms.prev.apply.start, terms.prev.apply.end, null, "[]")) {
+        selectable.push(`${terms.prev.pay.start.format("YYYY年MM月DD日")}から${terms.prev.pay.end.format("YYYY年MM月DD日")}まで`);
+    }
+
+    if (today.isBetween(terms.now.apply.start, terms.now.apply.end, null, "[]")) {
+        selectable.push(`${terms.now.pay.start.format("YYYY年MM月DD日")}から${terms.now.pay.end.format("YYYY年MM月DD日")}まで`);
+    }
+
+    if (today.isBetween(terms.next.apply.start, terms.next.apply.end, null, "[]")) {
+        selectable.push(`${terms.next.pay.start.format("YYYY年MM月DD日")}から${terms.next.pay.end.format("YYYY年MM月DD日")}まで`);
+    }
+
+    const term_select = $("#targetTerm");
+    selectable.forEach((item) => {
+        const option = $("<option>");
+        option.attr("value", item);
+        option.text(item);
+        term_select.append(option);
+    });
+});
 
 // URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする
 $(() => {
