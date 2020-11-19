@@ -1,4 +1,8 @@
 /*
+    Version 2.1
+    申込回数を例外的にカウントしない工務店レコードの存在に対応。無視する申込が含まれていた場合、alertを表示。
+    また、工務店マスタの入力内容に対応するパターンが支払パターンマスタに無い場合にalertを表示するように修正。
+
     Version 2
     支払タイミング：遅払いに対応。
     協力会社マスタに早払い用の申込回数フィールドとは別に遅払い用の申込回数フィールドを作成。
@@ -27,6 +31,7 @@
 
     const APP_ID_APPLY = kintone.app.getId();
     const fieldKyoryokuId_APPLY = "ルックアップ";
+    const fieldKyoryokuName_APPLY = "支払先正式名称";
     const fieldConstructionShopId_APPLY = "constructionShopId";
     const fieldClosingDay_APPLY = "closingDay";
     const fieldStatus_APPLY = "状態";
@@ -45,6 +50,7 @@
 
     const APP_ID_CONSTRUCTION = 96;
     const fieldId_CONSTRUCTION = "id";
+    const fieldName_CONSTRUCTION = "工務店正式名称";
     const fieldPattern_CONSTRUCTION = "pattern";
 
     const APP_ID_PATTERN = 95;
@@ -52,6 +58,10 @@
     const fieldDeadline_PATTERN = "deadline";
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
+
+    const IGNORE_CONSTRUCTOR_IDS = {
+        "500": "株式会社GIG"
+    };
 
     kintone.events.on("app.record.index.show", (event) => {
         if (needShowButton()) {
@@ -100,7 +110,7 @@
                 });
 
             // 協力会社ごとにカウント条件に当てはまる申込だけをカウント
-            const count_result = await countByKyoryokuId(target_applies, construction_shops, patterns);
+            const {count_result, ignored_records} = await countByKyoryokuId(target_applies, construction_shops, patterns);
 
             const update_records_num = await updateKyoryokuMaster(count_result)
                 .catch((err) => {
@@ -110,6 +120,12 @@
 
             console.log(`${update_records_num  } records updated.`);
             alert(`${update_records_num  }件 の協力会社の申込み回数を更新しました。`);
+            if (ignored_records.length) {
+                const message = ignored_records
+                    .map((ignored) => `協力会社ID：${ignored.kyoryoku_id}、協力会社名：${ignored.kyoryoku_name}（工務店ID：${ignored.constructor_id}、工務店名：${ignored.constructor_name}）`)
+                    .join("\n");
+                alert(`次の協力会社からの申込は、回数をカウントしない例外にあたるため、カウントをスキップしました。\n\n${message}`);
+            }
             alert("ページを更新します。");
             window.location.reload();
         } catch(err) {
@@ -124,6 +140,7 @@
             "app": APP_ID_APPLY,
             "fields": [
                 fieldKyoryokuId_APPLY,
+                fieldKyoryokuName_APPLY,
                 fieldConstructionShopId_APPLY,
                 fieldClosingDay_APPLY,
                 fieldTiming_APPLY
@@ -141,6 +158,7 @@
             "app": APP_ID_CONSTRUCTION,
             "fields": [
                 fieldId_CONSTRUCTION,
+                fieldName_CONSTRUCTION,
                 fieldPattern_CONSTRUCTION
             ],
             "condition": `${fieldId_CONSTRUCTION} in ("${ids.join("\",\"")}")`
@@ -172,25 +190,50 @@
         console.log("協力会社IDごとに回数をカウントする");
 
         const counts = {};
+        const ignored_records = [];
         // 協力会社IDごとにループ
         const kyoryoku_ids = new Set(target_applies.map((rec) => rec[fieldKyoryokuId_APPLY]["value"]));
         for (const kyoryoku_id of kyoryoku_ids) {
             // 協力会社に対応する工務店を取得
-            const construction_id = target_applies.find((rec) => rec[fieldKyoryokuId_APPLY]["value"] === kyoryoku_id)[fieldConstructionShopId_APPLY]["value"];
+            const apply = target_applies.find((rec) => rec[fieldKyoryokuId_APPLY]["value"] === kyoryoku_id);
+            const construction_id = apply[fieldConstructionShopId_APPLY]["value"];
+
             const construction_shop = construction_shops.find((rec) => rec[fieldId_CONSTRUCTION]["value"] === construction_id);
 
-            // 工務店に対応する直近の支払パターンを取得
-            const pattern = patterns
-                .filter((rec) => rec[fieldPattern_PATTERN]["value"] === construction_shop[fieldPattern_CONSTRUCTION]["value"])
-                .reduce((provisional, current) => {
-                    // 支払パターンフィールドの値が同じレコードの中で、申込期限が最も過去のもの
-                    const prov_date = getDateFromYYYYMMDD(provisional[fieldDeadline_PATTERN]["value"]);
-                    const curr_date = getDateFromYYYYMMDD(current[fieldDeadline_PATTERN]["value"]);
-
-                    return (prov_date < curr_date)
-                        ? provisional
-                        : current;
+            if (IGNORE_CONSTRUCTOR_IDS[construction_id]) {
+                // カウント対象外
+                ignored_records.push({
+                    constructor_id: construction_id,
+                    constructor_name: construction_shop[fieldName_CONSTRUCTION]["value"],
+                    kyoryoku_id: kyoryoku_id,
+                    kyoryoku_name: apply[fieldKyoryokuName_APPLY]["value"]
                 });
+                continue;
+            }
+
+            // 工務店に対応する直近の支払パターンを取得
+            const constructor_patterns = patterns.filter((rec) => rec[fieldPattern_PATTERN]["value"] === construction_shop[fieldPattern_CONSTRUCTION]["value"]);
+
+            if (!constructor_patterns.length) {
+                const input_pattern = construction_shop[fieldPattern_CONSTRUCTION]["value"]
+                    ? construction_shop[fieldPattern_CONSTRUCTION]["value"]
+                    : "(空欄)";
+
+                alert("工務店マスタに入力している支払パターンが、支払パターンマスタに見つかりませんでした。\n"
+                    + "工務店マスタの入力を正しく修正するか、支払パターンマスタにレコードを追加してください。\n\n"
+                    + `工務店ID：${construction_id}、工務店名：${construction_shop[fieldName_CONSTRUCTION]["value"]}、入力値：${input_pattern}`);
+                continue;
+            }
+
+            const pattern = constructor_patterns.reduce((provisional, current) => {
+                // 支払パターンフィールドの値が同じレコードの中で、申込期限が最も過去のもの
+                const prov_date = getDateFromYYYYMMDD(provisional[fieldDeadline_PATTERN]["value"]);
+                const curr_date = getDateFromYYYYMMDD(current[fieldDeadline_PATTERN]["value"]);
+
+                return (prov_date < curr_date)
+                    ? provisional
+                    : current;
+            });
 
             // 直近の支払パターンの申込期限の1年前をFromとする
             const last_year = Number(pattern[fieldDeadline_PATTERN]["value"].split("-")[0]) - 1;
@@ -220,7 +263,10 @@
             };
         }
 
-        return counts;
+        return {
+            count_result: counts,
+            ignored_records: ignored_records
+        };
     }
 
     function getDateFromYYYYMMDD(yyyy_mm_dd) {

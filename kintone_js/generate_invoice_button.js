@@ -56,8 +56,9 @@ dayjs.locale("ja");
     })(kintone.app.getId());
 
     const ACCOUNTS = {
-        "ID": "三井住友銀行　神田支店\n普通預金　3 3 9 1 1 9 5\nインベストデザイン（カ",
-        "LAGLESS": "三井住友銀行　神田支店\n普通預金　3 4 0 9 1 3 4\nラグレス（ド，マスターコウザ"
+        "株式会社NID": "三井住友銀行　神田支店\n普通預金　3 3 9 1 1 9 5\nカ）エヌアイディー",
+        "ラグレス合同会社": "三井住友銀行　神田支店\n普通預金　3 4 0 9 1 3 4\nラグレス（ド，マスターコウザ",
+        "ラグレス2合同会社": "三井住友銀行　神田支店\n普通預金　3 4 5 9 5 5 4\nラグレスニ　（ド,マスターコウザ",
     };
 
     const APP_ID_CONSTRUCTOR = 96;
@@ -74,6 +75,7 @@ dayjs.locale("ja");
     const fieldClosingDate_COLLECT = "closingDate";
     const fieldCollectableAmount_COLLECT = "scheduledCollectableAmount";
     const fieldAccount_COLLECT = "account";
+    const fieldDaysLater_COLLECT = "daysLater";
     const fieldStatus_COLLECT = "collectStatus";
     const statusApproved_COLLECT = "クラウドサイン承認済み";
     const fieldParentCollectRecord_COLLECT = "parentCollectRecord";
@@ -197,6 +199,7 @@ dayjs.locale("ja");
                 fieldDeadline_COLLECT,
                 fieldCollectableAmount_COLLECT,
                 fieldAccount_COLLECT,
+                fieldDaysLater_COLLECT,
                 fieldParentCollectRecord_COLLECT,
                 fieldTotalBilledAmount_COLLECT,
                 tableCloudSignApplies_COLLECT,
@@ -315,6 +318,7 @@ dayjs.locale("ja");
                 fieldTotalBilledAmount_COLLECT,
                 tableInvoiceTargets_COLLECT,
                 fieldAccount_COLLECT,
+                fieldDaysLater_COLLECT,
                 fieldMailToInvest_COLLECT,
                 fieldHandleForHolidays_COLLECT
             ],
@@ -359,10 +363,22 @@ dayjs.locale("ja");
         // pdfmakeのライブラリ用のオブジェクトを生成する。
         const product_name = parent_record[fieldProductName_COLLECT]["value"];
         const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
-        const contact_company = get_contractor_name(parent_record[fieldAccount_COLLECT]["value"], parent_record["daysLater"]["value"])
-
-        if (!contact_company) {
-            throw new Error(`不明な支払元口座です: ${parent_record[fieldAccount_COLLECT]["value"]}`);
+        let contact_company;
+        try {
+            contact_company = get_contractor_name(
+                parent_record[fieldAccount_COLLECT]["value"],
+                parent_record[fieldDaysLater_COLLECT]["value"],
+                parent_record[fieldConstructionShopId_COLLECT]["value"]
+            );
+        } catch (e) {
+            if (e instanceof TypeError) {
+                throw new Error("連絡先として表示する会社名を確定できませんでした。\n"
+                    + "【支払元口座】および【遅払い日数】を工務店マスタに正しく入力してください。\n\n"
+                    + `工務店ID：${parent_record[fieldConstructionShopId_COLLECT]["value"]}\n`
+                    + `工務店名：${parent_record[fieldConstructionShopName_COLLECT]["value"]}`);
+            } else {
+                throw new Error(`不明なエラーです。追加の情報：${e}`);
+            }
         }
 
         const doc = {
@@ -538,15 +554,10 @@ dayjs.locale("ja");
         account_title.rowSpan = 3;
         account_title.margin = [0, 30, 0, 0];
 
-        const account_id = parent_record[fieldAccount_COLLECT]["value"];
-        if (!(account_id in ACCOUNTS)) {
-            throw new Error(`不明な支払先口座IDです：${account_id}`);
-        }
-
         const account_value = JSON.parse(JSON.stringify(billing_value_template));
-        account_value.text = ACCOUNTS[account_id];
+        account_value.text = ACCOUNTS[contact_company];
         account_value.rowSpan = 3;
-        account_value.fontSize = 9;
+        account_value.fontSize = 8;
         account_value.margin = [0, 14, 0, 0];
 
         const bill_table = {

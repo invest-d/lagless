@@ -44,7 +44,8 @@ exports.ke_ban_form = functions.https.onRequest(async (req, res) => {
         },
         accountNumber_Form: "口座番号",
         accountName_Form: "口座名義",
-        agree: "利用規約に同意する"
+        agree: "利用規約に同意する",
+        targetTerm: "前払いを希望する稼働期間"
     };
 
     const busboy = new Busboy({ headers: req.headers });
@@ -64,13 +65,13 @@ exports.ke_ban_form = functions.https.onRequest(async (req, res) => {
                 const file_name = `${fieldname}.${String(mimetype).split("/")[1]}`;
                 file.on("data", (data) => {
                     const buffer = Buffer.from(data);
-                const file_encoded = buffer.toString("base64");
-                message.attachments.push({
-                    filename: file_name,
-                    content: file_encoded,
-                    type: mimetype.toLocaleLowerCase(),
-                    disposition: "attachment"
-                });
+                    const file_encoded = buffer.toString("base64");
+                    message.attachments.push({
+                        filename: file_name,
+                        content: file_encoded,
+                        type: mimetype.toLocaleLowerCase(),
+                        disposition: "attachment"
+                    });
                 });
             }
         }

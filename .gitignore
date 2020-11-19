@@ -58,6 +58,9 @@ node_modules/
 # Output of 'npm pack'
 *.tgz
 
+# webpack source-map files
+*.map
+
 # Yarn Integrity file
 .yarn-integrity
 

@@ -13,6 +13,7 @@ const params = new URLSearchParams(window.location.search);
 import * as rv from "./HTMLFormElement-HTMLInputElement.reportValidity";
 import * as find from "./defineFindPolyfill";
 find.definePolyfill();
+import "formdata-polyfill";
 
 import { get_kintone_data } from "./app";
 
@@ -228,9 +229,15 @@ $(() => {
     });
 });
 
+const VALID_MIME_TYPES = {
+    "application/pdf": "pdf",
+    "image/jpeg": "jpg",
+    "image/png": "png"
+};
+
 // 送信ボタンをクリックしたときの挙動
 $(() => {
-    $("#send").click(function(event){
+    $("#send").click(async function (event) {
     // formのデフォルトのsubmit挙動を止めて、独自にsubmit挙動を実装
         event.preventDefault();
 
@@ -244,78 +251,169 @@ $(() => {
 
         $("#report-validity").hide();
 
-        // 添付ファイルのファイルサイズが大きすぎるとサーバーエラーになるため、送信できないようにする。
-        const FILE_SIZE_LIMIT = 4 * Math.pow(1024, 2);
-        // Byte数で取得。既存ユーザのときは添付ファイルが必要ない項目があるので、それは無視する
+        // 各種添付ファイルチェック。添付ファイルを入力していない項目は無視する
         const inputs = $.makeArray($("input[type='file']").filter((i, elem) => $(elem).val() != ""));
+
+        // Object.valuesはIEでは使えないので回避
+        const extensions = Object.keys(VALID_MIME_TYPES).map((key) => VALID_MIME_TYPES[key]);
+        // mimetypeをチェック
+        const invalid_input = inputs.find((input) => {
+            if (input.files[0].type) {
+                return !(input.files[0].type in VALID_MIME_TYPES);
+            } else {
+                // IEでは、少なくともPDFファイルの場合に input.files[0].type が空文字となる。参考： https://stackoverflow.com/questions/32849014/ie-11-and-ie-edge-get-file-type-failed
+                // 仕方ないのでファイル名を直接見る。
+                // includes()もIEでは使えない
+                return extensions.indexOf(input.files[0].name.split(".").slice(-1)[0]) === -1;
+            }
+        });
+        if (invalid_input) {
+            const valid_list = extensions.join(", ");
+            const label_text = $(`label[for='${invalid_input.id}']`).text();
+            alert(`${label_text}のファイル形式の変更をお願いします。\n`
+                + `利用可能な形式は${valid_list}です。\n\n`
+                + `現在のファイル形式：${$(invalid_input).val().split(".").slice(-1)[0]}`);
+            return;
+        }
+
+        // 添付ファイルのファイルサイズが大きすぎるとサーバーエラーになるため、送信できないようにする。
+        // Storageからfunctionsに読み込んで処理するにあたり、1ファイルあたり10MB程度ならメモリ制限に引っ掛からず安定して処理できる模様
+        const FILE_SIZE_LIMIT = 10 * Math.pow(1024, 2);
         const over_input = inputs.find((input) => input.files[0].size >= FILE_SIZE_LIMIT);
         if (over_input !== undefined) {
             // alertに表示するため、inputに対応するラベルを取得
             const label_text = $(`label[for='${over_input.id}']`).text();
+            const over_filesize_mb = (over_input.files[0].size / Math.pow(1024, 2)).toPrecision(2);
             alert(`${label_text}のファイル容量を${FILE_SIZE_LIMIT / Math.pow(1024, 2)}MBより小さくしてください。\n`
-            + `現在のファイル容量：およそ${(over_input.files[0].size / Math.pow(1024, 2)).toPrecision(2)}MB`);
+            + `現在のファイル容量：およそ${over_filesize_mb}MB`);
+
+            // rollbarで補足可能にする
+            window.onerror(`申込フォームにおいて、添付ファイルサイズ制限による失敗がありました。ファイルサイズ：${over_filesize_mb}MB`, window.location.href);
             return;
         }
 
-        const form_data = new FormData($("#form_id")[0]);
-
-        if (isSafari()) {
-            // 添付ファイルが空の場合は要素を削除。削除しないとSafariで不具合が出る
-            $("input[type=file]").each((i, j) => {
-                const name = $(j).attr("name");
-                if(!$(`[name=${  name  }]`).val()) {
-                    form_data.delete(name);
-                }
-            });
-        }
+        const functions_post_data = new FormData($("#form_id")[0]);
+        // 添付ファイルはFunctionsではなくStorageに送信するので、削除する
+        $("input[type=file]").each((_, j) => {
+            const name = $(j).attr("name");
+            functions_post_data.delete(name);
+        });
 
         // 多重送信防止
         showSending("送信中...");
-        $("#send").text("送信中...")
+        $("#send")
+            .text("送信中...")
             .prop("disabled", true);
 
-        // データ送信。kintone用のデータ変換はfirebase側
+        try {
+            const uploaded_files = await upload_attachment_files(inputs);
+            const result = await post_to_kintone(functions_post_data, uploaded_files);
+            window.location.href = String(result.redirect);
+        } catch (err) {
+            alert(err.message);
+            hideSending();
+            $("#send")
+                .text("送信")
+                .prop("disabled", false);
+        }
+        // 成功すればそのままページ遷移するため、hideSending()は必要ない
+    });
+});
+
+const upload_attachment_files = async (inputs) => {
+    const get_signed_url = (file_name, mime_type, url) => {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: "json",
+                data: JSON.stringify({
+                    process_type: "signed_url",
+                    file_name: file_name,
+                    mime_type: mime_type
+                }),
+                cache: false,
+                processData: false,
+                contentType: false,
+            })
+                .done((data) => resolve(data.signed_url))
+                .fail((err) => reject(err));
+        });
+    };
+
+    const upload_file = (signed_url, file) => {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                type : "PUT",
+                url : signed_url,
+                headers: {
+                    "Content-Type": file.type
+                },
+                data : file,
+                cache : false,
+                processData: false,
+            })
+                .done(() => resolve())
+                .fail((err) => reject(err));
+        });
+    };
+
+    const timestamp = new Date().getTime();
+    const upload_processes = inputs.map(async (input) => {
+        const ext = VALID_MIME_TYPES[input.files[0].type];
+        const field_name = input.attributes.name.value;
+        // 同じファイル名だと上書きするので、タイムスタンプで上書きを回避
+        const file_name = `${field_name}_${timestamp}${ENV.filename_suffix}.${ext}`;
+
+        // アップロードするファイルの数だけ、異なる署名付きURLが必要になる
+        const signed_url = await get_signed_url(file_name, input.files[0].type, ENV.apply_endpoint);
+        await upload_file(signed_url, input.files[0]);
+        return {
+            name: file_name,
+            mime_type: input.files[0].type,
+        };
+    });
+
+    return Promise.all(upload_processes)
+        .then((files) => files)
+        .catch((err) => {
+            console.error(err);
+            throw new Error("申込の送信中にエラーが発生しました。\n"
+            + "ご不便をおかけして申し訳ございません。時間を置いて再度お試し頂くか、下記連絡先にお問い合わせください。\n\n"
+            + `${$("#contact").text()}`);
+        });
+};
+
+const post_to_kintone = async (form_data, files) => {
+    return new Promise((resolve, reject) => {
+        // json形式で送信する
+        const input_data = {};
+        for (const [key, val] of form_data) {
+            input_data[key] = val;
+        }
+
         $.ajax({
             type: "POST",
-            enctype: "multipart/form-data",
-            url: "https://us-central1-lagless.cloudfunctions.net/send_apply",
+            url: ENV.apply_endpoint,
             dataType: "json",
-            data: form_data,
+            data: JSON.stringify({
+                process_type: "post",
+                fields: input_data,
+                files: files,
+            }),
             cache: false,
             processData: false,
             contentType: false
         })
-            .done((data) => {
-                // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
-                window.location.href = String(data["redirect"]);
-            })
-            .fail((data) => {
-                // 失敗時はアラートを出すだけ。ページ遷移しない。フォームの入力内容もそのまま
-                console.error(JSON.stringify(data));
-                hideSending();
-                $("#send").text("送信")
-                    .prop("disabled", false);
-                alert(`登録に失敗しました。\n${data.responseJSON.message}`);
+            .done((data) => resolve(data))
+            .fail((err) => {
+                console.error(err);
+                reject(new Error("申込の送信中にエラーが発生しました。\n"
+                    + "ご不便をおかけして申し訳ございません。時間を置いて再度お試し頂くか、下記連絡先にお問い合わせください。\n\n"
+                    + `${$("#contact").text()}`));
             });
     });
-});
-
-function isSafari() {
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    if (userAgent.indexOf("msie") != -1 || userAgent.indexOf("trident") != -1) {
-    // ie
-    } else if (userAgent.indexOf("edge") != -1) {
-    // edge
-    } else if (userAgent.indexOf("chrome") != -1) {
-    // chrome
-    } else if (userAgent.indexOf("safari") != -1) {
-    // safari
-        return true;
-    }
-
-    // それ以外
-    return false;
-}
+};
 
 function showSending(msg){
     // 引数なし（メッセージなし）を許容

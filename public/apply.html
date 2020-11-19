@@ -62,7 +62,7 @@
 
         <p>お申込みフォームの入力でお困りの際は、下記連絡先までお気軽にお電話ください。</p>
 
-        <p><span class="service">ラグレス</span>事務局<br>
+        <p id="contact"><span class="service">ラグレス</span>事務局<br>
           電話番号 ： <a href="tel:03-6261-6818">03-6261-6818</a> （インベストデザイン株式会社）<br>
           受付時間 ： 10：00～17：00 <br>
           定休日 ： 土・日・祝</p>
@@ -272,10 +272,9 @@
 
       <div class="form-group pt-5">
         <h2>■ 対象債権内容（件名・税込金額）■</h2>
-        <p>※<span class="timing">早払い</span>をご希望の請求書データをご添付ください。<br>
-          　携帯で撮った請求書の写真でも構いません。<br>
-          　請求書が複数枚に渡る場合は、一つのファイルにまとめて頂きますようお願いいたします。</p>
-        <p>※添付ができない場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。<br>
+        <p>※<span class="timing">早払い</span>をご希望の請求書ファイルをご添付ください。<br>
+          　携帯で撮った請求書の写真でも構いません。<br></p>
+        <p>※添付ができない場合、もしくは請求書の枚数が10枚を超える場合は、お手数をおかけしますが下記連絡先へご連絡お願いいたします。<br>
           　<span class="service">ラグレス</span>事務局　<a href="tel:03-6261-6818">03-6261-6818</a>（インベストデザイン株式会社）</p>
         <p>※【該当の方のみ】<br>
           協力会費のお支払が必要な場合は、各発注企業さまの取り扱い方法に従い手続きいたします（請求書の合計金額から協力会費を差し引かせていただきます）</p>
@@ -311,17 +310,98 @@
       <!-- /請求書の締日 -->
 
 
-      <!-- 請求書データ -->
+      <!-- 請求書ファイル -->
       <div class="form-group">
-        <label for="invoice">請求書データ</label>
+        <label for="invoice_1">請求書ファイル（1枚目）</label>
         <span class="badge badge-danger">必須</span>
         <input type="file" class="form-control-file p-2 border rounded no-blank"
-          name="invoice" id="invoice" required/>
+          name="invoice_1" id="invoice_1" required/>
         <span class="fas fa-check valid-status-icon-file valid-input"></span>
         <span class="fas fa-times valid-status-icon-file invalid-input"></span>
         <div class="invalid-feedback">添付してください</div>
       </div>
-      <!-- /請求書データ -->
+
+      <div class="form-group">
+        <label for="invoice_2">請求書ファイル（2枚目）</label>
+        <input type="file" class="form-control-file p-2 border rounded"
+          name="invoice_2" id="invoice_2"/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+
+      <div class="form-group">
+        <label for="invoice_3">請求書ファイル（3枚目）</label>
+        <input type="file" class="form-control-file p-2 border rounded"
+          name="invoice_3" id="invoice_3"/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+
+      <div class="form-group">
+        <label for="invoice_4">請求書ファイル（4枚目）</label>
+        <input type="file" class="form-control-file p-2 border rounded"
+          name="invoice_4" id="invoice_4"/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+
+      <div class="form-group">
+        <label for="invoice_5">請求書ファイル（5枚目）</label>
+        <input type="file" class="form-control-file p-2 border rounded"
+          name="invoice_5" id="invoice_5"/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+
+      <div class="form-group">
+        <label for="invoice_6">請求書ファイル（6枚目）</label>
+        <input type="file" class="form-control-file p-2 border rounded"
+          name="invoice_6" id="invoice_6"/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+
+      <div class="form-group">
+        <label for="invoice_7">請求書ファイル（7枚目）</label>
+        <input type="file" class="form-control-file p-2 border rounded"
+          name="invoice_7" id="invoice_7"/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+
+      <div class="form-group">
+        <label for="invoice_8">請求書ファイル（8枚目）</label>
+        <input type="file" class="form-control-file p-2 border rounded"
+          name="invoice_8" id="invoice_8"/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+
+      <div class="form-group">
+        <label for="invoice_9">請求書ファイル（9枚目）</label>
+        <input type="file" class="form-control-file p-2 border rounded"
+          name="invoice_9" id="invoice_9"/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+
+      <div class="form-group">
+        <label for="invoice_10">請求書ファイル（10枚目）</label>
+        <input type="file" class="form-control-file p-2 border rounded"
+          name="invoice_10" id="invoice_10"/>
+        <span class="fas fa-check valid-status-icon-file valid-input"></span>
+        <span class="fas fa-times valid-status-icon-file invalid-input"></span>
+        <div class="invalid-feedback">添付してください</div>
+      </div>
+      <!-- /請求書ファイル -->
 
 
       <!-- 対象債権合計金額 -->

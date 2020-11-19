@@ -9,9 +9,30 @@ export function addComma(num) {
     return String(num).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
 }
 
-export function get_contractor_name(account, days_later) {
+export function get_contractor_name(account, days_later, counstructor_id) {
+    const is_available_late_payment = Number.isInteger(Number(days_later)) && Number(days_later) > 0;
+
+    // 遅払いの提供がまだ開始していない状態であっても、V2として扱うべき工務店が例外的に存在する
+    const exceptional_v2_constructors = {
+        "100": "株式会社RealtorSolutions",
+        "103": "古川製材株式会社",
+        "105": "株式会社メガステップ",
+        "201": "株式会社匠和美建",
+        "202": "株式会社匠和美建",
+        "203": "株式会社匠和美建",
+        "204": "株式会社ハウジング重兵衛",
+        "212": "株式会社エムアールエスブレイン",
+        "213": "株式会社リガード",
+        "301": "ウスクラ建設（株）",
+        "dev100": "株式会社リライトテスト用"
+        // 下記もV2扱いだが、工務店マスタが未作成。作成次第対応
+        // "ファストハウス株式会社",
+        // "株式会社住まいず",
+        // "駒商株式会社",
+    };
+
     let version = "";
-    if (Number.isInteger(Number(days_later)) && Number(days_later) > 0) {
+    if (is_available_late_payment || counstructor_id in exceptional_v2_constructors) {
         version = "V2";
     } else {
         version = "V1";
@@ -19,7 +40,7 @@ export function get_contractor_name(account, days_later) {
 
     return {
         "ID": {
-            "V1": "インベストデザイン株式会社",
+            "V1": "株式会社NID",
             "V2": "ラグレス2合同会社"
         },
         "LAGLESS": {
