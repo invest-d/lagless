@@ -261,7 +261,7 @@ async function post_apply_record(form_text_data, env) {
         status: kintone_post_response.status,
         id: kintone_post_response.data.id,
         redirect_to: env.success_redirect_to,
-        record: record,
+        record: payload.record,
     };
 }
 
