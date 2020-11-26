@@ -9,7 +9,7 @@
         つまり、二つのアプリがどちらも参照している取引企業管理のレコード番号によって対応付ける。
 
     審査アプリの転記対象フィールドコード
-        付与与信枠_自動算出_標準と高額
+        付与与信枠_手動入力_標準と高額
 
     取得条件
         同一企業に対して複数回の審査が存在することを想定。（審査は毎月更新の予定）
@@ -23,7 +23,7 @@
     const APP_ID_EXAM = 79;
     // フィールドコード
     const customerCode_EXAM = "取引企業管理No_審査対象企業";
-    const creditAmount_EXAM = "付与与信枠_自動算出_標準と高額";
+    const creditAmount_EXAM = "付与与信枠_手動入力_標準と高額";
     const examinedDay_EXAM = "審査完了日";
 
     const APP_ID_KOMUTEN = 96;
