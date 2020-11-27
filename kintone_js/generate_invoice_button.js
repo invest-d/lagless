@@ -480,7 +480,7 @@ dayjs.locale("ja");
                 "東京都千代田区神田神保町三丁目\n",
                 "5番地 住友不動産九段下ビル7F\n",
                 `Mail:${mail}\n`,
-                "TEL:03-6261-6818\n"
+                "TEL:050-3188-6800\n"
             ],
             fontSize: 7,
             border: [false]
