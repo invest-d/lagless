@@ -256,7 +256,7 @@ import { get_contractor_name } from "./util_forms";
             if (contractor === "ラグレス合同会社") {
                 offerers.push({
                     "email": "h.kanemoto@shine-artist.com",
-                    "name": "田口勝富 様",
+                    "name": "田口勝富",
                     "organization": "ラグレス合同会社　代表社員　ラグレス一般社団法人　職務執行者",
                     "language_code": "ja"
                 });
