@@ -1,165 +1,198 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>軽バン.COM【売上前払いシステム】申込受付案内ページ</title>
-    <style>
-      #content {
-          width: 650px;
-          margin-left: auto;
-          margin-right: auto;
-      }
-      #content h2 {
-          text-align: center;
-      }
-      h3 {
-        margin-top: 0.6rem;
-        margin-bottom: 0.6rem;
-      }
-      #content .logo {
-          text-align: center;
-      }
-      #content .logo img {
-          max-width: 100%;
-      }
-      .center {
-          text-align: center;
-      }
-      #schedule {
-          width: 526px;
-          height: 420px;
-          background-image: url(images/schedule.png);
-          background-repeat: no-repeat;
-          position: relative;
-          margin-left: auto;
-          margin-right: auto;
-          margin-top: 32px;
-      }
-      table.schedule, th, td { border: 1px solid #000; border-collapse: collapse; }
-      thead th { color: #fff; background-color: #666; line-height: 30px; padding-left: 0.5rem; padding-right: 0.5rem;}
-      tbody td { padding: 6px; }
-      tbody td.border-none { border: 0; }
-      tbody td.focus { background-color: #fcc; }
-      button.act { background-color: #f00; color: #fff; border-radius: 4px; width: 260px; height: 44px; font-size: 20px; font-weight: bold; cursor: pointer; }
-      button.act:hover { background-color: #fcc; }
-      .small { font-size: 0.8rem; }
-      #float_act { position: fixed; top: 400px; right: 40px; width: 200px; box-shadow: 0px 0px 6px 3px #666; padding: 0px; padding-top: 24px; background-color: #fff; }
-      #float_act div { font-weight: bold; text-align: center; margin-bottom: 20px; }
-      #float_act a { text-decoration: none; }
-      #float_act button.act { width: 160px; display: block; margin-bottom: 20px; margin-left: auto; margin-right: auto; }
-    </style>
-  </head>
-  <body>
-    <div id="content">
-      <div class="logo" style="margin-bottom: 2rem;"><img src="images/keban_site_top.jpg"></div>
+<html lang="ja">
 
-      軽バン.COM【売上前払いシステム】は、<br />
-      軽バンドットコム様に代わり、インベストデザイン株式会社が運営しております。<br />
-      <br />
-      ドライバー様の配送および日報報告完了後、<br />
-      本サービスにお申し込みいただければ、売上金額の一部を入金予定日（翌々月末日）よりも先に受け取ることが可能です。<br />
-      <br />
-      <h3>
-        ■前払い可能金額■
-      </h3>
-      前払い前に、支払予定明細をメールにて通知いたします。<br />
-      <table class="amount">
-        <tbody>
-          <tr>
-            <td>
-              <strong>【1稼働日当たりの前払い金額】<span class="small">※1</span>　×　【稼働日数】</strong>
-            </td>
-          </tr>
-          <tr>
-            <td class="border-none">
-              <span class="small">
-                ※1<br />
-                a. 稼働開始4ヶ月未満のドライバー様の場合  3000円/日<br />
-                b. 稼働開始4ヶ月以上のドライバー様の場合  5000円/日<br />
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="small">
-        上記a, bの金額以上をご希望の場合は、軽バンドットコム様とインベストデザインの審査がございます。<br />
-        （稼働開始6ヶ月以上のドライバー様が対象）
-      </p>
-      <br />
-      <h3>
-        ■前払いスケジュール・手数料■
-      </h3>
-      <table class="schedule" style="table-layout: fixed;">
-        <thead><tr><th></th><th>締め日</th><th>前払い手数料</th><th>申込期限</th><th>前払い予定日</th></tr></thead>
-        <tbody>
-          <tr>
-            <td>①</td>
-            <td>当月5日<br><span class="small">(毎月1〜5日稼働分)</span></td>
-            <td>5.95%</td>
-            <td rowspan="6">締め日 + 1営業日まで</td>
-            <td rowspan="6">締め日 + 4営業日頃</td>
-          </tr>
-          <tr>
-            <td>②</td>
-            <td>当月10日<br><span class="small">(毎月6〜10日稼働分)</span></td>
-            <td>5.70%</td>
-          </tr>
-          <tr>
-            <td>③</td>
-            <td>当月15日<br><span class="small">(毎月11〜15日稼働分)</span></td>
-            <td>5.45%</td>
-          </tr>
-          <tr>
-            <td>④</td>
-            <td>当月20日<br><span class="small">(毎月16〜20日稼働分)</span></td>
-            <td>5.20%</td>
-          </tr>
-          <tr>
-            <td>⑤</td>
-            <td>当月25日<br><span class="small">(毎月21〜25日稼働分)</span></td>
-            <td>4.95%</td>
-          </tr>
-          <tr>
-            <td>⑥</td>
-            <td>当月末<br><span class="small">(毎月26〜末日稼働分)</span></td>
-            <td>4.70%</td>
-          </tr>
-        </tbody>
-      </table>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <title>軽バン.COM【売上前払いシステム】申込受付案内ページ</title>
+  <link rel="stylesheet" href="css/ke_ban.css">
+  <script src="./ke_ban_entry.js" charset="UTF-8"></script>
+</head>
 
-      <p class="small">
-        ※前払い手数料と振込手数料（250円 + 税）はドライバー様負担となります。<br>
-        　前払い可能金額から上記手数料を差し引いた金額をお支払いします。
-      </p>
+<body>
 
-      <br />
-      <small>
-        ※注意事項※<br />
-        ■案件の応募をされていない方は前払いをご利用できません。<br />
-        <br />
-        ■当社が軽バンドットコム様に設定している予算枠を超過した場合、前払いができない場合がございますのでお早めにお申込みください。尚、予算枠等に関するご質問にはお答えいたしかねますので、予めご了承ください。<br />
-        <br />
-        ■予算枠超過により申込の受付不可となった場合は、その旨をメールにて通知いたします。<br />
-        <br />
-        ■天災、通信インフラの故障及びその他の事象により実行日が遅れる可能性がございます。このような場合も、ドライバー様は前払いの申込みを取り消すことはできませんので予めご了承ください。<br />
-      </small>
+  <!-- #content start -->
+  <div id="content">
 
-      <h2 style="margin-top: 5rem;">■​お申込みはこちら■</h2>
-      <div class="center">
-        <a href="./ke_ban.html" class="form_1"><button class="act">初めてのご利用</button></a>
-        <a href="./ke_ban.html?user=existing" class="form_2"><button class="act">2回目以降</button></a>
+
+    <div class="paragraph logo">
+      <img src="images/keban_site_top.jpg" alt="サービスロゴ画像">
+    </div>
+
+
+    <div class="paragraph">
+      <div class="block">
+        <p>
+          軽バン.COM【売上前払いシステム】は、<br />
+          軽バンドットコム様に代わり、インベストデザイン株式会社が運営しております。
+        </p>
+        <p>
+          ドライバー様の配送および日報報告完了後、<br />
+          本サービスにお申し込みいただければ、売上金額の一部を入金予定日（翌々月末日）よりも先に受け取ることが可能です。
+        </p>
       </div>
-      <br />
-      <br />
-      <div class="center" style="border: 1px solid #000; max-width: 500px; margin-left: auto; margin-right: auto; padding: 24px;">
-        <div style="text-align: left;">前払いについてのお問い合わせはこちら</div>
-        【軽バン.COM前払い事務局】 <br />
-        運営会社：インベストデザイン株式会社 <br />
-        メール：<a href="lagless+keban@invest-d.com" class="mail">lagless+keban@invest-d.com</a> <br />
-        電話：050-3188-6800 <br />
-        電話時間 ：10：00～17：00 <br />
-        定休日：土・日・祝
+
+
+      <div id="apply_schedule" class="block">
+        <h3>
+          ■現在申込可能な稼働期間■
+        </h3>
+        <span id="available_term">2020年12月02日（水）〜2020年12月08日（火）</span>稼働分<br />
+        申込締切：<span id="apply_deadline">2020年12月08日（火）23:59</span>まで
+      </div>
+
+
+      <div id="amount_description" class="block">
+        <h3>
+          ■前払い可能金額■
+        </h3>
+        前払い前に、支払予定明細をメールにて通知いたします。<br />
+        <table class="amount">
+          <tbody>
+            <tr>
+              <td>
+                <strong>【1稼働日当たりの前払い金額】<span class="small">※1</span>　×　【稼働日数】</strong>
+              </td>
+            </tr>
+            <tr>
+              <td class="border-none">
+                <span class="small">
+                  ※1<br />
+                  a. 稼働開始4ヶ月未満のドライバー様の場合 3000円/日<br />
+                  b. 稼働開始4ヶ月以上のドライバー様の場合 5000円/日<br />
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="small">
+          上記a, bの金額以上をご希望の場合は、軽バンドットコム様とインベストデザインの審査がございます。<br />
+          （稼働開始6ヶ月以上のドライバー様が対象）
+        </p>
+      </div>
+
+
+      <div class="block">
+        <h3>
+          ■前払いスケジュール■
+        </h3>
+        <table class="schedule">
+          <thead>
+            <tr>
+              <th>申込期間</th>
+              <th>申込締切</th>
+              <th>前払予定日</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>毎週水曜日〜翌週火曜日までの1週間</td>
+              <td>火曜日23:59まで</td>
+              <td>金曜日</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+
+      <div class="block">
+        <h3>
+          ■前払い手数料率■
+        </h3>
+        <div id="rate_table">
+          <table id="sample_table" class="schedule">
+            <colgroup>
+              <col class="week_term_col">
+              <col>
+            </colgroup>
+            <thead>
+              <tr>
+                <th>稼働した日時</th>
+                <th>手数料率</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>毎月一日〜第一日曜日</td>
+                <td>5.7%</td>
+              </tr>
+              <tr>
+                <td>翌月曜日〜第二日曜日</td>
+                <td>5.5%</td>
+              </tr>
+              <tr>
+                <td>翌月曜日〜第三日曜日</td>
+                <td>5.3%</td>
+              </tr>
+              <tr>
+                <td>翌月曜日〜第四日曜日</td>
+                <td>5.1%</td>
+              </tr>
+              <tr>
+                <td>翌月曜日〜第五日曜日</td>
+                <td>4.9%</td>
+              </tr>
+              <tr>
+                <td>翌月曜日〜末日</td>
+                <td>4.9%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          ※暦上の日曜日で週を区切らせていただきます。<br />
+          　（例）毎月1日～第一日曜日：1週目<br />
+          　　　　翌週月曜日～第二日曜日：2週目<br />
+          ※6週目が発生した場合は5週目の手数料率を適用いたします。<br />
+          ※申込可能な稼働期間が月をまたいだ場合、翌月の稼働分のお申込みについては、<br />
+          　翌月の手数料率を適用いたします。<br />
+          ※前払い手数料と振込手数料（250円 + 税）はドライバー様負担となります。<br>
+          　前払い可能金額から上記手数料を差し引いた金額をお支払いします。
+        </p>
+      </div>
+
+
+      <div class="block small_text">
+        <p>
+          ※注意事項※
+        </p>
+        <p>
+          ■案件の応募をされていない方は前払いをご利用できません。
+        </p>
+        <p>
+          ■当社が軽バンドットコム様に設定している予算枠を超過した場合、前払いができない場合がございますのでお早めにお申込みください。尚、予算枠等に関するご質問にはお答えいたしかねますので、予めご了承ください。
+        </p>
+        <p>
+          ■予算枠超過により申込の受付不可となった場合は、その旨をメールにて通知いたします。
+        </p>
+        <p>
+          ■天災、通信インフラの故障及びその他の事象により実行日が遅れる可能性がございます。このような場合も、ドライバー様は前払いの申込みを取り消すことはできませんので予めご了承ください。
+        </p>
       </div>
     </div>
 
-  </body>
+
+    <div class="paragraph center">
+      <h2>■​お申込みはこちら■</h2>
+      <a href="./ke_ban.html" class="form_1"><button class="act">初めてのご利用</button></a>
+      <a href="./ke_ban.html?user=existing" class="form_2"><button class="act">2回目以降</button></a>
+    </div>
+
+
+    <div class="center paragraph"
+      style="border: 1px solid #000; max-width: 500px; margin-left: auto; margin-right: auto; padding: 24px;">
+      <div style="text-align: left;">前払いについてのお問い合わせはこちら</div>
+      【軽バン.COM前払い事務局】 <br />
+      運営会社：インベストデザイン株式会社 <br />
+      メール：<a href="lagless+keban@invest-d.com" class="mail">lagless+keban@invest-d.com</a> <br />
+      電話：050-3188-6800 <br />
+      電話時間 ：10：00～17：00 <br />
+      定休日：土・日・祝
+    </div>
+
+
+  </div>
+  <!-- #content end -->
+
+</body>
+
 </html>
