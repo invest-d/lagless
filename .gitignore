@@ -70,6 +70,7 @@ kintone_js/dist/
 public/app.js
 public/apply.js
 public/ke_ban.js
+public/ke_ban_entry.js
 public/menu.js
 public/css/bootstrap.min.css
 public/css/all.min.css
