@@ -1,4 +1,8 @@
 /*
+    Version 1.1
+    与信枠を転記する際、手動入力の値と自動算出の値を考慮するようにした。
+    手動入力の値を優先しつつ、どちらも入力されていない場合は0円扱いとするか、処理をスキップするかを選択可能。
+
     Version 1
     審査アプリ(79)に記載されている与信枠を工務店マスタ(96)に転記するボタンを設置する。
 
@@ -23,7 +27,9 @@
     const APP_ID_EXAM = 79;
     // フィールドコード
     const customerCode_EXAM = "取引企業管理No_審査対象企業";
-    const creditAmount_EXAM = "付与与信枠_手動入力_標準と高額";
+    const customerName_EXAM = "法人名・屋号";
+    const creditAmountManual_EXAM = "付与与信枠_手動入力_標準と高額";
+    const creditAmountAuto_EXAM = "付与与信枠_自動算出";
     const examinedDay_EXAM = "審査完了日";
 
     const APP_ID_KOMUTEN = 96;
@@ -97,8 +103,14 @@
         // 全件取得
         const body_exams = {
             "app": APP_ID_EXAM,
-            "fields": [customerCode_EXAM, creditAmount_EXAM, examinedDay_EXAM],
-            "query": `${examinedDay_EXAM} != "" and ${creditAmount_EXAM} >= 0`, // ヤバい取引企業は与信枠ゼロにして対応することもあるので、ゼロ円のレコードも取得
+            "fields": [
+                customerCode_EXAM,
+                customerName_EXAM,
+                creditAmountManual_EXAM,
+                creditAmountAuto_EXAM,
+                examinedDay_EXAM
+            ],
+            "query": `${examinedDay_EXAM} != "" and (${creditAmountManual_EXAM} >= 0 or ${creditAmountAuto_EXAM} >= 0)`, // ヤバい取引企業は与信枠ゼロにして対応することもあるので、ゼロ円のレコードも取得
             "seek": true
         };
 
@@ -165,26 +177,54 @@
         const komuten_info = await kintoneRecord.getAllRecordsByQuery(body_exams);
 
         console.log("工務店レコードそれぞれについて、審査アプリから取得した与信枠をPUTするオブジェクトを作る");
-        const put_records = komuten_info.records.map((komuten) => {
-            // 審査レコードの中から、工務店レコードの取引企業Noフィールドと同じ取引企業Noのレコードを探してセット。
-            // 工務店レコード1件に対して審査レコードは1件のみなのでfind（n件あるのは逆の場合）
-            // 結果、匠和美健などの場合は一つの審査レコードの与信枠が複数の工務店レコードにセットされる。
-            const target_exam = latest_exam_records.find((record) => record[customerCode_EXAM]["value"] === komuten[customerCode_KOMUTEN]["value"]);
+        const put_records = komuten_info.records
+            .map((komuten) => {
+                // 審査レコードの中から、工務店レコードの取引企業Noフィールドと同じ取引企業Noのレコードを探してセット。
+                // 工務店レコード1件に対して審査レコードは1件のみなのでfind（n件あるのは逆の場合）
+                // 結果、匠和美健などの場合は一つの審査レコードの与信枠が複数の工務店レコードにセットされる。
+                const target_exam = latest_exam_records.find((record) => record[customerCode_EXAM]["value"] === komuten[customerCode_KOMUTEN]["value"]);
 
-            // 工務店に対して1件も審査レコードがない場合はnullセット
-            const credit = (target_exam === undefined)
-                ? null
-                : target_exam[creditAmount_EXAM]["value"];
+                const credit = (() => {
+                    if (target_exam === undefined) {
+                        // 工務店に対して1件も審査レコードがない場合はnullセット
+                        return null;
+                    } else {
+                        // 手動で定める与信枠と自動で定める与信枠がある。どちらか決められない場合はダイアログを出す
+                        const credit_early_manual = Number(target_exam[creditAmountManual_EXAM]["value"]);
+                        const credit_early_auto = Number(target_exam[creditAmountAuto_EXAM]["value"]);
 
-            return {
-                "id": komuten[recordNo_KOMUTEN]["value"],
-                "record": {
-                    [creditFacility_KOMUTEN]: {
-                        "value": credit
+                        if (credit_early_manual > 0) {
+                            return credit_early_manual;
+                        } else if (credit_early_auto > 0) {
+                            return credit_early_auto;
+                        } else {
+                            const is_zero_credit = window.confirm("企業に対する早払い与信枠が入力されていません。与信枠を0円扱いとして続行しますか？\n"
+                                + "いいえの場合、この企業については与信枠を上書きせずに処理をスキップし、他の企業の処理を続行します。\n\n"
+                                + `企業名: ${target_exam[customerName_EXAM]["value"]}, 取引企業管理No.: ${target_exam[customerCode_EXAM]["value"]}, 手動入力与信枠: ${target_exam[creditAmountManual_EXAM]["value"]}, 自動算出与信枠: ${target_exam[creditAmountAuto_EXAM]["value"]}`);
+
+                            if (is_zero_credit) {
+                                return 0;
+                            } else {
+                                return undefined;
+                            }
+                        }
                     }
+                })();
+
+                if (credit === undefined) {
+                    return undefined;
+                } else {
+                    return {
+                        "id": komuten[recordNo_KOMUTEN]["value"],
+                        "record": {
+                            [creditFacility_KOMUTEN]: {
+                                "value": credit
+                            }
+                        }
+                    };
                 }
-            };
-        });
+            })
+            .filter((rec) => rec !== undefined); // 与信枠を上書きしないもの = undefinedを除く
 
         const body_update_credits = {
             "app": APP_ID_KOMUTEN,
