@@ -14,6 +14,7 @@ module.exports = (env, argv) => {
                 app: "./src/app.js",
                 apply: "./src/apply.js",
                 ke_ban: "./src/ke_ban.js",
+                ke_ban_entry: "./src/ke_ban_entry.js",
                 menu: "./src/menu.js"
             },
             output: {
@@ -71,6 +72,7 @@ module.exports = (env, argv) => {
                 app: "./src/app.js",
                 apply: "./src/apply.js",
                 ke_ban: "./src/ke_ban.js",
+                ke_ban_entry: "./src/ke_ban_entry.js",
                 menu: "./src/menu.js"
             },
             output: {
