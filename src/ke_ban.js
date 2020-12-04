@@ -4,6 +4,9 @@ import "@fortawesome/fontawesome-free";
 
 import "bootstrap";
 
+import flatpickr from "flatpickr";
+import "flatpickr/dist/l10n/ja.js";
+
 import $ from "jquery";
 
 import "url-search-params-polyfill";
@@ -17,55 +20,118 @@ dayjs.locale("ja");
 import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
 
-export const getTodayDate = () => {
-    const specified_date = (() => {
-        if (getUrlParam("debug_date") == "random") {
-            const min = 1606748400; // 2020年12月01日
-            const max = 1638284400; // 2021年12月01日
-            const random_integer = Math.floor(Math.random() * (max + 1 - min)) + min;
-            return dayjs.unix(random_integer);
-        } else {
-            return dayjs(getUrlParam("debug_date"));
-        }
-    })();
-    if (specified_date.isValid()) {
-        // デバッグ用。パラメータに日付を書くことで、「ブラウザを開いたときの日付」を変更できる
-        console.log(`debug mode: today is ${specified_date.format("YYYY-MM-DD")}`);
-        return specified_date;
-    } else {
-        return dayjs();
-    }
-};
-
-export const get_pay_term_start_date = (today) => {
-    const wednesday = 3;
-    let moved_date = today;
-    while (moved_date.day() !== wednesday) {
-        console.log("processing pay term start date...");
-        moved_date = moved_date.subtract(1, "day");
-    }
-    return moved_date;
-};
-export const get_pay_term_end_date = (today) => {
-    const tuesday = 2;
-    let moved_date = today;
-    while (moved_date.day() !== tuesday) {
-        console.log("processing pay term end date...");
-        moved_date = moved_date.add(1, "day");
-    }
-    return moved_date;
-};
-
 // フォームを開いた時点において、前払対象になる期間を確定する
 $(() => {
-    const today = getTodayDate();
+    // 前払い可能な期間は原則的に5日ごとの区切り。
+    // 1日～5日、6日～10日、……、月末のみ26日～月末日。
+    // 前払い可能な期間の開始日の翌日から終了日の翌営業日までが申込期間。
+    // ページを開く度に前払い期間と申込期間のテーブルを用意する。
+    // 現在の日付が当てはまっている申込期間の数だけ前払い期間のドロップダウンを生成する。
+
+    // 現在の日付が属する五十日について、開始日と終了日を求める
+    const today = dayjs();
+    const terms = {
+        prev: {
+            pay: {
+                start: null,
+                end: null
+            },
+            apply: {
+                start: null,
+                end: null
+            }
+        },
+        now: {
+            pay: {
+                start: null,
+                end: null
+            },
+            apply: {
+                start: null,
+                end: null
+            }
+        },
+        next: {
+            pay: {
+                start: null,
+                end: null
+            },
+            apply: {
+                start: null,
+                end: null
+            }
+        }
+    };
+
+    const get_pay_term_start_date = (target_date) => {
+        let start_date = target_date;
+        while (start_date.date() % 5 !== 1) {
+            start_date = start_date.subtract(1, "day");
+        }
+        return start_date;
+    };
+    const get_pay_term_end_date = (target_date) => {
+        if (get_pay_term_start_date(target_date).date() === 26) {
+            // 最終タームの場合、前払い対象の終了日は月末
+            return target_date.endOf("month");
+        } else {
+            let end_date = target_date;
+            while (end_date.date() % 5 !== 0) {
+                end_date = end_date.add(1, "day");
+            }
+            return end_date;
+        }
+    };
+
+    terms.now.pay.start = get_pay_term_start_date(today);
+    terms.now.pay.end = get_pay_term_end_date(today);
+
+    // 現在の五十日の直前の五十日について、開始日と終了日を求める
+    terms.prev.pay.start = get_pay_term_start_date(terms.now.pay.start.subtract(1, "day"));
+    terms.prev.pay.end = get_pay_term_end_date(terms.now.pay.start.subtract(1, "day"));
+
+    // 現在の五十日の直後の五十日について、開始日と終了日を求める
+    terms.next.pay.start = get_pay_term_start_date(terms.now.pay.end.add(1, "day"));
+    terms.next.pay.end = get_pay_term_end_date(terms.now.pay.end.add(1, "day"));
+
+    // それぞれの五十日について、申込可能期間を求める
+    // 申込可能期間の開始日は常に五十日の開始日の翌日になる
+    terms.prev.apply.start = terms.prev.pay.start.add(1, "day");
+    terms.now.apply.start = terms.now.pay.start.add(1, "day");
+    terms.next.apply.start = terms.next.pay.start.add(1, "day");
+    // 申込可能期間の終了日は五十日の終了日の翌営業日
+    const get_next_business_date = (target_date) => {
+        let next_date = target_date.add(1, "day");
+        while([0, 6].includes(next_date.day())) {
+            next_date = next_date.add(1, "day");
+        }
+        return next_date;
+    };
+    terms.prev.apply.end = get_next_business_date(terms.prev.pay.end);
+    terms.now.apply.end = get_next_business_date(terms.now.pay.end);
+    terms.next.apply.end = get_next_business_date(terms.next.pay.end);
+
+    // 現在の日付がどの申込期間に入っているかを判定して、選択肢に加えていく
+    const selectable = [];
+    if (today.isBetween(terms.prev.apply.start, terms.prev.apply.end, null, "[]")) {
+        selectable.push(`${terms.prev.pay.start.format("YYYY年MM月DD日")}から${terms.prev.pay.end.format("YYYY年MM月DD日")}まで`);
+    }
+
+    if (today.isBetween(terms.now.apply.start, terms.now.apply.end, null, "[]")) {
+        selectable.push(`${terms.now.pay.start.format("YYYY年MM月DD日")}から${terms.now.pay.end.format("YYYY年MM月DD日")}まで`);
+    }
+
+    if (today.isBetween(terms.next.apply.start, terms.next.apply.end, null, "[]")) {
+        selectable.push(`${terms.next.pay.start.format("YYYY年MM月DD日")}から${terms.next.pay.end.format("YYYY年MM月DD日")}まで`);
+    }
 
     const term_select = $("#targetTerm");
-    const option = $("<option>");
-    const item = `${get_pay_term_start_date(today).format("YYYY年MM月DD日(ddd)")}から${get_pay_term_end_date(today).format("YYYY年MM月DD日(ddd)")}`;
-    option.attr("value", item);
-    option.text(item);
-    term_select.append(option);
+    selectable.forEach((item) => {
+        const option = $("<option>");
+        option.attr("value", item);
+        option.text(item);
+        term_select.append(option);
+    });
 });
 
 // URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする
@@ -73,8 +139,8 @@ $(() => {
     const key = "user";
     const val = getUrlParam(key);
     if (val === "existing") {
-        // 2回目以降の申込みフォーム
-        // 初回のみ必須入力の項目を非表示にする
+    // 2回目以降の申込みフォーム
+    // 初回のみ必須入力の項目を非表示にする
         const objects = $("*[name=only_first]");
         hideObjects(objects);
         // 2回目以降は任意入力になる項目を設定する
@@ -82,12 +148,12 @@ $(() => {
         // 2回目以降で表示するキャプションを設定
         $("#second_caption").show();
     } else {
-        // 初回申込みフォーム
-        // 特に変更する必要はない
+    // 初回申込みフォーム
+    // 特に変更する必要はない
     }
 });
 
-// URLから指定したパラメータを取得する。パラメータが見つからなければ null を返す
+// URLから指定したパラメータを取得する
 function getUrlParam(param_name) {
     const params = new URLSearchParams(window.location.search);
     return params.get(param_name);
@@ -101,8 +167,8 @@ function hideObjects(objects) {
 
 // 必須入力項目を任意入力に変更する
 function arbitrariseInput() {
-    $("div[name=arbitrary_second]").each(function () {
-        // 必須のラベルを任意に変更
+    $("div[name=arbitrary_second]").each(function() {
+    // 必須のラベルを任意に変更
         $(this).find("span.badge").removeClass("badge-danger")
             .addClass("badge-secondary")
             .text("任意");
@@ -118,16 +184,31 @@ function cancelValidation(objects) {
         .prop("required", false);
 }
 
+// 日付入力欄でカレンダーからの入力を可能にする
+$(() => {
+    const today = new Date();
+    const config = {
+        "dateFormat": "Y-m-d",
+        "locale": "ja",
+        "maxDate": `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+    };
+    flatpickr.l10ns.ja.firstDayOfWeek = 0;
+    flatpickr("#closingDayFrom", config);
+    flatpickr("#closingDayTo", config);
+});
+$(() => {
+});
+
 // コントロール未入力のまま次に行こうとしたら警告を出す
 $(() => {
     $(".no-blank").blur(blank_validate);
-    $(".pattern-required").blur(function () { pattern_validate($(this)); });
+    $(".pattern-required").blur(function () {pattern_validate($(this));});
 
     // 下記クラス.pattern-required-on-modifiedのバリデーションは、次のようになる
     // 1. 初回フォームであれば無条件でblur時にパターンマッチのvalidate
     // 2-1. 2回目以降フォームであればblur時にブランクならOK判定
     // 2-2. 2回目以降フォームであればblur時に非ブランクならパターンマッチのvalidate
-    $(".pattern-required-on-modified").blur(function () {
+    $(".pattern-required-on-modified").blur(function() {
         pattern_validate($(this), getUrlParam("user") === "existing");
     });
 });
@@ -173,7 +254,7 @@ function pattern_validate(obj, blank_allowed) {
 $(() => {
     $("input[name=deposit_Form]").on("click", () => {
         $("input[name=bankCode_Form]").addClass("pattern-required")
-            .blur(function () { pattern_validate($(this)); })
+            .blur(function () {pattern_validate($(this));})
             .blur();
 
         $("input[name=bankName_Form]").addClass("no-blank")
@@ -181,7 +262,7 @@ $(() => {
             .blur();
 
         $("input[name=branchCode_Form]").addClass("pattern-required")
-            .blur(function () { pattern_validate($(this)); })
+            .blur(function () {pattern_validate($(this));})
             .blur();
 
         $("input[name=branchName_Form]").addClass("no-blank")
@@ -191,7 +272,7 @@ $(() => {
 });
 
 $(() => {
-    $(".bank-info").blur(function () {
+    $(".bank-info").blur(function() {
         const pattern = new RegExp($(this).attr("pattern"));
         if (pattern.test($(this).val())) {
             $(this).removeClass("invalid-pattern").addClass("valid-pattern");
@@ -219,14 +300,14 @@ $(() => {
 
 // 送信ボタンをクリックしたときの挙動
 $(() => {
-    $("#send").click(function (event) {
-        // formのデフォルトのsubmit挙動を止めて、独自にsubmit挙動を実装
+    $("#send").click(function(event){
+    // formのデフォルトのsubmit挙動を止めて、独自にsubmit挙動を実装
         event.preventDefault();
 
         rv.defineReportValidityPolyfill();
 
         // ブランクチェックなど
-        if (!this.form.reportValidity()) {
+        if(!this.form.reportValidity()) {
             $("#report-validity").show();
             return;
         }
@@ -244,7 +325,7 @@ $(() => {
             // alertに表示するため、inputに対応するラベルを取得
             const label_text = $(`label[for='${over_input.id}']`).text();
             alert(`${label_text}のファイル容量を${FILE_SIZE_LIMIT / Math.pow(1024, 2)}MBより小さくしてください。\n`
-                + `現在のファイル容量：およそ${(over_input.files[0].size / Math.pow(1024, 2)).toPrecision(2)}MB`);
+            + `現在のファイル容量：およそ${(over_input.files[0].size / Math.pow(1024, 2)).toPrecision(2)}MB`);
             return;
         }
 
@@ -254,7 +335,7 @@ $(() => {
             // 添付ファイルが空の場合は要素を削除。削除しないとSafariで不具合が出る
             $("input[type=file]").each((i, j) => {
                 const name = $(j).attr("name");
-                if (!$(`[name=${name}]`).val()) {
+                if(!$(`[name=${  name  }]`).val()) {
                     form_data.delete(name);
                 }
             });
@@ -294,13 +375,13 @@ $(() => {
 function isSafari() {
     const userAgent = window.navigator.userAgent.toLowerCase();
     if (userAgent.indexOf("msie") != -1 || userAgent.indexOf("trident") != -1) {
-        // ie
+    // ie
     } else if (userAgent.indexOf("edge") != -1) {
-        // edge
+    // edge
     } else if (userAgent.indexOf("chrome") != -1) {
-        // chrome
+    // chrome
     } else if (userAgent.indexOf("safari") != -1) {
-        // safari
+    // safari
         return true;
     }
 
@@ -308,9 +389,9 @@ function isSafari() {
     return false;
 }
 
-function showSending(msg) {
+function showSending(msg){
     // 引数なし（メッセージなし）を許容
-    if (msg == undefined) {
+    if( msg == undefined ){
         msg = "";
     }
     // 画面表示メッセージ
@@ -318,6 +399,6 @@ function showSending(msg) {
     $("#sending").show();
 }
 
-function hideSending() {
+function hideSending(){
     $("#sending").hide();
 }
