@@ -1,4 +1,9 @@
 /*
+    Version 2.1
+    申込アプリ内で対象となるレコードの種類を変更。
+    旧: 状態フィールドが「支払予定明細送付済」
+    新: 状態フィールドが「ID確認済」
+
     Version 2
     申込レコードから、新たに挿入する回収レコードへと転記するフィールドの中に
     支払タイミングと支払日のフィールドを追加
@@ -39,7 +44,7 @@
     const APP_ID_APPLY = APP_ID.APPLY;
     const fieldRecordId_APPLY = "レコード番号";
     const fieldStatus_APPLY = "状態";
-    const statusReady_APPLY = "支払予定明細送付済";
+    const statusReady_APPLY = "ID確認済";
     const fieldConstructionShopId_APPLY = "constructionShopId";
     const fieldClosingDay_APPLY = "closingDay";
     const fieldApplicant_APPLY = "支払先正式名称";
@@ -97,7 +102,7 @@
 
     // ボタンクリック時の処理を定義
     async function clickInsertCollect() {
-        const clicked_ok = confirm("支払明細送付済みの申込みを、工務店と締日ごとにまとめ、回収アプリにレコード追加します。");
+        const clicked_ok = confirm("ID確認済の申込みを、工務店と締日ごとにまとめ、回収アプリにレコード追加します。");
         if (!clicked_ok) {
             alert("処理は中断されました。");
             return;
@@ -112,7 +117,7 @@
                 });
 
             if (insert_targets.length <= 0) {
-                alert("状態が 支払予定明細送付済 かつ\n回収IDが 未入力 のレコードは存在しませんでした。\n回収アプリのレコードを作り直したい場合は、\n回収アプリのレコード詳細画面から\n「回収レコード削除」ボタンを押してください。");
+                alert(`状態が ${statusReady_APPLY} かつ\n回収IDが 未入力 のレコードは存在しませんでした。\n回収アプリのレコードを作り直したい場合は、\n回収アプリのレコード詳細画面から\n「回収レコード削除」ボタンを押してください。`);
                 return;
             }
 
