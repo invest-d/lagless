@@ -9,6 +9,7 @@
     "globals": {
         "kintone": false,
         "kintoneJSSDK": false,
+        "KintoneRestAPIClient": false,
         "ENV": false
     },
     "parserOptions": {
