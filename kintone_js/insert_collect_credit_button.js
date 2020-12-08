@@ -1,4 +1,9 @@
 /*
+    Version 2.1
+    申込アプリ内で対象となるレコードの種類を変更。
+    旧: 状態フィールドが「支払予定明細送付済」
+    新: 状態フィールドが「ID確認済」
+
     Version 2
     申込レコードから、新たに挿入する回収レコードへと転記するフィールドの中に
     支払タイミングと支払日のフィールドを追加
@@ -39,7 +44,7 @@
     const APP_ID_APPLY = APP_ID.APPLY;
     const fieldRecordId_APPLY = "レコード番号";
     const fieldStatus_APPLY = "状態";
-    const statusReady_APPLY = "支払予定明細送付済";
+    const statusReady_APPLY = "ID確認済";
     const fieldConstructionShopId_APPLY = "constructionShopId";
     const fieldClosingDay_APPLY = "closingDay";
     const fieldApplicant_APPLY = "支払先正式名称";
@@ -97,7 +102,7 @@
 
     // ボタンクリック時の処理を定義
     async function clickInsertCollect() {
-        const clicked_ok = confirm("支払明細送付済みの申込みを、工務店と締日ごとにまとめ、回収アプリにレコード追加します。");
+        const clicked_ok = confirm("ID確認済の申込みを、工務店と締日ごとにまとめ、回収アプリにレコード追加します。");
         if (!clicked_ok) {
             alert("処理は中断されました。");
             return;
@@ -112,7 +117,7 @@
                 });
 
             if (insert_targets.length <= 0) {
-                alert("状態が 支払予定明細送付済 かつ\n回収IDが 未入力 のレコードは存在しませんでした。\n回収アプリのレコードを作り直したい場合は、\n回収アプリのレコード詳細画面から\n「回収レコード削除」ボタンを押してください。");
+                alert(`状態が ${statusReady_APPLY} かつ\n回収IDが 未入力 のレコードは存在しませんでした。\n回収アプリのレコードを作り直したい場合は、\n回収アプリのレコード詳細画面から\n「回収レコード削除」ボタンを押してください。`);
                 return;
             }
 
@@ -129,8 +134,6 @@
                     console.error(err);
                     throw new Error("回収アプリにはレコードを作成できましたが、\n申込みレコードとの紐付け中にエラーが発生しました。");
                 });
-            console.log("update completed.");
-            console.log(updated_apply);
 
             alert(`${updated_apply.records.length}件 の申込みレコードを回収アプリに登録しました。`);
             alert("ページを更新します。");
@@ -141,7 +144,7 @@
     }
 
     function getAppliesReadyForCollect() {
-        console.log("申込みアプリの中で支払予定明細送付済 かつ 回収IDがブランクのレコードを全て取得する。");
+        // 申込みアプリの中で ID確認済 かつ 回収IDがブランクのレコードを全て取得する。
         const request_body = {
             "app": APP_ID_APPLY,
             "fields": [
@@ -163,8 +166,7 @@
     }
 
     async function insertCollectRecords(insert_targets_array) {
-        console.log("回収アプリにレコード挿入できる形にデータを加工する。");
-
+        // 回収アプリにレコード挿入できる形にデータを加工する。
         // 渡されてくるのは {constructionShopId: {…}, 支払先正式名称: {…}, totalReceivables: {…}, closingDay: {…}, paymentDate: {…}} のオブジェクトの配列
         // 各keyに対応するフィールド値へのアクセスは、array[0].constructionShopId.valueのようにする。
 
@@ -190,9 +192,6 @@
             const is_unique = (target_index === key_pairs_index);
             return is_unique;
         });
-
-        console.log("unique_key_pairs are");
-        console.log(unique_key_pairs);
 
         // 工務店マスタから回収日の情報を取得。申込レコードに含まれる工務店の情報のみ取得する
         const body_komuten_payment_date = {
@@ -281,8 +280,6 @@
         };
 
         // INSERT実行
-        console.log("insert request body is");
-        console.log(request_body);
         const resp = await client.record.addAllRecords(request_body);
         // 新規作成されたレコードID一覧を返す
         return resp.records.map((r) => r.id);
@@ -319,8 +316,7 @@
     }
 
     async function assignCollectIdsToApplies(applies, inserted_ids) {
-        console.log("申込みレコードに回収レコードのレコード番号を振る");
-
+        // 申込みレコードに回収レコードのレコード番号を振る
         // 先ほど回収アプリに挿入したレコードのidを使って、そのまま回収アプリからGET
         const in_query = `("${  inserted_ids.join('","')  }")`;
         const body_new_collects = {
