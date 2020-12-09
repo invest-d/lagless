@@ -1,4 +1,7 @@
 /*
+    Version 3.1
+    初回申込に対する振込手数料率半額CPに対応。
+
     Version 3
     支払予定明細のメール文面を作成する機能と、作成されたメール文面を送信する機能を別ファイルに分離した。
     本ファイルはメール文面を作成する機能だけについて引き続き責務を負う。
@@ -33,12 +36,20 @@
     当該フィールドにその本文を保存する。
 */
 
+const dayjs = require("dayjs");
+dayjs.locale("ja");
+import isBetween from "dayjs/plugin/isBetween";
+dayjs.extend(isBetween);
 import { get_contractor_name } from "./util_forms";
 
 (function() {
     "use strict";
 
+    // 本キャンペーンを打ち出してから最初に案内メールを送信する日
+    const HALF_COMMISION_START_DATE = dayjs("2020-12-17");
 
+    // 現状は終了日未定
+    const HALF_COMMISION_END_DATE = dayjs("9999-12-31");
 
     const button_name = "createPaymentDetail";
     const button_title = "支払予定明細の本文を一括作成";
@@ -48,6 +59,8 @@ import { get_contractor_name } from "./util_forms";
     const statusReady_APPLY = "工務店確認済";
     const statusConfirming_APPLY = "支払予定明細確認中";
     const statusConfirmed_APPLY = "支払予定明細送信前確認完了";
+    const statusPaid_APPLY = "実行完了";
+    const fieldCustomerId_APPLY = "ルックアップ";
     const fieldCustomerCompanyName_APPLY = "支払先正式名称";
     const fieldAddresseeName_APPLY = "担当者名";
     const fieldAddresseeTitle_APPLY = "役職名";
@@ -70,6 +83,9 @@ import { get_contractor_name } from "./util_forms";
     const fieldCommissionRate_Early_APPLY = "commissionRate";
     const fieldCommissionAmount_Early_APPLY = "commissionAmount";
     const fieldTransferAmount_Early_APPLY = "transferAmount";
+    const fieldCommissionRateEarlyFirst_APPLY = "commissionRateEarlyFirst";
+    const fieldCommissionAmountEarlyFirst_APPLY = "commissionAmountEarlyFirst";
+    const fieldTransferAmountEarlyFirst_APPLY = "transferAmountEarlyFirst";
     const fieldPaymentAccount_APPLY = "paymentAccount";
     const fieldConstructorID_APPLY = "constructionShopId";
     const nextActionButtonTitle = "支払予定明細一括送信";
@@ -109,7 +125,7 @@ import { get_contractor_name } from "./util_forms";
 
         const body_generate_target = {
             app: kintone.app.getId(),
-            query: `状態 in ("${statusReady_APPLY}")`
+            query: `${fieldStatus_APPLY} in ("${statusReady_APPLY}")`
         };
         const ready_to_generate = await kintone.api("/k/v1/records", "GET", body_generate_target)
             .catch((err) => {
@@ -122,7 +138,7 @@ import { get_contractor_name } from "./util_forms";
         }
 
         if (ready_to_generate.records.length === 0) {
-            alert(`支払予定明細本文の作成対象となるレコード（状態：${statusReady_APPLY}）のレコードはありませんでした。\n`
+            alert(`支払予定明細本文の作成対象となるレコード（${fieldStatus_APPLY}：${statusReady_APPLY}）のレコードはありませんでした。\n`
             + "処理を終了します。");
             return;
         }
@@ -159,7 +175,7 @@ import { get_contractor_name } from "./util_forms";
         // 支払明細を各レコードにセット
         let records_with_detail = [];
         try {
-            records_with_detail = attachDetail(ready_to_generate.records);
+            records_with_detail = await attachDetail(ready_to_generate.records);
         } catch (err) {
             alert(err.message);
             return;
@@ -196,8 +212,6 @@ import { get_contractor_name } from "./util_forms";
     }
 
     function attachDetail(target_records) {
-        const modified_records = [];
-
         // エラーが発生した時、どのレコードで発生したかの情報をthrowするためのlet
         let record_num = 0;
         try {
@@ -206,7 +220,7 @@ import { get_contractor_name } from "./util_forms";
                 return `${kintone_date_value.split("-")[0]}年${kintone_date_value.split("-")[1]}月${kintone_date_value.split("-")[2]}日`;
             };
 
-            target_records.forEach((record) => {
+            const processes = target_records.map(async (record) => {
                 record_num = record[fieldRecordId_COMMON]["value"];
 
                 const kyoryoku_company_name = record[fieldCustomerCompanyName_APPLY]["value"];
@@ -219,20 +233,48 @@ import { get_contractor_name } from "./util_forms";
                 const billing_amount = record[fieldApplicantAmount_APPLY]["value"];
                 const membership_fee = record[fieldMembershipFee_APPLY]["value"];
                 const transfer_fee_tax_incl = record[fieldTransferFee_APPLY]["value"];
-
-                let commission_rate;
-                let commission_amount;
-                let transfer_amount_of_money;
                 const timing = record[fieldPaymentTiming_APPLY]["value"];
-                if (timing === statusLatePayment_APPLY) {
-                    commission_rate = record[fieldCommissionRate_Late_APPLY]["value"];
-                    commission_amount = record[fieldCommissionAmount_Late_APPLY]["value"];
-                    transfer_amount_of_money = record[fieldTransferAmount_Late_APPLY]["value"];
-                } else {
-                    commission_rate = record[fieldCommissionRate_Early_APPLY]["value"];
-                    commission_amount = record[fieldCommissionAmount_Early_APPLY]["value"];
-                    transfer_amount_of_money = record[fieldTransferAmount_Early_APPLY]["value"];
-                }
+
+                const should_discount_for_first = await (async (kyoryoku_id) => {
+                    if (dayjs().isBetween(HALF_COMMISION_START_DATE, HALF_COMMISION_END_DATE, null, "[]")) {
+                        // 申込アプリの実行済みレコードを検索。0件 or 1件以上
+                        const body = {
+                            app: kintone.app.getId(),
+                            query: `${fieldCustomerId_APPLY} = "${kyoryoku_id}" and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}")`
+                        };
+                        const past_apply = await kintone.api("/k/v1/records", "GET", body);
+                        return past_apply.records.length === 0;
+                    } else {
+                        return false;
+                    }
+                })(record[fieldCustomerId_APPLY]["value"]);
+
+                const service_fees = ((timing, should_discount_for_first) => {
+                    let commission_rate;
+                    let commission_amount;
+                    let transfer_amount_of_money;
+                    if (timing === statusLatePayment_APPLY) {
+                        commission_rate = record[fieldCommissionRate_Late_APPLY]["value"];
+                        commission_amount = record[fieldCommissionAmount_Late_APPLY]["value"];
+                        transfer_amount_of_money = record[fieldTransferAmount_Late_APPLY]["value"];
+                    } else {
+                        if (should_discount_for_first) {
+                            commission_rate = record[fieldCommissionRateEarlyFirst_APPLY]["value"];
+                            commission_amount = record[fieldCommissionAmountEarlyFirst_APPLY]["value"];
+                            transfer_amount_of_money = record[fieldTransferAmountEarlyFirst_APPLY]["value"];
+                        } else {
+                            commission_rate = record[fieldCommissionRate_Early_APPLY]["value"];
+                            commission_amount = record[fieldCommissionAmount_Early_APPLY]["value"];
+                            transfer_amount_of_money = record[fieldTransferAmount_Early_APPLY]["value"];
+                        }
+                    }
+
+                    return {
+                        fee_rate: commission_rate,
+                        fee_amount: commission_amount,
+                        transfer_amount: transfer_amount_of_money,
+                    };
+                })(timing, should_discount_for_first);
 
                 const sender_mail = {
                     [statusProductName_Lagless_APPLY]: contractor_mail_lagless,
@@ -261,7 +303,7 @@ import { get_contractor_name } from "./util_forms";
                             + `工務店名：${record[fieldBillingCompanyName_APPLY]["value"]}`);
                     } else {
                         throw new Error(`不明なエラーです。追加の情報：${e}`);
-                }
+                    }
                 }
 
                 const apply_info = {
@@ -275,10 +317,10 @@ import { get_contractor_name } from "./util_forms";
                     construction_shop_name:         construction_shop_name,
                     billing_amount_comma:           addComma(billing_amount),
                     membership_fee_comma:           addComma(membership_fee),
-                    commission_percentage:          Number(commission_rate) * 100,
-                    commission_amount_comma:        addComma(commission_amount),
+                    commission_percentage:          Number(service_fees.fee_rate) * 100,
+                    commission_amount_comma:        addComma(service_fees.fee_amount),
                     transfer_fee_tax_incl_comma:    addComma(transfer_fee_tax_incl),
-                    transfer_amount_of_money_comma: addComma(transfer_amount_of_money),
+                    transfer_amount_of_money_comma: addComma(service_fees.transfer_amount),
                     contractor_name:                contractor_name,
                     sender_mail:                    sender_mail,
                 };
@@ -296,17 +338,16 @@ import { get_contractor_name } from "./util_forms";
                     }
                 };
 
-                // 一括更新するため配列に格納
-                modified_records.push(record_obj);
+                return record_obj;
             });
+
+            return Promise.all(processes).then((result) => result);
         } catch(err) {
             console.error(err);
             throw new Error(`レコード番号${String(record_num)} を処理中にエラーが発生したため、処理を中断しました。\n`
             + "レコードの内容に不足がないかを確認してからもう一度やり直してください。\n\n"
             + `エラー内容：${err.message}`);
         }
-
-        return modified_records;
     }
 
     // 支払予定明細本文を生成する。各変数の加工はせず、受け取ったものをそのまま入れ込む
