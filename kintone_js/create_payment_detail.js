@@ -99,7 +99,7 @@
     async function clickButton() {
         const before_process = `${statusReady_APPLY}の各レコードについて、支払予定明細書を作成しますか？\n\n`
             + "※このボタンでは文面を作成するだけで、メールは送信されません。\n"
-            + `※既に文面が作成済みでも、文面を削除してもう一度文面を作成・上書きします。`;
+            + "※既に文面が作成済みでも、文面を削除してもう一度文面を作成・上書きします。";
         const generate_ok = window.confirm(before_process);
 
         if (!generate_ok) {
@@ -143,17 +143,17 @@
 
         // 申込レコードに遅払い日数フィールドを紐付ける
         for (const apply of ready_to_generate.records) {
-            const constructor = constructors.records.find((r) => r["id"]["value"] === apply[fieldConstructorID_APPLY]["value"])
+            const constructor = constructors.records.find((r) => r["id"]["value"] === apply[fieldConstructorID_APPLY]["value"]);
 
             if (!constructor) {
                 const no_constructor = "申込レコードに対応する工務店レコードが見つかりませんでした。申込レコードに記入している工務店IDが正しいかどうか確認してください。\n"
                 + "この申込レコードの処理をスキップし、残りのレコードについて処理を続けます。\n\n"
                 + `申込レコード番号: ${apply[fieldRecordId_COMMON]["value"]}, 協力会社名: ${apply[fieldCustomerCompanyName_APPLY]["value"]}, 工務店ID: ${apply[fieldConstructorID_APPLY]["value"]}`;
-                alert(no_constructor)
+                alert(no_constructor);
                 return;
             }
 
-            apply[fieldDaysLater_APPLY] = { "value": constructor[fieldDaysLater_APPLY]["value"] }
+            apply[fieldDaysLater_APPLY] = { "value": constructor[fieldDaysLater_APPLY]["value"] };
         }
 
         // 支払明細を各レコードにセット
@@ -184,7 +184,7 @@
             const completed = `支払予定明細書を作成し、レコードの状態を「${statusConfirming_APPLY}」に更新しました。\n`
             + "各レコードの文面を目視で確認してください。\n\n"
             + `問題なし→レコードの状態を「${statusConfirmed_APPLY}」へと手動で更新し、「${nextActionButtonTitle}」ボタンをクリックしてください。\n`
-            + `目視確認の結果、文面に修正が必要な場合はシステム担当者に相談してください。`
+            + "目視確認の結果、文面に修正が必要な場合はシステム担当者に相談してください。";
             // 修正が必要な場合、手動で修正するか、自動で再生成するかで操作が分岐する。金額等の修正の場合は自動で再生成することを推奨。宛名などの修正は手動を推奨。
             // 手動で修正：レコードに保存されている文面を手動で修正して、レコードの状態を statusConfirmed_APPLY に更新すればOK
             // 自動で再生成：レコードの状態を statusReady_APPLY に手動で戻してから、この支払予定明細書一括作成ボタンをもう一度クリックする
@@ -204,7 +204,7 @@
             const getFormattedYYYYMMDD = (kintone_date_value) => {
                 // YYYY年MM月DD日のフォーマットで返す
                 return `${kintone_date_value.split("-")[0]}年${kintone_date_value.split("-")[1]}月${kintone_date_value.split("-")[2]}日`;
-            }
+            };
 
             target_records.forEach((record) => {
                 record_num = record[fieldRecordId_COMMON]["value"];
