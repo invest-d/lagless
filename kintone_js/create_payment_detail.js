@@ -325,7 +325,7 @@ import { get_contractor_name } from "./util_forms";
                     sender_mail:                    sender_mail,
                 };
 
-                const detail = generateDetailText(apply_info);
+                const detail = generateDetailText(apply_info, should_discount_for_first);
                 const record_obj = {
                     "id": record_num,
                     "record": {
@@ -351,10 +351,16 @@ import { get_contractor_name } from "./util_forms";
     }
 
     // 支払予定明細本文を生成する。各変数の加工はせず、受け取ったものをそのまま入れ込む
-    function generateDetailText(apply_info) {
+    function generateDetailText(apply_info, should_discount_for_first) {
         const fee_sign = apply_info.timing === statusLatePayment_APPLY
             ? "+"
             : "-";
+
+        // eslint-disable-next-line no-irregular-whitespace
+        let service_fee = `${apply_info.product_name}　利用手数料【（①+②）×${apply_info.commission_percentage}％】　${fee_sign}${apply_info.commission_amount_comma}円`;
+        if (should_discount_for_first) {
+            service_fee = service_fee.concat(" ※【初回申込限定】利用手数料半額キャンペーンが適用されました");
+        }
 
         // 行ごとに配列で格納し、最後に改行コードでjoinする
         const text = [
@@ -381,8 +387,7 @@ import { get_contractor_name } from "./util_forms";
             // eslint-disable-next-line no-irregular-whitespace
             `差引額（協力会費・立替金等）②　-${apply_info.membership_fee_comma}円`, //ゼロ円であっても -0円 表記
             "",
-            // eslint-disable-next-line no-irregular-whitespace
-            `${apply_info.product_name}　利用手数料【（①+②）×${apply_info.commission_percentage}％】　${fee_sign}${apply_info.commission_amount_comma}円`,
+            service_fee,
             "",
             // eslint-disable-next-line no-irregular-whitespace
             `振込手数料（貴社負担）　-${apply_info.transfer_fee_tax_incl_comma}円`,
