@@ -267,6 +267,7 @@ import { get_contractor_name } from "./util_forms";
                 const apply_info = {
                     timing:                         timing,
                     kyoryoku_company_name:          kyoryoku_company_name,
+                    // eslint-disable-next-line no-irregular-whitespace
                     kyoryoku_ceo_title_and_name:    (`${kyoryoku_ceo_title  } ${  kyoryoku_ceo_name}`).replace(/^( |　)+/,""), //titleが無い場合はreplaceで最初のスペースを取り除く
                     product_name:                   product_name,
                     closing_YYYYnenMMgatsuDDhi:     closing_YYYYnenMMgatsuDDhi,
@@ -324,6 +325,7 @@ import { get_contractor_name } from "./util_forms";
             "",
             `対象となる締め日：${apply_info.closing_YYYYnenMMgatsuDDhi}`,
             "",
+            // eslint-disable-next-line no-irregular-whitespace
             `お振込予定日　　：${apply_info.payment_YYYYnenMMgatsuDDhi}`,
             "─────────────────",
             "",
@@ -332,14 +334,19 @@ import { get_contractor_name } from "./util_forms";
             "※お申し込み受付後は、原則お振込日の変更ができかねます。",
             "",
             "",
+            // eslint-disable-next-line no-irregular-whitespace
             `${apply_info.construction_shop_name}宛 請求金額（税込）①　${apply_info.billing_amount_comma}円`,
             "",
+            // eslint-disable-next-line no-irregular-whitespace
             `差引額（協力会費・立替金等）②　-${apply_info.membership_fee_comma}円`, //ゼロ円であっても -0円 表記
             "",
+            // eslint-disable-next-line no-irregular-whitespace
             `${apply_info.product_name}　利用手数料【（①+②）×${apply_info.commission_percentage}％】　${fee_sign}${apply_info.commission_amount_comma}円`,
             "",
+            // eslint-disable-next-line no-irregular-whitespace
             `振込手数料（貴社負担）　-${apply_info.transfer_fee_tax_incl_comma}円`,
             "──────────────────────────────",
+            // eslint-disable-next-line no-irregular-whitespace
             `当社から貴社へのお振込み予定金額　${apply_info.transfer_amount_of_money_comma}円`,
             "",
             "",
