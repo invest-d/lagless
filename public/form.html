@@ -1,61 +1,9 @@
+<!DOCTYPE html>
 <html>
   <head>
     <script src="app.js"></script>
-    <style>
-      #content {
-          width: 650px;
-          margin-left: auto;
-          margin-right: auto;
-      }
-      #content h2 {
-          text-align: center;
-      }
-      #content .logo {
-          text-align: center;
-      }
-      #content .logo img {
-          max-width: 100%;
-      }
-      .center {
-          text-align: center;
-      }
-      .cond-lagless,
-      .cond-dandori,
-      .cond-renove {
-          display: none;
-      }
-      #schedule {
-          width: 526px;
-          height: 420px;
-          background-image: url(images/schedule.png);
-          background-repeat: no-repeat;
-          position: relative;
-          margin-left: auto;
-          margin-right: auto;
-          margin-top: 32px;
-      }
-      #schedule > span { position: absolute; font-size: 16px; white-space: nowrap; width: 100px; text-align: center; }
-      #schedule .service-message-1 { top: 165px; left: 110px; color: #D32C25; text-align: center; width: 300px; }
-      #schedule .service-message-2 { top: 216px; left: 12px; border-bottom: 1px solid #fff; color: #fff; width: auto; padding-left: 8px; padding-right: 8px; }
-      #schedule .closing { top: 60px; left: -10px; color: #D32C25; }
-      #schedule .closing.more { top: 270px; left: -10px; color: #fff; }
-      #schedule .original { top: 60px; left: 430px; color: #D32C25; }
-      #schedule .original.more { top: 270px; left: 430px; color: #fff; }
-      #schedule .lag-message { top: 105px; left: 80px; font-size: 13px; color: #D32C25; width: 360px; }
-      #schedule .early { top: 270px; left: 152px; color: #ff6; }
-      #schedule .deadline { top: 270px; left: 55px; color: #fff; }
-      #schedule .effect-message { top: 305px; left: 288px; font-size: 13px; color: #ff6; width: 120px; }
-      table, th, td { border: 1px solid #000; border-collapse: collapse; }
-      thead th { color: #fff; background-color: #666; line-height: 30px; }
-      tbody td { padding: 8px; line-height: 50px; }
-      tbody td.focus { background-color: #fcc; }
-      button.act { background-color: #f00; color: #fff; border-radius: 4px; width: 260px; height: 44px; font-size: 20px; font-weight: bold; cursor: pointer; }
-      button.act:hover { background-color: #fcc; }
-      #float_act { position: fixed; top: 400px; right: 40px; width: 200px; box-shadow: 0px 0px 6px 3px #666; padding: 0px; padding-top: 24px; background-color: #fff; }
-      #float_act div { font-weight: bold; text-align: center; margin-bottom: 20px; }
-      #float_act a { text-decoration: none; }
-      #float_act button.act { width: 160px; display: block; margin-bottom: 20px; margin-left: auto; margin-right: auto; }
-    </style>
+    <link rel="stylesheet" href="css/form.css">
+    <title>お申込みご案内ページ</title>
   </head>
   <body>
     <div id="error" style="display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: #ccc; padding-top: 30%; text-align: center;"></div>
@@ -85,15 +33,15 @@
       ■法人でも個人事業主でも、ご利用いただけます。<br />
       <br />
       <div id="schedule">
-        <span class="service-message-1"><span class="service"></span>なら...</span>
-        <span class="service-message-2"><span class="service"></span>利用のスケジュール</span>
-        <span class="closing"></span>
+        <span class="closing">25日</span>
+        <span class="original">翌々月10日</span>
+        <span class="lag-message">支払されるまで約<span class="lag">45日</span>のタイムラグが発生してしまう・・・</span>
+        <span class="service-message-1"><span class="service">ラグレス</span>なら...</span>
+        <span class="service-message-2"><span class="service">ラグレス</span>利用のスケジュール</span>
         <span class="closing more"></span>
         <span class="deadline"></span>
         <span class="early"></span>
-        <span class="original"></span>
         <span class="original more"></span>
-        <span class="lag-message">支払されるまで約<span class="lag"></span>のタイムラグが発生してしまう・・・</span>
         <span class="effect-message"><span style="text-decoration: underline;">約<span class="effect"></span>早く</span>なる！！</span>
       </div>
       <br />
