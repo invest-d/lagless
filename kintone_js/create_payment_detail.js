@@ -33,6 +33,8 @@
     当該フィールドにその本文を保存する。
 */
 
+import { get_contractor_name } from "./util_forms";
+
 (function() {
     "use strict";
 
@@ -69,8 +71,6 @@
     const fieldCommissionAmount_Early_APPLY = "commissionAmount";
     const fieldTransferAmount_Early_APPLY = "transferAmount";
     const fieldPaymentAccount_APPLY = "paymentAccount";
-    const statusPaymentAccount_LaglessGK_APPLY = "LAGLESS";
-    const statusPaymentAccount_Lagless2GK_APPLY = "ID";
     const fieldConstructorID_APPLY = "constructionShopId";
     const nextActionButtonTitle = "支払予定明細一括送信";
 
@@ -246,56 +246,43 @@
                 }
 
                 // 支払元口座と新ラグレス契約状況の2要素によって会社名を変更する
-                const version = ((days_later) => {
-                    if (!days_later) {
-                        // 空文字やundefinedの場合
-                        return "V1";
-                    }
-
-                    if (Number(days_later) > 0) {
-                        return "V2";
-                    } else {
-                        return "V1";
-                    }
-                })(record[fieldDaysLater_APPLY]["value"]);
-
-                let contractor_name = "";
+                let contractor_name;
                 try {
-                    contractor_name = {
-                        [statusPaymentAccount_Lagless2GK_APPLY]: {
-                            "V1": "インベストデザイン株式会社",
-                            "V2": "ラグレス2合同会社",
-                        },
-                        [statusPaymentAccount_LaglessGK_APPLY]: {
-                            "V1": "ラグレス合同会社",
-                            "V2": "ラグレス合同会社",
-                        }
-                    }[record[fieldPaymentAccount_APPLY]["value"]][version];
-                } catch (err) {
-                    throw new Error(`不明な支払元口座です: ${ record[fieldPaymentAccount_APPLY]["value"] }`);
+                    contractor_name = get_contractor_name(
+                        record[fieldPaymentAccount_APPLY]["value"],
+                        record[fieldDaysLater_APPLY]["value"],
+                        record[fieldConstructorID_APPLY]["value"]
+                    );
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        throw new Error("会社名を確定できませんでした。\n"
+                            + "【支払元口座】および【遅払い日数】を工務店マスタに正しく入力してください。\n\n"
+                            + `工務店ID：${record[fieldConstructorID_APPLY]["value"]}\n`
+                            + `工務店名：${record[fieldBillingCompanyName_APPLY]["value"]}`);
+                    } else {
+                        throw new Error(`不明なエラーです。追加の情報：${e}`);
+                }
                 }
 
-                if (!contractor_name) {
-                    throw new Error(`不明な支払元口座です: ${ record[fieldPaymentAccount_APPLY]["value"] }`);
-                }
+                const apply_info = {
+                    timing:                         timing,
+                    kyoryoku_company_name:          kyoryoku_company_name,
+                    kyoryoku_ceo_title_and_name:    (`${kyoryoku_ceo_title  } ${  kyoryoku_ceo_name}`).replace(/^( |　)+/,""), //titleが無い場合はreplaceで最初のスペースを取り除く
+                    product_name:                   product_name,
+                    closing_YYYYnenMMgatsuDDhi:     closing_YYYYnenMMgatsuDDhi,
+                    payment_YYYYnenMMgatsuDDhi:     payment_YYYYnenMMgatsuDDhi,
+                    construction_shop_name:         construction_shop_name,
+                    billing_amount_comma:           addComma(billing_amount),
+                    membership_fee_comma:           addComma(membership_fee),
+                    commission_percentage:          Number(commission_rate) * 100,
+                    commission_amount_comma:        addComma(commission_amount),
+                    transfer_fee_tax_incl_comma:    addComma(transfer_fee_tax_incl),
+                    transfer_amount_of_money_comma: addComma(transfer_amount_of_money),
+                    contractor_name:                contractor_name,
+                    sender_mail:                    sender_mail,
+                };
 
-                const detail = generateDetailText(
-                    kyoryoku_company_name,
-                    (`${kyoryoku_ceo_title  } ${  kyoryoku_ceo_name}`).replace(/^( |　)+/,""), //titleが無い場合はreplaceで最初のスペースを取り除く
-                    product_name,
-                    closing_YYYYnenMMgatsuDDhi,
-                    payment_YYYYnenMMgatsuDDhi,
-                    construction_shop_name,
-                    addComma(billing_amount),
-                    addComma(membership_fee),
-                    Number(commission_rate) * 100,
-                    addComma(commission_amount),
-                    addComma(transfer_fee_tax_incl),
-                    addComma(transfer_amount_of_money),
-                    contractor_name,
-                    sender_mail,
-                    timing);
-
+                const detail = generateDetailText(apply_info);
                 const record_obj = {
                     "id": record_num,
                     "record": {
@@ -322,38 +309,22 @@
     }
 
     // 支払予定明細本文を生成する。各変数の加工はせず、受け取ったものをそのまま入れ込む
-    function generateDetailText(
-        kyoryoku_company_name,
-        kyoryoku_ceo_title_and_name,
-        product_name,
-        closing_YYYYnenMMgatsuDDhi,
-        payment_YYYYnenMMgatsuDDhi,
-        construction_shop_name,
-        billing_amount_comma,
-        membership_fee_comma,
-        commission_percentage, // 5%のとき、0.05じゃなくて5を渡す。
-        commission_amount_comma,
-        transfer_fee_tax_incl_comma, //振込手数料1000円以上はたぶんないだろうけど、もしあったらコンマ付きで渡す
-        transfer_amount_of_money_comma,
-        contractor_name,
-        sender_mail,
-        timing
-    ) {
-        const fee_sign = timing === statusLatePayment_APPLY
+    function generateDetailText(apply_info) {
+        const fee_sign = apply_info.timing === statusLatePayment_APPLY
             ? "+"
             : "-";
 
         // 行ごとに配列で格納し、最後に改行コードでjoinする
         const text = [
-            `${kyoryoku_company_name}`,
-            `${kyoryoku_ceo_title_and_name} 様`,
+            `${apply_info.kyoryoku_company_name}`,
+            `${apply_info.kyoryoku_ceo_title_and_name} 様`,
             "",
-            `この度は、${product_name}のお申込みありがとうございます。`,
+            `この度は、${apply_info.product_name}のお申込みありがとうございます。`,
             "下記のとおり受付いたしましたので、お知らせいたします。",
             "",
-            `対象となる締め日：${closing_YYYYnenMMgatsuDDhi}`,
+            `対象となる締め日：${apply_info.closing_YYYYnenMMgatsuDDhi}`,
             "",
-            `お振込予定日　　：${payment_YYYYnenMMgatsuDDhi}`,
+            `お振込予定日　　：${apply_info.payment_YYYYnenMMgatsuDDhi}`,
             "─────────────────",
             "",
             "※債権譲渡登記をされている法人様は、ご利用をお断りさせていただきます。",
@@ -361,15 +332,15 @@
             "※お申し込み受付後は、原則お振込日の変更ができかねます。",
             "",
             "",
-            `${construction_shop_name}宛 請求金額（税込）①　${billing_amount_comma}円`,
+            `${apply_info.construction_shop_name}宛 請求金額（税込）①　${apply_info.billing_amount_comma}円`,
             "",
-            `差引額（協力会費・立替金等）②　-${membership_fee_comma}円`, //ゼロ円であっても -0円 表記
+            `差引額（協力会費・立替金等）②　-${apply_info.membership_fee_comma}円`, //ゼロ円であっても -0円 表記
             "",
-            `${product_name}　利用手数料【（①+②）×${commission_percentage}％】　${fee_sign}${commission_amount_comma}円`,
+            `${apply_info.product_name}　利用手数料【（①+②）×${apply_info.commission_percentage}％】　${fee_sign}${apply_info.commission_amount_comma}円`,
             "",
-            `振込手数料（貴社負担）　-${transfer_fee_tax_incl_comma}円`,
+            `振込手数料（貴社負担）　-${apply_info.transfer_fee_tax_incl_comma}円`,
             "──────────────────────────────",
-            `当社から貴社へのお振込み予定金額　${transfer_amount_of_money_comma}円`,
+            `当社から貴社へのお振込み予定金額　${apply_info.transfer_amount_of_money_comma}円`,
             "",
             "",
             "",
@@ -377,10 +348,10 @@
             "下記連絡先までお問い合わせください。",
             "",
             "──────────────────────────────■",
-            `【${product_name}事務局】`,
-            contractor_name,
+            `【${apply_info.product_name}事務局】`,
+            apply_info.contractor_name,
             "東京都千代田区神田神保町三丁目5番地 住友不動産九段下ビル7F",
-            `Mail：${sender_mail}`,
+            `Mail：${apply_info.sender_mail}`,
             "TEL：050-3188-6800",
             "──────────────────────────────■",
             ""
