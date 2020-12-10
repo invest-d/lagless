@@ -211,9 +211,9 @@ import { get_contractor_name } from "./util_forms";
         document.location.reload();
     }
 
-    function attachDetail(target_records) {
+    async function attachDetail(target_records) {
         // エラーが発生した時、どのレコードで発生したかの情報をthrowするためのlet
-        let record_num = 0;
+        let error_num = 0;
         try {
             const getFormattedYYYYMMDD = (kintone_date_value) => {
                 // YYYY年MM月DD日のフォーマットで返す
@@ -221,7 +221,8 @@ import { get_contractor_name } from "./util_forms";
             };
 
             const processes = target_records.map(async (record) => {
-                record_num = record[fieldRecordId_COMMON]["value"];
+                const record_num = record[fieldRecordId_COMMON]["value"];
+                error_num = record[fieldRecordId_COMMON]["value"];
 
                 const kyoryoku_company_name = record[fieldCustomerCompanyName_APPLY]["value"];
                 const kyoryoku_ceo_name = record[fieldAddresseeName_APPLY]["value"];
@@ -341,10 +342,11 @@ import { get_contractor_name } from "./util_forms";
                 return record_obj;
             });
 
-            return Promise.all(processes).then((result) => result);
+            const result = await Promise.all(processes);
+            return result;
         } catch(err) {
             console.error(err);
-            throw new Error(`レコード番号${String(record_num)} を処理中にエラーが発生したため、処理を中断しました。\n`
+            throw new Error(`レコード番号${String(error_num)} を処理中にエラーが発生したため、処理を中断しました。\n`
             + "レコードの内容に不足がないかを確認してからもう一度やり直してください。\n\n"
             + `エラー内容：${err.message}`);
         }
