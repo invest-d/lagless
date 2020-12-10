@@ -37,6 +37,7 @@ const fieldStatus_COLLECT = "collectStatus";
 const fieldRecordId_COLLECT = "レコード番号";
 const fieldConstructorId_COLLECT = "constructionShopId";
 const fieldClosingDate_COLLECT = "closingDate";
+const statusRejected_COLLECT = "クラウドサイン却下・再作成待ち";
 
 export function getParentAndChildCollectRecords(record) {
     console.log("親子レコードを全て取得する。");
@@ -44,10 +45,23 @@ export function getParentAndChildCollectRecords(record) {
     const constructor_id = record[fieldConstructorId_COLLECT]["value"];
     const closing_date = record[fieldClosingDate_COLLECT]["value"];
 
+    const queries = [
+        // 親自身よりも後に作成されたレコードが対象。（generate_invoice_button.jsにおいて、親子グループ内でレコード番号が最も小さいレコードが親になるという前提）
+        `${fieldRecordId_COLLECT} >= ${record[fieldRecordId_COLLECT]["value"]}`,
+
+        // 子レコード
+        `${fieldConstructorId_COLLECT} = "${constructor_id}" and ${fieldClosingDate_COLLECT} = "${closing_date}"`,
+
+        // 取り下げは除外
+        `${fieldStatus_COLLECT} not in ("${statusRejected_COLLECT}")`,
+    ];
+
+    const query = queries.map((q) => `(${q})`).join(" and ");
+
     const get_body = {
         "app": APP_ID_COLLECT,
         "fields": [fieldRecordId_COLLECT],
-        "query": `${fieldConstructorId_COLLECT} = "${constructor_id}" and ${fieldClosingDate_COLLECT} = "${closing_date}"`
+        "query": query
     };
 
     console.log(get_body);
