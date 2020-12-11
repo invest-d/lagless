@@ -1,4 +1,11 @@
 /*
+    Version 3 beta
+    GMOあおぞらネット銀行特有のCSVファイル形式で出力するように改良。
+    同銀行を利用しての振込登録は一部の工務店のみでテスト運用するため、出力可能な対象データを制限している。
+    また、Version 2以前の機能は結局オペレーション上で利用していなかった（振込件数が常に1桁などで人力の方が作業が早かった）ため、全面的に廃止。
+    Version 2以前で利用していた全銀形式では金融機関およびその支店の日本語名称を外部APIから取得する必要があった。
+    しかしGMOあおぞら形式では日本語名称をセットするフィールド無いため、APIへのアクセスも必要なくなった
+
     Version 2
     申込レコードの「支払タイミング」フィールドの値によって、出力する金額フィールドを変更する。
     支払タイミング：遅払い→「遅払い時の振込金額」フィールド
@@ -20,131 +27,58 @@
     // CSVファイルで保存するにあたってShift-Jisに変換する
     const Encoding = require("encoding-japanese");
 
-    const data = {"banks": []};
+    const APP_ID_APPLY                      = kintone.app.getId();
+    const fieldRecordId_APPLY               = "レコード番号";
+    const fieldBankCode_APPLY               = "bankCode";
+    const fieldBranchCode_APPLY             = "branchCode";
+    const fieldDepositType_APPLY            = "deposit";
+    const fieldAccountNumber_APPLY          = "accountNumber";
+    const fieldAccountName_APPLY            = "accountName";
+    const fieldTotalReceivables_APPLY       = "totalReceivables";
+    const fieldTransferAmount_APPLY         = "transferAmount";
+    const fieldTransferAmountLate_APPLY     = "transferAmount_late";
+    const fieldStatus_APPLY                 = "状態";
+    const statusReady_APPLY                 = "振込前確認完了";
+    const statusDone_APPLY                  = "振込データ出力済";
+    const fieldPaymentDate_APPLY            = "paymentDate";
+    const fieldPaymentAccount_APPLY         = "paymentAccount";
+    const fieldPaymentTiming_APPLY          = "paymentTiming";
+    const statusPaymentLate_APPLY           = "遅払い";
+    const statusPaymentOriginal_APPLY       = "通常払い";
+    const fieldConstructionShopId_APPLY     = "constructionShopId";
 
-    const APP_ID_APPLY                       = kintone.app.getId();
-    const fieldRecordId_APPLY                = "レコード番号";
-    const fieldBankCode_APPLY                = "bankCode";
-    const fieldBranchCode_APPLY              = "branchCode";
-    const fieldDepositType_APPLY             = "deposit";
-    const fieldAccountNumber_APPLY           = "accountNumber";
-    const fieldAccountName_APPLY             = "accountName";
-    const fieldTransferAmount_APPLY          = "transferAmount";
-    const fieldTransferAmountLate_APPLY      = "transferAmount_late";
-    const fieldStatus_APPLY                  = "状態";
-    const statusReady_APPLY                  = "振込前確認完了";
-    const statusDone_APPLY                   = "振込データ出力済";
-    const fieldPaymentDate_APPLY             = "paymentDate";
-    const fieldPaymentAccount_APPLY          = "paymentAccount";
-    const fieldNeedAcquireRegistration_APPLY = "登記の取得";
-    const statusNeedAcquire_APPLY            = "取得要";
-    const fieldPaymentTiming_APPLY           = "paymentTiming";
-    const statusPaymentLate_APPLY            = "遅払い";
-    const requester_accounts = [
-        "ID",
-        "LAGLESS"
-    ];
-
-    async function getBankKana(request_json) {
-        if (!("bank" in request_json)) {
-            throw new Error("no bank code specified.");
+    const AVAILABLE_CONSTRUCTORS = {
+        REALTOR_SOLUTIONS: {
+            ID: "100",
+            NAME: "株式会社RealtorSolutions",
+            BANK_CODE: "0157",
+            BRANCH_CODE: "261"
         }
+    };
 
-        await fetchBank(request_json)
-            .catch((err) => {
-                console.error(err);
-                throw new Error("銀行情報の取得中にエラーが発生しました");
-            });
-
-        if ("branch" in request_json) {
-            return data.banks.find((bank) => bank.code == request_json.bank).branches.find((branch) => branch.code == request_json.branch).kana;
-        }
-        else {
-            return data.banks.find((bank) => bank.code == request_json.bank).kana;
-        }
-    }
-
-    async function fetchBank(request_json) {
-        // 銀行情報がキャッシュされていない場合のみ、fetchを行って追加でキャッシュする
-        if (data.banks.some((bank) => bank.code == request_json.bank)) {
-            return;
-        }
-
-        const res = await fetch(`https://us-central1-lagless.cloudfunctions.net/zengin?bank=${request_json.bank}`);
-        const result = await res.json();
-        data.banks.push(result.banks[0]);
-    }
-
-    // インベストデザイン側の口座情報をそれぞれclassで持つ
-    class Account {
-        constructor() {
-            this.smbc_header_record  = "1";
-            this.smbc_transfer_type  = "21";
-            this.smbc_char_code_type = "0";
-        }
-
-        create(account) {
-            if (account === requester_accounts[0]) {
-                return new AccountID();
-            }
-            else if (account === requester_accounts[1]) {
-                return new AccountLagless();
-            }
-            else {
-                throw new Error("invalid account.");
-            }
-        }
-    }
-
-    class AccountID extends Account {
-        constructor() {
-            super();
-            this.smbc_code      = "2648852000";
-            this.requester_name = "ｲﾝﾍﾞｽﾄﾃﾞｻﾞｲﾝ(ｶ".padEnd(40, " ");
-            this.bank_code      = "0009";
-            this.bank_name      = addPadding("ﾐﾂｲｽﾐﾄﾓ", 15); //getBankKanaを使いたいけど、constructor内では非同期処理を同期的に扱えない。
-            this.branch_code    = "219";
-            this.branch_name    = addPadding("ｶﾝﾀﾞ", 15);
-            this.deposit_type   = "1";
-            this.account_number = "3391195";
-        }
-    }
-
-    class AccountLagless extends Account {
-        constructor() {
-            super();
-            this.smbc_code      = "3648579000";
-            this.requester_name = "ﾗｸﾞﾚｽ (ﾄﾞ,ﾏｽﾀ-ｺｳｻﾞ".padEnd(40, " ");
-            this.bank_code      = "0009";
-            this.bank_name      = addPadding("ﾐﾂｲｽﾐﾄﾓ", 15);
-            this.branch_code    = "219";
-            this.branch_name    = addPadding("ｶﾝﾀﾞ", 15);
-            this.deposit_type   = "1";
-            this.account_number = "3409134";
-        }
-    }
-
+    const buttonName = "outputCsv";
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         // コントロールの重複作成防止チェック
-        if (document.getElementById("outputCsv") !== null) {
+        if (document.getElementById(buttonName) !== null) {
             return;
         }
 
         // 出力ボタンを設置
-        const button = createButtonOutputCsv();
+        const button = createButton();
         kintone.app.getHeaderMenuSpaceElement().appendChild(button);
     });
 
-    function createButtonOutputCsv() {
-        const outputCsv = document.createElement("button");
-        outputCsv.id = "outputCsv";
-        outputCsv.innerText = "SMBC向け振込データをダウンロード";
-        outputCsv.addEventListener("click", clickOutputCsv);
-        return outputCsv;
+    function createButton() {
+        const button = document.createElement("button");
+        button.id = buttonName;
+        button.innerText = "あおぞら向け総合振込データをダウンロード";
+        button.addEventListener("click", clickButton);
+        return button;
     }
 
     // CSV出力ボタンクリック時の処理を定義
-    async function clickOutputCsv() {
+    async function clickButton() {
         const do_download = confirm("振込用のcsvデータをダウンロードします。よろしいですか？\n\n"
         + "※このあとに支払日を指定し、\n"
         + "未出力のものだけ出力 OR 出力済みも含めて全て出力 のどちらかを選択できます。");
@@ -164,30 +98,36 @@
         + "OK：未出力のものは出力し、出力済みのものは出力しない\n"
         + "キャンセル：未出力のものも、未出力のものも、全て出力する");
 
-        // 支払元口座のそれぞれについて、該当するレコードを取得→加工→CSVファイルに保存
-        await kintone.Promise.all(requester_accounts.map(async (account) => {
-            const target = await getKintoneRecords(account, payment_date, only_undownloaded)
-                .catch((err) => {
-                    console.error(err);
-                    alert(`支払元口座：${account}のデータを取得中にエラーが発生しました。\n${err.message}`);
-                });
-
-            console.log(`target_applies: account of ${account}`);
-            console.log(target.records);
-
-            if (target.records.length === 0) {
-                alert(`支払元口座：${account}の支払い対象はありませんでした。`);
+        const target_status = ((only_undownloaded) => {
+            if (only_undownloaded) {
+                return statusReady_APPLY;
             } else {
-                const csv_data = await generateCsvData(account, target.records, payment_date);
-                const sjis_list = encodeToSjis(csv_data);
-
-                const file_name = `支払日${payment_date}ぶんの振込データ（振込元：${account}）.csv`;
-                downloadFile(sjis_list, file_name);
-
-                await updateToDone(target.records);
+                return `${statusReady_APPLY} および ${statusDone_APPLY}`;
             }
-        }));
+        })(only_undownloaded);
+        alert(`${fieldStatus_APPLY}フィールドが${target_status}のレコードを対象に処理します。`);
 
+        alert(`本機能はテスト運用中です。従って、工務店が${Object.values(AVAILABLE_CONSTRUCTORS).map((c) => c.NAME).join(", ")}の申込レコードのみを対象とします。`);
+
+        const account = "ID"; // GMOあおぞらから振込できるのはIDの口座のみ
+        const target = await getKintoneRecords(account, payment_date, only_undownloaded)
+            .catch((err) => {
+                alert(`支払元口座：${account}のデータを取得中にエラーが発生しました。\n${err.message}`);
+                throw new Error(err);
+            });
+
+        if (target && target.records.length === 0) {
+            alert(`支払元口座：${account}の支払い対象はありませんでした。`);
+            return;
+        }
+
+        const csv_data = generateCsvData(target.records);
+        const sjis_list = encodeToSjis(csv_data);
+
+        const file_name = `支払日${payment_date}ぶんの振込データ（振込元：${account}）.csv`;
+        downloadFile(sjis_list, file_name);
+
+        await updateToDone(target.records);
         alert("振込データのダウンロードを完了しました。");
         alert("ページを更新します。");
         window.location.reload();
@@ -200,7 +140,9 @@
             ? `("${statusReady_APPLY}")`
             : `("${statusReady_APPLY}", "${statusDone_APPLY}")`;
 
-        // 債権譲渡登記が必要な支払実行対象は、支払実行の前日に債権譲渡登記を取得する必要がある ＆ CSVによる一括振込は翌日の振込には間に合わないため、CSV出力対象から外す
+        const test_constructors = Object.values(AVAILABLE_CONSTRUCTORS).map((c) => `"${c.ID}"`).join(", ");
+
+        // 債権譲渡登記の取得が必要な申込についてもCSV出力する。GMOあおぞらの振込であれば当日着金が可能なため。
         const request_body = {
             "app": APP_ID_APPLY,
             "fields": [
@@ -212,124 +154,103 @@
                 fieldAccountNumber_APPLY,
                 fieldAccountName_APPLY,
                 fieldTransferAmount_APPLY,
-                fieldTransferAmountLate_APPLY
+                fieldTransferAmountLate_APPLY,
+                fieldTotalReceivables_APPLY,
+                fieldConstructionShopId_APPLY
             ],
             "query": `${fieldStatus_APPLY} in ${in_query}
-                    and ${fieldNeedAcquireRegistration_APPLY} not in ("${statusNeedAcquire_APPLY}")
                     and ${fieldPaymentDate_APPLY} = "${target_date}"
-                    and ${fieldPaymentAccount_APPLY} = "${account}"`
+                    and ${fieldPaymentAccount_APPLY} = "${account}"
+                    and ${fieldConstructionShopId_APPLY} in (${test_constructors})`
         };
 
         return kintone.api(kintone.api.url("/k/v1/records", true), "GET", request_body);
     }
 
-    async function generateCsvData(account, applies, payment_date) {
-        console.log("取得したレコードをCSVファイルに変換する。");
+    const generateCsvData = (applies) => {
+        // 申込レコード1つを1行の文字列として、CRLFで連結した文字列を返す
+        const csv_rows = applies.map((apply) => getAozoraCsvRow(apply));
+        // 最終行の最後にもCRLFを追加
+        return `${csv_rows.join("\r\n")}\r\n`;
+    };
 
-        const csv_content = [];
-        const csv_format = ((col) => `"${col}"`);
+    const getAozoraCsvRow = (record) => {
+        // 各フィールドのデータをダブルクォーテーションで囲み、カンマ区切りにして連結した文字列を返す。
+        const csv_format = (col) => `"${col}"`; // データにダブルクォーテーションは含まれない。
 
-        // YYYY-MM-DDをMMDDに変換
-        const pay_date_mmdd = payment_date.split("-")[1] + payment_date.split("-")[2];
+        // 仕様： https://gmo-aozora.com/support/guide/tranfer-upload.pdf 5/10ページ
+        const fields = [];
+        fields.push((`0000${record[fieldBankCode_APPLY]["value"]}`).slice(-4));
+        fields.push((`000${record[fieldBranchCode_APPLY]["value"]}`).slice(-3));
+        const deposit_type = (record[fieldDepositType_APPLY]["value"] === "普通")
+            ? "1"
+            : "2";
+        fields.push(deposit_type);
+        fields.push((`0000000${record[fieldAccountNumber_APPLY]["value"]}`).slice(-7));
+        fields.push(zenkakuToHankaku(record[fieldAccountName_APPLY]["value"]));
+        fields.push(getAmountByTiming(record));
+        fields.push(" "); // 顧客情報フィールド。不使用
+        fields.push(" "); // 識別表示フィールド。不使用
 
-        // ヘッダー
-        const account_obj = new Account().create(account);
-        csv_content.push(getHeaderRecord(account_obj, pay_date_mmdd).map(csv_format).join(","));
+        return fields.map(csv_format).join(",");
+    };
 
-        // データ
-        const data_records = await getDataRecords(applies);
-        data_records.forEach((data_record) => {
-            csv_content.push(data_record.map(csv_format).join(","));
-        });
+    const getAmountByTiming = (record) => {
+        // 支払タイミングそれぞれに応じた振込金額を取得する
+        const TIMING = record[fieldPaymentTiming_APPLY]["value"];
 
-        // トレーラー
-        csv_content.push(getTrailerRecord(applies).map(csv_format).join(","));
-
-        // エンド
-        csv_content.push(getEndRecord().map(csv_format).join(","));
-
-        const new_line = "\r\n";
-        return csv_content.join(new_line);
-    }
-
-    function getHeaderRecord(account_obj, transfer_date_mmdd) {
-        return [
-            account_obj.smbc_header_record,  //データ区分：ヘッダーレコード
-            account_obj.smbc_transfer_type,  //種別コード：総合振込
-            account_obj.smbc_char_code_type, //コード区分：JIS
-            account_obj.smbc_code,           //振込依頼人会社コード
-            account_obj.requester_name,      //振込依頼人名ｶﾅ
-            transfer_date_mmdd,              //振込日MMDD
-            account_obj.bank_code,           //銀行コード
-            account_obj.bank_name,           //銀行名ｶﾅ
-            account_obj.branch_code,         //支店コード
-            account_obj.branch_name,         //支店名ｶﾅ
-            account_obj.deposit_type,        //口座種別
-            account_obj.account_number       //口座番号
-        ];
-    }
-
-    async function getDataRecords(kintone_records) {
-        return await kintone.Promise.all(kintone_records.map(async (kintone_record) => {
-            const bank_code_to = (`0000${kintone_record[fieldBankCode_APPLY]["value"]}`).slice(-4);
-            const bank_name_to = addPadding(await getBankKana({bank: bank_code_to}), 15);
-            const branch_code_to = (`000${kintone_record[fieldBranchCode_APPLY]["value"]}`).slice(-3);
-            const branch_name_to = addPadding(await getBankKana({bank: bank_code_to, branch: branch_code_to}), 15);
-            const deposit_to = (kintone_record[fieldDepositType_APPLY]["value"] === "普通")
-                ? "1"
-                : "2";
-            const account_number_to = kintone_record[fieldAccountNumber_APPLY]["value"];
-            const account_name_to = addPadding(kintone_record[fieldAccountName_APPLY]["value"], 30);
-            const amount_of_money = getAmountByTiming(kintone_record);
-
-            return [
-                "2",               //データ区分：データレコード
-                bank_code_to,      //銀行コード
-                bank_name_to,      //銀行名ｶﾅ
-                branch_code_to,    //支店コード
-                branch_name_to,    //支店名ｶﾅ
-                " ".repeat(4),     //手形交換所番号：不使用、スペース埋め
-                deposit_to,        //口座種別
-                account_number_to, //口座番号
-                account_name_to,   //受取人名ｶﾅ
-                amount_of_money,   //振込金額
-                "0",               //新規コード：その他
-                "",                //顧客コード1：不使用
-                "",                //顧客コード2：不使用
-                " ",               //振込指定区分：スペース
-                ""                 //識別コード：不使用
-            ];
-        }));
-    }
-
-    function getAmountByTiming(record) {
-        // 早払いの申込か遅払いの申込かによって、早払い時の振込金額フィールドを使うか遅払い時の振込金額フィールドを使うかを分岐する
-        if (record[fieldPaymentTiming_APPLY]["value"] === statusPaymentLate_APPLY) {
+        if (TIMING === statusPaymentLate_APPLY) {
             return record[fieldTransferAmountLate_APPLY]["value"];
+        } else if (TIMING === statusPaymentOriginal_APPLY) {
+            return getOriginalPaymentAmount(record);
         } else {
-            // "早払い"の場合と、旧サービスを使っている場合は"未設定"の場合もあるのでelseで対応
             return record[fieldTransferAmount_APPLY]["value"];
         }
-    }
+    };
 
-    function getTrailerRecord(kintone_records) {
-        const total_amount = kintone_records.reduce((total, record) => {
-            const amount = getAmountByTiming(record);
-            return total + Number(amount);
-        }, 0);
+    const getOriginalPaymentAmount = (record) => {
+        // 通常払いの場合、下記のように特殊な金額計算を行う。
+        // ①サービス利用手数料を差し引かない（対象債権金額をそのまま利用する）
+        // ②工務店が支払する場合と同額の振込手数料を差し引く
+        const constructor_id = record[fieldConstructionShopId_APPLY]["value"];
+        const receiver_account = {
+            bank_code: record[fieldBankCode_APPLY]["value"],
+            branch_code: record[fieldBranchCode_APPLY]["value"],
+        };
+        const receivable_amount = Number(record[fieldTotalReceivables_APPLY]["value"]);
 
-        return [
-            "8",                    //データ区分：トレーラーレコード
-            kintone_records.length, //合計件数
-            total_amount            //合計金額
-        ];
-    }
+        if (constructor_id === AVAILABLE_CONSTRUCTORS.REALTOR_SOLUTIONS.ID) {
+            const transfer_fee_original = ((receiver_account, transfer_amount) => {
+                const LOWER_FEE_BORDER = 30000;
 
-    function getEndRecord() {
-        return [
-            "9" //データ区分：エンドレコード
-        ];
-    }
+                if ((receiver_account.bank_code === AVAILABLE_CONSTRUCTORS.REALTOR_SOLUTIONS.BANK_CODE)
+                && (receiver_account.branch_code === AVAILABLE_CONSTRUCTORS.REALTOR_SOLUTIONS.BRANCH_CODE)) {
+                    // 同一店内
+                    return 0;
+                } else if ((receiver_account.bank_code === AVAILABLE_CONSTRUCTORS.REALTOR_SOLUTIONS.BANK_CODE)
+                && (receiver_account.branch_code !== AVAILABLE_CONSTRUCTORS.REALTOR_SOLUTIONS.BRANCH_CODE)) {
+                    // 同一銀行内・別の本支店
+                    if (transfer_amount < LOWER_FEE_BORDER) {
+                        return 55;
+                    } else {
+                        return 220;
+                    }
+                } else {
+                    // 他行宛
+                    if (transfer_amount < LOWER_FEE_BORDER) {
+                        return 330;
+                    } else {
+                        return 550;
+                    }
+                }
+            })(receiver_account, receivable_amount);
+            // (請求書金額 - 協力会費) - (インベストが関わらない場合を想定した本来の振込手数料)を返す。
+            // (請求書金額 - 協力会費)の金額は対象債権合計金額と同じ
+            return receivable_amount - transfer_fee_original;
+        }
+
+        throw new Error("申込レコードに紐づく工務店が現状は通常払いに未対応なため、処理を中断します。");
+    };
 
     function encodeToSjis(csv_data) {
         // 1文字ずつ格納
@@ -344,8 +265,6 @@
 
     // 生成したデータをCSVファイルとしてローカルにダウンロードする。
     function downloadFile(sjis_code_list, file_name) {
-        console.log("downloading...");
-
         const uint8_list = new Uint8Array(sjis_code_list);
         const write_data = new Blob([uint8_list], { type: "text/csv" });
 
@@ -371,8 +290,6 @@
     }
 
     function updateToDone(outputted_records) {
-        console.log("出力を終えたレコードの状態を出力済みに更新する");
-
         const request_body = {
             "app": APP_ID_APPLY,
             "records": outputted_records.map((record) => {
@@ -390,8 +307,9 @@
         return kintone.api(kintone.api.url("/k/v1/records", true), "PUT", request_body);
     }
 
-    // 全銀形式で使用可能な文字を半角に変換する。使用不可能な文字を受け取った場合はエラーとする。
     function zenkakuToHankaku(input_string){
+        // 全銀形式で使用可能な文字を半角に変換する。使用不可能な文字を受け取った場合はエラーとする。
+        // 特に、ダブルクォーテーションは使用不可能。
         const zenkaku_array = [
             "ア","イ","ウ","エ","オ","カ","キ","ク","ケ","コ"
             ,"サ","シ","ス","セ","ソ","タ","チ","ツ","テ","ト"
@@ -445,22 +363,5 @@
         }
 
         return converted_han;
-    }
-
-    // 全銀フォーマットの文字数に合わせるため、半角文字に変換して指定文字数まで半角空白を追加する。もし指定文字数より多かったら右から削る。
-    function addPadding(input, num) {
-        // inputは半角に出来るものだけ受け付ける
-        const input_han = zenkakuToHankaku(input);
-        const char_num = input_han.length;
-        let padded = input_han;
-
-        if (num - char_num > 0) {
-            padded = input_han + " ".repeat(num - char_num);
-        }
-        else {
-            padded = padded.slice(0, num);
-        }
-
-        return padded;
     }
 })();
