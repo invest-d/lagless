@@ -46,6 +46,7 @@
     const statusPaymentLate_APPLY           = "遅払い";
     const statusPaymentOriginal_APPLY       = "通常払い";
     const fieldConstructionShopId_APPLY     = "constructionShopId";
+    const fieldKyoryokuId_APPLY             = "ルックアップ";
 
     const AVAILABLE_CONSTRUCTORS = {
         REALTOR_SOLUTIONS: {
@@ -156,7 +157,8 @@
                 fieldTransferAmount_APPLY,
                 fieldTransferAmountLate_APPLY,
                 fieldTotalReceivables_APPLY,
-                fieldConstructionShopId_APPLY
+                fieldConstructionShopId_APPLY,
+                fieldKyoryokuId_APPLY
             ],
             "query": `${fieldStatus_APPLY} in ${in_query}
                     and ${fieldPaymentDate_APPLY} = "${target_date}"
@@ -189,7 +191,7 @@
         fields.push((`0000000${record[fieldAccountNumber_APPLY]["value"]}`).slice(-7));
         fields.push(zenkakuToHankaku(record[fieldAccountName_APPLY]["value"]));
         fields.push(getAmountByTiming(record));
-        fields.push(" "); // 顧客情報フィールド。不使用
+        fields.push(record[fieldKyoryokuId_APPLY]["value"]); // 顧客情報フィールド。任意入力フィールドであり、協力会社IDを記入する。
         fields.push(" "); // 識別表示フィールド。不使用
 
         return fields.map(csv_format).join(",");
