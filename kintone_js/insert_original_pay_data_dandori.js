@@ -45,6 +45,7 @@
     const fieldConstructorID_KYORYOKU       = "工務店ID";
     const fieldCommonName_KYORYOKU          = "支払先";
     const fieldFormalName_KYORYOKU          = "支払先正式名称";
+    const fieldPhone_KYORYOKU               = "電話番号";
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
@@ -176,8 +177,8 @@
     };
 
     const convert = (dandori_records, constructor) => {
-        const getKyoryokuID = async (kyoryoku_name, constructor_id) => {
-            // 通名もしくは正式名称のフィールドに完全一致するレコードがあればそれを返す。なければ空文字
+        const getKyoryokuID = async (invoice_name, invoice_phone, constructor_id) => {
+            // 通名もしくは正式名称のフィールドと、電話番号のフィールドの両方が完全一致するレコードがあればそれを返す。なければ空文字
             const request_body = {
                 "app": APP_ID_KYORYOKU,
                 "condition": `${fieldConstructorID_KYORYOKU} = "${constructor_id}"`,
@@ -185,8 +186,17 @@
             const records = await client.record.getAllRecords(request_body);
 
             const target = records.find((r) => {
-                return (r[fieldCommonName_KYORYOKU]["value"] === kyoryoku_name)
-                    || (r[fieldFormalName_KYORYOKU]["value"] === kyoryoku_name);
+                const equal_name = (r[fieldCommonName_KYORYOKU]["value"] === invoice_name)
+                    || (r[fieldFormalName_KYORYOKU]["value"] === invoice_name);
+
+                const equal_phone = ((invoice_phone) => {
+                    if (!invoice_phone) {
+                        return false;
+                    }
+                    return r[fieldPhone_KYORYOKU]["value"] === invoice_phone;
+                })(invoice_phone);
+
+                return equal_name && equal_phone;
             });
 
             if (target) {
@@ -201,7 +211,7 @@
             const phone = (r[fieldKyoryokuPhone_DANDORI]["value"] === "")
                 ? "000-0000-0000"
                 : r[fieldKyoryokuPhone_DANDORI]["value"];
-            const kyoryoku_id = await getKyoryokuID(r[fieldKyoryokuName_DANDORI]["value"], constructor.id);
+            const kyoryoku_id = await getKyoryokuID(r[fieldKyoryokuName_DANDORI]["value"], r[fieldKyoryokuPhone_DANDORI]["value"], constructor.id);
             return {
                 [fieldStatus_APPLY]: {
                     "value": statusInserted_APPLY
