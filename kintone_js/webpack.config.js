@@ -1,3 +1,5 @@
+const webpack = require("webpack");
+
 module.exports = (env, argv) => {
     const IS_DEVELOPMENT = argv.mode === "development";
     if (IS_DEVELOPMENT) {
@@ -21,6 +23,7 @@ module.exports = (env, argv) => {
                 color_exceeding_payment: "./color_exceeding_payment.js",
                 generate_acceptance_letter_button: "./generate_acceptance_letter_button.js",
                 post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
+                insert_original_pay_data_dandori: "./insert_original_pay_data_dandori.js",
             },
 
             // ファイルの出力設定
@@ -29,7 +32,14 @@ module.exports = (env, argv) => {
                 path: `${__dirname}/dist`,
                 // 出力ファイル名
                 filename: "[name].js"
-            }
+            },
+            plugins: [
+                new webpack.DefinePlugin({
+                    ENV: JSON.stringify({
+                        APPLY: 159,
+                    }),
+                }),
+            ]
         };
     } else {
         return {
@@ -50,6 +60,7 @@ module.exports = (env, argv) => {
                 color_exceeding_payment: "./color_exceeding_payment.js",
                 generate_acceptance_letter_button: "./generate_acceptance_letter_button.js",
                 post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
+                insert_original_pay_data_dandori: "./insert_original_pay_data_dandori.js",
             },
 
             // ファイルの出力設定
@@ -58,7 +69,14 @@ module.exports = (env, argv) => {
                 path: `${__dirname}/dist`,
                 // 出力ファイル名
                 filename: "[name].js"
-            }
+            },
+            plugins: [
+                new webpack.DefinePlugin({
+                    ENV: JSON.stringify({
+                        APPLY: 161,
+                    }),
+                }),
+            ]
         };
     }
 };
