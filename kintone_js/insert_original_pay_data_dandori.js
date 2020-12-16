@@ -32,8 +32,6 @@
     const fieldKyoryokuName_DANDORI         = "kyoryokuName";
     const fieldKyoryokuPhone_DANDORI        = "kyoryokuPhone";
     const fieldBillingDetail_DANDORI        = "constructionBillTaxInclDetail";
-    const fieldMemberFeeDetail_DANDORI      = "memberShipFeeDetail";
-    const fieldReceivableDetail_DANDORI     = "receivableAmountDetail";
     const fieldBillingSum_DANDORI           = "constructionBillTaxInclSum";
     const fieldMemberFeeSum_DANDORI         = "memberShipFeeSum";
     const fieldReceivableSum_DANDORI        = "receivableAmountSum";
@@ -50,6 +48,7 @@
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         if (needShowButton()) {
             const button = createButton();
