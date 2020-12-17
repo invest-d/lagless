@@ -11,7 +11,7 @@
     実行結果をテキストファイルに保存して、開発版アプリと本番アプリでフィールドの設定などに差異が無いかを確かめたりする用途に使える。
 */
 
-const app = 999;
+const app_id = 999;
 // レイアウト情報のうち、widthおよびheightは揃える手段がないため、比較対象から外す
 const del_W_H = (obj) => {
     const deleted = {};
@@ -36,11 +36,12 @@ const del_view_id = (obj) => {
         delete obj.views[view].id;
     });
 };
-const getting = (async (app) => {
-    const [fields, layout, views] = await Promise.all([
-        kintone.api(kintone.api.url("/k/v1/app/form/fields", true), "GET", { app: app }),
-        kintone.api(kintone.api.url("/k/v1/app/form/layout", true), "GET", { app: app }),
-        kintone.api(kintone.api.url("/k/v1/preview/app/views", true), "GET", { app: app })
+const getting = (async (app_id) => {
+    const [app, fields, layout, views] = await Promise.all([
+        kintone.api(kintone.api.url("/k/v1/app", true), "GET", { id: app_id }),
+        kintone.api(kintone.api.url("/k/v1/app/form/fields", true), "GET", { app: app_id }),
+        kintone.api(kintone.api.url("/k/v1/app/form/layout", true), "GET", { app: app_id }),
+        kintone.api(kintone.api.url("/k/v1/preview/app/views", true), "GET", { app: app_id })
     ]);
 
     del_view_id(views);
@@ -50,11 +51,12 @@ const getting = (async (app) => {
     delete views.revision;
 
     return {
+        id: {appId: app.appId, name: app.name}, //個人情報が結構入っていたので必要そうな情報だけ抜き取る
         fields: fields,
         layout: del_W_H(layout),
         views: views,
     };
-})(app);
+})(app_id);
 const sort_object = (unordered) => {
     const ordered = {};
     Object.keys(unordered).sort().forEach((key) => {
@@ -66,4 +68,4 @@ const sort_object = (unordered) => {
     });
     return ordered;
 };
-getting.then((resp) => console.log(JSON.stringify(sort_object(resp), null, "  ")));
+getting.then((resp) => console.log(JSON.stringify(sort_object(resp), null, "    ")));
