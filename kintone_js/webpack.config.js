@@ -23,7 +23,7 @@ module.exports = (env, argv) => {
                 color_exceeding_payment: "./color_exceeding_payment.js",
                 generate_acceptance_letter_button: "./generate_acceptance_letter_button.js",
                 post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
-                insert_original_pay_data_dandori: "./insert_original_pay_data_dandori.js",
+                174: "./174.js",
             },
 
             // ファイルの出力設定
@@ -60,7 +60,7 @@ module.exports = (env, argv) => {
                 color_exceeding_payment: "./color_exceeding_payment.js",
                 generate_acceptance_letter_button: "./generate_acceptance_letter_button.js",
                 post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
-                insert_original_pay_data_dandori: "./insert_original_pay_data_dandori.js",
+                174: "./174.js",
             },
 
             // ファイルの出力設定
