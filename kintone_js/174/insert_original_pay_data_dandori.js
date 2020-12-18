@@ -377,16 +377,9 @@ const getApplyRecordsThisClosing = async (closing_date, constructor_id) => {
 export const divideInvoices = async (invoice_groups, constructor_id) => {
     // ダンドリワークのデータを、通常払いすべき請求とすべきでない請求に振り分ける。
     // 通常払いすべきでない請求とは、早払いもしくは遅払いで処理するように既に申込を受け付けている請求のこと。
-    const search_exists_process = invoice_groups.filter((i) => existsApplyRecord(i.main, constructor_id));
-    const search_not_exists_process = invoice_groups.filter((i) => !(existsApplyRecord(i.main, constructor_id)));
-
-    const [
-        original_pay_groups,
-        using_factoring_groups
-    ] = await Promise.all([
-        Promise.all(search_exists_process),
-        Promise.all(search_not_exists_process)
-    ]);
+    const search_exists_result = await Promise.all(invoice_groups.map((i) => existsApplyRecord(i.main, constructor_id)));
+    const using_factoring_groups = invoice_groups.filter((_, i) => search_exists_result[i]);
+    const original_pay_groups = invoice_groups.filter((_, i) => !search_exists_result[i]);
 
     return {
         original_pay_groups: original_pay_groups,
