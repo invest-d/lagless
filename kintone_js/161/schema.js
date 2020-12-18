@@ -249,6 +249,19 @@ export const schema_apply = {
                 "unit": "円",
                 "unitPosition": "AFTER"
             },
+            "commissionAmountEarlyFirst": {
+                "code": "commissionAmountEarlyFirst",
+                "displayScale": "",
+                "expression": "ROUNDDOWN(totalReceivables* commissionRateEarlyFirst, 0)",
+                "format": "NUMBER_DIGIT",
+                "hideExpression": false,
+                "label": "早払いサービス手数料（初回割引適用時）",
+                "noLabel": false,
+                "required": false,
+                "type": "CALC",
+                "unit": "円",
+                "unitPosition": "AFTER"
+            },
             "commissionAmount_late": {
                 "code": "commissionAmount_late",
                 "displayScale": "",
@@ -274,6 +287,19 @@ export const schema_apply = {
                 "required": false,
                 "type": "NUMBER",
                 "unique": false,
+                "unit": "",
+                "unitPosition": "BEFORE"
+            },
+            "commissionRateEarlyFirst": {
+                "code": "commissionRateEarlyFirst",
+                "displayScale": "5",
+                "expression": "commissionRate/2",
+                "format": "NUMBER",
+                "hideExpression": false,
+                "label": "早払いサービス手数料割合（初回割引適用時）",
+                "noLabel": false,
+                "required": false,
+                "type": "CALC",
                 "unit": "",
                 "unitPosition": "BEFORE"
             },
@@ -528,8 +554,12 @@ export const schema_apply = {
                         "index": "0",
                         "label": "未設定"
                     },
-                    "遅払い": {
+                    "通常払い": {
                         "index": "2",
+                        "label": "通常払い"
+                    },
+                    "遅払い": {
+                        "index": "3",
                         "label": "遅払い"
                     }
                 },
@@ -633,6 +663,19 @@ export const schema_apply = {
                 "format": "NUMBER_DIGIT",
                 "hideExpression": false,
                 "label": "早払い時の振込金額",
+                "noLabel": false,
+                "required": false,
+                "type": "CALC",
+                "unit": "円",
+                "unitPosition": "AFTER"
+            },
+            "transferAmountEarlyFirst": {
+                "code": "transferAmountEarlyFirst",
+                "displayScale": "",
+                "expression": "totalReceivables - commissionAmountEarlyFirst - transferFeeTaxIncl",
+                "format": "NUMBER_DIGIT",
+                "hideExpression": false,
+                "label": "早払い時の振込金額（初回割引適用時）",
                 "noLabel": false,
                 "required": false,
                 "type": "CALC",
@@ -868,7 +911,7 @@ export const schema_apply = {
                         "label": "ID確認済"
                     },
                     "保留中": {
-                        "index": "11",
+                        "index": "12",
                         "label": "保留中"
                     },
                     "債権譲渡登記取得待ち": {
@@ -876,11 +919,11 @@ export const schema_apply = {
                         "label": "債権譲渡登記取得待ち"
                     },
                     "取下げ": {
-                        "index": "12",
+                        "index": "13",
                         "label": "取下げ"
                     },
                     "実行完了": {
-                        "index": "10",
+                        "index": "11",
                         "label": "実行完了"
                     },
                     "工務店確認済": {
@@ -888,11 +931,11 @@ export const schema_apply = {
                         "label": "工務店確認済"
                     },
                     "振込データ出力済": {
-                        "index": "9",
+                        "index": "10",
                         "label": "振込データ出力済"
                     },
                     "振込前確認完了": {
-                        "index": "8",
+                        "index": "9",
                         "label": "振込前確認完了"
                     },
                     "支払予定明細FAX送信待ち": {
@@ -914,6 +957,10 @@ export const schema_apply = {
                     "未処理": {
                         "index": "0",
                         "label": "未処理"
+                    },
+                    "通常払い確認待ち": {
+                        "index": "8",
+                        "label": "通常払い確認待ち"
                     }
                 },
                 "required": false,
@@ -1429,6 +1476,21 @@ export const schema_apply = {
                         "type": "CALC",
                         "code": "transferAmount",
                         "size": {}
+                    },
+                    {
+                        "type": "CALC",
+                        "code": "commissionRateEarlyFirst",
+                        "size": {}
+                    },
+                    {
+                        "type": "CALC",
+                        "code": "commissionAmountEarlyFirst",
+                        "size": {}
+                    },
+                    {
+                        "type": "CALC",
+                        "code": "transferAmountEarlyFirst",
+                        "size": {}
                     }
                 ]
             },
@@ -1599,8 +1661,10 @@ export const schema_apply = {
                 "fields": [
                     "レコード番号",
                     "状態",
+                    "ルックアップ",
+                    "支払先正式名称",
+                    "totalReceivables",
                     "paymentTiming",
-                    "登記の取得",
                     "paymentDate",
                     "paymentAccount",
                     "bankCode",
@@ -1609,11 +1673,9 @@ export const schema_apply = {
                     "branchName",
                     "deposit",
                     "accountNumber",
-                    "accountName",
-                    "transferAmount",
-                    "transferAmount_late"
+                    "accountName"
                 ],
-                "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"振込前確認完了\", \"振込データ出力済\")",
+                "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\")",
                 "index": "5",
                 "name": "振込データ出力",
                 "sort": "paymentDate desc, paymentAccount asc",

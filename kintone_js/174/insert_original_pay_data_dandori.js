@@ -16,7 +16,8 @@ const PRODUCT_NAME = "ダンドリペイメント";
 
 const commonRecordID = "$id";
 
-import { schema_apply } from "../159/schema";
+// FIXME: 開発環境と本番環境で、申込アプリのスキーマの読み込みを自動的に切り替えたい
+import { schema_apply } from "../161/schema";
 const APP_ID_APPLY                      = schema_apply.id.appId;
 const fieldStatus_APPLY                 = schema_apply.fields.properties.状態.code;
 const statusInserted_APPLY              = schema_apply.fields.properties.状態.options.通常払い確認待ち.label;
