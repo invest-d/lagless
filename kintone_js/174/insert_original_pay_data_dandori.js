@@ -267,7 +267,6 @@ export const downloadUndefinedKyoryokuCsv = (undefined_kyoryoku_list, constructo
 const groupByInvoiceID = (records) => {
     const invoice_ids = Array.from(new Set(records.map((r) => r[fieldInvoiceID_DANDORI]["value"])));
 
-    // 請求IDごとにグループ化（1レコードは請求書に記載する明細の1行に相当する）
     const invoice_groups = {};
     for (const invoice_id of invoice_ids) {
         invoice_groups[invoice_id] = records.filter((r) => r[fieldInvoiceID_DANDORI]["value"] === invoice_id);
@@ -276,13 +275,14 @@ const groupByInvoiceID = (records) => {
     return invoice_groups;
 };
 
-export const aggregateCsvData = (records) => {
-    // 請求IDごとにグループ化（1レコードは請求書に記載する明細の1行に相当する）
+export const groupDandoriInvoices = (records) => {
+    // アプリにインポートされる1レコードは請求書に記載する明細の1行に相当するため、請求書単位（請求ID単位）にグループ化する
     const invoice_groups = groupByInvoiceID(records);
 
     const aggregated = [];
     Object.values(invoice_groups).forEach((group) => {
-        // グループごとに、①案件の合計額、②協力会費差し引き後振込金額が一致しているか検算する
+        // グループごとに、①案件の合計額、②協力会費差し引き後振込金額が一致しているか検算する。
+        // インポートされたレコードそれぞれに合計の値が記載してあるため、どのレコードを使ってもよい。従ってここでは[0]を使う。
         const billing_sum = group.reduce((sum, record) => {return Number(sum) + Number(record[fieldBillingDetail_DANDORI]["value"]);}, 0);
         const member_fee = Number(group[0][fieldMemberFeeSum_DANDORI]["value"]);
 
@@ -297,7 +297,10 @@ export const aggregateCsvData = (records) => {
             }
 
             // 問題なければgroup[0]を代表にして返す
-            aggregated.push(group[0]);
+            aggregated.push({
+                main: group[0],
+                details: group
+            });
         } catch (e) {
             alert(`${e}\n\nこの請求書の処理をスキップします`);
         }
@@ -370,28 +373,35 @@ const getApplyRecordsThisClosing = async (closing_date, constructor_id) => {
     return client.record.getAllRecords(request_body);
 };
 
-export const convert = async (dandori_records, constructor) => {
-    // ダンドリワーク請求データアプリのレコードを加工して、ラグレス申込アプリにinsertできるオブジェクトにする
-    const using_factoring_invoices = [];
-    const original_pay_invoices = [];
-    for (const r of dandori_records) {
-        const already_applied = await existsApplyRecord(r, constructor.id);
-        if (already_applied) {
-            // 既に申込があるものについては二重に支払わないようにする
-            using_factoring_invoices.push(r);
-        } else {
-            // 逆に申込がないものは自動的に本来の支払日に支払をする必要がある
-            original_pay_invoices.push(r);
-        }
-    }
+export const divideInvoices = async (invoice_groups, constructor_id) => {
+    // ダンドリワークのデータを、通常払いすべき請求とすべきでない請求に振り分ける。
+    // 通常払いすべきでない請求とは、早払いもしくは遅払いで処理するように既に申込を受け付けている請求のこと。
+    const search_exists_process = invoice_groups.filter((i) => existsApplyRecord(i.main, constructor_id));
+    const search_not_exists_process = invoice_groups.filter((i) => !(existsApplyRecord(i.main, constructor_id)));
 
-    const processes = original_pay_invoices.map(async (r) => {
-        const phone = (r[fieldKyoryokuPhone_DANDORI]["value"] === "")
+    const [
+        original_pay_groups,
+        using_factoring_groups
+    ] = await Promise.all([
+        Promise.all(search_exists_process),
+        Promise.all(search_not_exists_process)
+    ]);
+
+    return {
+        original_pay_groups: original_pay_groups,
+        using_factoring_groups: using_factoring_groups
+    };
+};
+
+export const convertToApplyRecord = async (invoice_groups, constructor) => {
+    // ダンドリワーク請求データアプリのレコードを加工して、ラグレス申込アプリにinsertできるオブジェクトにする
+    const processes = invoice_groups.map(async (invoice_group) => {
+        const phone = (invoice_group.main[fieldKyoryokuPhone_DANDORI]["value"] === "")
             ? "000-0000-0000"
-            : r[fieldKyoryokuPhone_DANDORI]["value"];
+            : invoice_group.main[fieldKyoryokuPhone_DANDORI]["value"];
 
         const kyoryoku_master = await getKyoryokuMaster(constructor.id);
-        const kyoryoku_id = await getKyoryokuID(r[fieldKyoryokuName_DANDORI]["value"], r[fieldKyoryokuPhone_DANDORI]["value"], kyoryoku_master);
+        const kyoryoku_id = await getKyoryokuID(invoice_group.main[fieldKyoryokuName_DANDORI]["value"], invoice_group.main[fieldKyoryokuPhone_DANDORI]["value"], kyoryoku_master);
 
         return {
             [fieldStatus_APPLY]: {
@@ -401,22 +411,22 @@ export const convert = async (dandori_records, constructor) => {
                 "value": statusOriginalPay_APPLY
             },
             [fieldBillingAmount_APPLY]: {
-                "value": r[fieldBillingSum_DANDORI]["value"]
+                "value": invoice_group.main[fieldBillingSum_DANDORI]["value"]
             },
             [fieldMemberFee_APPLY]: {
-                "value": r[fieldMemberFeeSum_DANDORI]["value"]
+                "value": invoice_group.main[fieldMemberFeeSum_DANDORI]["value"]
             },
             [fieldReceivable_APPLY]: {
-                "value": r[fieldReceivableSum_DANDORI]["value"]
+                "value": invoice_group.main[fieldReceivableSum_DANDORI]["value"]
             },
             [fieldClosingDate_APPLY]: {
-                "value": r[fieldClosingDate_DANDORI]["value"]
+                "value": invoice_group.main[fieldClosingDate_DANDORI]["value"]
             },
             [fieldPaymentDate_APPLY]: {
-                "value": r[fieldPaymentDate_DANDORI]["value"]
+                "value": invoice_group.main[fieldPaymentDate_DANDORI]["value"]
             },
             [fieldKyoryokuName_APPLY]: {
-                "value": r[fieldKyoryokuName_DANDORI]["value"]
+                "value": invoice_group.main[fieldKyoryokuName_DANDORI]["value"]
             },
             [fieldConstructorName_APPLY]: {
                 "value": constructor.name
@@ -432,15 +442,8 @@ export const convert = async (dandori_records, constructor) => {
             }
         };
     });
-    const new_apply_records = await Promise.all(processes);
 
-    const result = {
-        new_apply_records: new_apply_records,
-        insert_target_invoices: original_pay_invoices,
-        ignored_invoices: using_factoring_invoices
-    };
-
-    return result;
+    return Promise.all(processes);
 };
 
 export async function insertApplyRecords(records) {
@@ -453,15 +456,18 @@ export async function insertApplyRecords(records) {
     return resp.records.map((r) => r.id);
 }
 
-export const updateToDone = (records) => {
-    return updateStatus(records, statusCompleted_DANDORI);
+export const updateToDone = (invoice_groups) => {
+    return updateStatus(invoice_groups, statusCompleted_DANDORI);
 };
 
-export const updateToIgnored = (records) => {
-    return updateStatus(records, statusIgnored_DANDORI);
+export const updateToIgnored = (invoice_groups) => {
+    return updateStatus(invoice_groups, statusIgnored_DANDORI);
 };
 
-const updateStatus = (records, status) => {
+const updateStatus = (invoice_groups, status) => {
+    // 請求書単位でまとめられているレコードを展開
+    const records = invoice_groups.flatMap((g) => g.details);
+
     const request_body = {
         "app": APP_ID_DANDORI,
         "records": records.map((r) => {

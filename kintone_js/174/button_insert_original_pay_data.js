@@ -32,31 +32,32 @@ async function clickButton() {
     try {
         const constructor = await logic.getConstructor(constructor_id);
 
-        const targets = await logic.getTargetRecords()
+        const target_invoices = await logic.getTargetRecords()
             .catch((err) => {
                 console.error(err);
                 throw new Error("請求データレコードの取得中にエラーが発生しました。");
             });
 
-        if (targets.length === 0) {
+        if (target_invoices.length === 0) {
             alert(`${schema_174.fields.properties.status.label}が${schema_174.fields.properties.status.options.未処理.label}のレコードは存在しませんでした。`);
             return;
         }
 
-        const aggregated_records = logic.aggregateCsvData(targets);
+        const invoice_groups = logic.groupDandoriInvoices(target_invoices);
 
-        const convert_result = await logic.convert(aggregated_records, constructor);
+        const { original_pay_groups, using_factoring_groups } = await logic.divideInvoices(invoice_groups, constructor.id);
 
-        const inserted_ids = await logic.insertApplyRecords(convert_result.new_apply_records)
+        const new_apply_records = await logic.convertToApplyRecord(original_pay_groups, constructor);
+
+        const inserted_ids = await logic.insertApplyRecords(new_apply_records)
             .catch((err) => {
                 console.error(err);
                 throw new Error("申込アプリへのレコード挿入中にエラーが発生しました。");
             });
 
-        // FIXME: このままだと、aggregateCsvDataで削除されたレコードが未処理のままになる
         await Promise.all([
-            logic.updateToDone(convert_result.insert_target_invoices),
-            logic.updateToIgnored(convert_result.ignored_invoices)
+            logic.updateToDone(original_pay_groups),
+            logic.updateToIgnored(using_factoring_groups)
         ]);
 
         alert(`${inserted_ids.length}件 の請求書を申込アプリに登録しました。\n申込アプリの各レコードを確認し、協力会社ID（と口座情報）が入っていない場合は手動で入力してください。`);
