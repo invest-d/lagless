@@ -65,7 +65,7 @@ export const schema_174 = {
             "constructionBillTaxDetail": {
                 "code": "constructionBillTaxDetail",
                 "defaultValue": "",
-                "digit": false,
+                "digit": true,
                 "displayScale": "",
                 "label": "消費税(円)",
                 "maxValue": "",
@@ -74,13 +74,13 @@ export const schema_174 = {
                 "required": false,
                 "type": "NUMBER",
                 "unique": false,
-                "unit": "",
-                "unitPosition": "BEFORE"
+                "unit": "円",
+                "unitPosition": "AFTER"
             },
             "constructionBillTaxExclDetail": {
                 "code": "constructionBillTaxExclDetail",
                 "defaultValue": "",
-                "digit": false,
+                "digit": true,
                 "displayScale": "",
                 "label": "請求額(税抜)",
                 "maxValue": "",
@@ -89,13 +89,13 @@ export const schema_174 = {
                 "required": false,
                 "type": "NUMBER",
                 "unique": false,
-                "unit": "",
-                "unitPosition": "BEFORE"
+                "unit": "円",
+                "unitPosition": "AFTER"
             },
             "constructionBillTaxInclDetail": {
                 "code": "constructionBillTaxInclDetail",
                 "defaultValue": "",
-                "digit": false,
+                "digit": true,
                 "displayScale": "",
                 "label": "請求額(税込)",
                 "maxValue": "",
@@ -104,13 +104,13 @@ export const schema_174 = {
                 "required": false,
                 "type": "NUMBER",
                 "unique": false,
-                "unit": "",
-                "unitPosition": "BEFORE"
+                "unit": "円",
+                "unitPosition": "AFTER"
             },
             "constructionBillTaxInclSum": {
                 "code": "constructionBillTaxInclSum",
                 "defaultValue": "",
-                "digit": false,
+                "digit": true,
                 "displayScale": "",
                 "label": "合計(円)",
                 "maxValue": "",
@@ -119,8 +119,8 @@ export const schema_174 = {
                 "required": false,
                 "type": "NUMBER",
                 "unique": false,
-                "unit": "",
-                "unitPosition": "BEFORE"
+                "unit": "円",
+                "unitPosition": "AFTER"
             },
             "constructionClientName": {
                 "code": "constructionClientName",
@@ -327,7 +327,7 @@ export const schema_174 = {
             "memberShipFeeDetail": {
                 "code": "memberShipFeeDetail",
                 "defaultValue": "",
-                "digit": false,
+                "digit": true,
                 "displayScale": "",
                 "label": "協力会費(円)",
                 "maxValue": "",
@@ -336,13 +336,13 @@ export const schema_174 = {
                 "required": false,
                 "type": "NUMBER",
                 "unique": false,
-                "unit": "",
-                "unitPosition": "BEFORE"
+                "unit": "円",
+                "unitPosition": "AFTER"
             },
             "memberShipFeeSum": {
                 "code": "memberShipFeeSum",
                 "defaultValue": "",
-                "digit": false,
+                "digit": true,
                 "displayScale": "",
                 "label": "協力会費 合計(円)",
                 "maxValue": "",
@@ -351,8 +351,8 @@ export const schema_174 = {
                 "required": false,
                 "type": "NUMBER",
                 "unique": false,
-                "unit": "",
-                "unitPosition": "BEFORE"
+                "unit": "円",
+                "unitPosition": "AFTER"
             },
             "paymentDate": {
                 "code": "paymentDate",
@@ -394,7 +394,7 @@ export const schema_174 = {
             "receivableAmountDetail": {
                 "code": "receivableAmountDetail",
                 "defaultValue": "",
-                "digit": false,
+                "digit": true,
                 "displayScale": "",
                 "label": "振込支払額(円)",
                 "maxValue": "",
@@ -403,13 +403,13 @@ export const schema_174 = {
                 "required": false,
                 "type": "NUMBER",
                 "unique": false,
-                "unit": "",
-                "unitPosition": "BEFORE"
+                "unit": "円",
+                "unitPosition": "AFTER"
             },
             "receivableAmountSum": {
                 "code": "receivableAmountSum",
                 "defaultValue": "",
-                "digit": false,
+                "digit": true,
                 "displayScale": "",
                 "label": "振込支払額 合計(円)",
                 "maxValue": "",
@@ -418,8 +418,8 @@ export const schema_174 = {
                 "required": false,
                 "type": "NUMBER",
                 "unique": false,
-                "unit": "",
-                "unitPosition": "BEFORE"
+                "unit": "円",
+                "unitPosition": "AFTER"
             },
             "salesOfficeName": {
                 "code": "salesOfficeName",
