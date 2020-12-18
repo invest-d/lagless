@@ -77,6 +77,7 @@ import { get_contractor_name } from "./util_forms";
     const fieldTransferFee_APPLY = "transferFeeTaxIncl";
     const fieldPaymentTiming_APPLY = "paymentTiming";
     const statusLatePayment_APPLY = "遅払い";
+    const statusOriginalPayment_APPLY = "通常払い";
     const fieldCommissionRate_Late_APPLY = "commissionRate_late";
     const fieldCommissionAmount_Late_APPLY = "commissionAmount_late";
     const fieldTransferAmount_Late_APPLY = "transferAmount_late";
@@ -125,7 +126,9 @@ import { get_contractor_name } from "./util_forms";
 
         const body_generate_target = {
             app: kintone.app.getId(),
-            query: `${fieldStatus_APPLY} in ("${statusReady_APPLY}")`
+            query: `${fieldStatus_APPLY} in ("${statusReady_APPLY}")
+                and ${fieldPaymentTiming_APPLY} not in ("${statusOriginalPayment_APPLY}")`
+            // 通常払いは債権譲渡行為を伴わない単なる業務代行。従って支払予定明細を送信する必要がない。
         };
         const ready_to_generate = await kintone.api("/k/v1/records", "GET", body_generate_target)
             .catch((err) => {
@@ -238,7 +241,7 @@ import { get_contractor_name } from "./util_forms";
 
                 const should_discount_for_first = await (async (kyoryoku_id) => {
                     if (dayjs().isBetween(HALF_COMMISION_START_DATE, HALF_COMMISION_END_DATE, null, "[]")) {
-                        // 申込アプリの実行済みレコードを検索。0件 or 1件以上
+                        // キャンペーン期間中の場合、申込アプリの実行済みレコードを検索。0件 or 1件以上
                         const body = {
                             app: kintone.app.getId(),
                             query: `${fieldCustomerId_APPLY} = "${kyoryoku_id}" and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}")`
@@ -259,6 +262,7 @@ import { get_contractor_name } from "./util_forms";
                         commission_amount = record[fieldCommissionAmount_Late_APPLY]["value"];
                         transfer_amount_of_money = record[fieldTransferAmount_Late_APPLY]["value"];
                     } else {
+                        // 通常払いレコードはそもそも処理対象外なので考慮しない
                         if (should_discount_for_first) {
                             commission_rate = record[fieldCommissionRateEarlyFirst_APPLY]["value"];
                             commission_amount = record[fieldCommissionAmountEarlyFirst_APPLY]["value"];
