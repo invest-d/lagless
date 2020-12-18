@@ -29,6 +29,9 @@ async function clickButton() {
 
     const constructor_id = prompt("工務店IDを入力してください", "100");
 
+    const text_ready = this.innerText;
+    this.innerText = "作成中...";
+
     try {
         const constructor = await logic.getConstructor(constructor_id);
 
@@ -62,8 +65,11 @@ async function clickButton() {
 
         alert(`${inserted_ids.length}件 の請求書を申込アプリに登録しました。\n申込アプリの各レコードを確認し、協力会社ID（と口座情報）が入っていない場合は手動で入力してください。`);
         alert("ページを更新します。");
+
+        this.innerText = text_ready;
         window.location.reload();
     } catch(err) {
+        this.innerText = text_ready;
         console.error(err);
         alert(err);
     }
