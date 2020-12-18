@@ -95,6 +95,7 @@ import { get_contractor_name } from "./util_forms";
     const contractor_mail_dandori = "d-p@invest-d.com";
     const contractor_mail_renove = "lagless@invest-d.com"; // ラグレスと同じ
 
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         // コントロールの重複作成防止チェック
         if (document.getElementById(button_name) !== null) {
@@ -242,9 +243,12 @@ import { get_contractor_name } from "./util_forms";
                 const should_discount_for_first = await (async (kyoryoku_id) => {
                     if (dayjs().isBetween(HALF_COMMISION_START_DATE, HALF_COMMISION_END_DATE, null, "[]")) {
                         // キャンペーン期間中の場合、申込アプリの実行済みレコードを検索。0件 or 1件以上
+                        // ファクタリングを実行したレコードだけを対象にするので、通常払いは除外する
                         const body = {
                             app: kintone.app.getId(),
-                            query: `${fieldCustomerId_APPLY} = "${kyoryoku_id}" and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}")`
+                            query: `${fieldCustomerId_APPLY} = "${kyoryoku_id}"
+                                and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}")
+                                and ${fieldPaymentTiming_APPLY} not in ("${statusOriginalPayment_APPLY}")`
                         };
                         const past_apply = await kintone.api("/k/v1/records", "GET", body);
                         return past_apply.records.length === 0;
