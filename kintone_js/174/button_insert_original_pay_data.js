@@ -6,7 +6,7 @@
 import { schema_174 } from "./schema";
 import * as logic from "./insert_original_pay_data_dandori";
 
-const button_id = "insertCollect";
+const button_id = "insertOriginalPayRecords";
 export const needShowButton = () => {
     // 増殖バグ防止
     return document.getElementById(button_id) === null;
