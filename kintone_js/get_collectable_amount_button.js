@@ -1,4 +1,7 @@
 /*
+    Version 3
+    通常払いレコードを集計対象外にした
+
     Version 2
     未回収金額のうち、早払いの申込金額と遅払いの申込金額を分けて集計するように変更
 
@@ -9,6 +12,10 @@
 
 (function () {
     "use strict";
+
+    const statusPaymentTimingUndefined_APPLY = "未設定";
+    const statusPaymentTimingEarly_APPLY = "早払い";
+    const statusPaymentTimingLate_APPLY = "遅払い";
 
     const APP_ID_KOMUTEN = 96;
     const fieldConstructionShopId_KOMUTEN = "id";
@@ -151,11 +158,13 @@
                     };
 
                     record[fieldTableCloudSign_COLLECT]["value"].forEach((row) => {
-                        if (row["value"][tableFieldPaymentTimingCS_COLLECT]["value"] === "遅払い") {
+                        if (row["value"][tableFieldPaymentTimingCS_COLLECT]["value"] === statusPaymentTimingLate_APPLY) {
                             subtotal.late += Number(row["value"][tableFieldReceivableCS_COLLECT]["value"]);
-                        } else {
+                        } if (row["value"][tableFieldPaymentTimingCS_COLLECT]["value"] === statusPaymentTimingUndefined_APPLY
+                            || row["value"][tableFieldPaymentTimingCS_COLLECT]["value"] === statusPaymentTimingEarly_APPLY) {
                             subtotal.early += Number(row["value"][tableFieldReceivableCS_COLLECT]["value"]);
                         }
+                        // その他は通常払いなので回収金額算出の対象外
                     });
 
                     total_by_customer.early += subtotal.early;

@@ -1,4 +1,8 @@
 /*
+    Version 3
+    申込アプリ内で対象となるレコードの種類を変更。
+    支払タイミングが通常払いのレコードは対象外となるようにした
+
     Version 2.1
     申込アプリ内で対象となるレコードの種類を変更。
     旧: 状態フィールドが「支払予定明細送付済」
@@ -52,6 +56,7 @@
     const fieldMemberFee_APPLY = "membership_fee";
     const fieldTotalReceivables_APPLY = "totalReceivables";
     const fieldPaymentTiming_APPLY = "paymentTiming";
+    const statusPaymentTimingOriginal_APPLY = "通常払い";
     const fieldPaymentDate_APPLY = "paymentDate";
     const fieldCollectId_APPLY = "collectId";
     const fieldInvoice_APPLY = "invoice";
@@ -159,7 +164,9 @@
                 fieldPaymentDate_APPLY,
                 fieldInvoice_APPLY
             ],
-            "condition": `${fieldStatus_APPLY} in ("${statusReady_APPLY}") and ${fieldCollectId_APPLY} = ""` //回収IDブランク
+            "condition": `${fieldStatus_APPLY} in ("${statusReady_APPLY}")`
+                + `and ${fieldCollectId_APPLY} = ""` //回収IDブランク
+                + `and ${fieldPaymentTiming_APPLY} not in ("${statusPaymentTimingOriginal_APPLY}")` // 通常払い以外
         };
 
         return client.record.getAllRecords(request_body);
