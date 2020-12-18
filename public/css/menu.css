@@ -151,3 +151,11 @@ a.act:hover, a.form:hover {
 table.service-outline {
     table-layout: fixed;
 }
+
+.red-text {
+    color: #f00;
+}
+
+.nowrap-inline {
+    display: inline-block;
+}

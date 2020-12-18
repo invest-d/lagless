@@ -21,6 +21,7 @@ module.exports = (env, argv) => {
                 color_exceeding_payment: "./color_exceeding_payment.js",
                 generate_acceptance_letter_button: "./generate_acceptance_letter_button.js",
                 post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
+                create_payment_detail: "./create_payment_detail.js",
             },
 
             // ファイルの出力設定
@@ -33,6 +34,7 @@ module.exports = (env, argv) => {
         };
     } else {
         return {
+            mode: "production",
             module: {
                 rules: [
                     {
@@ -50,6 +52,7 @@ module.exports = (env, argv) => {
                 color_exceeding_payment: "./color_exceeding_payment.js",
                 generate_acceptance_letter_button: "./generate_acceptance_letter_button.js",
                 post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
+                create_payment_detail: "./create_payment_detail.js",
             },
 
             // ファイルの出力設定
