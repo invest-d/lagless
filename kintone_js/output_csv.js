@@ -186,13 +186,18 @@
 
         // 仕様： https://gmo-aozora.com/support/guide/tranfer-upload.pdf 5/10ページ
         const fields = [];
-        fields.push((`0000${record[fieldBankCode_APPLY]["value"]}`).slice(-4));
-        fields.push((`000${record[fieldBranchCode_APPLY]["value"]}`).slice(-3));
+        // 先にゼロ埋め
+        record[fieldBankCode_APPLY]["value"] = (`0000${record[fieldBankCode_APPLY]["value"]}`).slice(-4);
+        record[fieldBranchCode_APPLY]["value"] = (`000${record[fieldBranchCode_APPLY]["value"]}`).slice(-3);
+        record[fieldAccountNumber_APPLY]["value"] = (`0000000${record[fieldAccountNumber_APPLY]["value"]}`).slice(-7);
+
+        fields.push(record[fieldBankCode_APPLY]["value"]);
+        fields.push(record[fieldBranchCode_APPLY]["value"]);
         const deposit_type = (record[fieldDepositType_APPLY]["value"] === "普通")
             ? "1"
             : "2";
         fields.push(deposit_type);
-        fields.push((`0000000${record[fieldAccountNumber_APPLY]["value"]}`).slice(-7));
+        fields.push(record[fieldAccountNumber_APPLY]["value"]);
         fields.push(zenkakuToHankaku(record[fieldAccountName_APPLY]["value"]));
         fields.push(getAmountByTiming(record));
         fields.push(record[fieldKyoryokuId_APPLY]["value"]); // 顧客情報フィールド。任意入力フィールドであり、協力会社IDを記入する。
