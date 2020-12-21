@@ -181,9 +181,6 @@
     };
 
     const getAozoraCsvRow = (record) => {
-        // 各フィールドのデータをダブルクォーテーションで囲み、カンマ区切りにして連結した文字列を返す。
-        const csv_format = (col) => `"${col}"`; // データにダブルクォーテーションは含まれない。
-
         // 仕様： https://gmo-aozora.com/support/guide/tranfer-upload.pdf 5/10ページ
         const fields = [];
         // 先にゼロ埋め
@@ -203,7 +200,7 @@
         fields.push(record[fieldKyoryokuId_APPLY]["value"]); // 顧客情報フィールド。任意入力フィールドであり、協力会社IDを記入する。
         fields.push(" "); // 識別表示フィールド。不使用
 
-        return fields.map(csv_format).join(",");
+        return fields.join(",");
     };
 
     const getAmountByTiming = (record) => {
