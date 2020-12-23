@@ -378,7 +378,7 @@ $(() => {
         $.ajax({
             type: "POST",
             enctype: "multipart/form-data",
-            url: "https://us-central1-lagless.cloudfunctions.net/ke_ban_form",
+            url: ENV.ke_ban_endpoint,
             dataType: "json",
             data: form_data,
             cache: false,

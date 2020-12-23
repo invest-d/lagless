@@ -76,6 +76,7 @@ exports.ke_ban_form = functions.https.onRequest(async (req, res) => {
             }
         }
     });
+    // eslint-disable-next-line no-unused-vars
     busboy.on("field", (fieldname, val, fieldnameTruncated, valTruncated) => {
         const value = (() => {
             // 預金種目の場合に限り "普通" or "当座" に変換する
