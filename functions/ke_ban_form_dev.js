@@ -1,9 +1,13 @@
 const functions = require("firebase-functions");
 
+const FormData = require("form-data");
 const Busboy = require("busboy");
 const axios = require("axios");
 
 const sendgrid = require("@sendgrid/mail");
+
+const fs = require("fs");
+const path = require("path");
 
 const KE_BAN_CONSTRUCTOR = {
     ID: "600",
@@ -34,9 +38,11 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
     };
 
     // メール送信用
-    const message = {};
-    message.text = "";
-    message.attachments = [];
+    const internal_message = {};
+    internal_message.text = "";
+    internal_message.attachments = [];
+    const auto_reply_message = {};
+    auto_reply_message.attachments = [];
     const fieldname_dict = {
         company: "会社名・屋号名",
         phone: "電話番号",
@@ -108,12 +114,14 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                     const file_name = `${fieldname}.${ext}`;
 
                     const file_encoded = attachment.toString("base64");
-                    message.attachments.push({
+                    const file = {
                         filename: file_name,
                         content: file_encoded,
                         type: mimetype.toLocaleLowerCase(),
                         disposition: "attachment"
-                    });
+                    };
+                    internal_message.attachments.push(file);
+                    auto_reply_message.attachments.push(file);
 
                     file_upload_processes.push(uploadToKintone(env.api_token_files, attachment, file_name)
                         .then((resp) => {
@@ -136,28 +144,46 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                     return val;
                 }
             })();
-            message.text = `${message.text}\n${fieldname_dict[fieldname]}: ${value}`;
+            internal_message.text = `${internal_message.text}\n${fieldname_dict[fieldname]}: ${value}`;
 
             form_data[fieldname] = value;
         });
 
         busboy.on("finish", async () => {
             if (is_valid_apply) {
-                // 自動送信メール
-                message.from = env.from_address;
-                message.to = env.to_address;
-                message.cc = env.cc_address;
-                message.subject = "軽バンドットコム登録ドライバー様より前払いのお申し込みがありました。";
-                if (message.attachments.length == 0) {
-                    delete message.attachments;
+                // FIXME: kintoneにアップロードした添付ファイルのファイルキーを取得してレコードとの紐付けを行う
+                // 社内向けの申込受付通知
+                internal_message.from = env.from_address;
+                internal_message.to = env.to_address;
+                internal_message.cc = env.cc_address;
+                internal_message.subject = "軽バンドットコム登録ドライバー様より前払いのお申し込みがありました。";
+                if (internal_message.attachments.length == 0) {
+                    delete internal_message.attachments;
                 }
 
                 sendgrid.setApiKey(process.env.wfi_sendgrid_api_key);
-                console.log(`sending message... To: ${message.to}, Cc: ${message.cc}`);
-                await sendgrid.send(message)
+                console.log(`sending internal notification... To: ${internal_message.to}, Cc: ${internal_message.cc}`);
+                // await sendgrid.send(internal_message)
+                //     .catch((error) => {
+                //         console.error(`KE-BAN:社内通知メール送信エラー：${JSON.stringify(error)}`);
+                //         respond_error(res, error);
+                //     });
+
+                // 申込者向けの、申込受付自動返信メール
+                auto_reply_message.from = env.from_address;
+                auto_reply_message.to = form_data["mail"];
+                auto_reply_message.cc = env.cc_address;
+                auto_reply_message.subject = "【軽バン.COM前払い事務局】お申込みいただきありがとうございます。";
+                const auto_reply_text = fs.readFileSync(path.join(__dirname, "autoMailKeBan_template.txt"), "utf8");
+                auto_reply_message.text = substituteTemplate(auto_reply_text, form_data);
+                if (auto_reply_message.attachments.length == 0) {
+                    delete auto_reply_message.attachments;
+                }
+                console.log(`sending auto reply... To: ${auto_reply_message.to}, Cc: ${auto_reply_message.cc}`);
+                await sendgrid.send(auto_reply_message)
                     .catch((error) => {
-                        console.error(`KE-BAN:メール送信エラー：${JSON.stringify(error)}`);
-                        respond_error(res, error);
+                        // このメールは最悪届かなくてもオペレーションを続行できるため、フロントにはエラーを返さない
+                        console.error(`KE-BAN:申込受付自動返信メール送信エラー：${JSON.stringify(error)}`);
                     });
 
                 // kintoneレコード登録
@@ -326,4 +352,12 @@ function postRecord(app_id, token, payload) {
     };
 
     return axios.post("https://investdesign.cybozu.com/k/v1/record.json", payload, { headers });
+}
+
+// メールのテンプレート文面をdataの内容で置換した文字列を返す
+function substituteTemplate(template, data) {
+    const pattern = /{\s*(\w+?)\s*}/g;
+    return template.replace(pattern, (_, token) => {
+        return data[token] || "";
+    });
 }
