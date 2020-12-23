@@ -37,35 +37,144 @@ export const getTodayDate = () => {
     }
 };
 
-export const get_pay_term_start_date = (today) => {
-    const wednesday = 3;
-    let moved_date = today;
-    while (moved_date.day() !== wednesday) {
-        console.log("processing pay term start date...");
-        moved_date = moved_date.subtract(1, "day");
+export const get_pay_term_start_date = (base_date) => {
+    // target_dateが属する申込可能な稼働期間の開始日を取得する
+    let start_date = base_date;
+    while (start_date.date() % 5 !== 1) {
+        start_date = start_date.subtract(1, "day");
     }
-    return moved_date;
+    return start_date;
 };
-export const get_pay_term_end_date = (today) => {
-    const tuesday = 2;
-    let moved_date = today;
-    while (moved_date.day() !== tuesday) {
-        console.log("processing pay term end date...");
-        moved_date = moved_date.add(1, "day");
+export const get_pay_term_end_date = (base_date) => {
+    // base_dateが属する申込可能な稼働期間の終了日を取得する
+    if (get_pay_term_start_date(base_date).date() === 26) {
+        // 最終タームの場合、前払い対象の終了日は月末
+        return base_date.endOf("month");
+    } else {
+        let end_date = base_date;
+        while (end_date.date() % 5 !== 0) {
+            end_date = end_date.add(1, "day");
+        }
+        return end_date;
     }
-    return moved_date;
+};
+export const get_next_business_date = (base_date) => {
+    let next_date = base_date.add(1, "day");
+    while([0, 6].includes(next_date.day())) {
+        next_date = next_date.add(1, "day");
+    }
+    return next_date;
+};
+
+export const get_terms_before_and_after = (today) => {
+    // 前払い可能な期間は原則的に5日ごとの区切り。
+    // 1日～5日、6日～10日、……、21日〜25日。
+    // 前払い可能な期間の開始日の翌日から終了日の翌営業日までが申込期間。
+    // 現在の日付が属する五十日について、開始日と終了日を求める
+    const terms = {
+        prev: {
+            pay: {
+                start: null,
+                end: null
+            },
+            apply: {
+                start: null,
+                end: null
+            }
+        },
+        now: {
+            pay: {
+                start: null,
+                end: null
+            },
+            apply: {
+                start: null,
+                end: null
+            }
+        },
+        next: {
+            pay: {
+                start: null,
+                end: null
+            },
+            apply: {
+                start: null,
+                end: null
+            }
+        }
+    };
+
+    terms.now.pay.start = get_pay_term_start_date(today);
+    terms.now.pay.end = get_pay_term_end_date(today);
+
+    // 現在の五十日の直前の五十日について、開始日と終了日を求める
+    terms.prev.pay.start = get_pay_term_start_date(terms.now.pay.start.subtract(1, "day"));
+    terms.prev.pay.end = get_pay_term_end_date(terms.now.pay.start.subtract(1, "day"));
+
+    // 現在の五十日の直後の五十日について、開始日と終了日を求める
+    terms.next.pay.start = get_pay_term_start_date(terms.now.pay.end.add(1, "day"));
+    terms.next.pay.end = get_pay_term_end_date(terms.now.pay.end.add(1, "day"));
+
+    // それぞれの五十日について、申込可能期間を求める
+    // 申込可能期間の開始日は常に五十日の開始日に等しい
+    terms.prev.apply.start = terms.prev.pay.start;
+    terms.now.apply.start = terms.now.pay.start;
+    terms.next.apply.start = terms.next.pay.start;
+    // 申込可能期間の終了日は五十日の終了日の翌営業日
+    terms.prev.apply.end = get_next_business_date(terms.prev.pay.end);
+    terms.now.apply.end = get_next_business_date(terms.now.pay.end);
+    terms.next.apply.end = get_next_business_date(terms.next.pay.end);
+
+    return terms;
 };
 
 // フォームを開いた時点において、前払対象になる期間を確定する
 $(() => {
+    // ページを開く度に前払い期間と申込期間のテーブルを用意する。
+    // 現在の日付が当てはまっている申込期間の数だけ前払い期間のドロップダウンを生成する。
+
+    // 26日〜月末日の期間については申込対象外。
+    // 申込対象外の期間だけがドロップダウンに表示される場合に限り、「現在お申込み頂ける稼働期間はございません。」と表示。
     const today = getTodayDate();
+    const terms = get_terms_before_and_after(today);
+
+    // 現在の日付がどの申込期間に入っているかを判定して、選択肢に加えていく
+    const choice_phrases = [];
+    if (today.isBetween(terms.prev.apply.start, terms.prev.apply.end, null, "[]")) {
+        choice_phrases.push(`${terms.prev.pay.start.format("YYYY年MM月DD日")}から${terms.prev.pay.end.format("YYYY年MM月DD日")}まで`);
+    }
+
+    if (today.isBetween(terms.now.apply.start, terms.now.apply.end, null, "[]")) {
+        choice_phrases.push(`${terms.now.pay.start.format("YYYY年MM月DD日")}から${terms.now.pay.end.format("YYYY年MM月DD日")}まで`);
+    }
+
+    if (today.isBetween(terms.next.apply.start, terms.next.apply.end, null, "[]")) {
+        choice_phrases.push(`${terms.next.pay.start.format("YYYY年MM月DD日")}から${terms.next.pay.end.format("YYYY年MM月DD日")}まで`);
+    }
+
+    // 不可能な期間を除外
+    const selectable = choice_phrases.filter((p) => !p.includes("26日から"));
 
     const term_select = $("#targetTerm");
-    const option = $("<option>");
-    const item = `${get_pay_term_start_date(today).format("YYYY年MM月DD日(ddd)")}から${get_pay_term_end_date(today).format("YYYY年MM月DD日(ddd)")}`;
-    option.attr("value", item);
-    option.text(item);
-    term_select.append(option);
+    selectable.forEach((item) => {
+        const option = $("<option>");
+        option.attr("value", item);
+        option.text(item);
+        term_select.append(option);
+    });
+
+    // 選択可能な期間がない場合はその旨の選択肢を表示する
+    if (term_select.children().length === 0) {
+        const unavailable_option = $("<option>");
+        const unavailable_message = "現在お申込み頂ける稼働期間はございません。";
+        unavailable_option.attr("value", unavailable_message);
+        unavailable_option.text(unavailable_message);
+        term_select.append(unavailable_option);
+
+        // 画面全体を非表示にもする
+        $("#form_id").addClass("d-none");
+        $("#unavailable").removeClass("d-none");
+    }
 });
 
 // URLのパラメータによって初回のフォームもしくは2回目以降のフォームにする
