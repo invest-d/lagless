@@ -107,7 +107,7 @@ div#unavailable {
   height: 100%;
 }
 
-div#unavailable > p {
+div#unavailable > div {
   position: relative;
   top: 50%;
   left: 50%;
