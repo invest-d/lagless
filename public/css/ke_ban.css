@@ -35,8 +35,7 @@ table.schedule td {
   text-align: center;
 }
 thead th {
-  color: #fff;
-  background-color: #666;
+  background-color: #e0e0e0;
   line-height: 30px;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
@@ -113,4 +112,8 @@ div#unavailable > div {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
+}
+
+.text-emphasize {
+  color: #0055c4;
 }
