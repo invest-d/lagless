@@ -151,7 +151,14 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
 
         busboy.on("finish", async () => {
             if (is_valid_apply) {
-                // FIXME: kintoneにアップロードした添付ファイルのファイルキーを取得してレコードとの紐付けを行う
+                const upload_results = await Promise.all(file_upload_processes)
+                    .catch((err) => {
+                        console.error(`kintoneファイルアップロードエラー: ${err}`);
+                        busboy.end();
+                        throw new Error(JSON.stringify({status: 500, mesasge: "不明なエラーが発生しました。"}));
+                    });
+                upload_results.forEach((result) => form_data[result["fieldname"]] = result["value"]);
+
                 // 社内向けの申込受付通知
                 internal_message.from = env.from_address;
                 internal_message.to = env.to_address;
@@ -163,11 +170,11 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
 
                 sendgrid.setApiKey(process.env.wfi_sendgrid_api_key);
                 console.log(`sending internal notification... To: ${internal_message.to}, Cc: ${internal_message.cc}`);
-                // await sendgrid.send(internal_message)
-                //     .catch((error) => {
-                //         console.error(`KE-BAN:社内通知メール送信エラー：${JSON.stringify(error)}`);
-                //         respond_error(res, error);
-                //     });
+                await sendgrid.send(internal_message)
+                    .catch((error) => {
+                        console.error(`KE-BAN:社内通知メール送信エラー：${JSON.stringify(error)}`);
+                        respond_error(res, error);
+                    });
 
                 // 申込者向けの、申込受付自動返信メール
                 auto_reply_message.from = env.from_address;
