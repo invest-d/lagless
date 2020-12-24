@@ -255,22 +255,29 @@ const post_apply_record = async (form_data, env) => {
     const get_kyoryoku_id = async (name, email) => {
         // 名前とメールアドレスを条件にして協力会社マスタを検索し、協力会社IDを得る。見つからなかったり、重複している場合はnullを返す
         const in_query_constructors = Object.values(KE_BAN_RECORDS_BY_CLOSING).map((r) => `"${r.ID}"`).join(",");
-        const no_space_name = name.replace(" ", "").replace("　", "");
+        const deleteSpaces = (s) => {return s.replace(" ", "").replace("　", "");};
+        const no_space_name = deleteSpaces(name);
         const payload = {
             app: APP_ID_KYORYOKU,
-            fields: [fieldID_KYORYOKU],
+            fields: [fieldID_KYORYOKU, fieldCommonName_KYORYOKU, fieldOfficialName_KYORYOKU],
             query: `${fieldConstructorID_KYORYOKU} in (${in_query_constructors})`
-                + `and (${fieldCommonName_KYORYOKU} = "${no_space_name}" or ${fieldOfficialName_KYORYOKU} = "${no_space_name}")`
                 + `and ${fieldEmail_KYORYOKU} = "${email}"`
         };
-        const result = await getRecord(APP_ID_KYORYOKU, process.env.api_token_kyoryoku, payload);
-        if (result.data.records.length === 1) {
-            return result.data.records[0][fieldID_KYORYOKU]["value"];
+        const kintone_data = await getRecord(APP_ID_KYORYOKU, process.env.api_token_kyoryoku, payload);
+
+        // kintone保存の氏名データからwhitespaceを取り除いて比較
+        const result = kintone_data.data.records.filter((r) => {
+            return deleteSpaces(r[fieldCommonName_KYORYOKU]["value"]) === no_space_name ||
+                deleteSpaces(r[fieldOfficialName_KYORYOKU]["value"]) === no_space_name;
+        });
+
+        if (result.length === 1) {
+            return result[0][fieldID_KYORYOKU]["value"];
         } else {
-            if (result.data.records.length === 0) {
+            if (result.length === 0) {
                 console.warn(`協力会社マスタに未登録のドライバーです: "${name}", "${email}"`);
             } else {
-                const ids = result.data.records.map((r) => `"${r[fieldID_KYORYOKU]["value"]}"`).join(",");
+                const ids = result.map((r) => `"${r[fieldID_KYORYOKU]["value"]}"`).join(",");
                 console.warn(`協力会社マスタに重複して登録されているドライバーです: "${name}", "${email}"。レコードID: ${ids}`);
             }
             return null;
