@@ -18,6 +18,13 @@ const KE_BAN_RECORDS_BY_CLOSING = {
     "25": { ID: "404", NAME: "株式会社ワールドフォースインターナショナル" },
 };
 
+const APP_ID_KYORYOKU               = "88";
+const fieldID_KYORYOKU              = "支払企業No_";
+const fieldConstructorID_KYORYOKU   = "工務店ID";
+const fieldCommonName_KYORYOKU      = "支払先";
+const fieldOfficialName_KYORYOKU    = "支払先正式名称";
+const fieldEmail_KYORYOKU           = "メールアドレス";
+
 exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
     if (req.method != "POST") {
         res.status(405).json({message: "Method Not Allowed"});
@@ -173,14 +180,17 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                 }
 
                 sendgrid.setApiKey(process.env.wfi_sendgrid_api_key);
-                // console.log(`sending internal notification... To: ${internal_message.to}, Cc: ${internal_message.cc}`);
-                // await sendgrid.send(internal_message)
-                //     .catch((error) => {
-                //         console.error(`KE-BAN:社内通知メール送信エラー：${JSON.stringify(error)}`);
-                //         respond_error(res, error);
-                //     });
+                console.log(`sending internal notification... To: ${internal_message.to}, Cc: ${internal_message.cc}`);
+                await sendgrid.send(internal_message)
+                    .catch((error) => {
+                        console.error(`KE-BAN:社内通知メール送信エラー：${JSON.stringify(error)}`);
+                        respond_error(res, error);
+                    });
 
                 // 申込者向けの、申込受付自動返信メール
+                // script by https://nju33.com/javascript/%E6%97%A5%E6%9C%AC%E6%99%82%E9%96%93%E3%82%92%E5%8F%96%E5%BE%97
+                const jst_now = new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000));
+                form_data["date_now"] = `${jst_now.getFullYear()}年 ${jst_now.getMonth()+1}月 ${jst_now.getDate()}日`;
                 auto_reply_message.from = env.from_address;
                 auto_reply_message.to = form_data["mail"];
                 auto_reply_message.cc = env.cc_address;
@@ -190,12 +200,12 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                 if (auto_reply_message.attachments.length == 0) {
                     delete auto_reply_message.attachments;
                 }
-                // console.log(`sending auto reply... To: ${auto_reply_message.to}, Cc: ${auto_reply_message.cc}`);
-                // await sendgrid.send(auto_reply_message)
-                //     .catch((error) => {
-                //         // このメールは最悪届かなくてもオペレーションを続行できるため、フロントにはエラーを返さない
-                //         console.error(`KE-BAN:申込受付自動返信メール送信エラー：${JSON.stringify(error)}`);
-                //     });
+                console.log(`sending auto reply... To: ${auto_reply_message.to}, Cc: ${auto_reply_message.cc}`);
+                await sendgrid.send(auto_reply_message)
+                    .catch((error) => {
+                        // このメールは最悪届かなくてもオペレーションを続行できるため、フロントにはエラーを返さない
+                        console.error(`KE-BAN:申込受付自動返信メール送信エラー：${JSON.stringify(error)}`);
+                    });
 
                 // kintoneレコード登録
                 await post_apply_record(form_data, env)
@@ -242,7 +252,37 @@ function uploadToKintone(token, attachment, filename) {
 }
 
 const post_apply_record = async (form_data, env) => {
-    const get_posting_payload = (form_data, app_id) => {
+    const get_kyoryoku_id = async (name, email) => {
+        // 名前とメールアドレスを条件にして協力会社マスタを検索し、協力会社IDを得る。見つからなかったり、重複している場合はnullを返す
+        const in_query_constructors = Object.values(KE_BAN_RECORDS_BY_CLOSING).map((r) => `"${r.ID}"`).join(",");
+        const no_space_name = name.replace(" ", "").replace("　", "");
+        const payload = {
+            app: APP_ID_KYORYOKU,
+            fields: [fieldID_KYORYOKU],
+            query: `${fieldConstructorID_KYORYOKU} in (${in_query_constructors})`
+                + `and (${fieldCommonName_KYORYOKU} = "${no_space_name}" or ${fieldOfficialName_KYORYOKU} = "${no_space_name}")`
+                + `and ${fieldEmail_KYORYOKU} = "${email}"`
+        };
+        const result = await getRecord(APP_ID_KYORYOKU, process.env.api_token_kyoryoku, payload);
+        if (result.data.records.length === 1) {
+            return result.data.records[0][fieldID_KYORYOKU]["value"];
+        } else {
+            if (result.data.records.length === 0) {
+                console.warn(`協力会社マスタに未登録のドライバーです: "${name}", "${email}"`);
+            } else {
+                const ids = result.data.records.map((r) => `"${r[fieldID_KYORYOKU]["value"]}"`).join(",");
+                console.warn(`協力会社マスタに重複して登録されているドライバーです: "${name}", "${email}"。レコードID: ${ids}`);
+            }
+            return null;
+        }
+    };
+
+    const get_posting_payload = async (form_data, app_id) => {
+        const kyoryoku_id = await get_kyoryoku_id(form_data["company"], form_data["mail"]);
+        if (kyoryoku_id) {
+            form_data["ルックアップ"] = kyoryoku_id;
+        }
+
         const record = {};
 
         // フォームの入力内容を読み取る
@@ -280,11 +320,15 @@ const post_apply_record = async (form_data, env) => {
             record: record
         };
     };
-    const payload = get_posting_payload(form_data, env.app_id);
+    const payload = await get_posting_payload(form_data, env.app_id);
 
     // kintoneへの登録
-    // 申込みアプリの工務店IDを元に工務店マスタのレコードを参照するため、両方のアプリのAPIトークンが必要
-    const API_TOKEN = `${env.api_token_record},${process.env.api_token_komuten}`;
+    const tokens = [
+        env.api_token_record,
+        process.env.api_token_komuten,
+        process.env.api_token_kyoryoku
+    ];
+    const API_TOKEN = `${tokens.join(",")}`;
     const kintone_post_response = await postRecord(env.app_id, API_TOKEN, payload)
         .catch((err) => {
             console.error(`kintoneレコード登録エラー：${err}`);
@@ -353,6 +397,23 @@ function extractHostDomain(url) {
 
     // ドメイン部分だけ抜き出す
     return domain_and_port.split(":")[0];
+}
+
+function getRecord(app_id, token, payload) {
+    // kintoneのレコードを取得する
+    const headers = {
+        "Host": `investdesign.cybozu.com:${app_id}`,
+        "X-Cybozu-API-Token": token,
+        "Authorization": `Basic ${token}`,
+        "Content-Type": "application/json",
+    };
+
+    return axios({
+        method: "get",
+        url: "https://investdesign.cybozu.com/k/v1/records.json",
+        data: payload,
+        headers: headers
+    });
 }
 
 function postRecord(app_id, token, payload) {
