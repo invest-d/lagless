@@ -59,3 +59,5 @@ exports.fetch_cloudSign_token = require("./fetch_cloudSign_token").fetch_cloudSi
 
 // WFIの申し込みフォームからの送信
 exports.ke_ban_form = require("./ke_ban_form").ke_ban_form;
+
+exports.ke_ban_form_dev = require("./ke_ban_form_dev").ke_ban_form_dev;
