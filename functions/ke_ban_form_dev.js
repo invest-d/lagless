@@ -9,9 +9,13 @@ const sendgrid = require("@sendgrid/mail");
 const fs = require("fs");
 const path = require("path");
 
-const KE_BAN_CONSTRUCTOR = {
-    ID: "600",
-    NAME: "株式会社ワールドフォースインターナショナル"
+// kintone工務店マスタに登録している工務店データ一覧。締日ごとに異なるレコードを保存している。
+const KE_BAN_RECORDS_BY_CLOSING = {
+    "05": { ID: "400", NAME: "株式会社ワールドフォースインターナショナル" },
+    "10": { ID: "401", NAME: "株式会社ワールドフォースインターナショナル" },
+    "15": { ID: "402", NAME: "株式会社ワールドフォースインターナショナル" },
+    "20": { ID: "403", NAME: "株式会社ワールドフォースインターナショナル" },
+    "25": { ID: "404", NAME: "株式会社ワールドフォースインターナショナル" },
 };
 
 exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
@@ -169,12 +173,12 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                 }
 
                 sendgrid.setApiKey(process.env.wfi_sendgrid_api_key);
-                console.log(`sending internal notification... To: ${internal_message.to}, Cc: ${internal_message.cc}`);
-                await sendgrid.send(internal_message)
-                    .catch((error) => {
-                        console.error(`KE-BAN:社内通知メール送信エラー：${JSON.stringify(error)}`);
-                        respond_error(res, error);
-                    });
+                // console.log(`sending internal notification... To: ${internal_message.to}, Cc: ${internal_message.cc}`);
+                // await sendgrid.send(internal_message)
+                //     .catch((error) => {
+                //         console.error(`KE-BAN:社内通知メール送信エラー：${JSON.stringify(error)}`);
+                //         respond_error(res, error);
+                //     });
 
                 // 申込者向けの、申込受付自動返信メール
                 auto_reply_message.from = env.from_address;
@@ -186,12 +190,12 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                 if (auto_reply_message.attachments.length == 0) {
                     delete auto_reply_message.attachments;
                 }
-                console.log(`sending auto reply... To: ${auto_reply_message.to}, Cc: ${auto_reply_message.cc}`);
-                await sendgrid.send(auto_reply_message)
-                    .catch((error) => {
-                        // このメールは最悪届かなくてもオペレーションを続行できるため、フロントにはエラーを返さない
-                        console.error(`KE-BAN:申込受付自動返信メール送信エラー：${JSON.stringify(error)}`);
-                    });
+                // console.log(`sending auto reply... To: ${auto_reply_message.to}, Cc: ${auto_reply_message.cc}`);
+                // await sendgrid.send(auto_reply_message)
+                //     .catch((error) => {
+                //         // このメールは最悪届かなくてもオペレーションを続行できるため、フロントにはエラーを返さない
+                //         console.error(`KE-BAN:申込受付自動返信メール送信エラー：${JSON.stringify(error)}`);
+                //     });
 
                 // kintoneレコード登録
                 await post_apply_record(form_data, env)
@@ -259,9 +263,11 @@ const post_apply_record = async (form_data, env) => {
             record[key]= {"value": form_data[key]};
         }
 
-        // その他、軽バン.COMの場合の固定値を追加
-        record["constructionShopId"]    = {"value": KE_BAN_CONSTRUCTOR.ID};
-        record["billingCompany"]        = {"value": KE_BAN_CONSTRUCTOR.NAME};
+        // その他、軽バン.COMの場合にセットする値を追加
+        const closing_date = `0${record["closingDay"]["value"].split("-")[2]}`.slice(-2);
+        const ke_ban_record = KE_BAN_RECORDS_BY_CLOSING[closing_date];
+        record["constructionShopId"]    = {"value": ke_ban_record.ID};
+        record["billingCompany"]        = {"value": ke_ban_record.NAME};
         record["paymentTiming"]         = {"value": "早払い"};
         record["applicationAmount"]     = {"value": 0}; // レコード作成後に手動で問い合わせ→追記
         record["membership_fee"]        = {"value": 0};
