@@ -25,7 +25,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -38,7 +38,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -51,7 +51,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -67,7 +67,7 @@ export const schema_96 = {
                 "required": false,
                 "type": "NUMBER",
                 "unique": false,
-                "unit": "%",
+                "unit": "",
                 "unitPosition": "AFTER"
             },
             "cost": {
@@ -79,7 +79,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -137,7 +137,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -197,7 +197,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -210,7 +210,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -244,12 +244,16 @@ export const schema_96 = {
                         "index": "0",
                         "label": "前営業日"
                     },
+                    "未確認": {
+                        "index": "2",
+                        "label": "未確認"
+                    },
                     "翌営業日": {
                         "index": "1",
                         "label": "翌営業日"
                     }
                 },
-                "required": false,
+                "required": true,
                 "type": "DROP_DOWN"
             },
             "id": {
@@ -287,7 +291,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -324,9 +328,24 @@ export const schema_96 = {
                 "minLength": "",
                 "noLabel": false,
                 "protocol": "MAIL",
-                "required": false,
+                "required": true,
                 "type": "LINK",
                 "unique": false
+            },
+            "monthResetCount": {
+                "code": "monthResetCount",
+                "defaultValue": "0",
+                "digit": false,
+                "displayScale": "0",
+                "label": "申込回数リセット月",
+                "maxValue": "12",
+                "minValue": "0",
+                "noLabel": false,
+                "required": false,
+                "type": "NUMBER",
+                "unique": false,
+                "unit": "月",
+                "unitPosition": "AFTER"
             },
             "nextCheckStatus": {
                 "align": "HORIZONTAL",
@@ -356,7 +375,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -566,10 +585,10 @@ export const schema_96 = {
                 "maxValue": "",
                 "minValue": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "NUMBER",
                 "unique": false,
-                "unit": "%",
+                "unit": "",
                 "unitPosition": "AFTER"
             },
             "tmptransferFee": {
@@ -581,7 +600,7 @@ export const schema_96 = {
                 "maxValue": "",
                 "minValue": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "NUMBER",
                 "unique": false,
                 "unit": "円",
@@ -596,7 +615,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -760,7 +779,7 @@ export const schema_96 = {
                     "sort": "レコード番号 desc"
                 },
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "NUMBER"
             },
             "工務店名": {
@@ -772,7 +791,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -785,7 +804,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -804,7 +823,7 @@ export const schema_96 = {
                         "label": "LAGLESS"
                     }
                 },
-                "required": false,
+                "required": true,
                 "type": "DROP_DOWN"
             },
             "更新日時": {
@@ -827,7 +846,7 @@ export const schema_96 = {
                 "minLength": "",
                 "noLabel": false,
                 "protocol": "WEB",
-                "required": false,
+                "required": true,
                 "type": "LINK",
                 "unique": false
             }
@@ -839,6 +858,16 @@ export const schema_96 = {
     },
     "layout": {
         "layout": [
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "LABEL",
+                        "label": "<div>工務店ID</div><div><div><span style=\"font-size:14px\">100番台&#xff1a;ダンドリペイメント</span></div><div><span style=\"font-size:14px\">200番台&#xff1a;ラグレス</span></div><div><span style=\"font-size:14px\">300番台&#xff1a;リノベ不動産Payment</span></div><div><span style=\"font-size:14px\">400番台&#xff1a;WFI</span></div><div><span style=\"font-size:14px\">500番台&#xff1a;GIG</span></div><div><span style=\"font-size:14px\">601番　&#xff1a;MED</span></div></div>",
+                        "size": {}
+                    }
+                ]
+            },
             {
                 "type": "ROW",
                 "fields": [
@@ -921,7 +950,12 @@ export const schema_96 = {
                         "type": "SINGLE_LINE_TEXT",
                         "code": "service",
                         "size": {}
-                    },
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
                     {
                         "type": "SINGLE_LINE_TEXT",
                         "code": "limit",
@@ -935,6 +969,21 @@ export const schema_96 = {
                     {
                         "type": "LABEL",
                         "label": "<div>数値型の年間回数制限について&#xff1a;<div>制限なしの場合は0。未記入の場合は0として扱う。<br /></div><div>将来的には数値型のフィールドだけに統一したい。</div></div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "NUMBER",
+                        "code": "monthResetCount",
+                        "size": {}
+                    },
+                    {
+                        "type": "LABEL",
+                        "label": "<div>リセット月が「0」もしくは空欄→カウント日の直近1年間が対象<div>リセット月が「1〜12のどれか」→その月になったらカウントをリセット</div><div><br /></div><div>例&#xff1a;リセット月「2」の場合→2月から翌年1月がカウント対象期間。2月時め請求書のぶんからまたカウント回数がゼロになる</div></div>",
                         "size": {}
                     }
                 ]
@@ -1000,6 +1049,11 @@ export const schema_96 = {
                     {
                         "type": "SINGLE_LINE_TEXT",
                         "code": "transfer_fee",
+                        "size": {}
+                    },
+                    {
+                        "type": "LABEL",
+                        "label": "<div><br /></div><div>←記載例&#xff09;275円&#xff08;税込&#xff09;</div><div><br /></div>",
                         "size": {}
                     },
                     {
@@ -1357,7 +1411,7 @@ export const schema_96 = {
                     "説明ページ"
                 ],
                 "filterCond": "id in (\"103\", \"107\", \"209\", \"211\", \"300\", \"303\", \"304\")",
-                "index": "2",
+                "index": "3",
                 "name": "202012-末締め末払い",
                 "sort": "id asc",
                 "type": "LIST"
@@ -1402,7 +1456,7 @@ export const schema_96 = {
                     "invoiceAddressee"
                 ],
                 "filterCond": "工務店名 like \"テスト\"",
-                "index": "1",
+                "index": "2",
                 "name": "テスト用レコード",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1432,6 +1486,26 @@ export const schema_96 = {
                 "filterCond": "工務店名 not like \"テスト\"",
                 "index": "0",
                 "name": "一覧1",
+                "sort": "レコード番号 desc",
+                "type": "LIST"
+            },
+            "一覧（支払パターン）": {
+                "fields": [
+                    "支払元口座",
+                    "defaultPaymentResponsible",
+                    "id",
+                    "工務店正式名称",
+                    "handleForHolidays",
+                    "pattern",
+                    "closing",
+                    "original",
+                    "early",
+                    "daysLater",
+                    "service"
+                ],
+                "filterCond": "工務店名 not like \"テスト\"",
+                "index": "1",
+                "name": "一覧（支払パターン）",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
             }

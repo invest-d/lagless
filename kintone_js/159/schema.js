@@ -396,6 +396,19 @@ export const schema_apply = {
                 "unit": "",
                 "unitPosition": "BEFORE"
             },
+            "dandoriID": {
+                "code": "dandoriID",
+                "defaultValue": "",
+                "expression": "",
+                "hideExpression": false,
+                "label": "ダンドリワークID",
+                "maxLength": "",
+                "minLength": "",
+                "noLabel": false,
+                "required": false,
+                "type": "SINGLE_LINE_TEXT",
+                "unique": false
+            },
             "deposit": {
                 "align": "HORIZONTAL",
                 "code": "deposit",
@@ -460,6 +473,32 @@ export const schema_apply = {
                 "thumbnailSize": "150",
                 "type": "FILE"
             },
+            "factorableAmountPerDayWFI": {
+                "code": "factorableAmountPerDayWFI",
+                "displayScale": "",
+                "expression": "IF(monthsWorkedKeban<4, 3000, 5000)",
+                "format": "NUMBER_DIGIT",
+                "hideExpression": false,
+                "label": "稼働日1日あたりの前払い可能金額",
+                "noLabel": false,
+                "required": false,
+                "type": "CALC",
+                "unit": "円",
+                "unitPosition": "AFTER"
+            },
+            "factorableTotalAmountWFI": {
+                "code": "factorableTotalAmountWFI",
+                "displayScale": "",
+                "expression": "factorableAmountPerDayWFI*workedDaysWFI",
+                "format": "NUMBER_DIGIT",
+                "hideExpression": false,
+                "label": "前払対象金額",
+                "noLabel": false,
+                "required": false,
+                "type": "CALC",
+                "unit": "円",
+                "unitPosition": "AFTER"
+            },
             "invoice": {
                 "code": "invoice",
                 "label": "請求書データの添付",
@@ -467,6 +506,29 @@ export const schema_apply = {
                 "required": false,
                 "thumbnailSize": "250",
                 "type": "FILE"
+            },
+            "kebanID": {
+                "code": "kebanID",
+                "defaultValue": "",
+                "expression": "",
+                "hideExpression": false,
+                "label": "軽バンドットコムドライバーID",
+                "maxLength": "",
+                "minLength": "",
+                "noLabel": false,
+                "required": false,
+                "type": "SINGLE_LINE_TEXT",
+                "unique": false
+            },
+            "kebanStartDate": {
+                "code": "kebanStartDate",
+                "defaultNowValue": false,
+                "defaultValue": "",
+                "label": "ドライバー稼働開始日",
+                "noLabel": false,
+                "required": false,
+                "type": "DATE",
+                "unique": false
             },
             "mail": {
                 "code": "mail",
@@ -493,6 +555,21 @@ export const schema_apply = {
                 "type": "NUMBER",
                 "unique": false,
                 "unit": "円",
+                "unitPosition": "AFTER"
+            },
+            "monthsWorkedKeban": {
+                "code": "monthsWorkedKeban",
+                "defaultValue": "0",
+                "digit": false,
+                "displayScale": "",
+                "label": "稼働開始日からの経過月数",
+                "maxValue": "",
+                "minValue": "0",
+                "noLabel": false,
+                "required": false,
+                "type": "NUMBER",
+                "unique": false,
+                "unit": "ヶ月",
                 "unitPosition": "AFTER"
             },
             "ordererGig": {
@@ -723,6 +800,21 @@ export const schema_apply = {
                 "unit": "円",
                 "unitPosition": "AFTER"
             },
+            "workedDaysWFI": {
+                "code": "workedDaysWFI",
+                "defaultValue": "0",
+                "digit": false,
+                "displayScale": "",
+                "label": "稼働機関の稼働日数",
+                "maxValue": "",
+                "minValue": "0",
+                "noLabel": false,
+                "required": false,
+                "type": "NUMBER",
+                "unique": false,
+                "unit": "日",
+                "unitPosition": "AFTER"
+            },
             "カテゴリー": {
                 "code": "カテゴリー",
                 "enabled": false,
@@ -779,6 +871,18 @@ export const schema_apply = {
                         {
                             "field": "役職名",
                             "relatedField": "役職名"
+                        },
+                        {
+                            "field": "dandoriID",
+                            "relatedField": "dandoriID"
+                        },
+                        {
+                            "field": "kebanID",
+                            "relatedField": "kebanID"
+                        },
+                        {
+                            "field": "kebanStartDate",
+                            "relatedField": "kebanStartDate"
                         }
                     ],
                     "filterCond": "",
@@ -1419,6 +1523,41 @@ export const schema_apply = {
                 "fields": [
                     {
                         "type": "LABEL",
+                        "label": "<div>↓工務店ごとに特有のフィールド↓</div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "SINGLE_LINE_TEXT",
+                        "code": "dandoriID",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "SINGLE_LINE_TEXT",
+                        "code": "kebanID",
+                        "size": {}
+                    },
+                    {
+                        "type": "DATE",
+                        "code": "kebanStartDate",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "LABEL",
                         "label": "<div>↑協力会社ルックアップ───────────────────────────────────────<br /></div>",
                         "size": {}
                     }
@@ -1567,6 +1706,95 @@ export const schema_apply = {
                     {
                         "type": "NUMBER",
                         "code": "collectId",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "HR",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "LABEL",
+                        "label": "<div>軽バン.COM用フィールド</div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "LABEL",
+                        "label": "<div>経過月数は次のように計算する&#xff08;kintoneの機能では計算不可能なので、エクセルで計算してからインポート&#xff09;<div>①【前払を申し込んだ月の1日】と【ドライバーが稼働開始した月の1日】の間の月数……Xヶ月とする</div><div>②ドライバーが稼働開始した日付が1日〜14日だった場合→Xヶ月を経過月数とする</div><div>③ドライバーが稼働開始した日付が15日〜31日だった場合→&#xff08;X-1&#xff09;ヶ月を経過月数とする</div></div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "LABEL",
+                        "label": "<div>稼働日数はWFI様に問い合わせて記入する</div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "NUMBER",
+                        "code": "monthsWorkedKeban",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "CALC",
+                        "code": "factorableAmountPerDayWFI",
+                        "size": {}
+                    },
+                    {
+                        "type": "LABEL",
+                        "label": "<div>✖️</div>",
+                        "size": {}
+                    },
+                    {
+                        "type": "NUMBER",
+                        "code": "workedDaysWFI",
+                        "size": {}
+                    },
+                    {
+                        "type": "LABEL",
+                        "label": "<div>&#xff1d;</div>",
+                        "size": {}
+                    },
+                    {
+                        "type": "CALC",
+                        "code": "factorableTotalAmountWFI",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "LABEL",
+                        "label": "<div>回収レコード作成時、申込金額フィールドが0円のままになっている場合は、前払対象金額フィールドを申込金額フィールドへ自動で転記してから処理します</div>",
                         "size": {}
                     }
                 ]
@@ -1752,22 +1980,18 @@ export const schema_apply = {
                     "billingCompanyOfficialName",
                     "ルックアップ",
                     "支払先正式名称",
-                    "phone",
-                    "mail",
                     "paymentTiming",
+                    "closingDay",
                     "paymentDate",
                     "状態",
-                    "membership_fee",
-                    "commissionAmount",
                     "transferAmount",
-                    "commissionAmount_late",
                     "transferAmount_late",
                     "transferFeeTaxIncl"
                 ],
-                "filterCond": "ルックアップ != \"\" and 状態 in (\"実行完了\") and paymentDate >= FROM_TODAY(-1, YEARS)",
+                "filterCond": "ルックアップ != \"\" and 状態 in (\"実行完了\") and paymentTiming not in (\"通常払い\") and closingDay >= FROM_TODAY(-1, YEARS)",
                 "index": "6",
                 "name": "申込回数カウント対象（概算）",
-                "sort": "constructionShopId asc, ルックアップ asc, paymentTiming asc, paymentDate desc",
+                "sort": "constructionShopId asc, ルックアップ asc, paymentTiming asc, closingDay desc",
                 "type": "LIST"
             }
         }
