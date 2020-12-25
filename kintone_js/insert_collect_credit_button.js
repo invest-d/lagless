@@ -45,73 +45,78 @@
         }
     })(kintone.app.getId());
 
-    const APP_ID_APPLY = APP_ID.APPLY;
-    const fieldRecordId_APPLY = "レコード番号";
-    const fieldStatus_APPLY = "状態";
-    const statusReady_APPLY = "ID確認済";
-    const fieldConstructionShopId_APPLY = "constructionShopId";
-    const fieldClosingDay_APPLY = "closingDay";
-    const fieldApplicant_APPLY = "支払先正式名称";
-    const fieldInvoiceAmount_APPLY = "applicationAmount";
-    const fieldMemberFee_APPLY = "membership_fee";
-    const fieldTotalReceivables_APPLY = "totalReceivables";
-    const fieldPaymentTiming_APPLY = "paymentTiming";
+    const APP_ID_APPLY                      = APP_ID.APPLY;
+    const fieldRecordId_APPLY               = "レコード番号";
+    const fieldStatus_APPLY                 = "状態";
+    const statusReady_APPLY                 = "ID確認済";
+    const fieldConstructionShopId_APPLY     = "constructionShopId";
+    const fieldClosingDay_APPLY             = "closingDay";
+    const fieldApplicant_APPLY              = "支払先正式名称";
+    const fieldInvoiceAmount_APPLY          = "applicationAmount";
+    const fieldMemberFee_APPLY              = "membership_fee";
+    const fieldTotalReceivables_APPLY       = "totalReceivables";
+    const fieldPaymentTiming_APPLY          = "paymentTiming";
     const statusPaymentTimingOriginal_APPLY = "通常払い";
-    const fieldPaymentDate_APPLY = "paymentDate";
-    const fieldCollectId_APPLY = "collectId";
-    const fieldInvoice_APPLY = "invoice";
+    const fieldPaymentDate_APPLY            = "paymentDate";
+    const fieldCollectId_APPLY              = "collectId";
+    const fieldInvoice_APPLY                = "invoice";
 
-    const APP_ID_COLLECT = APP_ID.COLLECT;
-    const fieldRecordId_COLLECT = "レコード番号";
-    const fieldConstructionShopId_COLLECT = "constructionShopId";
-    const fieldClosingDate_COLLECT = "closingDate";
-    const fieldDeadline_COLLECT = "deadline";
-    const fieldStatus_COLLECT = "collectStatus";
-    const statusDefault_COLLECT = "クラウドサイン作成待ち";
-    const fieldScheduledCollectableAmount_COLLECT = "scheduledCollectableAmount";
-    const tableCloudSignApplies_COLLECT = "cloudSignApplies";
-    const tableFieldApplyRecordNoCS = "applyRecordNoCS";
-    const tableFieldApplicantOfficialNameCS = "applicantOfficialNameCS";
-    const tableFieldInvoiceAmountCS = "invoiceAmountCS";
-    const tableFieldMemberFeeCS = "membershipFeeCS";
-    const tableFieldReceivableCS = "receivableCS";
-    const tableFieldPaymentTimingCS = "paymentTimingCS";
-    const tableFieldPaymentDateCS = "paymentDateCS";
-    const tableFieldAttachmentFileKeyCS = "attachmentFileKeyCS";
+    const APP_ID_COLLECT                            = APP_ID.COLLECT;
+    const fieldRecordId_COLLECT                     = "レコード番号";
+    const fieldConstructionShopId_COLLECT           = "constructionShopId";
+    const fieldClosingDate_COLLECT                  = "closingDate";
+    const fieldDeadline_COLLECT                     = "deadline";
+    const fieldStatus_COLLECT                       = "collectStatus";
+    const statusDefault_COLLECT                     = "クラウドサイン作成待ち";
+    const fieldScheduledCollectableAmount_COLLECT   = "scheduledCollectableAmount";
+    const tableCloudSignApplies_COLLECT             = "cloudSignApplies";
+    const tableFieldApplyRecordNoCS                 = "applyRecordNoCS";
+    const tableFieldApplicantOfficialNameCS         = "applicantOfficialNameCS";
+    const tableFieldInvoiceAmountCS                 = "invoiceAmountCS";
+    const tableFieldMemberFeeCS                     = "membershipFeeCS";
+    const tableFieldReceivableCS                    = "receivableCS";
+    const tableFieldPaymentTimingCS                 = "paymentTimingCS";
+    const tableFieldPaymentDateCS                   = "paymentDateCS";
+    const tableFieldAttachmentFileKeyCS             = "attachmentFileKeyCS";
 
-    const APP_ID_KOMUTEN = 96;
-    const fieldConstructionShopId_KOMUTEN = "id";
-    const fieldOriginalPaymentDate_KOMUTEN = "original";
+    const APP_ID_KOMUTEN                    = 96;
+    const fieldConstructionShopId_KOMUTEN   = "id";
+    const fieldOriginalPaymentDate_KOMUTEN  = "original";
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         if (needShowButton()) {
-            const button = createInsertCollectRecordButton();
+            const button = createButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
 
+    const button_id = "insertCollect";
+    const button_label = "クラウドサイン用に回収レコードを作成";
     function needShowButton() {
         // 一旦は常にボタンを表示する。増殖バグだけ防止
-        return document.getElementById("insertCollect") === null;
+        return document.getElementById(button_id) === null;
     }
 
-    function createInsertCollectRecordButton() {
-        const insertCollect = document.createElement("button");
-        insertCollect.id = "insertCollect";
-        insertCollect.innerText = "クラウドサイン用に回収レコードを作成";
-        insertCollect.addEventListener("click", clickInsertCollect);
-        return insertCollect;
+    function createButton() {
+        const button = document.createElement("button");
+        button.id = button_id;
+        button.innerText = button_label;
+        button.addEventListener("click", clickButton);
+        return button;
     }
 
     // ボタンクリック時の処理を定義
-    async function clickInsertCollect() {
+    async function clickButton() {
         const clicked_ok = confirm("ID確認済の申込みを、工務店と締日ごとにまとめ、回収アプリにレコード追加します。");
         if (!clicked_ok) {
             alert("処理は中断されました。");
             return;
         }
+        const text_ready = this.innerText;
+        this.innerText = "作成中...";
 
         try {
             // 対象となるレコードを申込みアプリから全件取得
@@ -145,6 +150,8 @@
             window.location.reload();
         } catch(err) {
             alert(err);
+        } finally {
+            this.innerText = text_ready;
         }
     }
 
