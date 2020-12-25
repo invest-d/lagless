@@ -16,12 +16,48 @@ export const schema_88 = {
                 "unit": "回",
                 "unitPosition": "AFTER"
             },
+            "dandoriID": {
+                "code": "dandoriID",
+                "defaultValue": "",
+                "expression": "",
+                "hideExpression": false,
+                "label": "ダンドリワーク協力会社ID",
+                "maxLength": "",
+                "minLength": "",
+                "noLabel": false,
+                "required": false,
+                "type": "SINGLE_LINE_TEXT",
+                "unique": false
+            },
+            "kebanID": {
+                "code": "kebanID",
+                "defaultValue": "",
+                "expression": "",
+                "hideExpression": false,
+                "label": "ドライバーID",
+                "maxLength": "",
+                "minLength": "",
+                "noLabel": false,
+                "required": false,
+                "type": "SINGLE_LINE_TEXT",
+                "unique": false
+            },
+            "kebanStartDate": {
+                "code": "kebanStartDate",
+                "defaultNowValue": false,
+                "defaultValue": "",
+                "label": "稼働開始日",
+                "noLabel": false,
+                "required": false,
+                "type": "DATE",
+                "unique": false
+            },
             "numberOfApplication": {
                 "code": "numberOfApplication",
                 "defaultValue": "0",
                 "digit": false,
                 "displayScale": "",
-                "label": "直近1年の早払い申込み回数（ボタンで入力）",
+                "label": "1年間の早払い申込み回数（ボタンで入力）",
                 "maxValue": "",
                 "minValue": "",
                 "noLabel": false,
@@ -36,7 +72,7 @@ export const schema_88 = {
                 "defaultValue": "0",
                 "digit": false,
                 "displayScale": "",
-                "label": "直近1年の遅払い申込み回数（ボタンで入力）",
+                "label": "1年間の遅払い申込み回数（ボタンで入力）",
                 "maxValue": "",
                 "minValue": "",
                 "noLabel": false,
@@ -242,7 +278,7 @@ export const schema_88 = {
                         "label": "ダンドリペイメント"
                     },
                     "テスト商品": {
-                        "index": "5",
+                        "index": "6",
                         "label": "テスト商品"
                     },
                     "ネクステージペイメント": {
@@ -256,6 +292,10 @@ export const schema_88 = {
                     "リノベ不動産Payment": {
                         "index": "2",
                         "label": "リノベ不動産Payment"
+                    },
+                    "軽バンドットコム": {
+                        "index": "5",
+                        "label": "軽バンドットコム"
                     }
                 },
                 "required": true,
@@ -284,7 +324,7 @@ export const schema_88 = {
                     "sort": "レコード番号 desc"
                 },
                 "noLabel": false,
-                "required": false,
+                "required": true,
                 "type": "SINGLE_LINE_TEXT"
             },
             "工務店名": {
@@ -895,6 +935,16 @@ export const schema_88 = {
                 "type": "ROW",
                 "fields": [
                     {
+                        "type": "LABEL",
+                        "label": "<div>申込回数は、工務店マスタの「申込回数リセット月」に基づく期間内の申込レコードを対象にカウントします</div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
                         "type": "NUMBER",
                         "code": "numberOfApplication",
                         "size": {}
@@ -929,6 +979,70 @@ export const schema_88 = {
                         "code": "関連レコード一覧"
                     }
                 ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "HR",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "LABEL",
+                        "label": "<div>工務店特有のフィールド群&#xff08;全て任意入力&#xff09;</div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "LABEL",
+                        "label": "<div>ダンドリペイメント利用の工務店用</div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "SINGLE_LINE_TEXT",
+                        "code": "dandoriID",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "LABEL",
+                        "label": "<div>ワールドフォースインターナショナル用</div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "SINGLE_LINE_TEXT",
+                        "code": "kebanID",
+                        "size": {}
+                    },
+                    {
+                        "type": "DATE",
+                        "code": "kebanStartDate",
+                        "size": {}
+                    }
+                ]
             }
         ]
     },
@@ -938,25 +1052,24 @@ export const schema_88 = {
                 "fields": [
                     "レコード番号",
                     "支払企業No_",
-                    "支払先正式名称",
                     "開始日",
+                    "支払先",
+                    "支払先正式名称",
+                    "役職名",
                     "担当者名",
+                    "工務店ID",
                     "工務店名",
                     "商品名",
-                    "除外期間",
-                    "送付方法",
-                    "申込メール送付日",
-                    "初回送信日時",
-                    "shouldSendStartMail",
-                    "statusStartMail",
-                    "startMailSendDate",
+                    "銀行名",
+                    "支店名",
+                    "預金種目",
+                    "口座番号",
+                    "口座名義",
                     "メールアドレス",
-                    "電話番号",
-                    "numberOfApplication",
-                    "applicationLimit"
+                    "電話番号"
                 ],
-                "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店名 = \"MED Communications株式会社\"",
-                "index": "10",
+                "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"601\"",
+                "index": "12",
                 "name": "MED Communications株式会社",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -982,7 +1095,7 @@ export const schema_88 = {
                     "applicationLimit"
                 ],
                 "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"301\"",
-                "index": "3",
+                "index": "1",
                 "name": "ウスクラ建設株式会社",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1005,7 +1118,7 @@ export const schema_88 = {
                     "updatedDate"
                 ],
                 "filterCond": "支払先正式名称 like \"テスト\"",
-                "index": "16",
+                "index": "20",
                 "name": "テスト用スタートメール",
                 "sort": "shouldSendStartMail desc",
                 "type": "LIST"
@@ -1045,7 +1158,7 @@ export const schema_88 = {
                     "送付方法"
                 ],
                 "filterCond": "支払先正式名称 like \"テスト\"",
-                "index": "15",
+                "index": "19",
                 "name": "テスト用レコード",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1096,8 +1209,8 @@ export const schema_88 = {
                     "numberOfApplication",
                     "applicationLimit"
                 ],
-                "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"103\"",
-                "index": "5",
+                "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"215\"",
+                "index": "10",
                 "name": "古川製材株式会社",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1123,7 +1236,7 @@ export const schema_88 = {
                     "applicationLimit"
                 ],
                 "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"211\"",
-                "index": "2",
+                "index": "13",
                 "name": "有限会社矢内石油",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1155,7 +1268,7 @@ export const schema_88 = {
                     "商品名"
                 ],
                 "filterCond": "最終送信日時 = TODAY()",
-                "index": "14",
+                "index": "18",
                 "name": "本日送付した先",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1182,8 +1295,8 @@ export const schema_88 = {
                     "工務店名",
                     "商品名"
                 ],
-                "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 = \"株式会社GIG\"",
-                "index": "11",
+                "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店ID = \"500\"",
+                "index": "4",
                 "name": "株式会社GIG",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1209,7 +1322,7 @@ export const schema_88 = {
                     "applicationLimit"
                 ],
                 "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"100\"",
-                "index": "4",
+                "index": "14",
                 "name": "株式会社Realtor Solutions",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1235,7 +1348,7 @@ export const schema_88 = {
                     "applicationLimit"
                 ],
                 "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"300\"",
-                "index": "8",
+                "index": "15",
                 "name": "株式会社WAKUWAKU",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1261,8 +1374,34 @@ export const schema_88 = {
                     "applicationLimit"
                 ],
                 "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"212\"",
-                "index": "6",
+                "index": "2",
                 "name": "株式会社エムアールエスブレイン",
+                "sort": "レコード番号 desc",
+                "type": "LIST"
+            },
+            "株式会社サンクリエーション": {
+                "fields": [
+                    "レコード番号",
+                    "支払企業No_",
+                    "支払先正式名称",
+                    "担当者名",
+                    "工務店名",
+                    "商品名",
+                    "除外期間",
+                    "送付方法",
+                    "申込メール送付日",
+                    "初回送信日時",
+                    "shouldSendStartMail",
+                    "statusStartMail",
+                    "startMailSendDate",
+                    "メールアドレス",
+                    "電話番号",
+                    "numberOfApplication",
+                    "applicationLimit"
+                ],
+                "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"101\"",
+                "index": "5",
+                "name": "株式会社サンクリエーション",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
             },
@@ -1287,8 +1426,60 @@ export const schema_88 = {
                     "applicationLimit"
                 ],
                 "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"210\"",
-                "index": "1",
+                "index": "6",
                 "name": "株式会社ナサホーム",
+                "sort": "レコード番号 desc",
+                "type": "LIST"
+            },
+            "株式会社ハウジング重兵衛": {
+                "fields": [
+                    "レコード番号",
+                    "支払企業No_",
+                    "支払先正式名称",
+                    "担当者名",
+                    "工務店名",
+                    "商品名",
+                    "除外期間",
+                    "送付方法",
+                    "申込メール送付日",
+                    "初回送信日時",
+                    "shouldSendStartMail",
+                    "statusStartMail",
+                    "startMailSendDate",
+                    "メールアドレス",
+                    "電話番号",
+                    "numberOfApplication",
+                    "applicationLimit"
+                ],
+                "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"204\"",
+                "index": "8",
+                "name": "株式会社ハウジング重兵衛",
+                "sort": "レコード番号 desc",
+                "type": "LIST"
+            },
+            "株式会社ヒカリテック": {
+                "fields": [
+                    "レコード番号",
+                    "支払企業No_",
+                    "支払先正式名称",
+                    "担当者名",
+                    "工務店名",
+                    "商品名",
+                    "除外期間",
+                    "送付方法",
+                    "申込メール送付日",
+                    "初回送信日時",
+                    "shouldSendStartMail",
+                    "statusStartMail",
+                    "startMailSendDate",
+                    "メールアドレス",
+                    "電話番号",
+                    "numberOfApplication",
+                    "applicationLimit"
+                ],
+                "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"214\"",
+                "index": "9",
+                "name": "株式会社ヒカリテック",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
             },
@@ -1313,8 +1504,34 @@ export const schema_88 = {
                     "applicationLimit"
                 ],
                 "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"105\"",
-                "index": "7",
+                "index": "11",
                 "name": "株式会社メガステップ",
+                "sort": "レコード番号 desc",
+                "type": "LIST"
+            },
+            "株式会社日本中央住販": {
+                "fields": [
+                    "レコード番号",
+                    "支払企業No_",
+                    "支払先正式名称",
+                    "担当者名",
+                    "工務店名",
+                    "商品名",
+                    "除外期間",
+                    "送付方法",
+                    "申込メール送付日",
+                    "初回送信日時",
+                    "shouldSendStartMail",
+                    "statusStartMail",
+                    "startMailSendDate",
+                    "メールアドレス",
+                    "電話番号",
+                    "numberOfApplication",
+                    "applicationLimit"
+                ],
+                "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"104\"",
+                "index": "7",
+                "name": "株式会社日本中央住販",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
             },
@@ -1338,7 +1555,7 @@ export const schema_88 = {
                     "applicationLimit"
                 ],
                 "filterCond": "申込メール送付日 = \"0\"",
-                "index": "13",
+                "index": "17",
                 "name": "案内メールテスト用",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1362,7 +1579,7 @@ export const schema_88 = {
                     "商品名"
                 ],
                 "filterCond": "申込メール送付日 != \"0\" and 申込メール送付日 != \"\"",
-                "index": "12",
+                "index": "16",
                 "name": "自動送付",
                 "sort": "申込メール送付日 asc",
                 "type": "LIST"
@@ -1388,7 +1605,7 @@ export const schema_88 = {
                     "applicationLimit"
                 ],
                 "filterCond": "支払先正式名称 not like \"テスト\" and 支払先正式名称 not like \"test\" and 工務店名 not like \"テスト\" and 工務店名 not like \"test\" and 工務店ID = \"304\"",
-                "index": "9",
+                "index": "3",
                 "name": "銀杏開発株式会社",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
