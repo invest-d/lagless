@@ -46,22 +46,21 @@ import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
 import { get_contractor_name } from "./util_forms";
 
+export const KE_BAN_CONSTRUCTORS = [
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+];
+
 (function() {
     "use strict";
 
     // 本キャンペーンを打ち出してから最初に案内メールを送信する日
     const HALF_COMMISION_START_DATE = dayjs("2020-12-17");
-
     // 現状は終了日未定
     const HALF_COMMISION_END_DATE = dayjs("9999-12-31");
-
-    const KE_BAN_CONSTRUCTORS = [
-        "400",
-        "401",
-        "402",
-        "403",
-        "404",
-    ];
 
     const button_name = "createPaymentDetail";
     const button_title = "支払予定明細の本文を一括作成";

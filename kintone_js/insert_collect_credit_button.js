@@ -1,4 +1,7 @@
 /*
+    Version 4
+    軽バン.COM案件について、回収レコード作成前に申込金額を記入する処理を追加
+
     Version 3
     申込アプリ内で対象となるレコードの種類を変更。
     支払タイミングが通常払いのレコードは対象外となるようにした
@@ -21,6 +24,10 @@
     回収アプリに新規レコードとして追加したあと、
     申込みレコードの回収IDフィールドに回収アプリ側のレコード番号を入力する。
 */
+
+import {
+    KE_BAN_CONSTRUCTORS
+} from "./create_payment_detail";
 
 (function () {
     "use strict";
@@ -45,6 +52,8 @@
         }
     })(kintone.app.getId());
 
+    const commonRecordID = "$id";
+
     const APP_ID_APPLY                      = APP_ID.APPLY;
     const fieldRecordId_APPLY               = "レコード番号";
     const fieldStatus_APPLY                 = "状態";
@@ -60,6 +69,7 @@
     const fieldPaymentDate_APPLY            = "paymentDate";
     const fieldCollectId_APPLY              = "collectId";
     const fieldInvoice_APPLY                = "invoice";
+    const factorableTotalAmountWFI          = "factorableTotalAmountWFI";
 
     const APP_ID_COLLECT                            = APP_ID.COLLECT;
     const fieldRecordId_COLLECT                     = "レコード番号";
@@ -84,6 +94,10 @@
     const fieldOriginalPaymentDate_KOMUTEN  = "original";
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
+
+    const INSERT_TARGET_COND = `${fieldStatus_APPLY} in ("${statusReady_APPLY}")`
+        + `and ${fieldCollectId_APPLY} = ""` //回収IDブランク
+        + `and ${fieldPaymentTiming_APPLY} not in ("${statusPaymentTimingOriginal_APPLY}")`; // 通常払い以外
 
     // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
@@ -119,6 +133,10 @@
         this.innerText = "作成中...";
 
         try {
+            // 作成前に軽バン.COM案件の対象債権合計金額を手動で別フィールドから転記する必要がある。
+            // しかし忘れていても大丈夫なように転記処理をしておく。
+            await copyKebanFactoringAmount();
+
             // 対象となるレコードを申込みアプリから全件取得
             const insert_targets = await getAppliesReadyForCollect()
                 .catch((err) => {
@@ -155,6 +173,52 @@
         }
     }
 
+    const getKebanZeroApplies = () => {
+        const in_query = KE_BAN_CONSTRUCTORS
+            .map((id) => `"${id}"`).join(",");
+
+        const body = {
+            app: APP_ID_APPLY,
+            fields: [
+                commonRecordID,
+                fieldInvoiceAmount_APPLY,
+                factorableTotalAmountWFI
+            ],
+            // 回収レコード作成対象 && 工務店IDがWFI && 申込金額が0
+            condition: `${INSERT_TARGET_COND}
+                and ${fieldConstructionShopId_APPLY} in (${in_query})
+                and ${fieldInvoiceAmount_APPLY} = 0`,
+        };
+
+        return client.record.getAllRecords(body);
+    };
+
+    const getCopiedPutPayload = (targets) => {
+        const records = targets.map((r) => {
+            return {
+                "id": r[commonRecordID]["value"],
+                "record": {
+                    [fieldInvoiceAmount_APPLY]: {
+                        "value": r[factorableTotalAmountWFI]["value"],
+                    }
+                }
+            };
+        });
+
+        return {
+            app: APP_ID_APPLY,
+            records: records
+        };
+    };
+
+    const copyKebanFactoringAmount = async () => {
+        // 軽バン.COMの支払予定明細未作成レコードの更新処理を行う。
+        // 申込金額フィールドが0のレコードに限り、前払対象金額フィールドを申込金額フィールドに転記する。
+        const targets = await getKebanZeroApplies();
+        const payload = getCopiedPutPayload(targets);
+        await client.record.updateAllRecords(payload);
+    };
+
     function getAppliesReadyForCollect() {
         // 申込みアプリの中で ID確認済 かつ 回収IDがブランクのレコードを全て取得する。
         const request_body = {
@@ -171,9 +235,7 @@
                 fieldPaymentDate_APPLY,
                 fieldInvoice_APPLY
             ],
-            "condition": `${fieldStatus_APPLY} in ("${statusReady_APPLY}")`
-                + `and ${fieldCollectId_APPLY} = ""` //回収IDブランク
-                + `and ${fieldPaymentTiming_APPLY} not in ("${statusPaymentTimingOriginal_APPLY}")` // 通常払い以外
+            "condition": INSERT_TARGET_COND
         };
 
         return client.record.getAllRecords(request_body);
