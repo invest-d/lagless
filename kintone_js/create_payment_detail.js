@@ -46,14 +46,6 @@ import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
 import { get_contractor_name } from "./util_forms";
 
-export const KE_BAN_CONSTRUCTORS = [
-    "400",
-    "401",
-    "402",
-    "403",
-    "404",
-];
-
 (function() {
     "use strict";
 
@@ -65,6 +57,14 @@ export const KE_BAN_CONSTRUCTORS = [
     const button_name = "createPaymentDetail";
     const button_title = "支払予定明細の本文を一括作成";
     const nextActionButtonTitle = "支払予定明細一括送信";
+
+    const KE_BAN_CONSTRUCTORS = [
+        "400",
+        "401",
+        "402",
+        "403",
+        "404",
+    ];
 
     const fieldRecordId_COMMON = "$id";
 
@@ -103,6 +103,9 @@ export const KE_BAN_CONSTRUCTORS = [
     const fieldTransferAmountEarlyFirst_APPLY   = "transferAmountEarlyFirst";
     const fieldPaymentAccount_APPLY             = "paymentAccount";
     const fieldConstructorID_APPLY              = "constructionShopId";
+    const fieldFactorableAmountPerDayWFI_APPLY  = "factorableAmountPerDayWFI";
+    const fieldWorkedDaysWFI_APPLY              = "workedDaysWFI";
+    const fieldFactorableTotalAmountWFI_APPLY   = "factorableTotalAmountWFI";
 
     const contractor_mail_lagless               = "lagless@invest-d.com";
     const contractor_mail_dandori               = "d-p@invest-d.com";
@@ -227,14 +230,54 @@ export const KE_BAN_CONSTRUCTORS = [
         document.location.reload();
     }
 
+    async function attachDetail(target_records) {
+        // エラーが発生した時、どのレコードで発生したかの情報をthrowするためのlet
+        let error_num = 0;
+        try {
+            const processes = target_records.map(async (record) => {
+                error_num = record[fieldRecordId_COMMON]["value"];
+
+                const multiline_detail_text = await (async (record) => {
+                    if (KE_BAN_CONSTRUCTORS.includes(record[fieldConstructorID_APPLY]["value"])) {
+                        const display_record_data = getKebanDetailDisplayData(record);
+                        return generateDetailTextKeban(display_record_data);
+                    } else {
+                        return await getLaglessPaymentDetail(record);
+                    }
+                })(record);
+
+                const record_obj = {
+                    "id": record[fieldRecordId_COMMON]["value"],
+                    "record": {
+                        [fieldDetail_APPLY]: {
+                            "value": multiline_detail_text
+                        },
+                        [fieldStatus_APPLY]: {
+                            "value": statusConfirming_APPLY
+                        }
+                    }
+                };
+
+                return record_obj;
+            });
+
+            const result = await Promise.all(processes);
+            return result;
+        } catch(err) {
+            console.error(err);
+            throw new Error(`レコード番号${String(error_num)} を処理中にエラーが発生したため、処理を中断しました。\n`
+            + "レコードの内容に不足がないかを確認してからもう一度やり直してください。\n\n"
+            + `エラー内容：${err.message}`);
+        }
+    }
+
     const getFormattedYYYYMMDD = (kintone_date_value) => {
         // YYYY年MM月DD日のフォーマットで返す
         return `${kintone_date_value.split("-")[0]}年${kintone_date_value.split("-")[1]}月${kintone_date_value.split("-")[2]}日`;
     };
 
-    const get_lagless_payment_detail = async () => {
+    const getLaglessPaymentDetail = async (record) => {
         // ラグレスのファクタリング支払予定明細の本文を取得する
-        const record_num                    = record[fieldRecordId_COMMON]["value"];
         const kyoryoku_company_name         = record[fieldCustomerCompanyName_APPLY]["value"];
         const kyoryoku_ceo_name             = record[fieldAddresseeName_APPLY]["value"];
         const kyoryoku_ceo_title            = record[fieldAddresseeTitle_APPLY]["value"];
@@ -326,7 +369,7 @@ export const KE_BAN_CONSTRUCTORS = [
             timing:                         timing,
             kyoryoku_company_name:          kyoryoku_company_name,
             // eslint-disable-next-line no-irregular-whitespace
-            kyoryoku_ceo_title_and_name:    (`${kyoryoku_ceo_title  } ${  kyoryoku_ceo_name}`).replace(/^( |　)+/,""), //titleが無い場合はreplaceで最初のスペースを取り除く
+            kyoryoku_ceo_title_and_name:    getAddresseeName(kyoryoku_ceo_title, kyoryoku_ceo_name),
             product_name:                   product_name,
             closing_YYYYnenMMgatsuDDhi:     closing_YYYYnenMMgatsuDDhi,
             payment_YYYYnenMMgatsuDDhi:     payment_YYYYnenMMgatsuDDhi,
@@ -341,45 +384,15 @@ export const KE_BAN_CONSTRUCTORS = [
             sender_mail:                    sender_mail,
         };
 
-        return generateDetailText(apply_info, should_discount_for_first);
+        return generateLaglessDetailText(apply_info, should_discount_for_first);
     };
 
-    async function attachDetail(target_records) {
-        // エラーが発生した時、どのレコードで発生したかの情報をthrowするためのlet
-        let error_num = 0;
-        try {
-            const processes = target_records.map(async (record) => {
-                error_num = record[fieldRecordId_COMMON]["value"];
-
-                const detail = (() => {})();
-
-                const record_obj = {
-                    "id": record[fieldRecordId_COMMON]["value"],
-                    "record": {
-                        [fieldDetail_APPLY]: {
-                            "value": detail
-                        },
-                        [fieldStatus_APPLY]: {
-                            "value": statusConfirming_APPLY
-                        }
-                    }
-                };
-
-                return record_obj;
-            });
-
-            const result = await Promise.all(processes);
-            return result;
-        } catch(err) {
-            console.error(err);
-            throw new Error(`レコード番号${String(error_num)} を処理中にエラーが発生したため、処理を中断しました。\n`
-            + "レコードの内容に不足がないかを確認してからもう一度やり直してください。\n\n"
-            + `エラー内容：${err.message}`);
-        }
-    }
+    const getAddresseeName = (title, name) => {
+        return (`${title} ${name}`).replace(/^( |　)+/,""); //titleが無い場合はreplaceで最初のスペースを取り除く
+    };
 
     // 支払予定明細本文を生成する。各変数の加工はせず、受け取ったものをそのまま入れ込む
-    function generateDetailText(apply_info, should_discount_for_first) {
+    function generateLaglessDetailText(apply_info, should_discount_for_first) {
         const fee_sign = apply_info.timing === statusLatePayment_APPLY
             ? "+"
             : "-";
@@ -441,50 +454,78 @@ export const KE_BAN_CONSTRUCTORS = [
         return text.join("\r\n");
     }
 
+    const getKebanDetailDisplayData = (record) => {
+        // 明細に表示するため、レコードの情報を各種加工する
+        const getKebanApplyableTerm = (closing_date) => {
+            // 締日を元に、申込可能な五十日の期間の開始日と終了日を求めて返す。
+            // 開始日は常に締日（＝期間の終了日）の4日前
+            return {
+                start: dayjs(closing_date).subtract(4, "day"),
+                end: dayjs(closing_date)
+            };
+        };
+
+        const term = getKebanApplyableTerm(record[fieldClosingDate_APPLY]["value"]);
+
+        return {
+            kyoryoku_company_name:              record[fieldCustomerCompanyName_APPLY]["value"],
+            kyoryoku_name:                      getAddresseeName(record[fieldAddresseeTitle_APPLY]["value"], record[fieldAddresseeName_APPLY]["value"]),
+            closing_YYYYnenMMgatsuDDhi:         `${term.start.format("YYYY年MM月DD日")}〜${term.end.format("YYYY年MM月DD日")}`,
+            payment_YYYYnenMMgatsuDDhi:         `${dayjs(record[fieldPaymentDate_APPLY]["value"]).format("YYYY年MM月DD日")}`,
+            factorableAmountPerDayWFI_comma:    addComma(record[fieldFactorableAmountPerDayWFI_APPLY]["value"]),
+            workedDaysWFI:                      record[fieldWorkedDaysWFI_APPLY]["value"],
+            factorableTotalAmountWFI_comma:     addComma(record[fieldFactorableTotalAmountWFI_APPLY]["value"]),
+            commissionRate_percent:             Number(record[fieldCommissionRate_Early_APPLY]["value"]) * 100,
+            commissionAmount_comma:             addComma(record[fieldCommissionAmount_Early_APPLY]["value"]),
+            transferFeeTaxIncl_comma:           addComma(record[fieldTransferFee_APPLY]["value"]),
+            transferAmount_comma:               addComma(record[fieldTransferAmount_Early_APPLY]["value"]),
+        };
+    };
+
     // 軽バン.COM用の支払予定明細を入力する
-    const generateDetailTextKeBan = (apply_info) => {
+    const generateDetailTextKeban = (apply_info) => {
         const text = [
+            `${apply_info.kyoryoku_company_name}`,
             `${apply_info.kyoryoku_name} 様`,
             "",
             "この度は、軽バン .COM【売上前払いシステム】のお申込みありがとうございます。",
             "下記のとおり受付いたしましたので、お知らせいたします。",
             "",
             "",
-            `対象となる締め日：${apply_info.closing_YYYYnenMMgatsuDDhi}`,
+            `対象となる稼働期間：${apply_info.closing_YYYYnenMMgatsuDDhi}`,
             "",
-            `お振込予定日　　：${apply_info.payment_YYYYnenMMgatsuDDhi}`,
+            `お振込予定日　　　：${apply_info.payment_YYYYnenMMgatsuDDhi}`,
             "",
             "",
             "※天災、通信インフラの故障及びその他の事象により、実行日が遅れる可能性がございます。",
             "",
             "",
             "",
-            // ファクタリング対象金額（税込）　　　　　70,000円
-            // 前払いシステム利用手数料　　　　　　　　　-300円
-            // 振込手数料（お客様負担）　　　　　　　　　-275円
-            // ───────────────────────────────────
-            // お振込み予定金額　　　　　　　　　　　　69,425円
+            `前払い可能単価（税込）　　　　　　①　${apply_info.factorableAmountPerDayWFI_comma}円`,
+            `稼働日数　　　　　　　　　　　　　②　${apply_info.workedDaysWFI}日`,
+            `前払い対象金額（①×②）　　　　　③　${apply_info.factorableTotalAmountWFI_comma}円`,
+            `前払いシステム利用手数料率　　　　④　${apply_info.commissionRate_percent}％`,
+            `前払いシステム利用手数料（③×④）⑤　${apply_info.commissionAmount_comma}円`,
+            `振込手数料（お客様負担）　　　　　⑥　${apply_info.transferFeeTaxIncl_comma}円`,
+            "───────────────────────────────────",
+            `お振込み予定金額　（③ - ⑤ - ⑥）　${apply_info.transferAmount_comma}円`,
+            "",
+            "",
+            "",
+            "ご不明な点などがございましたら、",
+            "下記連絡先までお問い合わせください。",
+            "",
+            "──────────────────────────────────────■",
+            "【軽バン .COM前払い事務局】",
+            "ファクタリング実行会社：ラグレス2合同会社",
+            "システム運営会社：インベストデザイン株式会社",
+            "MAIL：lagless+keban@invest-d.com（インベストデザイン株式会社）",
+            "TEL：050-3188-6800",
+            "営業時間 : 10時〜17時(平日のみ)",
+            "──────────────────────────────────────■",
         ];
 
-
-
-
-
-
-
-
-
-        // ご不明な点などがございましたら、
-        // 下記連絡先までお問い合わせください。
-
-        // ──────────────────────────────────────■
-        // 【軽バン .COM前払い事務局】
-        // ファクタリング実行会社：ラグレス2合同会社
-        // システム運営会社：インベストデザイン株式会社
-        // MAIL：lagless+keban@invest-d.com（インベストデザイン株式会社）
-        // TEL：050-3188-6800
-        // 営業時間 : 10時〜17時(平日のみ)
-        // ──────────────────────────────────────■
+        return text.join("\r\n");
     };
 
     function addComma(num) {

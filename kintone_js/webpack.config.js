@@ -25,7 +25,6 @@ module.exports = (env, argv) => {
                 post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
                 174: "./174.js",
                 create_payment_detail: "./create_payment_detail.js",
-                insert_collect_credit_button: "./insert_collect_credit_button.js",
             },
 
             // ファイルの出力設定
@@ -65,7 +64,6 @@ module.exports = (env, argv) => {
                 post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
                 174: "./174.js",
                 create_payment_detail: "./create_payment_detail.js",
-                insert_collect_credit_button: "./insert_collect_credit_button.js",
             },
 
             // ファイルの出力設定
