@@ -73,7 +73,7 @@
     const fieldPaymentDate_APPLY            = "paymentDate";
     const fieldCollectId_APPLY              = "collectId";
     const fieldInvoice_APPLY                = "invoice";
-    const factorableTotalAmountWFI          = "factorableTotalAmountWFI";
+    const factorableTotalAmountWFI_APPLY    = "factorableTotalAmountWFI";
 
     const APP_ID_COLLECT                            = APP_ID.COLLECT;
     const fieldRecordId_COLLECT                     = "レコード番号";
@@ -186,7 +186,7 @@
             fields: [
                 commonRecordID,
                 fieldInvoiceAmount_APPLY,
-                factorableTotalAmountWFI
+                factorableTotalAmountWFI_APPLY
             ],
             // 回収レコード作成対象 && 工務店IDがWFI && 申込金額が0
             condition: `${INSERT_TARGET_COND}
@@ -203,7 +203,7 @@
                 "id": r[commonRecordID]["value"],
                 "record": {
                     [fieldInvoiceAmount_APPLY]: {
-                        "value": r[factorableTotalAmountWFI]["value"],
+                        "value": r[factorableTotalAmountWFI_APPLY]["value"],
                     }
                 }
             };
