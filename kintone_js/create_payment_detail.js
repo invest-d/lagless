@@ -241,6 +241,14 @@ import { get_contractor_name } from "./util_forms";
                 const timing = record[fieldPaymentTiming_APPLY]["value"];
 
                 const should_discount_for_first = await (async (kyoryoku_id) => {
+                    // 210001: ペテロ組については申込レコードに記録がないが、実行した履歴が残っている（boxファイルで履歴を確認）
+                    const special_paid_kyoryoku_ids = [
+                        "210001"
+                    ];
+                    if (special_paid_kyoryoku_ids.includes(kyoryoku_id)) {
+                        return false;
+                    }
+
                     if (dayjs().isBetween(HALF_COMMISION_START_DATE, HALF_COMMISION_END_DATE, null, "[]")) {
                         // キャンペーン期間中の場合、申込アプリの実行済みレコードを検索。0件 or 1件以上
                         // ファクタリングを実行したレコードだけを対象にするので、通常払いは除外する
