@@ -12,6 +12,8 @@ import {
     getUrlParam
 } from "./common";
 
+export const SERVICE_START_DATE = dayjs("2021-01-05").hour(18).minute(0);
+
 export const getTodayDate = () => {
     const debug_date = (() => {
         if (getUrlParam("debug_date") == "random") {

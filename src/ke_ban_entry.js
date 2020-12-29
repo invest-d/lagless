@@ -7,7 +7,8 @@ dayjs.locale("ja");
 import {
     TODAY,
     get_terms_prev_now_next,
-    get_available_terms
+    get_available_terms,
+    SERVICE_START_DATE
 } from "./logics/ke_ban";
 
 $(() => {
@@ -21,11 +22,14 @@ $(() => {
         display_terms.push(`${dates}\r\n${deadline}\r\n`);
     }
 
-    // ページ上に表示する
-    if (display_terms.length === 0) {
+    // 1. 申込対象外の期間だけがドロップダウンに表示される場合
+    // 2. START_DATEよりも前の日時の場合
+    // 上記いずれかに当てはまる場合、「現在お申込み頂ける稼働期間はございません。」と表示。
+    const exist_available_terms = display_terms.length === 0;
+    if (exist_available_terms || TODAY.isBefore(SERVICE_START_DATE)) {
         let message = "現在お申込み頂ける稼働期間はございません。";
-        // 2020年内の場合は1月スタートである旨を補足
-        if (TODAY.year() < 2021) {
+        // サービス開始前の場合は1月スタートである旨を補足
+        if (TODAY.isBefore(SERVICE_START_DATE)) {
             message += "\r\n※2021年01月01日から本サービスをご利用頂けます";
         }
         document.getElementById("available_term").innerText = message;
