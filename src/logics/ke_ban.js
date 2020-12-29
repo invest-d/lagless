@@ -20,12 +20,19 @@ export const getTodayDate = () => {
             const random_integer = Math.floor(Math.random() * (max + 1 - min)) + min;
             return dayjs.unix(random_integer);
         } else {
-            return dayjs(getUrlParam("debug_date"));
+            let dayjs_initializer;
+            // アンダーバー区切りによる時刻の指定を許容
+            try {
+                dayjs_initializer = getUrlParam("debug_date").replace("_", " ");
+            } catch (e) {
+                dayjs_initializer = getUrlParam("debug_date");
+            }
+            return dayjs(dayjs_initializer);
         }
     })();
     if (getUrlParam("debug_date") && debug_date.isValid()) {
         // デバッグ用。パラメータに日付を書くことで、「ブラウザを開いたときの日付」を変更できる
-        console.log(`debug mode: today is ${debug_date.format("YYYY-MM-DD")}`);
+        console.log(`debug mode: today is ${debug_date.format("YYYY-MM-DD HH:mm:ss")}`);
         return debug_date;
     } else {
         return dayjs();
