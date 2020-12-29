@@ -22,14 +22,14 @@ $(() => {
     }
 
     // ページ上に表示する
-    if (display_terms.length > 0) {
-        document.getElementById("available_term").innerText = `${display_terms.join("\r\n")}`;
-    } else {
+    if (display_terms.length === 0) {
         let message = "現在お申込み頂ける稼働期間はございません。";
         // 2020年内の場合は1月スタートである旨を補足
         if (TODAY.year() < 2021) {
             message += "\r\n※2021年01月01日から本サービスをご利用頂けます";
         }
         document.getElementById("available_term").innerText = message;
+    } else {
+        document.getElementById("available_term").innerText = `${display_terms.join("\r\n")}`;
     }
 });
