@@ -12,21 +12,30 @@ import {
     getUrlParam
 } from "./common";
 
+export const SERVICE_START_DATE = dayjs("2021-01-05").hour(18).minute(0);
+
 export const getTodayDate = () => {
-    const specified_date = (() => {
+    const debug_date = (() => {
         if (getUrlParam("debug_date") == "random") {
             const min = 1606748400; // 2020年12月01日
             const max = 1638284400; // 2021年12月01日
             const random_integer = Math.floor(Math.random() * (max + 1 - min)) + min;
             return dayjs.unix(random_integer);
         } else {
-            return dayjs(getUrlParam("debug_date"));
+            let dayjs_initializer;
+            // アンダーバー区切りによる時刻の指定を許容
+            try {
+                dayjs_initializer = getUrlParam("debug_date").replace("_", " ");
+            } catch (e) {
+                dayjs_initializer = getUrlParam("debug_date");
+            }
+            return dayjs(dayjs_initializer);
         }
     })();
-    if (specified_date.isValid()) {
+    if (getUrlParam("debug_date") && debug_date.isValid()) {
         // デバッグ用。パラメータに日付を書くことで、「ブラウザを開いたときの日付」を変更できる
-        console.log(`debug mode: today is ${specified_date.format("YYYY-MM-DD")}`);
-        return specified_date;
+        console.log(`debug mode: today is ${debug_date.format("YYYY-MM-DD HH:mm:ss")}`);
+        return debug_date;
     } else {
         return dayjs();
     }

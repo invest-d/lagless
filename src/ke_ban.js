@@ -11,7 +11,8 @@ import {
 import {
     TODAY,
     get_terms_prev_now_next,
-    get_available_terms
+    get_available_terms,
+    SERVICE_START_DATE
 } from "./logics/ke_ban";
 
 // フォームを開いた時点において、前払対象になる期間を確定する
@@ -33,8 +34,11 @@ $(() => {
         term_select.append(option);
     });
 
-    // 申込対象外の期間だけがドロップダウンに表示される場合に限り、「現在お申込み頂ける稼働期間はございません。」と表示。
-    if (term_select.children().length === 0) {
+    // 1. 申込対象外の期間だけがドロップダウンに表示される場合
+    // 2. START_DATEよりも前の日時の場合
+    // 上記いずれかに当てはまる場合、「現在お申込み頂ける稼働期間はございません。」と表示。
+    const exist_available_terms = term_select.children().length === 0;
+    if (exist_available_terms || TODAY.isBefore(SERVICE_START_DATE)) {
         const unavailable_option = $("<option>");
         const unavailable_message = "現在お申込み頂ける稼働期間はございません。";
         unavailable_option.attr("value", unavailable_message);
@@ -45,7 +49,7 @@ $(() => {
         $("#form_id").addClass("d-none");
         $("#unavailable").removeClass("d-none");
         // 2020年内の場合は1月スタートである旨を補足
-        if (TODAY.year() < 2021) {
+        if (TODAY.isBefore(SERVICE_START_DATE)) {
             const message = `${$("#unavailable-message").text()}\r\n※2021年01月01日から本サービスをご利用頂けます`;
             // 改行を反映させたいのでinnerText
             $("#unavailable-message").get(0).innerText = message;
