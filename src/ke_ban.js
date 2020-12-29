@@ -48,7 +48,7 @@ $(() => {
         // 画面全体を非表示にもする
         $("#form_id").addClass("d-none");
         $("#unavailable").removeClass("d-none");
-        // 2020年内の場合は1月スタートである旨を補足
+        // サービス開始日時より前の場合は1月スタートである旨を補足
         if (TODAY.isBefore(SERVICE_START_DATE)) {
             const message = `${$("#unavailable-message").text()}\r\n※2021年01月01日から本サービスをご利用頂けます`;
             // 改行を反映させたいのでinnerText
