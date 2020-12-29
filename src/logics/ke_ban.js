@@ -13,7 +13,7 @@ import {
 } from "./common";
 
 export const getTodayDate = () => {
-    const specified_date = (() => {
+    const debug_date = (() => {
         if (getUrlParam("debug_date") == "random") {
             const min = 1606748400; // 2020年12月01日
             const max = 1638284400; // 2021年12月01日
@@ -23,10 +23,10 @@ export const getTodayDate = () => {
             return dayjs(getUrlParam("debug_date"));
         }
     })();
-    if (specified_date.isValid()) {
+    if (getUrlParam("debug_date") && debug_date.isValid()) {
         // デバッグ用。パラメータに日付を書くことで、「ブラウザを開いたときの日付」を変更できる
-        console.log(`debug mode: today is ${specified_date.format("YYYY-MM-DD")}`);
-        return specified_date;
+        console.log(`debug mode: today is ${debug_date.format("YYYY-MM-DD")}`);
+        return debug_date;
     } else {
         return dayjs();
     }
