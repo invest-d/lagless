@@ -259,19 +259,11 @@
         });
 
         // 抜き出した工務店IDと締日のペアについて、重複なしのリストを作る。
-        // ロジックとしては、filterを利用するよく知られた重複削除のロジックと同じ。
-        // 今回はオブジェクトの配列なので、インデックスを探す上でindexOfが使えない代わりにfindIndexを使っている。
-        const unique_key_pairs = key_pairs.filter((key_pair1, key_pairs_index, self_arr) => {
-            const target_index = self_arr.findIndex(((key_pair2) => {
-                // 工務店IDの一致
-                return (key_pair1[fieldConstructionShopId_APPLY] === key_pair2[fieldConstructionShopId_APPLY])
-                // 締日の一致
-                && (key_pair1[fieldClosingDay_APPLY] === key_pair2[fieldClosingDay_APPLY]);
-            }));
-
-            const is_unique = (target_index === key_pairs_index);
-            return is_unique;
-        });
+        // ロジックの解説: https://www.deep-rain.com/programming/javascript/1125
+        const DELIMITER = String.fromCharCode("31");
+        const unique_key_pairs = Array.from(new Map(
+            key_pairs.map((p) => [`${p[fieldConstructionShopId_APPLY]}${DELIMITER}${p[fieldClosingDay_APPLY]}`, p])
+        ).values());
 
         // 工務店マスタから回収日の情報を取得。申込レコードに含まれる工務店の情報のみ取得する
         const body_komuten_payment_date = {
