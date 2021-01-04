@@ -331,8 +331,8 @@ dayjs.locale("ja");
 
         const sender = {
             text: [
-                `${corporate_info[fieldCorporateName_CORPORATE]["value"]}\n`,
                 `${corporate_info[fieldAddress_CORPORATE]["value"]}\n`,
+                `${corporate_info[fieldCorporateName_CORPORATE]["value"]}\n`,
                 `${corporate_info[fieldCeoTitle_CORPORATE]["value"]} ${corporate_info[fieldCeoName_CORPORATE]["value"]}`
             ],
             margin: [242, 0, 0, 0]
