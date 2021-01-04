@@ -2,6 +2,8 @@ import "@fortawesome/fontawesome-free";
 
 import "bootstrap";
 
+import * as holiday_jp from "@holiday-jp/holiday_jp";
+
 import dayjs from "dayjs";
 import "dayjs/locale/ja";
 dayjs.locale("ja");
@@ -69,13 +71,28 @@ export const get_pay_term_end_date = (base_date) => {
 };
 
 export const get_next_business_date = (base_date) => {
-    // base_date以外の、base_dateの翌日以降の営業日を取得する。
-    // 現状、曜日での判定のみ利用可能
-    // FIXME: その他日本の祝日やカスタム休日にも対応する
+    // base_dateの翌日以降の営業日を取得する。
     let next_date = base_date.add(1, "day");
-    while([0, 6].includes(next_date.day())) {
+
+    const is_holiday = (date) => {
+        // 土日は非営業日
+        if ([0, 6].includes(date.day())) {
+            return true;
+        }
+
+        // 祝日は非営業日
+        if (holiday_jp.isHoliday(date.toDate())) {
+            return true;
+        }
+
+        // FIXME: カスタム休日にも対応する
+        return false;
+    };
+
+    while (is_holiday(next_date)) {
         next_date = next_date.add(1, "day");
     }
+
     return next_date;
 };
 
