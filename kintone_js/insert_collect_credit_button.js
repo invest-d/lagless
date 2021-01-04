@@ -1,4 +1,8 @@
 /*
+    Version 4.1
+    軽バン.COM案件について、請求書ファイルキーを回収レコードに記入しないようにする処理を追加
+    （案件の性質上、請求書の提出が無いため）
+
     Version 4
     軽バン.COM案件について、回収レコード作成前に申込レコードを編集して申込金額を記入する処理を追加
 
@@ -317,7 +321,7 @@
                     // サブテーブル部分
                     [tableCloudSignApplies_COLLECT]: {
                         "value": target_records.map((record) => {
-                            return {
+                            const sub_table_record = {
                                 "value": {
                                     [tableFieldApplyRecordNoCS]: {
                                         "value": record[fieldRecordId_APPLY]["value"]
@@ -339,12 +343,18 @@
                                     },
                                     [tableFieldPaymentDateCS]: {
                                         "value": record[fieldPaymentDate_APPLY]["value"]
-                                    },
-                                    [tableFieldAttachmentFileKeyCS]: {
-                                        "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
                                     }
                                 }
                             };
+
+                            // WFIはファイルキー不要
+                            if (!KE_BAN_CONSTRUCTORS.includes(record[fieldConstructionShopId_APPLY]["value"])) {
+                                sub_table_record["value"][tableFieldAttachmentFileKeyCS] = {
+                                    "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
+                                };
+                            }
+
+                            return sub_table_record;
                         })
                     }
                 };
