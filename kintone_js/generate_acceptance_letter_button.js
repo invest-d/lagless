@@ -68,6 +68,7 @@ dayjs.locale("ja");
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         // ボタンを表示するか判定
         if (needShowButton()) {
@@ -140,7 +141,7 @@ dayjs.locale("ja");
                 }
 
                 // 各レコードについてPDFドキュメントを生成する
-                const corporate_info = corporates_by_constructor_id[record[fieldConstructorId_COLLECT]["value"]]
+                const corporate_info = corporates_by_constructor_id[record[fieldConstructorId_COLLECT]["value"]];
                 const letter_doc = generateInvoiceDocument(record, corporate_info);
                 const generator = await createPdf(letter_doc);
 
@@ -342,6 +343,7 @@ dayjs.locale("ja");
                 + "（対象債権の無効・取消、弁済・免除・相殺等の抗弁、"
                 + "原契約における義務違反・担保責任に基づく対象債権の減額・原契約の解除を含みます）に基づき、"
                 + "対象債権の全部又は一部の協力企業に対する支払を拒絶し得る一切の抗弁権を、放棄します。\n",
+                // eslint-disable-next-line no-irregular-whitespace
                 `　下記の金額については、${contractor_name}にお支払いいたします。`
             ],
             preserveLeadingSpaces: true,
@@ -370,6 +372,7 @@ dayjs.locale("ja");
             layout: {
                 // 明細行どうしの境界線のみ細くする
                 hLineWidth: (i, node) => (i > 1 && i < node.table.body.length) ? 0.5 : 1,
+                // eslint-disable-next-line no-unused-vars
                 vLineWidth: (i, node) => 1
             }
         };
