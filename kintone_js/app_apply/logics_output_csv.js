@@ -1,12 +1,14 @@
 "use strict";
 
+export const CLIENT = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
+
 // CSVファイルで保存するにあたってShift-Jisに変換する
 const Encoding = require("encoding-japanese");
 
 import { schema_apply as schema_apply_dev } from "../159/schema";
 import { schema_apply as schema_apply_prod } from "../161/schema";
 
-const APP_ID_APPLY                      = kintone.app.getId();
+export const APP_ID_APPLY = kintone.app.getId();
 
 const schema_apply = ((app_id) => {
     if (app_id === 159) {
@@ -18,25 +20,25 @@ const schema_apply = ((app_id) => {
     }
 })(APP_ID_APPLY);
 
-const fieldRecordId_APPLY               = schema_apply.fields.properties.レコード番号.code;
-const fieldBankCode_APPLY               = schema_apply.fields.properties.bankCode.code;
-const fieldBranchCode_APPLY             = schema_apply.fields.properties.branchCode.code;
-const fieldDepositType_APPLY            = schema_apply.fields.properties.deposit.code;
-const fieldAccountNumber_APPLY          = schema_apply.fields.properties.accountNumber.code;
-const fieldAccountName_APPLY            = schema_apply.fields.properties.accountName.code;
-const fieldTotalReceivables_APPLY       = schema_apply.fields.properties.totalReceivables.code;
-const fieldTransferAmount_APPLY         = schema_apply.fields.properties.transferAmount.code;
-const fieldTransferAmountLate_APPLY     = schema_apply.fields.properties.transferAmount_late.code;
-export const fieldStatus_APPLY          = schema_apply.fields.properties.状態.code;
-const statusReady_APPLY                 = schema_apply.fields.properties.状態.options.振込前確認完了.label;
-const statusDone_APPLY                  = schema_apply.fields.properties.状態.options.振込データ出力済.label;
-const fieldPaymentDate_APPLY            = schema_apply.fields.properties.paymentDate.code;
-const fieldPaymentAccount_APPLY         = schema_apply.fields.properties.paymentAccount.code;
-const fieldPaymentTiming_APPLY          = schema_apply.fields.properties.paymentTiming.code;
-const statusPaymentLate_APPLY           = schema_apply.fields.properties.paymentTiming.options.遅払い.label;
-const statusPaymentOriginal_APPLY       = schema_apply.fields.properties.paymentTiming.options.通常払い.label;
-const fieldConstructionShopId_APPLY     = schema_apply.fields.properties.constructionShopId.code;
-const fieldKyoryokuId_APPLY             = schema_apply.fields.properties.ルックアップ.code;
+export const fieldRecordId_APPLY            = schema_apply.fields.properties.レコード番号.code;
+export const fieldBankCode_APPLY            = schema_apply.fields.properties.bankCode.code;
+export const fieldBranchCode_APPLY          = schema_apply.fields.properties.branchCode.code;
+export const fieldDepositType_APPLY         = schema_apply.fields.properties.deposit.code;
+export const fieldAccountNumber_APPLY       = schema_apply.fields.properties.accountNumber.code;
+export const fieldAccountName_APPLY         = schema_apply.fields.properties.accountName.code;
+export const fieldTotalReceivables_APPLY    = schema_apply.fields.properties.totalReceivables.code;
+export const fieldTransferAmount_APPLY      = schema_apply.fields.properties.transferAmount.code;
+const fieldTransferAmountLate_APPLY         = schema_apply.fields.properties.transferAmount_late.code;
+export const fieldStatus_APPLY              = schema_apply.fields.properties.状態.code;
+const statusReady_APPLY                     = schema_apply.fields.properties.状態.options.振込前確認完了.label;
+const statusDone_APPLY                      = schema_apply.fields.properties.状態.options.振込データ出力済.label;
+export const fieldPaymentDate_APPLY         = schema_apply.fields.properties.paymentDate.code;
+export const fieldPaymentAccount_APPLY      = schema_apply.fields.properties.paymentAccount.code;
+export const fieldPaymentTiming_APPLY       = schema_apply.fields.properties.paymentTiming.code;
+const statusPaymentLate_APPLY               = schema_apply.fields.properties.paymentTiming.options.遅払い.label;
+const statusPaymentOriginal_APPLY           = schema_apply.fields.properties.paymentTiming.options.通常払い.label;
+export const fieldConstructionShopId_APPLY  = schema_apply.fields.properties.constructionShopId.code;
+export const fieldKyoryokuId_APPLY          = schema_apply.fields.properties.ルックアップ.code;
 
 export const AVAILABLE_CONSTRUCTORS = {
     REALTOR_SOLUTIONS: {
