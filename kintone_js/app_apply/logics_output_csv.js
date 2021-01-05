@@ -55,7 +55,7 @@ export const confirmBeforeExec = () => {
 };
 
 export const inputPaymentDate = () => {
-    prompt("YYYY-MM-DDの形式で支払日を入力してください。\n例：2020-01-23");
+    return prompt("YYYY-MM-DDの形式で支払日を入力してください。\n例：2020-01-23");
 };
 
 export const getTargetConditions = () => {

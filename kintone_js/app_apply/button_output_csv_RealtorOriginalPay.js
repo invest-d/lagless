@@ -31,7 +31,6 @@ import * as realtor_logics from "./logics_output_csv_RealtorOriginalPay";
     "use strict";
 
     const buttonName = "outputRealtorCsv";
-    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         if (!common_logics.needToShow(event, buttonName, realtor_logics.AVAILABLE_VIEW)) {
             return;
