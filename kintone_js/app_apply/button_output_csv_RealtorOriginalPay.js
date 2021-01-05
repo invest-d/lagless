@@ -33,12 +33,10 @@ import * as realtor_logics from "./logics_output_csv_RealtorOriginalPay";
     const buttonName = "outputRealtorCsv";
     // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
-        // コントロールの重複作成防止チェック
-        if (document.getElementById(buttonName) !== null) {
+        if (!common_logics.needToShow(event, buttonName)) {
             return;
         }
 
-        // 出力ボタンを設置
         const button = createButton();
         kintone.app.getHeaderMenuSpaceElement().appendChild(button);
     });

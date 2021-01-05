@@ -10,14 +10,11 @@ import * as wfi_logics from "./logics_output_csv_WfiEarlyPay";
     "use strict";
 
     const buttonName = "outputWfiEarlyCsv";
-    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
-        // コントロールの重複作成防止チェック
-        if (document.getElementById(buttonName) !== null) {
+        if (!common_logics.needToShow(event, buttonName)) {
             return;
         }
 
-        // 出力ボタンを設置
         const button = createButton();
         kintone.app.getHeaderMenuSpaceElement().appendChild(button);
     });
