@@ -805,7 +805,7 @@ export const schema_apply = {
                 "defaultValue": "0",
                 "digit": false,
                 "displayScale": "",
-                "label": "稼働機関の稼働日数",
+                "label": "稼働期間の稼働日数",
                 "maxValue": "",
                 "minValue": "0",
                 "noLabel": false,

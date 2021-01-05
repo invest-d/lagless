@@ -805,7 +805,7 @@ export const schema_apply = {
                 "defaultValue": "0",
                 "digit": false,
                 "displayScale": "",
-                "label": "稼働機関の稼働日数",
+                "label": "稼働期間の稼働日数",
                 "maxValue": "",
                 "minValue": "0",
                 "noLabel": false,
@@ -1834,6 +1834,37 @@ export const schema_apply = {
                 "sort": "paymentDate desc",
                 "type": "LIST"
             },
+            "一覧（未処理）": {
+                "fields": [
+                    "レコード番号",
+                    "状態",
+                    "paymentTiming",
+                    "closingDay",
+                    "登記の取得",
+                    "paymentDate",
+                    "paymentAccount",
+                    "productName",
+                    "ルックアップ",
+                    "company",
+                    "billingCompany",
+                    "applicationAmount",
+                    "membership_fee",
+                    "totalReceivables",
+                    "commissionAmount",
+                    "transferAmount",
+                    "commissionAmount_late",
+                    "transferAmount_late",
+                    "transferFeeTaxIncl",
+                    "paymentDetail",
+                    "mail",
+                    "detailSendDateTime"
+                ],
+                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"\", \"未処理\")",
+                "index": "1",
+                "name": "一覧（未処理）",
+                "sort": "paymentDate desc",
+                "type": "LIST"
+            },
             "回収レコード作成": {
                 "fields": [
                     "レコード番号",
@@ -1849,7 +1880,7 @@ export const schema_apply = {
                     "paymentDate"
                 ],
                 "filterCond": "状態 in (\"ID確認済\")",
-                "index": "2",
+                "index": "3",
                 "name": "回収レコード作成",
                 "sort": "状態 asc, constructionShopId asc, closingDay asc, collectId asc, ルックアップ asc",
                 "type": "LIST"
@@ -1880,7 +1911,7 @@ export const schema_apply = {
                     "detailSendDateTime"
                 ],
                 "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 not in (\"取下げ\") and paymentDate = THIS_MONTH()",
-                "index": "1",
+                "index": "2",
                 "name": "当月分一覧（取下げ除外）",
                 "sort": "paymentDate desc",
                 "type": "LIST"
@@ -1904,7 +1935,7 @@ export const schema_apply = {
                     "accountName"
                 ],
                 "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\")",
-                "index": "5",
+                "index": "6",
                 "name": "振込データ出力",
                 "sort": "paymentDate desc, paymentAccount asc",
                 "type": "LIST"
@@ -1936,7 +1967,7 @@ export const schema_apply = {
                     "transferAmount_late"
                 ],
                 "filterCond": "状態 in (\"工務店確認済\", \"支払予定明細FAX送信待ち\", \"支払予定明細確認中\")",
-                "index": "3",
+                "index": "4",
                 "name": "支払予定明細文面作成",
                 "sort": "状態 asc, レコード番号 desc",
                 "type": "LIST"
@@ -1968,7 +1999,7 @@ export const schema_apply = {
                     "transferAmount_late"
                 ],
                 "filterCond": "状態 in (\"支払予定明細送信前確認完了\", \"支払予定明細送付済\")",
-                "index": "4",
+                "index": "5",
                 "name": "支払予定明細送信状況",
                 "sort": "状態 asc, レコード番号 desc",
                 "type": "LIST"
@@ -1989,7 +2020,7 @@ export const schema_apply = {
                     "transferFeeTaxIncl"
                 ],
                 "filterCond": "company not like \"テスト\" and company not like \"test\" and ルックアップ != \"\" and 状態 in (\"実行完了\") and paymentTiming not in (\"通常払い\") and closingDay >= FROM_TODAY(-1, YEARS)",
-                "index": "6",
+                "index": "7",
                 "name": "申込回数カウント対象（概算）",
                 "sort": "constructionShopId asc, ルックアップ asc, paymentTiming asc, closingDay desc",
                 "type": "LIST"
