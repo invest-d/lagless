@@ -10,7 +10,7 @@ import { schema_apply as schema_apply_prod } from "../161/schema";
 
 export const APP_ID_APPLY = kintone.app.getId();
 
-const schema_apply = ((app_id) => {
+export const schema_apply = ((app_id) => {
     if (app_id === 159) {
         return schema_apply_dev;
     } else if (app_id === 161) {
@@ -37,9 +37,9 @@ export const fieldPaymentTiming_APPLY       = schema_apply.fields.properties.pay
 export const fieldConstructionShopId_APPLY  = schema_apply.fields.properties.constructionShopId.code;
 export const fieldKyoryokuId_APPLY          = schema_apply.fields.properties.ルックアップ.code;
 
-export const needToShow = (event, button_name) => {
+export const needToShow = (event, button_name, view_name) => {
     // 一覧機能で特定の一覧を選んでいる場合のみ表示
-    const is_selected_available_list = event.viewName === schema_apply.views.views.振込データ出力.name;
+    const is_selected_available_list = event.viewName === view_name;
 
     // 同一ボタンの重複作成防止
     const not_displayed = document.getElementById(button_name) === null;

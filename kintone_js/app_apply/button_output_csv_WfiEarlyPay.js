@@ -11,7 +11,7 @@ import * as wfi_logics from "./logics_output_csv_WfiEarlyPay";
 
     const buttonName = "outputWfiEarlyCsv";
     kintone.events.on("app.record.index.show", (event) => {
-        if (!common_logics.needToShow(event, buttonName)) {
+        if (!common_logics.needToShow(event, buttonName, wfi_logics.AVAILABLE_VIEW)) {
             return;
         }
 

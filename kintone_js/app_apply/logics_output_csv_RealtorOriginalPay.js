@@ -11,6 +11,8 @@ export const AVAILABLE_CONSTRUCTORS = {
     }
 };
 
+export const AVAILABLE_VIEW = common_logics.schema_apply.views.views["振込データ出力（リライト通常払い）"].name;
+
 export const getKintoneRecords = (account, target_date, conditions) => {
     console.log(`申込レコード一覧から、CSVファイルへの出力対象レコードを取得する。対象口座：${account}`);
 

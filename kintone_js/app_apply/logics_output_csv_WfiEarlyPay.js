@@ -25,6 +25,8 @@ export const AVAILABLE_CONSTRUCTORS = {
     },
 };
 
+export const AVAILABLE_VIEW = common_logics.schema_apply.views.views["振込データ出力（WFI早払い）"].name;
+
 export const getKintoneRecords = (account, target_date, conditions) => {
     const in_query = conditions.map((c) => `"${c}"`).join(", ");
 
