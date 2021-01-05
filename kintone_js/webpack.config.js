@@ -16,7 +16,8 @@ module.exports = (env, argv) => {
             },
 
             entry: {
-                output_csv: "./app_apply/button_output_csv.js",
+                output_csv_RealtorOriginal: "./app_apply/button_output_csv_RealtorOriginalPay.js",
+                output_csv_WfiEarly: "./app_apply/button_output_csv_WfiEarlyPay.js",
                 generate_invoice_button: "./generate_invoice_button.js",
                 add_to_queue_button: "./add_to_queue_button.js",
                 unsend_invoice_button: "./unsend_invoice_button.js",
@@ -56,7 +57,8 @@ module.exports = (env, argv) => {
             },
 
             entry: {
-                output_csv: "./app_apply/button_output_csv.js",
+                output_csv_RealtorOriginal: "./app_apply/button_output_csv_RealtorOriginalPay.js",
+                output_csv_WfiEarly: "./app_apply/button_output_csv_WfiEarlyPay.js",
                 generate_invoice_button: "./generate_invoice_button.js",
                 add_to_queue_button: "./add_to_queue_button.js",
                 unsend_invoice_button: "./unsend_invoice_button.js",

@@ -64,7 +64,11 @@ import * as wfi_logics from "./logics_output_csv_WfiEarlyPay";
         }
 
         try {
-            const csv_data = common_logics.generateCsvData(target_records);
+            const applies_fixed_amount = target_records.map((r) => {
+                r.transfer_amount = common_logics.getEarlyPaymentAmount(r);
+                return r;
+            });
+            const csv_data = common_logics.generateCsvData(applies_fixed_amount);
             const sjis_list = common_logics.encodeToSjis(csv_data);
 
             const file_name = `軽バンドットコム早払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`;
