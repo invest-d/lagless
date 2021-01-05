@@ -68,6 +68,7 @@ import { get_contractor_name } from "./util_forms";
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         // ボタンを表示するか判定
         if (needShowButton()) {
@@ -316,8 +317,9 @@ import { get_contractor_name } from "./util_forms";
             let name = `${accepter[tableFieldParticipantName_CONSTRUCTOR]["value"]}`;
 
             // 役職があれば追加
-            if (accepter.hasOwnProperty(tableFieldParticipantTitle_CONSTRUCTOR)
+            if (Object.prototype.hasOwnProperty.call(accepter, tableFieldParticipantTitle_CONSTRUCTOR)
                 && accepter[tableFieldParticipantTitle_CONSTRUCTOR]["value"] !== "") {
+                // eslint-disable-next-line no-irregular-whitespace
                 name = `${accepter[tableFieldParticipantTitle_CONSTRUCTOR]["value"]}　${name}`;
             }
 
@@ -359,8 +361,9 @@ import { get_contractor_name } from "./util_forms";
             let name = `${reportee[tableFieldReporteeName_CONSTRUCTOR]["value"]}`;
 
             // 役職があれば追加
-            if (reportee.hasOwnProperty(tableFieldReporteeTitle_CONSTRUCTOR)
+            if (Object.prototype.hasOwnProperty.call(reportee, tableFieldReporteeTitle_CONSTRUCTOR)
                 && reportee[tableFieldReporteeTitle_CONSTRUCTOR]["value"] !== "") {
+                // eslint-disable-next-line no-irregular-whitespace
                 name = `${reportee[tableFieldReporteeTitle_CONSTRUCTOR]["value"]}　${name}`;
             }
 
