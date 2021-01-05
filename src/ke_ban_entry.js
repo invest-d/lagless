@@ -11,6 +11,9 @@ import {
     SERVICE_START_DATE
 } from "./logics/ke_ban";
 
+import { defineIncludesPolyfill } from "./defineIncludesPolyfill";
+defineIncludesPolyfill();
+
 $(() => {
     const terms = get_terms_prev_now_next(TODAY);
 

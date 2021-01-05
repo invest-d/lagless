@@ -15,6 +15,9 @@ import * as find from "./defineFindPolyfill";
 find.definePolyfill();
 import "formdata-polyfill";
 
+import { defineIncludesPolyfill } from "./defineIncludesPolyfill";
+defineIncludesPolyfill();
+
 import { get_kintone_data } from "./app";
 
 // URLパラメータを引き継いでkintoneに送信できるようにする

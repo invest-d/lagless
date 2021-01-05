@@ -1,5 +1,8 @@
 import $ from "jquery";
 
+import { defineIncludesPolyfill } from "./defineIncludesPolyfill";
+defineIncludesPolyfill();
+
 $(() => {
     const query = location.search;
     const param = { };

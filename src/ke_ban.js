@@ -15,6 +15,9 @@ import {
     SERVICE_START_DATE
 } from "./logics/ke_ban";
 
+import { defineIncludesPolyfill } from "./defineIncludesPolyfill";
+defineIncludesPolyfill();
+
 // フォームを開いた時点において、前払対象になる期間を確定する
 $(() => {
     // ページを開く度に前払い期間と申込期間のテーブルを用意する。
