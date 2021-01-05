@@ -1,36 +1,50 @@
 "use strict";
 
+export const CLIENT = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
+
 // CSVファイルで保存するにあたってShift-Jisに変換する
 const Encoding = require("encoding-japanese");
 
-const APP_ID_APPLY                      = kintone.app.getId();
-const fieldRecordId_APPLY               = "レコード番号";
-const fieldBankCode_APPLY               = "bankCode";
-const fieldBranchCode_APPLY             = "branchCode";
-const fieldDepositType_APPLY            = "deposit";
-const fieldAccountNumber_APPLY          = "accountNumber";
-const fieldAccountName_APPLY            = "accountName";
-const fieldTotalReceivables_APPLY       = "totalReceivables";
-const fieldTransferAmount_APPLY         = "transferAmount";
-const fieldTransferAmountLate_APPLY     = "transferAmount_late";
-const fieldStatus_APPLY                 = "状態";
-const statusReady_APPLY                 = "振込前確認完了";
-const statusDone_APPLY                  = "振込データ出力済";
-const fieldPaymentDate_APPLY            = "paymentDate";
-const fieldPaymentAccount_APPLY         = "paymentAccount";
-const fieldPaymentTiming_APPLY          = "paymentTiming";
-const statusPaymentLate_APPLY           = "遅払い";
-const statusPaymentOriginal_APPLY       = "通常払い";
-const fieldConstructionShopId_APPLY     = "constructionShopId";
-const fieldKyoryokuId_APPLY             = "ルックアップ";
+import { schema_apply as schema_apply_dev } from "../159/schema";
+import { schema_apply as schema_apply_prod } from "../161/schema";
 
-export const AVAILABLE_CONSTRUCTORS = {
-    REALTOR_SOLUTIONS: {
-        ID: "100",
-        NAME: "株式会社RealtorSolutions",
-        BANK_CODE: "0157",
-        BRANCH_CODE: "261"
+export const APP_ID_APPLY = kintone.app.getId();
+
+export const schema_apply = ((app_id) => {
+    if (app_id === 159) {
+        return schema_apply_dev;
+    } else if (app_id === 161) {
+        return schema_apply_prod;
+    } else {
+        throw new Error(`Invalid app: ${app_id}`);
     }
+})(APP_ID_APPLY);
+
+export const fieldRecordId_APPLY            = schema_apply.fields.properties.レコード番号.code;
+export const fieldBankCode_APPLY            = schema_apply.fields.properties.bankCode.code;
+export const fieldBranchCode_APPLY          = schema_apply.fields.properties.branchCode.code;
+export const fieldDepositType_APPLY         = schema_apply.fields.properties.deposit.code;
+export const fieldAccountNumber_APPLY       = schema_apply.fields.properties.accountNumber.code;
+export const fieldAccountName_APPLY         = schema_apply.fields.properties.accountName.code;
+export const fieldTotalReceivables_APPLY    = schema_apply.fields.properties.totalReceivables.code;
+export const fieldTransferAmount_APPLY      = schema_apply.fields.properties.transferAmount.code;
+export const fieldStatus_APPLY              = schema_apply.fields.properties.状態.code;
+const statusReady_APPLY                     = schema_apply.fields.properties.状態.options.振込前確認完了.label;
+const statusDone_APPLY                      = schema_apply.fields.properties.状態.options.振込データ出力済.label;
+export const fieldPaymentDate_APPLY         = schema_apply.fields.properties.paymentDate.code;
+export const fieldPaymentAccount_APPLY      = schema_apply.fields.properties.paymentAccount.code;
+export const fieldPaymentTiming_APPLY       = schema_apply.fields.properties.paymentTiming.code;
+export const fieldConstructionShopId_APPLY  = schema_apply.fields.properties.constructionShopId.code;
+export const fieldKyoryokuId_APPLY          = schema_apply.fields.properties.ルックアップ.code;
+
+export const needToShow = (event, button_name, view_name) => {
+    // 一覧機能で特定の一覧を選んでいる場合のみ表示
+    const is_selected_available_list = event.viewName === view_name;
+
+    // 同一ボタンの重複作成防止
+    const not_displayed = document.getElementById(button_name) === null;
+
+    return is_selected_available_list && not_displayed;
 };
 
 export const confirmBeforeExec = () => {
@@ -41,7 +55,7 @@ export const confirmBeforeExec = () => {
 };
 
 export const inputPaymentDate = () => {
-    prompt("YYYY-MM-DDの形式で支払日を入力してください。\n例：2020-01-23");
+    return prompt("YYYY-MM-DDの形式で支払日を入力してください。\n例：2020-01-23");
 };
 
 export const getTargetConditions = () => {
@@ -61,53 +75,27 @@ export const getTargetConditions = () => {
     return conditions;
 };
 
-export const getKintoneRecords = (account, target_date, conditions) => {
-    console.log(`申込レコード一覧から、CSVファイルへの出力対象レコードを取得する。対象口座：${account}`);
-
-    const in_query = conditions.map((c) => `"${c}"`).join(",");
-
-    const test_constructors = Object.values(AVAILABLE_CONSTRUCTORS).map((c) => `"${c.ID}"`).join(", ");
-
-    // 債権譲渡登記の取得が必要な申込についてもCSV出力する。GMOあおぞらの振込であれば当日着金が可能なため。
-    const request_body = {
-        "app": APP_ID_APPLY,
-        "fields": [
-            fieldPaymentTiming_APPLY,
-            fieldRecordId_APPLY,
-            fieldBankCode_APPLY,
-            fieldBranchCode_APPLY,
-            fieldDepositType_APPLY,
-            fieldAccountNumber_APPLY,
-            fieldAccountName_APPLY,
-            fieldTransferAmount_APPLY,
-            fieldTransferAmountLate_APPLY,
-            fieldTotalReceivables_APPLY,
-            fieldConstructionShopId_APPLY,
-            fieldKyoryokuId_APPLY
-        ],
-        "query": `${fieldStatus_APPLY} in (${in_query})
-                and ${fieldPaymentDate_APPLY} = "${target_date}"
-                and ${fieldPaymentAccount_APPLY} = "${account}"
-                and ${fieldConstructionShopId_APPLY} in (${test_constructors})`
-    };
-
-    return kintone.api(kintone.api.url("/k/v1/records", true), "GET", request_body);
-};
-
 export const generateCsvData = (applies) => {
-    // 申込レコード1つを1行の文字列として、CRLFで連結した文字列を返す
-    const csv_rows = applies.map((apply) => getAozoraCsvRow(apply));
-    // 最終行の最後にもCRLFを追加
+    // 申込レコード1つを1行のCSV文字列に変換
+    const csv_rows = applies.map((apply) =>
+        getAozoraCsvRow(apply, apply.transfer_amount)
+    );
+    // CSV文字列それぞれをCRLFで結合し、最終行の最後にもCRLFを追加して返す
     return `${csv_rows.join("\r\n")}\r\n`;
 };
 
-export const getAozoraCsvRow = (record) => {
+export const getEarlyPaymentAmount = (record) => {
+    return record[fieldTransferAmount_APPLY]["value"];
+};
+
+const getAozoraCsvRow = (record, transfer_amount) => {
     // 仕様： https://gmo-aozora.com/support/guide/tranfer-upload.pdf 5/10ページ
     const fields = [];
-    // 先にゼロ埋め
-    record[fieldBankCode_APPLY]["value"] = (`0000${record[fieldBankCode_APPLY]["value"]}`).slice(-4);
-    record[fieldBranchCode_APPLY]["value"] = (`000${record[fieldBranchCode_APPLY]["value"]}`).slice(-3);
-    record[fieldAccountNumber_APPLY]["value"] = (`0000000${record[fieldAccountNumber_APPLY]["value"]}`).slice(-7);
+
+    // 先にレコードのデータをゼロ埋めした値で上書きしておく
+    record[fieldBankCode_APPLY]["value"]        = (`0000${record[fieldBankCode_APPLY]["value"]}`).slice(-4);
+    record[fieldBranchCode_APPLY]["value"]      = (`000${record[fieldBranchCode_APPLY]["value"]}`).slice(-3);
+    record[fieldAccountNumber_APPLY]["value"]   = (`0000000${record[fieldAccountNumber_APPLY]["value"]}`).slice(-7);
 
     fields.push(record[fieldBankCode_APPLY]["value"]);
     fields.push(record[fieldBranchCode_APPLY]["value"]);
@@ -117,68 +105,11 @@ export const getAozoraCsvRow = (record) => {
     fields.push(deposit_type);
     fields.push(record[fieldAccountNumber_APPLY]["value"]);
     fields.push(zenkakuToHankaku(record[fieldAccountName_APPLY]["value"]));
-    fields.push(getAmountByTiming(record));
+    fields.push(transfer_amount);
     fields.push(record[fieldKyoryokuId_APPLY]["value"]); // 顧客情報フィールド。任意入力フィールドであり、協力会社IDを記入する。
     fields.push(" "); // 識別表示フィールド。不使用
 
     return fields.join(",");
-};
-
-export const getAmountByTiming = (record) => {
-    // 支払タイミングそれぞれに応じた振込金額を取得する
-    const TIMING = record[fieldPaymentTiming_APPLY]["value"];
-
-    if (TIMING === statusPaymentLate_APPLY) {
-        return record[fieldTransferAmountLate_APPLY]["value"];
-    } else if (TIMING === statusPaymentOriginal_APPLY) {
-        return getOriginalPaymentAmount(record);
-    } else {
-        return record[fieldTransferAmount_APPLY]["value"];
-    }
-};
-
-export const getOriginalPaymentAmount = (record) => {
-    // 通常払いの場合、下記のように特殊な金額計算を行う。
-    // ①サービス利用手数料を差し引かない（対象債権金額をそのまま利用する）
-    // ②工務店が支払する場合と同額の振込手数料を差し引く
-    const constructor_id = record[fieldConstructionShopId_APPLY]["value"];
-    const receiver_account = {
-        bank_code: record[fieldBankCode_APPLY]["value"],
-        branch_code: record[fieldBranchCode_APPLY]["value"],
-    };
-    const receivable_amount = Number(record[fieldTotalReceivables_APPLY]["value"]);
-
-    if (constructor_id === AVAILABLE_CONSTRUCTORS.REALTOR_SOLUTIONS.ID) {
-        const transfer_fee_original = ((receiver_account, transfer_amount) => {
-            const LOWER_FEE_BORDER = 30000;
-
-            if ((receiver_account.bank_code === AVAILABLE_CONSTRUCTORS.REALTOR_SOLUTIONS.BANK_CODE)
-            && (receiver_account.branch_code === AVAILABLE_CONSTRUCTORS.REALTOR_SOLUTIONS.BRANCH_CODE)) {
-                // 同一店内
-                return 0;
-            } else if ((receiver_account.bank_code === AVAILABLE_CONSTRUCTORS.REALTOR_SOLUTIONS.BANK_CODE)
-            && (receiver_account.branch_code !== AVAILABLE_CONSTRUCTORS.REALTOR_SOLUTIONS.BRANCH_CODE)) {
-                // 同一銀行内・別の本支店
-                if (transfer_amount < LOWER_FEE_BORDER) {
-                    return 55;
-                } else {
-                    return 220;
-                }
-            } else {
-                // 他行宛
-                if (transfer_amount < LOWER_FEE_BORDER) {
-                    return 330;
-                } else {
-                    return 550;
-                }
-            }
-        })(receiver_account, receivable_amount);
-        // (請求書金額 - 協力会費) - (インベストが関わらない場合を想定した本来の振込手数料)を返す。
-        // (請求書金額 - 協力会費)の金額は対象債権合計金額と同じ
-        return receivable_amount - transfer_fee_original;
-    }
-
-    throw new Error("申込レコードに紐づく工務店が現状は通常払いに未対応なため、処理を中断します。");
 };
 
 export const encodeToSjis = (csv_data) => {
@@ -209,7 +140,7 @@ export const downloadFile = (sjis_code_list, file_name) => {
     kintone.app.getHeaderMenuSpaceElement().removeChild(download_link);
 };
 
-export const setText = (element,str) => {
+const setText = (element,str) => {
     if(element.textContent !== undefined){
         element.textContent = str;
     }
@@ -236,7 +167,7 @@ export const updateToDone = (outputted_records) => {
     return kintone.api(kintone.api.url("/k/v1/records", true), "PUT", request_body);
 };
 
-export const zenkakuToHankaku = (input_string) => {
+const zenkakuToHankaku = (input_string) => {
     // 全銀形式で使用可能な文字を半角に変換する。使用不可能な文字を受け取った場合はエラーとする。
     // 特に、ダブルクォーテーションは使用不可能。
     const zenkaku_array = [
