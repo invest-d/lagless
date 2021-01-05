@@ -309,3 +309,9 @@ export const zenkakuToHankaku = (input_string) => {
 
     return converted_han;
 };
+
+export const downloadCsv = (records, file_name) => {
+    const csv_data = generateCsvData(records);
+    const sjis_list = encodeToSjis(csv_data);
+    downloadFile(sjis_list, file_name);
+};
