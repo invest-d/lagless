@@ -1,3 +1,12 @@
+/*
+    Version 2
+    軽バン.COMの案件については、申込レコードから請求書ファイルを取得しないように修正。
+    クラウドサインの下書きには回収アプリで作成した債権譲渡承諾書のPDFファイルのみを添付する。
+
+    Version 1
+    回収アプリのレコード情報を元に、クラウドサインに契約書の下書きを作成する機能を実装。
+*/
+
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
@@ -7,6 +16,14 @@ import { get_contractor_name } from "./util_forms";
     "use strict";
     const CLOUDSIGN_API_SERVER = "https://api.cloudsign.jp";
     const GET_TOKEN_API = "https://us-central1-lagless.cloudfunctions.net/fetch_cloudSign_token";
+
+    const KE_BAN_CONSTRUCTORS = [
+        "400",
+        "401",
+        "402",
+        "403",
+        "404",
+    ];
 
     const APP_ID_LOGIN = "61";
     const cloud_sign_record_id = "54";
@@ -380,6 +397,8 @@ import { get_contractor_name } from "./util_forms";
             // ②回収レコードに紐づく申込レコードから、それぞれの請求書PDFファイルをダウンロードする。
             // ③1番および2番のデータを配列にして返す。インデックス0が債権譲渡承諾書、1以降が請求書
             // 制限事項：申込レコードに添付してあるファイルはPDFファイルであることを前提とする。
+            // 軽バン.COM案件の場合：1番のデータのみ返す。2番のデータは取得しない
+
             const targets = [];
 
             const acceptance_letter = {
@@ -388,15 +407,17 @@ import { get_contractor_name } from "./util_forms";
             };
             targets.push(acceptance_letter);
 
-            record[tableCloudSignApplies_COLLECT]["value"].forEach((row) => {
-                const applicant = row["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"];
-                const closing_date = record[fieldClosingDate_COLLECT]["value"];
-                const invoice = {
-                    name: `${dayjs(closing_date).format("YYYY年M月D日")}締め分請求書（${applicant}様）.pdf`,
-                    fileKey: row["value"][tableFieldAttachmentFileKey_COLLECT]["value"]
-                };
-                targets.push(invoice);
-            });
+            if (!KE_BAN_CONSTRUCTORS.includes(record[fieldConstructorId_COLLECT]["value"])) {
+                record[tableCloudSignApplies_COLLECT]["value"].forEach((row) => {
+                    const applicant = row["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"];
+                    const closing_date = record[fieldClosingDate_COLLECT]["value"];
+                    const invoice = {
+                        name: `${dayjs(closing_date).format("YYYY年M月D日")}締め分請求書（${applicant}様）.pdf`,
+                        fileKey: row["value"][tableFieldAttachmentFileKey_COLLECT]["value"]
+                    };
+                    targets.push(invoice);
+                });
+            }
 
             const download_processes = targets.map(async (obj) => {
                 const data = await client.file.downloadFile({ fileKey: obj.fileKey });
