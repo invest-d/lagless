@@ -1,7 +1,17 @@
+/*
+    Version 2
+    軽バン.COMの案件については、申込レコードから請求書ファイルを取得しないように修正。
+    クラウドサインの下書きには回収アプリで作成した債権譲渡承諾書のPDFファイルのみを添付する。
+
+    Version 1
+    回収アプリのレコード情報を元に、クラウドサインに契約書の下書きを作成する機能を実装。
+*/
+
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
 import { get_contractor_name } from "./util_forms";
+import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
 (function() {
     "use strict";
@@ -51,6 +61,7 @@ import { get_contractor_name } from "./util_forms";
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         // ボタンを表示するか判定
         if (needShowButton()) {
@@ -299,8 +310,9 @@ import { get_contractor_name } from "./util_forms";
             let name = `${accepter[tableFieldParticipantName_CONSTRUCTOR]["value"]}`;
 
             // 役職があれば追加
-            if (accepter.hasOwnProperty(tableFieldParticipantTitle_CONSTRUCTOR)
+            if (Object.prototype.hasOwnProperty.call(accepter, tableFieldParticipantTitle_CONSTRUCTOR)
                 && accepter[tableFieldParticipantTitle_CONSTRUCTOR]["value"] !== "") {
+                // eslint-disable-next-line no-irregular-whitespace
                 name = `${accepter[tableFieldParticipantTitle_CONSTRUCTOR]["value"]}　${name}`;
             }
 
@@ -342,8 +354,9 @@ import { get_contractor_name } from "./util_forms";
             let name = `${reportee[tableFieldReporteeName_CONSTRUCTOR]["value"]}`;
 
             // 役職があれば追加
-            if (reportee.hasOwnProperty(tableFieldReporteeTitle_CONSTRUCTOR)
+            if (Object.prototype.hasOwnProperty.call(reportee, tableFieldReporteeTitle_CONSTRUCTOR)
                 && reportee[tableFieldReporteeTitle_CONSTRUCTOR]["value"] !== "") {
+                // eslint-disable-next-line no-irregular-whitespace
                 name = `${reportee[tableFieldReporteeTitle_CONSTRUCTOR]["value"]}　${name}`;
             }
 
@@ -380,20 +393,27 @@ import { get_contractor_name } from "./util_forms";
             // ②回収レコードに紐づく申込レコードから、それぞれの請求書PDFファイルをダウンロードする。
             // ③1番および2番のデータを配列にして返す。インデックス0が債権譲渡承諾書、1以降が請求書
             // 制限事項：申込レコードに添付してあるファイルはPDFファイルであることを前提とする。
+            // 軽バン.COM案件の場合：1番のデータのみ返す。2番のデータは取得しない
+
+            const targets = [];
 
             const acceptance_letter = {
                 name: record[fieldAcceptanceLetter_COLLECT]["value"][0]["name"],
                 fileKey: record[fieldAcceptanceLetter_COLLECT]["value"][0]["fileKey"]
             };
-            const invoices = record[tableCloudSignApplies_COLLECT]["value"].map((row) => {
-                const applicant = row["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"];
-                const closing_date = record[fieldClosingDate_COLLECT]["value"];
-                return {
-                    name: `${dayjs(closing_date).format("YYYY年M月D日")}締め分請求書（${applicant}様）.pdf`,
-                    fileKey: row["value"][tableFieldAttachmentFileKey_COLLECT]["value"]
-                };
-            });
-            const targets = [acceptance_letter].concat(invoices);
+            targets.push(acceptance_letter);
+
+            if (!KE_BAN_CONSTRUCTORS.includes(record[fieldConstructorId_COLLECT]["value"])) {
+                record[tableCloudSignApplies_COLLECT]["value"].forEach((row) => {
+                    const applicant = row["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"];
+                    const closing_date = record[fieldClosingDate_COLLECT]["value"];
+                    const invoice = {
+                        name: `${dayjs(closing_date).format("YYYY年M月D日")}締め分請求書（${applicant}様）.pdf`,
+                        fileKey: row["value"][tableFieldAttachmentFileKey_COLLECT]["value"]
+                    };
+                    targets.push(invoice);
+                });
+            }
 
             const download_processes = targets.map(async (obj) => {
                 const data = await client.file.downloadFile({ fileKey: obj.fileKey });

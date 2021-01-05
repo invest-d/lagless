@@ -1,4 +1,7 @@
 /*
+    Version 2
+    軽バン.COM案件の場合は、債権譲渡承諾書PDFの明細テーブルについて専用のレイアウトを使用するようにした。
+
     Version 1
     回収アプリのレコード1つにつき、債権譲渡承諾書のpdfファイルを1つ生成してレコードの当該フィールドに添付する。
     債権譲渡承諾書に記載する明細行の内容は、回収レコード内にあるサブテーブル「クラウドサイン対象の申込レコード一覧」から生成する。
@@ -8,6 +11,7 @@
 // PDF生成ライブラリ
 import { createPdf } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
+import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
 const dayjs = require("dayjs");
 dayjs.locale("ja");
@@ -46,6 +50,7 @@ dayjs.locale("ja");
     const fieldClosing_COLLECT = "closingDate";
     const fieldDaysLater_COLLECT = "daysLater";
     const fieldSubtableCS_COLLECT = "cloudSignApplies";
+    const tableFieldApplyNo_COLLECT = "applyRecordNoCS";
     const tableFieldCustomerName_COLLECT = "applicantOfficialNameCS";
     const tableFieldPaymentTiming_COLLECT = "paymentTimingCS";
     const tableFieldPaymentDate_COLLECT = "paymentDateCS";
@@ -68,6 +73,7 @@ dayjs.locale("ja");
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         // ボタンを表示するか判定
         if (needShowButton()) {
@@ -140,7 +146,7 @@ dayjs.locale("ja");
                 }
 
                 // 各レコードについてPDFドキュメントを生成する
-                const corporate_info = corporates_by_constructor_id[record[fieldConstructorId_COLLECT]["value"]]
+                const corporate_info = corporates_by_constructor_id[record[fieldConstructorId_COLLECT]["value"]];
                 const letter_doc = generateInvoiceDocument(record, corporate_info);
                 const generator = await createPdf(letter_doc);
 
@@ -318,8 +324,8 @@ dayjs.locale("ja");
 
         const sender = {
             text: [
-                `${corporate_info[fieldCorporateName_CORPORATE]["value"]}\n`,
                 `${corporate_info[fieldAddress_CORPORATE]["value"]}\n`,
+                `${corporate_info[fieldCorporateName_CORPORATE]["value"]}\n`,
                 `${corporate_info[fieldCeoTitle_CORPORATE]["value"]} ${corporate_info[fieldCeoName_CORPORATE]["value"]}`
             ],
             margin: [242, 0, 0, 0]
@@ -342,6 +348,7 @@ dayjs.locale("ja");
                 + "（対象債権の無効・取消、弁済・免除・相殺等の抗弁、"
                 + "原契約における義務違反・担保責任に基づく対象債権の減額・原契約の解除を含みます）に基づき、"
                 + "対象債権の全部又は一部の協力企業に対する支払を拒絶し得る一切の抗弁権を、放棄します。\n",
+                // eslint-disable-next-line no-irregular-whitespace
                 `　下記の金額については、${contractor_name}にお支払いいたします。`
             ],
             preserveLeadingSpaces: true,
@@ -349,145 +356,276 @@ dayjs.locale("ja");
         };
         doc.content.push(letter_body);
 
-        const list_title = {
-            text: [
-                "＜債権譲渡希望者リスト＞\n",
-                `対象となる締日：${formatYMD(record[fieldClosing_COLLECT]["value"])}\n\n`,
-                "※対象債権内容の詳細は、別途添付の請求書に記載しております。"
-            ],
-            margin: [0, 15, 0, 0]
-        };
-        doc.content.push(list_title);
+        // ここから下はWFI案件／それ以外で内容が分岐
+        if (KE_BAN_CONSTRUCTORS.includes(record[fieldConstructorId_COLLECT]["value"])) {
+            const term_end = record[fieldClosing_COLLECT]["value"];
+            const term_start = ((yyyy_mm_dd) => {
+                // endの日付は5, 10, 15, 20, 25のいずれか。startは常にそれぞれから4を引いた値
+                const start_date = dayjs(yyyy_mm_dd).subtract(4, "day");
+                return start_date.format("YYYY-MM-DD");
+            })(term_end);
+            const list_title = {
+                text: [
+                    "＜債権譲渡希望者リスト＞\n",
+                    `対象となる稼働期間：${formatYMD(term_start)}〜${formatYMD(term_end)}\n\n`,
+                    "※対象債権内容の詳細は、別途添付の資料に記載しております。"
+                ],
+                margin: [0, 15, 0, 0]
+            };
+            doc.content.push(list_title);
 
-        const receivables_table = {
-            table: {
-                headerRows: 1,
-                widths: [ "6%", "21%", "12%", "15%", "18%", "13%", "15%" ],
-                // 行の高さはヘッダー行のみ少し高くする
-                heights: (row) => (row === 0) ? 30 : 10,
-                body: []
-            },
-            layout: {
-                // 明細行どうしの境界線のみ細くする
-                hLineWidth: (i, node) => (i > 1 && i < node.table.body.length) ? 0.5 : 1,
-                vLineWidth: (i, node) => 1
-            }
-        };
+            const receivables_table = {
+                table: {
+                    headerRows: 1,
+                    widths: [ "8%", "34%", "25%", "33%" ],
+                    // 行の高さはヘッダー行のみ少し高くする
+                    heights: (row) => (row === 0) ? 30 : 10,
+                    body: []
+                },
+                layout: {
+                    // 明細行どうしの境界線のみ細くする
+                    hLineWidth: (i, node) => (i > 1 && i < node.table.body.length) ? 0.5 : 1,
+                    // eslint-disable-next-line no-unused-vars
+                    vLineWidth: (i, node) => 1
+                }
+            };
 
-        const header_row = [
-            {
-                text: "No.",
-                style: "tableHeader",
-                fontSize: 10,
-                margin: [ 0, 10, 0, 0 ]
-            },
-            {
-                text: "協力会社名\n（対象債権譲渡企業）",
-                style: "tableHeader",
-                fontSize: 8,
-                margin: [ 0, 6, 0, 0 ]
-            },
-            {
-                text: "支払\nタイミング",
-                style: "tableHeader",
-                fontSize: 10,
-                margin: [ 0, 2, 0, 0 ]
-            },
-            {
-                text: "支払予定日",
-                style: "tableHeader",
-                fontSize: 10,
-                margin: [ 0, 10, 0, 0 ]
-            },
-            {
-                text: "請求書金額\n（税込）",
-                style: "tableHeader",
-                fontSize: 10,
-                margin: [ 0, 2, 0, 0 ]
-            },
-            {
-                text: "差引額\n（協力会費・\n立替金等）",
-                style: "tableHeader",
-                fontSize: 7,
-                margin: [ 0, 0, 0, 0 ]
-            },
-            {
-                text: "債権譲渡の\n対象となる金額",
-                style: "tableHeader",
-                fontSize: 8,
-                margin: [ 0, 6, 0, 0 ]
-            }
-        ];
-        receivables_table.table.body.push(header_row);
+            const header_row = [
+                {
+                    text: "No.",
+                    style: "tableHeader",
+                    fontSize: 10,
+                    margin: [ 0, 10, 0, 0 ]
+                },
+                {
+                    text: "ドライバー名\n（対象債権譲渡企業）",
+                    style: "tableHeader",
+                    fontSize: 8,
+                    margin: [ 0, 5, 0, 0 ]
+                },
+                {
+                    text: "支払予定日",
+                    style: "tableHeader",
+                    fontSize: 10,
+                    margin: [ 0, 10, 0, 0 ]
+                },
+                {
+                    text: "債権譲渡の\n対象となる金額",
+                    style: "tableHeader",
+                    fontSize: 8,
+                    margin: [ 0, 5, 0, 0 ]
+                }
+            ];
+            receivables_table.table.body.push(header_row);
 
-        const get_receivable_details = (record) => {
-            const target_applies = record[fieldSubtableCS_COLLECT]["value"];
-            const display_details = target_applies.map((apply, index) => {
-                // 1行目に「1」と表示
-                const row = index + 1;
+            const receivable_details = ((collect_record) => {
+                const detail_rows = [];
 
-                return [
-                    {text: String(row),                                                                          alignment: "right"},
-                    {text: apply["value"][tableFieldCustomerName_COLLECT]["value"],                              alignment: "left"},
-                    {text: get_display_payment_timing(apply["value"][tableFieldPaymentTiming_COLLECT]["value"]), alignment: "left"},
-                    {text: dayjs(apply["value"][tableFieldPaymentDate_COLLECT]["value"]).format("YYYY/M/D"),     alignment: "right"},
-                    {text: addComma(apply["value"][tableFieldInvoiceAmount_COLLECT]["value"]),                   alignment: "right"},
-                    {text: addComma(apply["value"][tableFieldMemberFee_COLLECT]["value"]),                       alignment: "right"},
-                    {text: addComma(apply["value"][tableFieldReceivableAmount_COLLECT]["value"]),                alignment: "right"}
-                ];
-            });
+                // 申込が何件あったとしても、1行だけで代表して全て表現してよい取り決め。
+                const summary_row = ((collect_record) => {
+                    // 申込が最も早い人の名前を代表して使用する
+                    const applies = collect_record[fieldSubtableCS_COLLECT]["value"];
+                    const first_apply = applies.reduce((first, apply) => {
+                        const first_is_older = Number(first["value"][tableFieldApplyNo_COLLECT]["value"]) < Number(apply["value"][tableFieldApplyNo_COLLECT]["value"]);
+                        return first_is_older ? first : apply;
+                    });
 
-            // PDFには明細行を最低でも10行以上表示する。つまり、下記のような処理となる。
-            if (target_applies.length < 10) {
-                // 申込が10行未満の場合：
-                // 1. 「以下余白」の行を追加し、
-                display_details.push([
-                    {text: String(display_details.length + 1), alignment: "right"},
-                    {text: "以下余白",                         alignment: "left"},
-                    {text: ""},
-                    {text: ""},
-                    {text: ""},
+                    let names = `${first_apply["value"][tableFieldCustomerName_COLLECT]["value"]} 様`;
+                    if (applies.length >= 2) {
+                        names = `${names}、他${applies.length - 1}名`;
+                    }
+
+                    const payment_date = dayjs(first_apply["value"][tableFieldPaymentDate_COLLECT]["value"]);
+
+                    const sum_of_receivables = record[fieldTotalAmount_COLLECT]["value"];
+
+                    return [
+                        {text: "1",                                     alignment: "right"},
+                        {text: names,                                   alignment: "left"},
+                        {text: payment_date.format("YYYY年M月D日"),     alignment: "right"},
+                        {text: `${addComma(sum_of_receivables)} 円`,    alignment: "right"}
+                    ];
+                })(collect_record);
+                detail_rows.push(summary_row);
+
+                detail_rows.push([
+                    {text: "2",         alignment: "right"},
+                    {text: "以下余白",  alignment: "left"},
                     {text: ""},
                     {text: ""}
                 ]);
 
-                // 2. 尚且つ明細行が10行になるまで空行を追加する。
-                for (let now_rows = display_details.length; now_rows < 10; now_rows++) {
-                    display_details.push([
+                for (let now_rows = detail_rows.length; now_rows < 10; now_rows++) {
+                    detail_rows.push([
                         {text: String(now_rows + 1), alignment: "right"},
                         {text: ""},
                         {text: ""},
-                        {text: ""},
-                        {text: ""},
-                        {text: ""},
-                        {text: ""},
+                        {text: ""}
                     ]);
                 }
-            }
-            // 申込が10行以上の場合：
-            // 特に何もしない。「以下余白」の行や空行も表示せず、PDFの2ページ目以降に11行目以降を表示する。
-            return display_details;
-        };
-        const receivable_details = get_receivable_details(record);
 
-        receivables_table.table.body = receivables_table.table.body.concat(receivable_details);
-        doc.content.push(receivables_table);
+                return detail_rows;
+            })(record);
+            receivables_table.table.body = receivables_table.table.body.concat(receivable_details);
+            doc.content.push(receivables_table);
 
-        const total_block = {
-            table: {
-                widths: [ "*", "24%", "20%" ],
-                heights: 10,
-                body: [
-                    [
-                        {text: "", border: [false, false, false, false]},
-                        {text: "合計金額", style: "tableHeader"},
-                        {text: `${addComma(record[fieldTotalAmount_COLLECT]["value"])} 円`, alignment: "right"}
+            const total_block = {
+                table: {
+                    widths: [ "*", "32%", "25%" ],
+                    heights: 10,
+                    body: [
+                        [
+                            {text: "", border: [false, false, false, false]},
+                            {text: "合計金額", style: "tableHeader"},
+                            {text: `${addComma(record[fieldTotalAmount_COLLECT]["value"])} 円`, alignment: "right"}
+                        ]
                     ]
-                ]
-            },
-            margin: [ 0, 5, 0, 0 ]
-        };
-        doc.content.push(total_block);
+                },
+                margin: [ 0, 5, 0, 0 ]
+            };
+            doc.content.push(total_block);
+        } else {
+            const list_title = {
+                text: [
+                    "＜債権譲渡希望者リスト＞\n",
+                    `対象となる締日：${formatYMD(record[fieldClosing_COLLECT]["value"])}\n\n`,
+                    "※対象債権内容の詳細は、別途添付の請求書に記載しております。"
+                ],
+                margin: [0, 15, 0, 0]
+            };
+            doc.content.push(list_title);
+
+            const receivables_table = {
+                table: {
+                    headerRows: 1,
+                    widths: [ "6%", "21%", "12%", "15%", "18%", "13%", "15%" ],
+                    // 行の高さはヘッダー行のみ少し高くする
+                    heights: (row) => (row === 0) ? 30 : 10,
+                    body: []
+                },
+                layout: {
+                    // 明細行どうしの境界線のみ細くする
+                    hLineWidth: (i, node) => (i > 1 && i < node.table.body.length) ? 0.5 : 1,
+                    // eslint-disable-next-line no-unused-vars
+                    vLineWidth: (i, node) => 1
+                }
+            };
+
+            const header_row = [
+                {
+                    text: "No.",
+                    style: "tableHeader",
+                    fontSize: 10,
+                    margin: [ 0, 10, 0, 0 ]
+                },
+                {
+                    text: "協力会社名\n（対象債権譲渡企業）",
+                    style: "tableHeader",
+                    fontSize: 8,
+                    margin: [ 0, 6, 0, 0 ]
+                },
+                {
+                    text: "支払\nタイミング",
+                    style: "tableHeader",
+                    fontSize: 10,
+                    margin: [ 0, 2, 0, 0 ]
+                },
+                {
+                    text: "支払予定日",
+                    style: "tableHeader",
+                    fontSize: 10,
+                    margin: [ 0, 10, 0, 0 ]
+                },
+                {
+                    text: "請求書金額\n（税込）",
+                    style: "tableHeader",
+                    fontSize: 10,
+                    margin: [ 0, 2, 0, 0 ]
+                },
+                {
+                    text: "差引額\n（協力会費・\n立替金等）",
+                    style: "tableHeader",
+                    fontSize: 7,
+                    margin: [ 0, 0, 0, 0 ]
+                },
+                {
+                    text: "債権譲渡の\n対象となる金額",
+                    style: "tableHeader",
+                    fontSize: 8,
+                    margin: [ 0, 6, 0, 0 ]
+                }
+            ];
+            receivables_table.table.body.push(header_row);
+
+            const get_receivable_details = (record) => {
+                const target_applies = record[fieldSubtableCS_COLLECT]["value"];
+                const display_details = target_applies.map((apply, index) => {
+                // 1行目に「1」と表示
+                    const row = index + 1;
+
+                    return [
+                        {text: String(row),                                                                          alignment: "right"},
+                        {text: apply["value"][tableFieldCustomerName_COLLECT]["value"],                              alignment: "left"},
+                        {text: get_display_payment_timing(apply["value"][tableFieldPaymentTiming_COLLECT]["value"]), alignment: "left"},
+                        {text: dayjs(apply["value"][tableFieldPaymentDate_COLLECT]["value"]).format("YYYY/M/D"),     alignment: "right"},
+                        {text: addComma(apply["value"][tableFieldInvoiceAmount_COLLECT]["value"]),                   alignment: "right"},
+                        {text: addComma(apply["value"][tableFieldMemberFee_COLLECT]["value"]),                       alignment: "right"},
+                        {text: addComma(apply["value"][tableFieldReceivableAmount_COLLECT]["value"]),                alignment: "right"}
+                    ];
+                });
+
+                // PDFには明細行を最低でも10行以上表示する。つまり、下記のような処理となる。
+                if (target_applies.length < 10) {
+                // 申込が10行未満の場合：
+                // 1. 「以下余白」の行を追加し、
+                    display_details.push([
+                        {text: String(display_details.length + 1), alignment: "right"},
+                        {text: "以下余白",                         alignment: "left"},
+                        {text: ""},
+                        {text: ""},
+                        {text: ""},
+                        {text: ""},
+                        {text: ""}
+                    ]);
+
+                    // 2. 尚且つ明細行が10行になるまで空行を追加する。
+                    for (let now_rows = display_details.length; now_rows < 10; now_rows++) {
+                        display_details.push([
+                            {text: String(now_rows + 1), alignment: "right"},
+                            {text: ""},
+                            {text: ""},
+                            {text: ""},
+                            {text: ""},
+                            {text: ""},
+                            {text: ""},
+                        ]);
+                    }
+                }
+                // 申込が10行以上の場合：
+                // 特に何もしない。「以下余白」の行や空行も表示せず、PDFの2ページ目以降に11行目以降を表示する。
+                return display_details;
+            };
+            const receivable_details = get_receivable_details(record);
+
+            receivables_table.table.body = receivables_table.table.body.concat(receivable_details);
+            doc.content.push(receivables_table);
+
+            const total_block = {
+                table: {
+                    widths: [ "*", "24%", "20%" ],
+                    heights: 10,
+                    body: [
+                        [
+                            {text: "", border: [false, false, false, false]},
+                            {text: "合計金額", style: "tableHeader"},
+                            {text: `${addComma(record[fieldTotalAmount_COLLECT]["value"])} 円`, alignment: "right"}
+                        ]
+                    ]
+                },
+                margin: [ 0, 5, 0, 0 ]
+            };
+            doc.content.push(total_block);
+        }
 
         return doc;
     }

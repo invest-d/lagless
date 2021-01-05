@@ -1,6 +1,10 @@
 /*
+    Version 4.1
+    軽バン.COM案件について、請求書ファイルキーを回収レコードに記入しないようにする処理を追加
+    （案件の性質上、請求書の提出が無いため）
+
     Version 4
-    軽バン.COM案件について、回収レコード作成前に申込金額を記入する処理を追加
+    軽バン.COM案件について、回収レコード作成前に申込レコードを編集して申込金額を記入する処理を追加
 
     Version 3
     申込アプリ内で対象となるレコードの種類を変更。
@@ -24,6 +28,7 @@
     回収アプリに新規レコードとして追加したあと、
     申込みレコードの回収IDフィールドに回収アプリ側のレコード番号を入力する。
 */
+import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
 (function () {
     "use strict";
@@ -47,14 +52,6 @@
             console.warn(`Unknown app: ${  app_id}`);
         }
     })(kintone.app.getId());
-
-    const KE_BAN_CONSTRUCTORS = [
-        "400",
-        "401",
-        "402",
-        "403",
-        "404",
-    ];
 
     const commonRecordID = "$id";
 
@@ -259,19 +256,11 @@
         });
 
         // 抜き出した工務店IDと締日のペアについて、重複なしのリストを作る。
-        // ロジックとしては、filterを利用するよく知られた重複削除のロジックと同じ。
-        // 今回はオブジェクトの配列なので、インデックスを探す上でindexOfが使えない代わりにfindIndexを使っている。
-        const unique_key_pairs = key_pairs.filter((key_pair1, key_pairs_index, self_arr) => {
-            const target_index = self_arr.findIndex(((key_pair2) => {
-                // 工務店IDの一致
-                return (key_pair1[fieldConstructionShopId_APPLY] === key_pair2[fieldConstructionShopId_APPLY])
-                // 締日の一致
-                && (key_pair1[fieldClosingDay_APPLY] === key_pair2[fieldClosingDay_APPLY]);
-            }));
-
-            const is_unique = (target_index === key_pairs_index);
-            return is_unique;
-        });
+        // ロジックの解説: https://www.deep-rain.com/programming/javascript/1125
+        const DELIMITER = String.fromCharCode("31");
+        const unique_key_pairs = Array.from(new Map(
+            key_pairs.map((p) => [`${p[fieldConstructionShopId_APPLY]}${DELIMITER}${p[fieldClosingDay_APPLY]}`, p])
+        ).values());
 
         // 工務店マスタから回収日の情報を取得。申込レコードに含まれる工務店の情報のみ取得する
         const body_komuten_payment_date = {
@@ -325,7 +314,7 @@
                     // サブテーブル部分
                     [tableCloudSignApplies_COLLECT]: {
                         "value": target_records.map((record) => {
-                            return {
+                            const sub_table_record = {
                                 "value": {
                                     [tableFieldApplyRecordNoCS]: {
                                         "value": record[fieldRecordId_APPLY]["value"]
@@ -347,12 +336,18 @@
                                     },
                                     [tableFieldPaymentDateCS]: {
                                         "value": record[fieldPaymentDate_APPLY]["value"]
-                                    },
-                                    [tableFieldAttachmentFileKeyCS]: {
-                                        "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
                                     }
                                 }
                             };
+
+                            // WFIはファイルキー不要
+                            if (!KE_BAN_CONSTRUCTORS.includes(record[fieldConstructionShopId_APPLY]["value"])) {
+                                sub_table_record["value"][tableFieldAttachmentFileKeyCS] = {
+                                    "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
+                                };
+                            }
+
+                            return sub_table_record;
                         })
                     }
                 };
