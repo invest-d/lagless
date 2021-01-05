@@ -25,6 +25,8 @@ function getGigMailData() {
         return;
     }
 
+    const logSheet = SpreadsheetApp.openById(LOG_SHEET_ID).getSheetByName("list");
+
     const data = [];
     threads.forEach((thread) => {
         const messages = thread.getMessages();
@@ -32,9 +34,21 @@ function getGigMailData() {
         // メールを一つずつ取り出す
         messages.forEach((message) => {
             if (message.getFrom().includes("Workship 運営事務局")) {
-                const plainBody = message.getPlainBody();
-                const mailData = getDataFromMailBody(plainBody);
-                data.push(mailData);
+                const msgId = message.getId();
+                const textFinder = logSheet.createTextFinder(msgId);
+                const ranges = textFinder.findAll();
+                // 重複メッセージが存在しないことを確認（件数ゼロ）
+                if (ranges.length == 0) {
+                    // メールに対する処理
+                    const plainBody = message.getPlainBody();
+                    const mailData = getDataFromMailBody(plainBody);
+                    data.push(mailData);
+
+                    // 空行を追加
+                    logSheet.insertRowBefore(2);
+                    //メッセージIDを記録
+                    logSheet.getRange("A2").setValue(msgId);
+                }
             }
         });
     });
@@ -117,6 +131,12 @@ function postKintoneRecords(gig_data) {
 
 function getKintoneRecordsPayload(mail_data) {
     const records = [];
+
+    const today = new Date();
+    // 日付にゼロを渡すと、ひと月前の末日になる
+    const clo = new Date(today.getFullYear(), today.getMonth(), 0);
+    const closing_field_value = [clo.getFullYear(), clo.getMonth()+1, clo.getDate()].join("-");
+
     for (const single_mail of mail_data) {
         const record = {
             // まず固定値を入力しておく
@@ -131,8 +151,8 @@ function getKintoneRecordsPayload(mail_data) {
                 "value": "0"
             },
             "closingDay": {
-                // 後から手動入力することが前提
-                "value": "2021-01-01"
+                // 常に「今日の日付から見た先月末」を入力
+                "value": closing_field_value
             },
             "billingCompany": {
                 "value": "株式会社GIG"
