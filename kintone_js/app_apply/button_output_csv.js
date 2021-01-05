@@ -70,16 +70,16 @@
         kintone.app.getHeaderMenuSpaceElement().appendChild(button);
     });
 
-    function createButton() {
+    const createButton = () => {
         const button = document.createElement("button");
         button.id = buttonName;
         button.innerText = "あおぞら向け総合振込データをダウンロード";
         button.addEventListener("click", clickButton);
         return button;
-    }
+    };
 
     // CSV出力ボタンクリック時の処理を定義
-    async function clickButton() {
+    const clickButton = async () => {
         const do_download = confirm("振込用のcsvデータをダウンロードします。よろしいですか？\n\n"
         + "※このあとに支払日を指定し、\n"
         + "未出力のものだけ出力 OR 出力済みも含めて全て出力 のどちらかを選択できます。");
@@ -136,9 +136,9 @@
         } catch (err) {
             alert (err);
         }
-    }
+    };
 
-    function getKintoneRecords(account, target_date, only_undownloaded) {
+    const getKintoneRecords = (account, target_date, only_undownloaded) => {
         console.log(`申込レコード一覧から、CSVファイルへの出力対象レコードを取得する。対象口座：${account}`);
 
         const in_query = (only_undownloaded)
@@ -171,7 +171,7 @@
         };
 
         return kintone.api(kintone.api.url("/k/v1/records", true), "GET", request_body);
-    }
+    };
 
     const generateCsvData = (applies) => {
         // 申込レコード1つを1行の文字列として、CRLFで連結した文字列を返す
@@ -260,7 +260,7 @@
         throw new Error("申込レコードに紐づく工務店が現状は通常払いに未対応なため、処理を中断します。");
     };
 
-    function encodeToSjis(csv_data) {
+    const encodeToSjis = (csv_data) => {
         // 1文字ずつ格納
         const unicode_list = [];
         for (let i = 0; i < csv_data.length; i++) {
@@ -269,10 +269,10 @@
 
         // 1文字ずつSJISに変換する
         return Encoding.convert(unicode_list, "sjis", "unicode");
-    }
+    };
 
     // 生成したデータをCSVファイルとしてローカルにダウンロードする。
-    function downloadFile(sjis_code_list, file_name) {
+    const downloadFile = (sjis_code_list, file_name) => {
         const uint8_list = new Uint8Array(sjis_code_list);
         const write_data = new Blob([uint8_list], { type: "text/csv" });
 
@@ -286,18 +286,18 @@
         setText(download_link, "download csv");
         download_link.click();
         kintone.app.getHeaderMenuSpaceElement().removeChild(download_link);
-    }
+    };
 
-    function setText(element,str){
+    const setText = (element,str) => {
         if(element.textContent !== undefined){
             element.textContent = str;
         }
         if(element.innerText !== undefined){
             element.innerText = str;
         }
-    }
+    };
 
-    function updateToDone(outputted_records) {
+    const updateToDone = (outputted_records) => {
         const request_body = {
             "app": APP_ID_APPLY,
             "records": outputted_records.map((record) => {
@@ -313,9 +313,9 @@
         };
 
         return kintone.api(kintone.api.url("/k/v1/records", true), "PUT", request_body);
-    }
+    };
 
-    function zenkakuToHankaku(input_string){
+    const zenkakuToHankaku = (input_string) => {
         // 全銀形式で使用可能な文字を半角に変換する。使用不可能な文字を受け取った場合はエラーとする。
         // 特に、ダブルクォーテーションは使用不可能。
         const zenkaku_array = [
@@ -373,5 +373,5 @@
         }
 
         return converted_han;
-    }
+    };
 })();
