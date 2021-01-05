@@ -1807,6 +1807,7 @@ export const schema_apply = {
                 "fields": [
                     "レコード番号",
                     "状態",
+                    "collectId",
                     "paymentTiming",
                     "closingDay",
                     "登記の取得",
@@ -1916,15 +1917,22 @@ export const schema_apply = {
                 "sort": "paymentDate desc",
                 "type": "LIST"
             },
-            "振込データ出力": {
+            "振込データ出力（WFI早払い）": {
                 "fields": [
                     "レコード番号",
                     "状態",
+                    "constructionShopId",
+                    "billingCompanyOfficialName",
                     "ルックアップ",
                     "支払先正式名称",
-                    "totalReceivables",
-                    "paymentTiming",
+                    "closingDay",
                     "paymentDate",
+                    "totalReceivables",
+                    "commissionRate",
+                    "commissionAmount",
+                    "transferFeeTaxIncl",
+                    "transferAmount",
+                    "paymentTiming",
                     "paymentAccount",
                     "bankCode",
                     "bankName",
@@ -1934,10 +1942,36 @@ export const schema_apply = {
                     "accountNumber",
                     "accountName"
                 ],
-                "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\")",
+                "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
+                "index": "7",
+                "name": "振込データ出力（WFI早払い）",
+                "sort": "paymentDate asc, paymentAccount asc",
+                "type": "LIST"
+            },
+            "振込データ出力（リライト通常払い）": {
+                "fields": [
+                    "レコード番号",
+                    "状態",
+                    "constructionShopId",
+                    "billingCompanyOfficialName",
+                    "ルックアップ",
+                    "支払先正式名称",
+                    "paymentDate",
+                    "totalReceivables",
+                    "paymentTiming",
+                    "paymentAccount",
+                    "bankCode",
+                    "bankName",
+                    "branchCode",
+                    "branchName",
+                    "deposit",
+                    "accountNumber",
+                    "accountName"
+                ],
+                "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\") and constructionShopId = \"100\"",
                 "index": "6",
-                "name": "振込データ出力",
-                "sort": "paymentDate desc, paymentAccount asc",
+                "name": "振込データ出力（リライト通常払い）",
+                "sort": "paymentDate asc, paymentAccount asc",
                 "type": "LIST"
             },
             "支払予定明細文面作成": {
@@ -2020,7 +2054,7 @@ export const schema_apply = {
                     "transferFeeTaxIncl"
                 ],
                 "filterCond": "company not like \"テスト\" and company not like \"test\" and ルックアップ != \"\" and 状態 in (\"実行完了\") and paymentTiming not in (\"通常払い\") and closingDay >= FROM_TODAY(-1, YEARS)",
-                "index": "7",
+                "index": "8",
                 "name": "申込回数カウント対象（概算）",
                 "sort": "constructionShopId asc, ルックアップ asc, paymentTiming asc, closingDay desc",
                 "type": "LIST"
