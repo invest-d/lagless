@@ -1,7 +1,4 @@
 /*
-    Version 3.1
-    リライト通常払いのデータを出力するための専用ボタンとして定義。
-
     Version 3 beta
     GMOあおぞらネット銀行特有のCSVファイル形式で出力するように改良。
     同銀行を利用しての振込登録は一部の工務店のみでテスト運用するため、出力可能な対象データを制限している。
@@ -28,8 +25,9 @@ import * as logics from "./logics_output_csv";
 
 (function() {
     "use strict";
+    const fieldStatus_APPLY = "状態";
 
-    const buttonName = "outputRealtorCsv";
+    const buttonName = "outputCsv";
     // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         // コントロールの重複作成防止チェック
@@ -45,7 +43,7 @@ import * as logics from "./logics_output_csv";
     const createButton = () => {
         const button = document.createElement("button");
         button.id = buttonName;
-        button.innerText = "総合振込データ（リライト通常払い）";
+        button.innerText = "あおぞら向け総合振込データをダウンロード";
         button.addEventListener("click", clickButton);
         return button;
     };
@@ -66,11 +64,9 @@ import * as logics from "./logics_output_csv";
         }
 
         const target_conditions = logics.getTargetConditions();
-        alert(`${logics.fieldStatus_APPLY}フィールドが${target_conditions.join(", ")}のレコードを対象に処理します。`);
+        alert(`${fieldStatus_APPLY}フィールドが${target_conditions.join(", ")}のレコードを対象に処理します。`);
 
-        const exec_target_message = "本機能はリライト通常払い専用です。\n"
-            + `従って、工務店が${Object.values(logics.AVAILABLE_CONSTRUCTORS).map((c) => c.NAME).join(", ")}の申込レコードのみを対象とします。`;
-        alert(exec_target_message);
+        alert(`本機能はテスト運用中です。従って、工務店が${Object.values(logics.AVAILABLE_CONSTRUCTORS).map((c) => c.NAME).join(", ")}の申込レコードのみを対象とします。`);
 
         const account = "ID"; // GMOあおぞらから振込できるのはIDの口座のみ
         const target = await logics.getKintoneRecords(account, payment_date, target_conditions)
@@ -80,17 +76,19 @@ import * as logics from "./logics_output_csv";
             });
 
         if (target && target.records.length === 0) {
-            alert(`支払日：${payment_date}、振込元：${account}で、状態が${target_conditions.join(", ")}のレコードはありませんでした。`);
+            alert(`支払元口座：${account}の支払い対象はありませんでした。`);
             return;
         }
 
         try {
-            const file_name = `リライト通常払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`;
-            logics.downloadCsv(target.records, file_name);
+            const csv_data = logics.generateCsvData(target.records);
+            const sjis_list = logics.encodeToSjis(csv_data);
+
+            const file_name = `支払日${payment_date}ぶんの振込データ（振込元：${account}）.csv`;
+            logics.downloadFile(sjis_list, file_name);
 
             await logics.updateToDone(target.records);
-
-            alert("リライト通常払い用振込データのダウンロードを完了しました。");
+            alert("振込データのダウンロードを完了しました。");
             alert("ページを更新します。");
             window.location.reload();
         } catch (err) {
