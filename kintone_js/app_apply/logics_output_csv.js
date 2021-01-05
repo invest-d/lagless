@@ -3,26 +3,40 @@
 // CSVファイルで保存するにあたってShift-Jisに変換する
 const Encoding = require("encoding-japanese");
 
+import { schema_apply as schema_apply_dev } from "../159/schema";
+import { schema_apply as schema_apply_prod } from "../161/schema";
+
 const APP_ID_APPLY                      = kintone.app.getId();
-const fieldRecordId_APPLY               = "レコード番号";
-const fieldBankCode_APPLY               = "bankCode";
-const fieldBranchCode_APPLY             = "branchCode";
-const fieldDepositType_APPLY            = "deposit";
-const fieldAccountNumber_APPLY          = "accountNumber";
-const fieldAccountName_APPLY            = "accountName";
-const fieldTotalReceivables_APPLY       = "totalReceivables";
-const fieldTransferAmount_APPLY         = "transferAmount";
-const fieldTransferAmountLate_APPLY     = "transferAmount_late";
-const fieldStatus_APPLY                 = "状態";
-const statusReady_APPLY                 = "振込前確認完了";
-const statusDone_APPLY                  = "振込データ出力済";
-const fieldPaymentDate_APPLY            = "paymentDate";
-const fieldPaymentAccount_APPLY         = "paymentAccount";
-const fieldPaymentTiming_APPLY          = "paymentTiming";
-const statusPaymentLate_APPLY           = "遅払い";
-const statusPaymentOriginal_APPLY       = "通常払い";
-const fieldConstructionShopId_APPLY     = "constructionShopId";
-const fieldKyoryokuId_APPLY             = "ルックアップ";
+
+const schema_apply = ((app_id) => {
+    if (app_id === 159) {
+        return schema_apply_dev;
+    } else if (app_id === 161) {
+        return schema_apply_prod;
+    } else {
+        throw new Error(`Invalid app: ${app_id}`);
+    }
+})(APP_ID_APPLY);
+
+const fieldRecordId_APPLY               = schema_apply.fields.properties.レコード番号.code;
+const fieldBankCode_APPLY               = schema_apply.fields.properties.bankCode.code;
+const fieldBranchCode_APPLY             = schema_apply.fields.properties.branchCode.code;
+const fieldDepositType_APPLY            = schema_apply.fields.properties.deposit.code;
+const fieldAccountNumber_APPLY          = schema_apply.fields.properties.accountNumber.code;
+const fieldAccountName_APPLY            = schema_apply.fields.properties.accountName.code;
+const fieldTotalReceivables_APPLY       = schema_apply.fields.properties.totalReceivables.code;
+const fieldTransferAmount_APPLY         = schema_apply.fields.properties.transferAmount.code;
+const fieldTransferAmountLate_APPLY     = schema_apply.fields.properties.transferAmount_late.code;
+export const fieldStatus_APPLY          = schema_apply.fields.properties.状態.code;
+const statusReady_APPLY                 = schema_apply.fields.properties.状態.options.振込前確認完了.label;
+const statusDone_APPLY                  = schema_apply.fields.properties.状態.options.振込データ出力済.label;
+const fieldPaymentDate_APPLY            = schema_apply.fields.properties.paymentDate.code;
+const fieldPaymentAccount_APPLY         = schema_apply.fields.properties.paymentAccount.code;
+const fieldPaymentTiming_APPLY          = schema_apply.fields.properties.paymentTiming.code;
+const statusPaymentLate_APPLY           = schema_apply.fields.properties.paymentTiming.options.遅払い.label;
+const statusPaymentOriginal_APPLY       = schema_apply.fields.properties.paymentTiming.options.通常払い.label;
+const fieldConstructionShopId_APPLY     = schema_apply.fields.properties.constructionShopId.code;
+const fieldKyoryokuId_APPLY             = schema_apply.fields.properties.ルックアップ.code;
 
 export const AVAILABLE_CONSTRUCTORS = {
     REALTOR_SOLUTIONS: {
