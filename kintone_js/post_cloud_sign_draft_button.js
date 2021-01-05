@@ -380,20 +380,23 @@ import { get_contractor_name } from "./util_forms";
             // ②回収レコードに紐づく申込レコードから、それぞれの請求書PDFファイルをダウンロードする。
             // ③1番および2番のデータを配列にして返す。インデックス0が債権譲渡承諾書、1以降が請求書
             // 制限事項：申込レコードに添付してあるファイルはPDFファイルであることを前提とする。
+            const targets = [];
 
             const acceptance_letter = {
                 name: record[fieldAcceptanceLetter_COLLECT]["value"][0]["name"],
                 fileKey: record[fieldAcceptanceLetter_COLLECT]["value"][0]["fileKey"]
             };
-            const invoices = record[tableCloudSignApplies_COLLECT]["value"].map((row) => {
+            targets.push(acceptance_letter);
+
+            record[tableCloudSignApplies_COLLECT]["value"].forEach((row) => {
                 const applicant = row["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"];
                 const closing_date = record[fieldClosingDate_COLLECT]["value"];
-                return {
+                const invoice = {
                     name: `${dayjs(closing_date).format("YYYY年M月D日")}締め分請求書（${applicant}様）.pdf`,
                     fileKey: row["value"][tableFieldAttachmentFileKey_COLLECT]["value"]
                 };
+                targets.push(invoice);
             });
-            const targets = [acceptance_letter].concat(invoices);
 
             const download_processes = targets.map(async (obj) => {
                 const data = await client.file.downloadFile({ fileKey: obj.fileKey });
