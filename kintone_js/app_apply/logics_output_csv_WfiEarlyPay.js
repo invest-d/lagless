@@ -46,7 +46,7 @@ export const getKintoneRecords = (account, target_date, conditions) => {
             common_logics.fieldConstructionShopId_APPLY,
             common_logics.fieldKyoryokuId_APPLY
         ],
-        "query": `
+        "condition": `
                 ${common_logics.fieldStatus_APPLY} in (${in_query})
                 and ${common_logics.fieldConstructionShopId_APPLY} in (${constructors})
                 and ${common_logics.fieldPaymentDate_APPLY} = "${target_date}"
@@ -54,5 +54,5 @@ export const getKintoneRecords = (account, target_date, conditions) => {
             `
     };
 
-    return kintone.api(kintone.api.url("/k/v1/records", true), "GET", request_body);
+    return common_logics.CLIENT.record.getAllRecords(request_body);
 };

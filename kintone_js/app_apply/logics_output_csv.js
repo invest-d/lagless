@@ -101,13 +101,13 @@ export const getKintoneRecords = (account, target_date, conditions) => {
             fieldConstructionShopId_APPLY,
             fieldKyoryokuId_APPLY
         ],
-        "query": `${fieldStatus_APPLY} in (${in_query})
+        "condition": `${fieldStatus_APPLY} in (${in_query})
                 and ${fieldPaymentDate_APPLY} = "${target_date}"
                 and ${fieldPaymentAccount_APPLY} = "${account}"
                 and ${fieldConstructionShopId_APPLY} in (${test_constructors})`
     };
 
-    return kintone.api(kintone.api.url("/k/v1/records", true), "GET", request_body);
+    return CLIENT.record.getAllRecords(request_body);
 };
 
 export const generateCsvData = (applies) => {

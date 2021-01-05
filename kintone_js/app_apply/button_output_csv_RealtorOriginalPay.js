@@ -73,25 +73,25 @@ import * as logics from "./logics_output_csv";
         alert(exec_target_message);
 
         const account = "ID"; // GMOあおぞらから振込できるのはIDの口座のみ
-        const target = await logics.getKintoneRecords(account, payment_date, target_conditions)
+        const target_records = await logics.getKintoneRecords(account, payment_date, target_conditions)
             .catch((err) => {
                 alert(`支払元口座：${account}のデータを取得中にエラーが発生しました。\n${err.message}`);
                 throw new Error(err);
             });
 
-        if (target && target.records.length === 0) {
+        if (target_records && target_records.length === 0) {
             alert(`支払日：${payment_date}、振込元：${account}で、状態が${target_conditions.join(", ")}のレコードはありませんでした。`);
             return;
         }
 
         try {
-            const csv_data = logics.generateCsvData(target.records);
+            const csv_data = logics.generateCsvData(target_records);
             const sjis_list = logics.encodeToSjis(csv_data);
 
             const file_name = `リライト通常払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`;
             logics.downloadFile(sjis_list, file_name);
 
-            await logics.updateToDone(target.records);
+            await logics.updateToDone(target_records);
 
             alert("リライト通常払い用振込データのダウンロードを完了しました。");
             alert("ページを更新します。");
