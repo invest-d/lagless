@@ -11,6 +11,7 @@
 // PDF生成ライブラリ
 import { createPdf } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
+import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
 const dayjs = require("dayjs");
 dayjs.locale("ja");
@@ -37,14 +38,6 @@ dayjs.locale("ja");
             console.warn(`Unknown app: ${ app_id }`);
         }
     })(kintone.app.getId());
-
-    const KE_BAN_CONSTRUCTORS = [
-        "400",
-        "401",
-        "402",
-        "403",
-        "404",
-    ];
 
     const APP_ID_COLLECT = APP_ID.COLLECT;
     const fieldRecordId_COLLECT = "$id";

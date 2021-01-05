@@ -28,6 +28,7 @@
     回収アプリに新規レコードとして追加したあと、
     申込みレコードの回収IDフィールドに回収アプリ側のレコード番号を入力する。
 */
+import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
 (function () {
     "use strict";
@@ -51,14 +52,6 @@
             console.warn(`Unknown app: ${  app_id}`);
         }
     })(kintone.app.getId());
-
-    const KE_BAN_CONSTRUCTORS = [
-        "400",
-        "401",
-        "402",
-        "403",
-        "404",
-    ];
 
     const commonRecordID = "$id";
 

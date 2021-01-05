@@ -11,19 +11,12 @@ const dayjs = require("dayjs");
 dayjs.locale("ja");
 
 import { get_contractor_name } from "./util_forms";
+import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
 (function() {
     "use strict";
     const CLOUDSIGN_API_SERVER = "https://api.cloudsign.jp";
     const GET_TOKEN_API = "https://us-central1-lagless.cloudfunctions.net/fetch_cloudSign_token";
-
-    const KE_BAN_CONSTRUCTORS = [
-        "400",
-        "401",
-        "402",
-        "403",
-        "404",
-    ];
 
     const APP_ID_LOGIN = "61";
     const cloud_sign_record_id = "54";

@@ -45,6 +45,7 @@ dayjs.locale("ja");
 import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
 import { get_contractor_name } from "./util_forms";
+import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
 (function() {
     "use strict";
@@ -57,14 +58,6 @@ import { get_contractor_name } from "./util_forms";
     const button_name = "createPaymentDetail";
     const button_title = "支払予定明細の本文を一括作成";
     const nextActionButtonTitle = "支払予定明細一括送信";
-
-    const KE_BAN_CONSTRUCTORS = [
-        "400",
-        "401",
-        "402",
-        "403",
-        "404",
-    ];
 
     const fieldRecordId_COMMON = "$id";
 
