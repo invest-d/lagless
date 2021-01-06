@@ -587,7 +587,26 @@ dayjs.locale("ja");
         };
         doc.content.push(detail_table_title);
 
-        const detail_title_template = {
+        const detail_table = getLaglessDetailTable(parent_record["invoiceTargets"]["value"], total);
+        doc.content.push(detail_table);
+
+        doc.content.push(bar);
+
+        return doc;
+    }
+
+    const getLaglessDetailTable = (collect_record_details, total) => {
+        // 振込依頼書PDFに表示する支払明細テーブルのpdfDocオブジェクトを生成する
+        const detail_table = {
+            table: {
+                widths: ["5%", "32%", "16%", "17%", "30%"],
+                headerRows: 1,
+                body: []
+            },
+            margin: [0, 5, 0, 15]
+        };
+
+        const header_text_style = {
             text: "",
             fontSize: 8,
             bold: true,
@@ -598,36 +617,24 @@ dayjs.locale("ja");
             borderColor: [orange, orange, orange, black]
         };
 
-        const row_num_title = JSON.parse(JSON.stringify(detail_title_template));
-        row_num_title.text = "No.";
-
-        const paid_dist_title = JSON.parse(JSON.stringify(detail_title_template));
-        paid_dist_title.text = "支払先";
-
-        const paid_timing_title = JSON.parse(JSON.stringify(detail_title_template));
-        paid_timing_title.text = "支払タイミング";
-
-        const paid_date_title = JSON.parse(JSON.stringify(detail_title_template));
-        paid_date_title.text = "支払日";
-
-        const paid_amount_title = JSON.parse(JSON.stringify(detail_title_template));
-        paid_amount_title.text = "金額（税込：円）";
-
-        const detail_header_row = [
-            row_num_title,
-            paid_dist_title,
-            paid_timing_title,
-            paid_date_title,
-            paid_amount_title
+        const header_texts = [
+            "No.",
+            "支払先",
+            "支払タイミング",
+            "支払日",
+            "金額（税込：円）"
         ];
+        const header_row = header_texts.map((t) => {
+            // オブジェクトを複製して使用する
+            const pdfDoc_table_cell = JSON.parse(JSON.stringify(header_text_style));
+            pdfDoc_table_cell.text = t;
+            return pdfDoc_table_cell;
+        });
+        detail_table.body.push(header_row);
 
-        const detail_table_body = [];
-        detail_table_body.push(detail_header_row);
+        detail_table.body.push(...getDetailRowsDocObject(collect_record_details));
 
-        const detail_doc = getDetailDoc(parent_record["invoiceTargets"]["value"]);
-        detail_table_body.push(...detail_doc);
-
-        const sum_title = JSON.parse(JSON.stringify(detail_title_template));
+        const sum_title = JSON.parse(JSON.stringify(header_text_style));
         sum_title.text = "合計金額";
         sum_title.borderColor = [orange, orange, orange, orange];
 
@@ -646,25 +653,12 @@ dayjs.locale("ja");
             sum_title,
             sum_amount
         ];
-        detail_table_body.push(sum_row);
+        detail_table.body.push(sum_row);
 
-        const detail_table = {
-            table: {
-                widths: ["5%", "32%", "16%", "17%", "30%"],
-                headerRows: 1,
-                body: detail_table_body
-            },
-            margin: [0, 5, 0, 15]
-        };
+        return detail_table;
+    };
 
-        doc.content.push(detail_table);
-
-        doc.content.push(bar);
-
-        return doc;
-    }
-
-    function getDetailDoc(detail_records) {
+    function getDetailRowsDocObject(detail_records) {
         const detail_value_template = {
             text: "",
             alignment: "",
