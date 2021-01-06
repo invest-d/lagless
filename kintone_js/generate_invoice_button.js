@@ -606,7 +606,7 @@ dayjs.locale("ja");
             margin: [0, 5, 0, 15]
         };
 
-        const detail_title_template = {
+        const header_text_style = {
             text: "",
             fontSize: 8,
             bold: true,
@@ -624,17 +624,17 @@ dayjs.locale("ja");
             "支払日",
             "金額（税込：円）"
         ];
-        const detail_header_row = header_texts.map((t) => {
+        const header_row = header_texts.map((t) => {
             // オブジェクトを複製して使用する
-            const pdfDoc_table_cell = JSON.parse(JSON.stringify(detail_title_template));
+            const pdfDoc_table_cell = JSON.parse(JSON.stringify(header_text_style));
             pdfDoc_table_cell.text = t;
             return pdfDoc_table_cell;
         });
-        detail_table.body.push(detail_header_row);
+        detail_table.body.push(header_row);
 
-        detail_table.body.push(...getDetailDoc(collect_record_details));
+        detail_table.body.push(...getDetailRowsDocObject(collect_record_details));
 
-        const sum_title = JSON.parse(JSON.stringify(detail_title_template));
+        const sum_title = JSON.parse(JSON.stringify(header_text_style));
         sum_title.text = "合計金額";
         sum_title.borderColor = [orange, orange, orange, orange];
 
@@ -658,7 +658,7 @@ dayjs.locale("ja");
         return detail_table;
     };
 
-    function getDetailDoc(detail_records) {
+    function getDetailRowsDocObject(detail_records) {
         const detail_value_template = {
             text: "",
             alignment: "",
