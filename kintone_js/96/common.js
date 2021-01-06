@@ -5,3 +5,5 @@ export const KE_BAN_CONSTRUCTORS = [
     "403",
     "404",
 ];
+
+export const KE_BAN_PRODUCT_NAME = "軽バンドットコム";

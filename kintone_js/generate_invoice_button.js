@@ -26,8 +26,10 @@
 
 // PDF生成ライブラリ
 import { createPdf } from "./pdfMake_util";
+
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
-import { KE_BAN_CONSTRUCTORS } from "./96/common";
+
+import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "./96/common";
 
 // 祝日判定ライブラリ
 const holiday_jp = require("@holiday-jp/holiday_jp");
@@ -401,13 +403,30 @@ dayjs.locale("ja");
             }
         }
 
+        const system_name = ((product_name) => {
+            if (product_name === KE_BAN_PRODUCT_NAME) {
+                return "軽バン.COM【売上前払いシステム】";
+            } else {
+                return product_name;
+            }
+        })(product_name);
+
+        const office_name = ((product_name) => {
+            if (product_name === KE_BAN_PRODUCT_NAME) {
+                return "軽バン.COM前払い事務局";
+            } else {
+                return `${product_name}事務局`;
+            }
+        })(product_name);
+
         const doc = {
             info: {
-                title: `${company}様宛${product_name}利用分振込依頼書`,
-                author: `${product_name}事務局 ${contact_company}`,
+                title: `${company}様宛${system_name}利用分振込依頼書`,
+                author: `${office_name} ${contact_company}`,
+                // TODO: 軽バン.COMの場合は締め分ではなく対象月「YYYY年M月分」
                 subject: `${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分`,
-                creator: `${product_name}事務局 ${contact_company}`,
-                producer: `${product_name}事務局 ${contact_company}`,
+                creator: `${office_name} ${contact_company}`,
+                producer: `${office_name} ${contact_company}`,
             },
             content: [],
             pageSize: "A4",
@@ -434,7 +453,7 @@ dayjs.locale("ja");
 
         // 文書のタイトル
         const title = {
-            text: `${product_name} 振込依頼書 兼 支払明細書`,
+            text: `${system_name} 振込依頼書 兼 支払明細書`,
             fontSize: 14,
             bold: true,
             alignment: "center",
@@ -463,14 +482,26 @@ dayjs.locale("ja");
         };
         doc.content.push(addressee);
 
+        const body_service_name_1 = ((product_name) => {
+            if (product_name === KE_BAN_PRODUCT_NAME) {
+                // 軽バン.COMの場合のみ「下記のとおりお申込み受付を……」と表示
+                return "";
+            } else {
+                // その他は「下記のとおりラグレスのお申込み受付を……」と表示
+                return `${product_name}の`;
+            }
+        })(product_name);
+        const body_service_name_2 = (product_name === KE_BAN_PRODUCT_NAME)
+            ? ""
+            : product_name;
         const letter_body = {
             rowSpan: 2,
             border: [false],
             text: [
                 "拝啓　時下ますますご清栄のこととお慶び申し上げます。\n",
                 "平素は格別のご高配を賜り厚く御礼申し上げます。\n",
-                `さて、下記のとおり${product_name}のお申込み受付をいたしましたのでご案内いたします。\n`,
-                `つきましては、${product_name}利用分の合計金額を、お支払期限までに下記振込先口座へお振込み頂きますよう、お願い申し上げます。\n`,
+                `さて、下記のとおり${body_service_name_1}お申込み受付をいたしましたのでご案内いたします。\n`,
+                `つきましては、${body_service_name_2}利用分の合計金額を、お支払期限までに下記振込先口座へお振込み頂きますよう、お願い申し上げます。\n`,
                 "ご不明な点などがございましたら、下記連絡先までお問い合わせください。\n",
                 "今後ともどうぞ宜しくお願いいたします。\n",
                 {
@@ -492,7 +523,7 @@ dayjs.locale("ja");
         const mail = parent_record[fieldMailToInvest_COLLECT]["value"];
         const invoice_from = {
             text: [
-                `【${product_name}事務局】\n`,
+                `【${office_name}】\n`,
                 {
                     text: `${contact_company}\n`,
                     bold: true
@@ -541,12 +572,30 @@ dayjs.locale("ja");
         };
 
         // テンプレートのオブジェクトをディープコピーして必要な部分だけ設定
-        const closing_date_title = JSON.parse(JSON.stringify(billing_title_template));
-        closing_date_title.text = "対象となる締め日";
-        closing_date_title.borderColor = [orange, orange, orange, white];
+        const closing_date_title = ((product_name) => {
+            const closing_date_title = JSON.parse(JSON.stringify(billing_title_template));
+            closing_date_title.borderColor = [orange, orange, orange, white];
 
-        const closing_date = JSON.parse(JSON.stringify(billing_value_template));
-        closing_date.text = formatYMD(parent_record[fieldClosingDate_COLLECT]["value"]);
+            if (product_name === KE_BAN_PRODUCT_NAME) {
+                closing_date_title.text = "対象月";
+            } else{
+                closing_date_title.text = "対象となる締め日";
+            }
+
+            return closing_date_title;
+        })(product_name);
+
+        const closing_date = ((product_name) => {
+            const closing_date = JSON.parse(JSON.stringify(billing_value_template));
+
+            if (product_name === KE_BAN_PRODUCT_NAME) {
+                closing_date.text = dayjs(parent_record[fieldClosingDate_COLLECT]["value"]).format("YYYY年M月");
+            } else {
+                closing_date.text = formatYMD(parent_record[fieldClosingDate_COLLECT]["value"]);
+            }
+
+            return closing_date;
+        })(product_name);
 
         const deadline_title = JSON.parse(JSON.stringify(billing_title_template));
         deadline_title.text = "お支払期限";
