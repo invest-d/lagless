@@ -598,29 +598,19 @@ dayjs.locale("ja");
             borderColor: [orange, orange, orange, black]
         };
 
-        const row_num_title = JSON.parse(JSON.stringify(detail_title_template));
-        row_num_title.text = "No.";
-
-        const paid_dist_title = JSON.parse(JSON.stringify(detail_title_template));
-        paid_dist_title.text = "支払先";
-
-        const paid_timing_title = JSON.parse(JSON.stringify(detail_title_template));
-        paid_timing_title.text = "支払タイミング";
-
-        const paid_date_title = JSON.parse(JSON.stringify(detail_title_template));
-        paid_date_title.text = "支払日";
-
-        const paid_amount_title = JSON.parse(JSON.stringify(detail_title_template));
-        paid_amount_title.text = "金額（税込：円）";
-
-        const detail_header_row = [
-            row_num_title,
-            paid_dist_title,
-            paid_timing_title,
-            paid_date_title,
-            paid_amount_title
+        const header_texts = [
+            "No.",
+            "支払先",
+            "支払タイミング",
+            "支払日",
+            "金額（税込：円）"
         ];
-
+        const detail_header_row = header_texts.map((t) => {
+            // オブジェクトを複製して使用する
+            const pdfDoc_table_cell = JSON.parse(JSON.stringify(detail_title_template));
+            pdfDoc_table_cell.text = t;
+            return pdfDoc_table_cell;
+        });
         const detail_table_body = [];
         detail_table_body.push(detail_header_row);
 
