@@ -617,22 +617,68 @@ dayjs.locale("ja");
             borderColor: [orange, orange, orange, black]
         };
 
-        const header_texts = [
-            "No.",
-            "支払先",
-            "支払タイミング",
-            "支払日",
-            "金額（税込：円）"
+        const columns = [
+            {
+                title: "No.",
+                detail_style: {
+                    alignment: "right",
+                    borderColor: [white, black, orange, black]
+                }
+            },
+            {
+                title: "支払先",
+                detail_style: {
+                    value: {
+                        code: tableFieldApplicantOfficialNameIV_COLLECT,
+                        format: null
+                    },
+                    alignment: "left",
+                    borderColor: [orange, black, orange, black]
+                }
+            },
+            {
+                title: "支払タイミング",
+                detail_style: {
+                    value: {
+                        code: tableFieldPaymentTimingIV_COLLECT,
+                        format: get_display_payment_timing
+                    },
+                    alignment: "left",
+                    borderColor: [orange, black, orange, black]
+                }
+            },
+            {
+                title: "支払日",
+                detail_style: {
+                    value: {
+                        code: tableFieldPaymentDateIV_COLLECT,
+                        format: formatYMD
+                    },
+                    alignment: "left",
+                    borderColor: [orange, black, orange, black]
+                }
+            },
+            {
+                title: "金額（税込：円）",
+                detail_style: {
+                    value: {
+                        code: tableFieldReceivableIV_COLLECT,
+                        format: addComma
+                    },
+                    alignment: "right",
+                    borderColor: [orange, black, white, black]
+                }
+            },
         ];
-        const header_row = header_texts.map((t) => {
+        const header_row = columns.map((c) => {
             // オブジェクトを複製して使用する
             const pdfDoc_table_cell = JSON.parse(JSON.stringify(header_text_style));
-            pdfDoc_table_cell.text = t;
+            pdfDoc_table_cell.text = c.title;
             return pdfDoc_table_cell;
         });
-        detail_table.body.push(header_row);
+        detail_table.table.body.push(header_row);
 
-        detail_table.body.push(...getDetailRowsDocObject(collect_record_details));
+        detail_table.table.body.push(...getDetailRowsDocObject(collect_record_details, columns));
 
         const sum_title = JSON.parse(JSON.stringify(header_text_style));
         sum_title.text = "合計金額";
@@ -653,69 +699,79 @@ dayjs.locale("ja");
             sum_title,
             sum_amount
         ];
-        detail_table.body.push(sum_row);
+        detail_table.table.body.push(sum_row);
 
         return detail_table;
     };
 
-    function getDetailRowsDocObject(detail_records) {
-        const detail_value_template = {
+    function getDetailRowsDocObject(detail_records, columns) {
+        const detail_style_template = {
             text: "",
             alignment: "",
             lineHeight: 1,
             borderColor: [orange, black, orange, black]
         };
-        const details = detail_records.map((record, index) => {
-            const row_num = JSON.parse(JSON.stringify(detail_value_template));
-            row_num.text = String(index + 1);
-            row_num.alignment = "right";
-            row_num.borderColor = [white, black, orange, black];
+        const paid_rows = detail_records.map((record, index) => {
+            return columns.map((column) => {
+                const cell = JSON.parse(JSON.stringify(detail_style_template));
 
-            const paid_dist = JSON.parse(JSON.stringify(detail_value_template));
-            paid_dist.text = record["value"][tableFieldApplicantOfficialNameIV_COLLECT]["value"];
-            paid_dist.alignment = "left";
+                const style = column.detail_style;
+                if (style.value) {
+                    const text = record["value"][style.value.code]["value"];
+                    if (style.value.format) {
+                        cell.text = style.value.format(text);
+                    } else {
+                        cell.text = text;
+                    }
+                } else if (column.title.includes("No")) {
+                    // 行番号
+                    cell.text = String(index + 1);
+                }
 
-            const paid_timing = JSON.parse(JSON.stringify(detail_value_template));
-            paid_timing.text = get_display_payment_timing(record["value"][tableFieldPaymentTimingIV_COLLECT]["value"]);
-            paid_timing.alignment = "left";
+                if (style.alignment) {
+                    cell.alignment = style.alignment;
+                }
 
-            const paid_date = JSON.parse(JSON.stringify(detail_value_template));
-            paid_date.text = formatYMD(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]);
-            paid_date.alignment = "left";
+                if (style.borderColor) {
+                    cell.borderColor = style.borderColor;
+                }
 
-            const paid_amount = JSON.parse(JSON.stringify(detail_value_template));
-            paid_amount.text = addComma(record["value"][tableFieldReceivableIV_COLLECT]["value"]);
-            paid_amount.alignment = "right";
-            paid_amount.borderColor = [orange, black, white, black];
-
-            return [row_num, paid_dist, paid_timing, paid_date, paid_amount];
+                return cell;
+            });
         });
 
         // 明細は15行以上。15行より少ない場合は余白行を作り、15行以上の場合は明細の数のまま
-        if (details.length < 15) {
-            // 初めに一行だけ「以下余白」の行を挿入
-            const row_num = JSON.parse(JSON.stringify(detail_value_template));
-            row_num.text = String(details.length + 1);
-            row_num.alignment = "right";
-            row_num.borderColor = [white, black, orange, black];
+        let details = paid_rows;
+        if (paid_rows.length < 15) {
+            const getBlankRow = (columns, row_num) => {
+                // 行番号のみを記入し、他の列は全て空欄の行オブジェクトを得る
+                return columns.map((c) => {
+                    const cell = JSON.parse(JSON.stringify(detail_style_template));
 
-            const following_are_blank = JSON.parse(JSON.stringify(detail_value_template));
-            following_are_blank.text = "以下余白";
-            following_are_blank.alignment = "center";
+                    if (c.title.includes("No")) {
+                        cell.text = String(row_num);
+                        cell.alignment = "right";
+                    }
 
-            const blank_cell = {text: "", borderColor: [orange, black, orange, black]};
-            const blank_cell_right_edge = {text: "", borderColor: [orange, black, white, black]};
+                    if (c.detail_style.borderColor) {
+                        cell.borderColor = c.detail_style.borderColor;
+                    }
 
-            details.push([row_num, following_are_blank, blank_cell, blank_cell, blank_cell_right_edge]);
+                    return cell;
+                });
+            };
 
-            for (let i = details.length; i < 15; i++) {
-                const row_num = JSON.parse(JSON.stringify(detail_value_template));
-                row_num.text = String(i + 1);
-                row_num.alignment = "right";
-                row_num.borderColor = [white, black, orange, black];
+            // 15行に足りないぶんだけ、全ての行をblank_rowで埋めた配列を得る
+            // 解説: https://ginpen.com/2018/12/10/create-array-with-specified-length/
+            const blank_rows = [...Array(15 - paid_rows.length)]
+                .map((_, i) => getBlankRow(columns, i + paid_rows.length + 1));
 
-                details.push([row_num, blank_cell, blank_cell, blank_cell, blank_cell_right_edge]);
-            }
+            // blank_rowの最初の要素にのみ「以下余白」のテキストを記入
+            // 列のスタイルに関わらず中央寄せ固定
+            blank_rows[0][1].text = "以下余白";
+            blank_rows[0][1].alignment = "center";
+
+            details = paid_rows.concat(blank_rows);
         }
 
         return details;
