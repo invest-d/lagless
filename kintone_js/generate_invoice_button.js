@@ -244,17 +244,10 @@ dayjs.locale("ja");
         });
 
         // 抜き出した工務店IDと締日のペアについて、重複なしのリストを作る。
-        const unique_key_pairs = key_pairs.filter((key_pair1, key_pairs_index, self_arr) => {
-            const target_index = self_arr.findIndex(((key_pair2) => {
-                // 工務店IDの一致
-                return (key_pair1[fieldConstructionShopId_COLLECT] === key_pair2[fieldConstructionShopId_COLLECT])
-                // 締日の一致
-                && (key_pair1[fieldClosingDate_COLLECT] === key_pair2[fieldClosingDate_COLLECT]);
-            }));
-
-            const is_unique = (target_index === key_pairs_index);
-            return is_unique;
-        });
+        const DELIMITER = String.fromCharCode("31");
+        const unique_key_pairs = Array.from(new Map(
+            key_pairs.map((p) => [`${p[fieldConstructionShopId_COLLECT]}${DELIMITER}${p[fieldClosingDate_COLLECT]}`, p])
+        ).values());
 
         // 親レコード更新用のオブジェクトを作成
         const update_targets = unique_key_pairs.map((pair) => {
