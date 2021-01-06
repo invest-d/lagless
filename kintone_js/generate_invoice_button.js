@@ -587,6 +587,15 @@ dayjs.locale("ja");
         };
         doc.content.push(detail_table_title);
 
+        const detail_table = {
+            table: {
+                widths: ["5%", "32%", "16%", "17%", "30%"],
+                headerRows: 1,
+                body: []
+            },
+            margin: [0, 5, 0, 15]
+        };
+
         const detail_title_template = {
             text: "",
             fontSize: 8,
@@ -611,11 +620,10 @@ dayjs.locale("ja");
             pdfDoc_table_cell.text = t;
             return pdfDoc_table_cell;
         });
-        const detail_table_body = [];
-        detail_table_body.push(detail_header_row);
+        detail_table.body.push(detail_header_row);
 
         const detail_doc = getDetailDoc(parent_record["invoiceTargets"]["value"]);
-        detail_table_body.push(...detail_doc);
+        detail_table.body.push(...detail_doc);
 
         const sum_title = JSON.parse(JSON.stringify(detail_title_template));
         sum_title.text = "合計金額";
@@ -636,16 +644,7 @@ dayjs.locale("ja");
             sum_title,
             sum_amount
         ];
-        detail_table_body.push(sum_row);
-
-        const detail_table = {
-            table: {
-                widths: ["5%", "32%", "16%", "17%", "30%"],
-                headerRows: 1,
-                body: detail_table_body
-            },
-            margin: [0, 5, 0, 15]
-        };
+        detail_table.body.push(sum_row);
 
         doc.content.push(detail_table);
 
