@@ -1,4 +1,7 @@
 /*
+    Version 3
+    軽バン.COM案件の場合の専用レイアウトを追加
+
     Version 2
     遅払いの申込が入ってくる場合にも対応。
     - 文面を一部更新
@@ -24,6 +27,7 @@
 // PDF生成ライブラリ
 import { createPdf } from "./pdfMake_util";
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
+import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
 // 祝日判定ライブラリ
 const holiday_jp = require("@holiday-jp/holiday_jp");
@@ -56,9 +60,25 @@ dayjs.locale("ja");
     })(kintone.app.getId());
 
     const ACCOUNTS = {
-        "株式会社NID": "三井住友銀行　神田支店\n普通預金　3 3 9 1 1 9 5\nカ）エヌアイディー",
-        "ラグレス合同会社": "三井住友銀行　神田支店\n普通預金　3 4 0 9 1 3 4\nラグレス（ド，マスターコウザ",
-        "ラグレス2合同会社": "三井住友銀行　神田支店\n普通預金　3 4 5 9 5 5 4\nラグレスニ　（ド,マスターコウザ",
+        "株式会社NID": {
+            smbc: "三井住友銀行　神田支店\n普通預金　3 3 9 1 1 9 5\nカ）エヌアイディー"
+        },
+        "ラグレス合同会社": {
+            smbc: "三井住友銀行　神田支店\n普通預金　3 4 0 9 1 3 4\nラグレス（ド，マスターコウザ"
+        },
+        "ラグレス2合同会社": {
+            smbc: "三井住友銀行　神田支店\n普通預金　3 4 5 9 5 5 4\nラグレスニ　（ド,マスターコウザ",
+            gmo_aozora: "GMOあおぞらネット銀行\n法人営業部\n普通預金　1 2 0 3 8 6 8\nラグレスニ（ド"
+        },
+    };
+
+    const getAccount = (contractor, constructor_id) => {
+        // 一部の工務店ではGMOあおぞらネット銀行を利用する
+        if (KE_BAN_CONSTRUCTORS.includes(constructor_id)) {
+            return ACCOUNTS[contractor].gmo_aozora;
+        }
+
+        return ACCOUNTS[contractor].smbc;
     };
 
     const APP_ID_CONSTRUCTOR = 96;
@@ -555,10 +575,17 @@ dayjs.locale("ja");
         account_title.margin = [0, 30, 0, 0];
 
         const account_value = JSON.parse(JSON.stringify(billing_value_template));
-        account_value.text = ACCOUNTS[contact_company];
+        account_value.text = getAccount(contact_company, parent_record[fieldConstructionShopId_COLLECT]["value"]);
         account_value.rowSpan = 3;
         account_value.fontSize = 8;
-        account_value.margin = [0, 14, 0, 0];
+        account_value.margin = ((text) => {
+            let top_margin = 14;
+            if ((text.match(/\n/g) || []).length === 3) {
+                // 4行に亘る場合はマージンを調整
+                top_margin = 10;
+            }
+            return [0, top_margin, 0, 0];
+        })(account_value.text);
 
         const bill_table = {
             table: {
@@ -587,13 +614,117 @@ dayjs.locale("ja");
         };
         doc.content.push(detail_table_title);
 
-        const detail_table = getLaglessDetailTable(parent_record["invoiceTargets"]["value"], total);
+        const detail_table = ((constructor_id, details, total) => {
+            if (KE_BAN_CONSTRUCTORS.includes(constructor_id)) {
+                return getWfiDetailTable(details, total);
+            } else {
+                return getLaglessDetailTable(details, total);
+            }
+        })(parent_record[fieldConstructionShopId_COLLECT]["value"], parent_record["invoiceTargets"]["value"], total);
         doc.content.push(detail_table);
 
         doc.content.push(bar);
 
         return doc;
     }
+
+    const getWfiDetailTable = (collect_record_details, total) => {
+        // 振込依頼書PDFに表示する支払明細テーブルのpdfDocオブジェクトを生成する
+        // FIXME: ラグレスの場合とほとんど処理が共通なので、共通にしても良さそうな部分をもっと共通化する
+        const detail_table = {
+            table: {
+                widths: ["5%", "48%", "17%", "30%"],
+                headerRows: 1,
+                body: []
+            },
+            margin: [0, 5, 0, 15]
+        };
+
+        const header_text_style = {
+            text: "",
+            fontSize: 8,
+            bold: true,
+            lineHeight: 1,
+            alignment: "center",
+            color: white,
+            fillColor: orange,
+            borderColor: [orange, orange, orange, black]
+        };
+
+        const columns = [
+            {
+                title: "No.",
+                detail_style: {
+                    alignment: "right",
+                    borderColor: [white, black, orange, black]
+                }
+            },
+            {
+                title: "支払先ドライバー名",
+                detail_style: {
+                    value: {
+                        code: tableFieldApplicantOfficialNameIV_COLLECT,
+                        format: null
+                    },
+                    alignment: "left",
+                    borderColor: [orange, black, orange, black]
+                }
+            },
+            {
+                title: "支払日",
+                detail_style: {
+                    value: {
+                        code: tableFieldPaymentDateIV_COLLECT,
+                        format: formatYMD
+                    },
+                    alignment: "left",
+                    borderColor: [orange, black, orange, black]
+                }
+            },
+            {
+                title: "金額（税込：円）",
+                detail_style: {
+                    value: {
+                        code: tableFieldReceivableIV_COLLECT,
+                        format: addComma
+                    },
+                    alignment: "right",
+                    borderColor: [orange, black, white, black]
+                }
+            },
+        ];
+        const header_row = columns.map((c) => {
+            // オブジェクトを複製して使用する
+            const pdfDoc_table_cell = JSON.parse(JSON.stringify(header_text_style));
+            pdfDoc_table_cell.text = c.title;
+            return pdfDoc_table_cell;
+        });
+        detail_table.table.body.push(header_row);
+
+        detail_table.table.body.push(...getDetailRowsDocObject(collect_record_details, columns));
+
+        const sum_title = JSON.parse(JSON.stringify(header_text_style));
+        sum_title.text = "合計金額";
+        sum_title.borderColor = [orange, orange, orange, orange];
+
+        const sum_amount = {
+            text: total,
+            alignment: "right",
+            borderColor: [orange, orange, orange, orange],
+            bold: true
+        };
+
+        const blank_cell = {text: "", border: [false]};
+        const sum_row = [
+            blank_cell,
+            blank_cell,
+            sum_title,
+            sum_amount
+        ];
+        detail_table.table.body.push(sum_row);
+
+        return detail_table;
+    };
 
     const getLaglessDetailTable = (collect_record_details, total) => {
         // 振込依頼書PDFに表示する支払明細テーブルのpdfDocオブジェクトを生成する
