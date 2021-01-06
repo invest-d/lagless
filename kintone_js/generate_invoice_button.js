@@ -249,12 +249,31 @@ dayjs.locale("ja");
             key_pairs.map((p) => [`${p[fieldConstructionShopId_COLLECT]}${DELIMITER}${p[fieldClosingDate_COLLECT]}`, p])
         ).values());
 
+        // 軽バン.COM案件は、実行済みの回収レコードがあっても振込依頼書を作成しない場合がある
+        // （月ごとの最後の実行後に、ひと月ぶん全てまとめて振込依頼書を作成するのが基本）
+        let include_ke_ban_records = false;
+        if (unique_key_pairs.some((p) => KE_BAN_CONSTRUCTORS.includes(p[fieldConstructionShopId_COLLECT]))) {
+            const message = `${KE_BAN_PRODUCT_NAME}の回収レコードについて振込依頼書を作成しますか？\n`
+                + "\n"
+                + "はい→全てのレコードの振込依頼書を作成\n"
+                + `いいえ→${KE_BAN_PRODUCT_NAME}以外の回収レコードのみ振込依頼書を作成`;
+            include_ke_ban_records = confirm(message);
+        }
+
+        // 軽バン.COM案件は別集計する
+        const target_pairs = unique_key_pairs.filter((p) => !KE_BAN_CONSTRUCTORS.includes(p[fieldConstructionShopId_COLLECT]));
+
         // 親レコード更新用のオブジェクトを作成
-        const update_targets = unique_key_pairs.map((pair) => {
+        const update_targets_standard = target_pairs.map((pair) => {
             // 振込依頼書をまとめるべき回収レコードを配列としてグループ化
             const invoice_group = records.filter((record) => {
-                return record[fieldConstructionShopId_COLLECT]["value"] === pair[fieldConstructionShopId_COLLECT]
-                && record[fieldClosingDate_COLLECT]["value"] === pair[fieldClosingDate_COLLECT];
+                // 軽バン.COM案件か、それ以外かによって、グループ化のルールが異なる。
+                if (KE_BAN_CONSTRUCTORS.includes(record[fieldConstructionShopId_COLLECT]["value"])) {
+                    //
+                } else {
+                    return record[fieldConstructionShopId_COLLECT]["value"] === pair[fieldConstructionShopId_COLLECT]
+                    && record[fieldClosingDate_COLLECT]["value"] === pair[fieldClosingDate_COLLECT];
+                }
             });
 
             // グループの中でレコード番号が最も小さいもの一つを親と決める
@@ -314,7 +333,19 @@ dayjs.locale("ja");
             };
         });
 
-        return update_targets;
+        if (include_ke_ban_records) {
+            // 締め日フィールドの年月ごとにまとめる
+            const ke_ban_records = records
+                .filter((r) => KE_BAN_CONSTRUCTORS.includes(r[fieldConstructionShopId_COLLECT]["value"]));
+
+            const closing_months = Array.from(new Set(ke_ban_records
+                .map((r) => dayjs(r[fieldClosingDate_COLLECT]["value"]).format("YYYY-MM")))
+            );
+
+            // TODO: closing_months.mapでオブジェクトを作成
+        }
+
+        return update_targets_standard;
     }
 
     async function generateInvoices() {
