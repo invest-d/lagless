@@ -587,6 +587,16 @@ dayjs.locale("ja");
         };
         doc.content.push(detail_table_title);
 
+        const detail_table = getLaglessDetailTable(parent_record["invoiceTargets"]["value"], total);
+        doc.content.push(detail_table);
+
+        doc.content.push(bar);
+
+        return doc;
+    }
+
+    const getLaglessDetailTable = (collect_record_details, total) => {
+        // 振込依頼書PDFに表示する支払明細テーブルのpdfDocオブジェクトを生成する
         const detail_table = {
             table: {
                 widths: ["5%", "32%", "16%", "17%", "30%"],
@@ -622,8 +632,7 @@ dayjs.locale("ja");
         });
         detail_table.body.push(detail_header_row);
 
-        const detail_doc = getDetailDoc(parent_record["invoiceTargets"]["value"]);
-        detail_table.body.push(...detail_doc);
+        detail_table.body.push(...getDetailDoc(collect_record_details));
 
         const sum_title = JSON.parse(JSON.stringify(detail_title_template));
         sum_title.text = "合計金額";
@@ -646,12 +655,8 @@ dayjs.locale("ja");
         ];
         detail_table.body.push(sum_row);
 
-        doc.content.push(detail_table);
-
-        doc.content.push(bar);
-
-        return doc;
-    }
+        return detail_table;
+    };
 
     function getDetailDoc(detail_records) {
         const detail_value_template = {
