@@ -1,4 +1,7 @@
 /*
+    Version 3
+    軽バン.COM案件の場合の専用レイアウトを追加
+
     Version 2
     遅払いの申込が入ってくる場合にも対応。
     - 文面を一部更新
@@ -23,7 +26,10 @@
 
 // PDF生成ライブラリ
 import { createPdf } from "./pdfMake_util";
+
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
+
+import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "./96/common";
 
 // 祝日判定ライブラリ
 const holiday_jp = require("@holiday-jp/holiday_jp");
@@ -35,30 +41,50 @@ dayjs.locale("ja");
 (function() {
     "use strict";
 
+    const APP_ID_DEV = {
+        APPLY: 159,
+        COLLECT: 160
+    };
+
+    const APP_ID_PROD = {
+        APPLY: 161,
+        COLLECT: 162
+    };
+
     const APP_ID = ((app_id) => {
         switch(app_id) {
         // 開発版の回収アプリ
         case 160:
-            return {
-                APPLY: 159,
-                COLLECT: 160
-            };
+            return APP_ID_DEV;
 
         // 本番の回収アプリ
         case 162:
-            return {
-                APPLY: 161,
-                COLLECT: 162
-            };
+            return APP_ID_PROD;
         default:
             console.warn(`Unknown app: ${  app_id}`);
         }
     })(kintone.app.getId());
 
     const ACCOUNTS = {
-        "株式会社NID": "三井住友銀行　神田支店\n普通預金　3 3 9 1 1 9 5\nカ）エヌアイディー",
-        "ラグレス合同会社": "三井住友銀行　神田支店\n普通預金　3 4 0 9 1 3 4\nラグレス（ド，マスターコウザ",
-        "ラグレス2合同会社": "三井住友銀行　神田支店\n普通預金　3 4 5 9 5 5 4\nラグレスニ　（ド,マスターコウザ",
+        "株式会社NID": {
+            smbc: "三井住友銀行　神田支店\n普通預金　3 3 9 1 1 9 5\nカ）エヌアイディー"
+        },
+        "ラグレス合同会社": {
+            smbc: "三井住友銀行　神田支店\n普通預金　3 4 0 9 1 3 4\nラグレス（ド，マスターコウザ"
+        },
+        "ラグレス2合同会社": {
+            smbc: "三井住友銀行　神田支店\n普通預金　3 4 5 9 5 5 4\nラグレスニ　（ド,マスターコウザ",
+            gmo_aozora: "GMOあおぞらネット銀行\n法人営業部\n普通預金　1 2 0 3 8 6 8\nラグレスニ（ド"
+        },
+    };
+
+    const getAccount = (contractor, constructor_id) => {
+        // 一部の工務店ではGMOあおぞらネット銀行を利用する
+        if (KE_BAN_CONSTRUCTORS.includes(constructor_id)) {
+            return ACCOUNTS[contractor].gmo_aozora;
+        }
+
+        return ACCOUNTS[contractor].smbc;
     };
 
     const APP_ID_CONSTRUCTOR = 96;
@@ -211,6 +237,64 @@ dayjs.locale("ja");
         return kintone.api(kintone.api.url("/k/v1/records", true), "GET", request_body);
     }
 
+    // 振込依頼書が同一となる回収レコードのグループに対する各種処理----------------------------------------
+    const returnEarlyRecord = (a, b) => {
+        // グループの中でレコード番号が最も小さいもの一つを親と決める
+        if (Number(a[fieldRecordId_COLLECT]["value"]) < Number(b[fieldRecordId_COLLECT]["value"])) {
+            return a;
+        } else {
+            return b;
+        }
+    };
+
+    // 振込依頼書に記載する合計額
+    const sumInvoiceBills = (total, record) => total + Number(record[fieldCollectableAmount_COLLECT]["value"]);
+
+    const convertToKintoneSubTableObject = (record) => {
+        // グループの情報を親に集約。クラウドサイン用の情報とは別に保持するため、親の振込依頼書用サブテーブルに親自身のクラウドサイン用サブテーブルのレコードも加える。
+        // 振込依頼書に記載する申込レコード一覧（グループ化した回収レコードそれぞれの、クラウドサイン用サブテーブルに入っている申込レコードのunion）
+        // サブテーブルのUpdateをするにあたって、サブテーブルのレコードそれぞれのオブジェクトの構造を整える
+        return record[tableCloudSignApplies_COLLECT]["value"].map((sub_rec) => {
+            return {
+                "value": {
+                    [tableFieldApplyRecordNoIV_COLLECT]: {
+                        "value": sub_rec["value"][tableFieldApplyRecordNoCS_COLLECT]["value"]
+                    },
+                    [tableFieldApplicantOfficialNameIV_COLLECT]: {
+                        "value": sub_rec["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"]
+                    },
+                    [tableFieldReceivableIV_COLLECT]: {
+                        "value": sub_rec["value"][tableFieldReceivableCS_COLLECT]["value"]
+                    },
+                    [tableFieldPaymentTimingIV_COLLECT]: {
+                        "value": sub_rec["value"][tableFieldPaymentTimingCS_COLLECT]["value"]
+                    },
+                    [tableFieldPaymentDateIV_COLLECT]: {
+                        "value": sub_rec["value"][tableFieldPaymentDateCS_COLLECT]["value"]
+                    }
+                }
+            };
+        });
+    };
+
+    const getUpdateRecordObject = (record_id, total_billed, invoice_targets) => {
+        return {
+            "id": record_id,
+            "record": {
+                [fieldParentCollectRecord_COLLECT]: {
+                    "value": [statusParent_COLLECT] // チェックボックス型は複数選択のフィールドなので配列で値を指定
+                },
+                [fieldTotalBilledAmount_COLLECT]: {
+                    "value": total_billed
+                },
+                [tableInvoiceTargets_COLLECT]: {
+                    "value": invoice_targets
+                }
+            }
+        };
+    };
+    // ----------------------------------------------------------------------------------------------------
+
     function getAggregatedParentRecords(records) {
         console.log("振込依頼書作成対象のレコードを締日と工務店IDごとにまとめ、明細の情報を親に集約する");
         // まず工務店IDと締日だけ全て抜き出す
@@ -222,82 +306,76 @@ dayjs.locale("ja");
         });
 
         // 抜き出した工務店IDと締日のペアについて、重複なしのリストを作る。
-        const unique_key_pairs = key_pairs.filter((key_pair1, key_pairs_index, self_arr) => {
-            const target_index = self_arr.findIndex(((key_pair2) => {
-                // 工務店IDの一致
-                return (key_pair1[fieldConstructionShopId_COLLECT] === key_pair2[fieldConstructionShopId_COLLECT])
-                // 締日の一致
-                && (key_pair1[fieldClosingDate_COLLECT] === key_pair2[fieldClosingDate_COLLECT]);
-            }));
+        const DELIMITER = String.fromCharCode("31");
+        const unique_key_pairs = Array.from(new Map(
+            key_pairs.map((p) => [`${p[fieldConstructionShopId_COLLECT]}${DELIMITER}${p[fieldClosingDate_COLLECT]}`, p])
+        ).values());
 
-            const is_unique = (target_index === key_pairs_index);
-            return is_unique;
-        });
+        // 軽バン.COM案件は別集計する
+        const target_pairs = unique_key_pairs.filter((p) => !KE_BAN_CONSTRUCTORS.includes(p[fieldConstructionShopId_COLLECT]));
 
         // 親レコード更新用のオブジェクトを作成
-        const update_targets = unique_key_pairs.map((pair) => {
+        const update_targets_standard = target_pairs.map((pair) => {
             // 振込依頼書をまとめるべき回収レコードを配列としてグループ化
             const invoice_group = records.filter((record) => {
                 return record[fieldConstructionShopId_COLLECT]["value"] === pair[fieldConstructionShopId_COLLECT]
                 && record[fieldClosingDate_COLLECT]["value"] === pair[fieldClosingDate_COLLECT];
             });
 
-            // グループの中でレコード番号が最も小さいもの一つを親と決める
-            const parent_record = invoice_group.reduce((a, b) => {
-                if (Number(a[fieldRecordId_COLLECT]["value"]) < Number(b[fieldRecordId_COLLECT]["value"])) {
-                    return a;
-                } else {
-                    return b;
-                }
-            });
-
-            // グループの情報を親に集約。クラウドサイン用の情報とは別に保持するため、親の振込依頼書用サブテーブルに親自身のクラウドサイン用サブテーブルのレコードも加える。
-            // 振込依頼書に記載する合計額
-            const total_billed = invoice_group.reduce((total, record) => total + Number(record[fieldCollectableAmount_COLLECT]["value"]), 0);
-
-            // 振込依頼書に記載する申込レコード一覧（グループ化した回収レコードそれぞれの、クラウドサイン用サブテーブルに入っている申込レコードのunion）
-            const invoice_targets = invoice_group
-                .flatMap((record) => {
-                    // サブテーブルのUpdateをするにあたって、サブテーブルのレコードそれぞれのオブジェクトの構造を整える
-                    return record[tableCloudSignApplies_COLLECT]["value"].map((sub_rec) => {
-                        return {
-                            "value": {
-                                [tableFieldApplyRecordNoIV_COLLECT]: {
-                                    "value": sub_rec["value"][tableFieldApplyRecordNoCS_COLLECT]["value"]
-                                },
-                                [tableFieldApplicantOfficialNameIV_COLLECT]: {
-                                    "value": sub_rec["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"]
-                                },
-                                [tableFieldReceivableIV_COLLECT]: {
-                                    "value": sub_rec["value"][tableFieldReceivableCS_COLLECT]["value"]
-                                },
-                                [tableFieldPaymentTimingIV_COLLECT]: {
-                                    "value": sub_rec["value"][tableFieldPaymentTimingCS_COLLECT]["value"]
-                                },
-                                [tableFieldPaymentDateIV_COLLECT]: {
-                                    "value": sub_rec["value"][tableFieldPaymentDateCS_COLLECT]["value"]
-                                }
-                            }
-                        };
-                    });
-                });
+            const parent_record = invoice_group.reduce(returnEarlyRecord);
+            const total_billed = invoice_group.reduce(sumInvoiceBills, 0);
+            const invoice_targets = invoice_group.flatMap(convertToKintoneSubTableObject);
 
             // apiに渡すためにオブジェクトの構造を整える
-            return {
-                "id": parent_record[fieldRecordId_COLLECT]["value"],
-                "record": {
-                    [fieldParentCollectRecord_COLLECT]: {
-                        "value": [statusParent_COLLECT] // チェックボックス型は複数選択のフィールドなので配列で値を指定
-                    },
-                    [fieldTotalBilledAmount_COLLECT]: {
-                        "value": total_billed
-                    },
-                    [tableInvoiceTargets_COLLECT]: {
-                        "value": invoice_targets
-                    }
-                }
-            };
+            return getUpdateRecordObject(parent_record[fieldRecordId_COLLECT]["value"], total_billed, invoice_targets);
         });
+
+        let update_targets = update_targets_standard;
+
+        // 軽バン.COM案件は、実行済みの回収レコードがあっても常に振込依頼書を作成するわけではない。
+        // 月ごとの最後の実行後に、ひと月ぶん全てまとめて振込依頼書を作成するのが基本。
+        // 月ごとの最後の実行日を厳密に計算するのは煩雑になるため、最短の申込締切日(26日)〜振込依頼書送信期日（翌月第2週……遅くとも8日）までの場合のみ振込依頼書を作成できる仕様とした。
+        let include_ke_ban_records = false;
+        const today = (() => {
+            // 開発版アプリの場合は今日として扱う日付を指定可能
+            if (APP_ID.COLLECT === APP_ID_DEV.COLLECT) {
+                return dayjs(prompt("今日の日付：YYYY-MM-DD"));
+            } else {
+                return dayjs();
+            }
+        })();
+        if (unique_key_pairs.some((p) => KE_BAN_CONSTRUCTORS.includes(p[fieldConstructionShopId_COLLECT]))
+            && (today.date() > 26 || today.date() < 8)) {
+            const message = `${KE_BAN_PRODUCT_NAME}の回収レコードについて振込依頼書を作成しますか？\n`
+                + "\n"
+                + "はい→全てのレコードの振込依頼書を作成\n"
+                + `いいえ→${KE_BAN_PRODUCT_NAME}以外の回収レコードのみ振込依頼書を作成`;
+            include_ke_ban_records = confirm(message);
+        }
+        if (include_ke_ban_records) {
+            const ke_ban_records = records.filter((r) => {
+                return KE_BAN_CONSTRUCTORS.includes(r[fieldConstructionShopId_COLLECT]["value"])
+            });
+
+            const closing_months = Array.from(new Set(ke_ban_records
+                // 締め日フィールドの年月ごとにまとめる
+                .map((r) => dayjs(r[fieldClosingDate_COLLECT]["value"]).format("YYYY-MM")))
+            );
+
+            const update_targets_keban = closing_months.map((closing) => {
+                const invoice_group = ke_ban_records.filter((r) => {
+                    return dayjs(r[fieldClosingDate_COLLECT]["value"]).format("YYYY-MM") === closing;
+                });
+
+                const parent_record = invoice_group.reduce(returnEarlyRecord);
+                const total_billed = invoice_group.reduce(sumInvoiceBills, 0);
+                const invoice_targets = invoice_group.flatMap(convertToKintoneSubTableObject);
+
+                return getUpdateRecordObject(parent_record[fieldRecordId_COLLECT]["value"], total_billed, invoice_targets);
+            });
+
+            update_targets = update_targets_standard.concat(update_targets_keban);
+        }
 
         return update_targets;
     }
@@ -344,7 +422,16 @@ dayjs.locale("ja");
             parent_record["daysLater"] = { "value": constructor["daysLater"]["value"] };
 
             const invoice_doc = generateInvoiceDocument(parent_record);
-            const file_name = `${parent_record[fieldConstructionShopName_COLLECT]["value"]}様用 支払明細書兼振込依頼書${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分.pdf`;
+            const file_name = ((constructor_id, constructor_name, closing_date) => {
+                if (KE_BAN_CONSTRUCTORS.includes(constructor_id)) {
+                    // 軽バン.COMの場合は締め分ではなく対象月「YYYY年M月分」
+                    return `${constructor_name}様用 支払明細書兼振込依頼書${dayjs(closing_date).format("YYYY年M月")}分.pdf`;
+                } else {
+                    return `${constructor_name}様用 支払明細書兼振込依頼書${formatYMD(closing_date)}締め分.pdf`;
+                }
+            })(parent_record[fieldConstructionShopId_COLLECT]["value"],
+                parent_record[fieldConstructionShopName_COLLECT]["value"],
+                parent_record[fieldClosingDate_COLLECT]["value"]);
 
             console.log("作成した振込依頼書をPDF形式で生成");
             const generator = await createPdf(invoice_doc);
@@ -381,13 +468,38 @@ dayjs.locale("ja");
             }
         }
 
+        const system_name = ((product_name) => {
+            if (product_name === KE_BAN_PRODUCT_NAME) {
+                return "軽バン.COM【売上前払いシステム】";
+            } else {
+                return product_name;
+            }
+        })(product_name);
+
+        const office_name = ((product_name) => {
+            if (product_name === KE_BAN_PRODUCT_NAME) {
+                return "軽バン.COM前払い事務局";
+            } else {
+                return `${product_name}事務局`;
+            }
+        })(product_name);
+
+        const subject = ((product_name, closing_date) => {
+            if (product_name === KE_BAN_PRODUCT_NAME) {
+                // 軽バン.COMの場合は締め分ではなく対象月「YYYY年M月分」
+                return `${dayjs(closing_date).format("YYYY年M月")}分`;
+            } else {
+                return `${formatYMD(closing_date)}締め分`;
+            }
+        })(product_name, parent_record[fieldClosingDate_COLLECT]["value"]);
+
         const doc = {
             info: {
-                title: `${company}様宛${product_name}利用分振込依頼書`,
-                author: `${product_name}事務局 ${contact_company}`,
-                subject: `${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分`,
-                creator: `${product_name}事務局 ${contact_company}`,
-                producer: `${product_name}事務局 ${contact_company}`,
+                title: `${company}様宛${system_name}利用分振込依頼書`,
+                author: `${office_name} ${contact_company}`,
+                subject: subject,
+                creator: `${office_name} ${contact_company}`,
+                producer: `${office_name} ${contact_company}`,
             },
             content: [],
             pageSize: "A4",
@@ -414,7 +526,7 @@ dayjs.locale("ja");
 
         // 文書のタイトル
         const title = {
-            text: `${product_name} 振込依頼書 兼 支払明細書`,
+            text: `${system_name} 振込依頼書 兼 支払明細書`,
             fontSize: 14,
             bold: true,
             alignment: "center",
@@ -443,14 +555,26 @@ dayjs.locale("ja");
         };
         doc.content.push(addressee);
 
+        const body_service_name_1 = ((product_name) => {
+            if (product_name === KE_BAN_PRODUCT_NAME) {
+                // 軽バン.COMの場合のみ「下記のとおりお申込み受付を……」と表示
+                return "";
+            } else {
+                // その他は「下記のとおりラグレスのお申込み受付を……」と表示
+                return `${product_name}の`;
+            }
+        })(product_name);
+        const body_service_name_2 = (product_name === KE_BAN_PRODUCT_NAME)
+            ? ""
+            : product_name;
         const letter_body = {
             rowSpan: 2,
             border: [false],
             text: [
                 "拝啓　時下ますますご清栄のこととお慶び申し上げます。\n",
                 "平素は格別のご高配を賜り厚く御礼申し上げます。\n",
-                `さて、下記のとおり${product_name}のお申込み受付をいたしましたのでご案内いたします。\n`,
-                `つきましては、${product_name}利用分の合計金額を、お支払期限までに下記振込先口座へお振込み頂きますよう、お願い申し上げます。\n`,
+                `さて、下記のとおり${body_service_name_1}お申込み受付をいたしましたのでご案内いたします。\n`,
+                `つきましては、${body_service_name_2}利用分の合計金額を、お支払期限までに下記振込先口座へお振込み頂きますよう、お願い申し上げます。\n`,
                 "ご不明な点などがございましたら、下記連絡先までお問い合わせください。\n",
                 "今後ともどうぞ宜しくお願いいたします。\n",
                 {
@@ -472,7 +596,7 @@ dayjs.locale("ja");
         const mail = parent_record[fieldMailToInvest_COLLECT]["value"];
         const invoice_from = {
             text: [
-                `【${product_name}事務局】\n`,
+                `【${office_name}】\n`,
                 {
                     text: `${contact_company}\n`,
                     bold: true
@@ -521,12 +645,30 @@ dayjs.locale("ja");
         };
 
         // テンプレートのオブジェクトをディープコピーして必要な部分だけ設定
-        const closing_date_title = JSON.parse(JSON.stringify(billing_title_template));
-        closing_date_title.text = "対象となる締め日";
-        closing_date_title.borderColor = [orange, orange, orange, white];
+        const closing_date_title = ((product_name) => {
+            const closing_date_title = JSON.parse(JSON.stringify(billing_title_template));
+            closing_date_title.borderColor = [orange, orange, orange, white];
 
-        const closing_date = JSON.parse(JSON.stringify(billing_value_template));
-        closing_date.text = formatYMD(parent_record[fieldClosingDate_COLLECT]["value"]);
+            if (product_name === KE_BAN_PRODUCT_NAME) {
+                closing_date_title.text = "対象月";
+            } else{
+                closing_date_title.text = "対象となる締め日";
+            }
+
+            return closing_date_title;
+        })(product_name);
+
+        const closing_date = ((product_name) => {
+            const closing_date = JSON.parse(JSON.stringify(billing_value_template));
+
+            if (product_name === KE_BAN_PRODUCT_NAME) {
+                closing_date.text = dayjs(parent_record[fieldClosingDate_COLLECT]["value"]).format("YYYY年M月");
+            } else {
+                closing_date.text = formatYMD(parent_record[fieldClosingDate_COLLECT]["value"]);
+            }
+
+            return closing_date;
+        })(product_name);
 
         const deadline_title = JSON.parse(JSON.stringify(billing_title_template));
         deadline_title.text = "お支払期限";
@@ -555,10 +697,17 @@ dayjs.locale("ja");
         account_title.margin = [0, 30, 0, 0];
 
         const account_value = JSON.parse(JSON.stringify(billing_value_template));
-        account_value.text = ACCOUNTS[contact_company];
+        account_value.text = getAccount(contact_company, parent_record[fieldConstructionShopId_COLLECT]["value"]);
         account_value.rowSpan = 3;
         account_value.fontSize = 8;
-        account_value.margin = [0, 14, 0, 0];
+        account_value.margin = ((text) => {
+            let top_margin = 14;
+            if ((text.match(/\n/g) || []).length === 3) {
+                // 4行に亘る場合はマージンを調整
+                top_margin = 10;
+            }
+            return [0, top_margin, 0, 0];
+        })(account_value.text);
 
         const bill_table = {
             table: {
@@ -587,13 +736,117 @@ dayjs.locale("ja");
         };
         doc.content.push(detail_table_title);
 
-        const detail_table = getLaglessDetailTable(parent_record["invoiceTargets"]["value"], total);
+        const detail_table = ((constructor_id, details, total) => {
+            if (KE_BAN_CONSTRUCTORS.includes(constructor_id)) {
+                return getWfiDetailTable(details, total);
+            } else {
+                return getLaglessDetailTable(details, total);
+            }
+        })(parent_record[fieldConstructionShopId_COLLECT]["value"], parent_record["invoiceTargets"]["value"], total);
         doc.content.push(detail_table);
 
         doc.content.push(bar);
 
         return doc;
     }
+
+    const getWfiDetailTable = (collect_record_details, total) => {
+        // 振込依頼書PDFに表示する支払明細テーブルのpdfDocオブジェクトを生成する
+        // FIXME: ラグレスの場合とほとんど処理が共通なので、共通にしても良さそうな部分をもっと共通化する
+        const detail_table = {
+            table: {
+                widths: ["5%", "48%", "17%", "30%"],
+                headerRows: 1,
+                body: []
+            },
+            margin: [0, 5, 0, 15]
+        };
+
+        const header_text_style = {
+            text: "",
+            fontSize: 8,
+            bold: true,
+            lineHeight: 1,
+            alignment: "center",
+            color: white,
+            fillColor: orange,
+            borderColor: [orange, orange, orange, black]
+        };
+
+        const columns = [
+            {
+                title: "No.",
+                detail_style: {
+                    alignment: "right",
+                    borderColor: [white, black, orange, black]
+                }
+            },
+            {
+                title: "支払先ドライバー名",
+                detail_style: {
+                    value: {
+                        code: tableFieldApplicantOfficialNameIV_COLLECT,
+                        format: null
+                    },
+                    alignment: "left",
+                    borderColor: [orange, black, orange, black]
+                }
+            },
+            {
+                title: "支払日",
+                detail_style: {
+                    value: {
+                        code: tableFieldPaymentDateIV_COLLECT,
+                        format: formatYMD
+                    },
+                    alignment: "left",
+                    borderColor: [orange, black, orange, black]
+                }
+            },
+            {
+                title: "金額（税込：円）",
+                detail_style: {
+                    value: {
+                        code: tableFieldReceivableIV_COLLECT,
+                        format: addComma
+                    },
+                    alignment: "right",
+                    borderColor: [orange, black, white, black]
+                }
+            },
+        ];
+        const header_row = columns.map((c) => {
+            // オブジェクトを複製して使用する
+            const pdfDoc_table_cell = JSON.parse(JSON.stringify(header_text_style));
+            pdfDoc_table_cell.text = c.title;
+            return pdfDoc_table_cell;
+        });
+        detail_table.table.body.push(header_row);
+
+        detail_table.table.body.push(...getDetailRowsDocObject(collect_record_details, columns));
+
+        const sum_title = JSON.parse(JSON.stringify(header_text_style));
+        sum_title.text = "合計金額";
+        sum_title.borderColor = [orange, orange, orange, orange];
+
+        const sum_amount = {
+            text: total,
+            alignment: "right",
+            borderColor: [orange, orange, orange, orange],
+            bold: true
+        };
+
+        const blank_cell = {text: "", border: [false]};
+        const sum_row = [
+            blank_cell,
+            blank_cell,
+            sum_title,
+            sum_amount
+        ];
+        detail_table.table.body.push(sum_row);
+
+        return detail_table;
+    };
 
     const getLaglessDetailTable = (collect_record_details, total) => {
         // 振込依頼書PDFに表示する支払明細テーブルのpdfDocオブジェクトを生成する
@@ -617,22 +870,68 @@ dayjs.locale("ja");
             borderColor: [orange, orange, orange, black]
         };
 
-        const header_texts = [
-            "No.",
-            "支払先",
-            "支払タイミング",
-            "支払日",
-            "金額（税込：円）"
+        const columns = [
+            {
+                title: "No.",
+                detail_style: {
+                    alignment: "right",
+                    borderColor: [white, black, orange, black]
+                }
+            },
+            {
+                title: "支払先",
+                detail_style: {
+                    value: {
+                        code: tableFieldApplicantOfficialNameIV_COLLECT,
+                        format: null
+                    },
+                    alignment: "left",
+                    borderColor: [orange, black, orange, black]
+                }
+            },
+            {
+                title: "支払タイミング",
+                detail_style: {
+                    value: {
+                        code: tableFieldPaymentTimingIV_COLLECT,
+                        format: get_display_payment_timing
+                    },
+                    alignment: "left",
+                    borderColor: [orange, black, orange, black]
+                }
+            },
+            {
+                title: "支払日",
+                detail_style: {
+                    value: {
+                        code: tableFieldPaymentDateIV_COLLECT,
+                        format: formatYMD
+                    },
+                    alignment: "left",
+                    borderColor: [orange, black, orange, black]
+                }
+            },
+            {
+                title: "金額（税込：円）",
+                detail_style: {
+                    value: {
+                        code: tableFieldReceivableIV_COLLECT,
+                        format: addComma
+                    },
+                    alignment: "right",
+                    borderColor: [orange, black, white, black]
+                }
+            },
         ];
-        const header_row = header_texts.map((t) => {
+        const header_row = columns.map((c) => {
             // オブジェクトを複製して使用する
             const pdfDoc_table_cell = JSON.parse(JSON.stringify(header_text_style));
-            pdfDoc_table_cell.text = t;
+            pdfDoc_table_cell.text = c.title;
             return pdfDoc_table_cell;
         });
-        detail_table.body.push(header_row);
+        detail_table.table.body.push(header_row);
 
-        detail_table.body.push(...getDetailRowsDocObject(collect_record_details));
+        detail_table.table.body.push(...getDetailRowsDocObject(collect_record_details, columns));
 
         const sum_title = JSON.parse(JSON.stringify(header_text_style));
         sum_title.text = "合計金額";
@@ -653,69 +952,86 @@ dayjs.locale("ja");
             sum_title,
             sum_amount
         ];
-        detail_table.body.push(sum_row);
+        detail_table.table.body.push(sum_row);
 
         return detail_table;
     };
 
-    function getDetailRowsDocObject(detail_records) {
-        const detail_value_template = {
+    function getDetailRowsDocObject(detail_records, columns) {
+        const detail_style_template = {
             text: "",
             alignment: "",
             lineHeight: 1,
             borderColor: [orange, black, orange, black]
         };
-        const details = detail_records.map((record, index) => {
-            const row_num = JSON.parse(JSON.stringify(detail_value_template));
-            row_num.text = String(index + 1);
-            row_num.alignment = "right";
-            row_num.borderColor = [white, black, orange, black];
+        const paid_rows = detail_records
+            .sort((a, b) => {
+                // 支払日が古い順にソートしてから処理
+                const a_date = a["value"][tableFieldPaymentDateIV_COLLECT]["value"];
+                const b_date = b["value"][tableFieldPaymentDateIV_COLLECT]["value"];
+                return dayjs(a_date).unix() - dayjs(b_date).unix();
+            })
+            .map((record, index) => {
+                return columns.map((column) => {
+                    const cell = JSON.parse(JSON.stringify(detail_style_template));
 
-            const paid_dist = JSON.parse(JSON.stringify(detail_value_template));
-            paid_dist.text = record["value"][tableFieldApplicantOfficialNameIV_COLLECT]["value"];
-            paid_dist.alignment = "left";
+                    const style = column.detail_style;
+                    if (style.value) {
+                        const text = record["value"][style.value.code]["value"];
+                        if (style.value.format) {
+                            cell.text = style.value.format(text);
+                        } else {
+                            cell.text = text;
+                        }
+                    } else if (column.title.includes("No")) {
+                        // 行番号
+                        cell.text = String(index + 1);
+                    }
 
-            const paid_timing = JSON.parse(JSON.stringify(detail_value_template));
-            paid_timing.text = get_display_payment_timing(record["value"][tableFieldPaymentTimingIV_COLLECT]["value"]);
-            paid_timing.alignment = "left";
+                    if (style.alignment) {
+                        cell.alignment = style.alignment;
+                    }
 
-            const paid_date = JSON.parse(JSON.stringify(detail_value_template));
-            paid_date.text = formatYMD(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]);
-            paid_date.alignment = "left";
+                    if (style.borderColor) {
+                        cell.borderColor = style.borderColor;
+                    }
 
-            const paid_amount = JSON.parse(JSON.stringify(detail_value_template));
-            paid_amount.text = addComma(record["value"][tableFieldReceivableIV_COLLECT]["value"]);
-            paid_amount.alignment = "right";
-            paid_amount.borderColor = [orange, black, white, black];
-
-            return [row_num, paid_dist, paid_timing, paid_date, paid_amount];
-        });
+                    return cell;
+                });
+            });
 
         // 明細は15行以上。15行より少ない場合は余白行を作り、15行以上の場合は明細の数のまま
-        if (details.length < 15) {
-            // 初めに一行だけ「以下余白」の行を挿入
-            const row_num = JSON.parse(JSON.stringify(detail_value_template));
-            row_num.text = String(details.length + 1);
-            row_num.alignment = "right";
-            row_num.borderColor = [white, black, orange, black];
+        let details = paid_rows;
+        if (paid_rows.length < 15) {
+            const getBlankRow = (columns, row_num) => {
+                // 行番号のみを記入し、他の列は全て空欄の行オブジェクトを得る
+                return columns.map((c) => {
+                    const cell = JSON.parse(JSON.stringify(detail_style_template));
 
-            const following_are_blank = JSON.parse(JSON.stringify(detail_value_template));
-            following_are_blank.text = "以下余白";
-            following_are_blank.alignment = "center";
+                    if (c.title.includes("No")) {
+                        cell.text = String(row_num);
+                        cell.alignment = "right";
+                    }
 
-            const blank_cell = {text: "", borderColor: [orange, black, orange, black]};
-            const blank_cell_right_edge = {text: "", borderColor: [orange, black, white, black]};
+                    if (c.detail_style.borderColor) {
+                        cell.borderColor = c.detail_style.borderColor;
+                    }
 
-            details.push([row_num, following_are_blank, blank_cell, blank_cell, blank_cell_right_edge]);
+                    return cell;
+                });
+            };
 
-            for (let i = details.length; i < 15; i++) {
-                const row_num = JSON.parse(JSON.stringify(detail_value_template));
-                row_num.text = String(i + 1);
-                row_num.alignment = "right";
-                row_num.borderColor = [white, black, orange, black];
+            // 15行に足りないぶんだけ、全ての行をblank_rowで埋めた配列を得る
+            // 解説: https://ginpen.com/2018/12/10/create-array-with-specified-length/
+            const blank_rows = [...Array(15 - paid_rows.length)]
+                .map((_, i) => getBlankRow(columns, i + paid_rows.length + 1));
 
-                details.push([row_num, blank_cell, blank_cell, blank_cell, blank_cell_right_edge]);
-            }
+            // blank_rowの最初の要素にのみ「以下余白」のテキストを記入
+            // 列のスタイルに関わらず中央寄せ固定
+            blank_rows[0][1].text = "以下余白";
+            blank_rows[0][1].alignment = "center";
+
+            details = paid_rows.concat(blank_rows);
         }
 
         return details;
