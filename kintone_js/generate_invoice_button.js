@@ -41,21 +41,25 @@ dayjs.locale("ja");
 (function() {
     "use strict";
 
+    const APP_ID_DEV = {
+        APPLY: 159,
+        COLLECT: 160
+    };
+
+    const APP_ID_PROD = {
+        APPLY: 161,
+        COLLECT: 162
+    };
+
     const APP_ID = ((app_id) => {
         switch(app_id) {
         // 開発版の回収アプリ
         case 160:
-            return {
-                APPLY: 159,
-                COLLECT: 160
-            };
+            return APP_ID_DEV;
 
         // 本番の回収アプリ
         case 162:
-            return {
-                APPLY: 161,
-                COLLECT: 162
-            };
+            return APP_ID_PROD;
         default:
             console.warn(`Unknown app: ${  app_id}`);
         }
