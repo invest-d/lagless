@@ -271,13 +271,8 @@ dayjs.locale("ja");
         const update_targets_standard = target_pairs.map((pair) => {
             // 振込依頼書をまとめるべき回収レコードを配列としてグループ化
             const invoice_group = records.filter((record) => {
-                // 軽バン.COM案件か、それ以外かによって、グループ化のルールが異なる。
-                if (KE_BAN_CONSTRUCTORS.includes(record[fieldConstructionShopId_COLLECT]["value"])) {
-                    //
-                } else {
-                    return record[fieldConstructionShopId_COLLECT]["value"] === pair[fieldConstructionShopId_COLLECT]
-                    && record[fieldClosingDate_COLLECT]["value"] === pair[fieldClosingDate_COLLECT];
-                }
+                return record[fieldConstructionShopId_COLLECT]["value"] === pair[fieldConstructionShopId_COLLECT]
+                && record[fieldClosingDate_COLLECT]["value"] === pair[fieldClosingDate_COLLECT];
             });
 
             // グループの中でレコード番号が最も小さいもの一つを親と決める
