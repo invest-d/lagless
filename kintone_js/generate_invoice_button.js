@@ -237,6 +237,64 @@ dayjs.locale("ja");
         return kintone.api(kintone.api.url("/k/v1/records", true), "GET", request_body);
     }
 
+    // 振込依頼書が同一となる回収レコードのグループに対する各種処理----------------------------------------
+    const returnEarlyRecord = (a, b) => {
+        // グループの中でレコード番号が最も小さいもの一つを親と決める
+        if (Number(a[fieldRecordId_COLLECT]["value"]) < Number(b[fieldRecordId_COLLECT]["value"])) {
+            return a;
+        } else {
+            return b;
+        }
+    };
+
+    // 振込依頼書に記載する合計額
+    const sumInvoiceBills = (total, record) => total + Number(record[fieldCollectableAmount_COLLECT]["value"]);
+
+    const convertToKintoneSubTableObject = (record) => {
+        // グループの情報を親に集約。クラウドサイン用の情報とは別に保持するため、親の振込依頼書用サブテーブルに親自身のクラウドサイン用サブテーブルのレコードも加える。
+        // 振込依頼書に記載する申込レコード一覧（グループ化した回収レコードそれぞれの、クラウドサイン用サブテーブルに入っている申込レコードのunion）
+        // サブテーブルのUpdateをするにあたって、サブテーブルのレコードそれぞれのオブジェクトの構造を整える
+        return record[tableCloudSignApplies_COLLECT]["value"].map((sub_rec) => {
+            return {
+                "value": {
+                    [tableFieldApplyRecordNoIV_COLLECT]: {
+                        "value": sub_rec["value"][tableFieldApplyRecordNoCS_COLLECT]["value"]
+                    },
+                    [tableFieldApplicantOfficialNameIV_COLLECT]: {
+                        "value": sub_rec["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"]
+                    },
+                    [tableFieldReceivableIV_COLLECT]: {
+                        "value": sub_rec["value"][tableFieldReceivableCS_COLLECT]["value"]
+                    },
+                    [tableFieldPaymentTimingIV_COLLECT]: {
+                        "value": sub_rec["value"][tableFieldPaymentTimingCS_COLLECT]["value"]
+                    },
+                    [tableFieldPaymentDateIV_COLLECT]: {
+                        "value": sub_rec["value"][tableFieldPaymentDateCS_COLLECT]["value"]
+                    }
+                }
+            };
+        });
+    };
+
+    const getUpdateRecordObject = (record_id, total_billed, invoice_targets) => {
+        return {
+            "id": record_id,
+            "record": {
+                [fieldParentCollectRecord_COLLECT]: {
+                    "value": [statusParent_COLLECT] // チェックボックス型は複数選択のフィールドなので配列で値を指定
+                },
+                [fieldTotalBilledAmount_COLLECT]: {
+                    "value": total_billed
+                },
+                [tableInvoiceTargets_COLLECT]: {
+                    "value": invoice_targets
+                }
+            }
+        };
+    };
+    // ----------------------------------------------------------------------------------------------------
+
     function getAggregatedParentRecords(records) {
         console.log("振込依頼書作成対象のレコードを締日と工務店IDごとにまとめ、明細の情報を親に集約する");
         // まず工務店IDと締日だけ全て抜き出す
@@ -275,45 +333,9 @@ dayjs.locale("ja");
                 && record[fieldClosingDate_COLLECT]["value"] === pair[fieldClosingDate_COLLECT];
             });
 
-            // グループの中でレコード番号が最も小さいもの一つを親と決める
-            const parent_record = invoice_group.reduce((a, b) => {
-                if (Number(a[fieldRecordId_COLLECT]["value"]) < Number(b[fieldRecordId_COLLECT]["value"])) {
-                    return a;
-                } else {
-                    return b;
-                }
-            });
-
-            // グループの情報を親に集約。クラウドサイン用の情報とは別に保持するため、親の振込依頼書用サブテーブルに親自身のクラウドサイン用サブテーブルのレコードも加える。
-            // 振込依頼書に記載する合計額
-            const total_billed = invoice_group.reduce((total, record) => total + Number(record[fieldCollectableAmount_COLLECT]["value"]), 0);
-
-            // 振込依頼書に記載する申込レコード一覧（グループ化した回収レコードそれぞれの、クラウドサイン用サブテーブルに入っている申込レコードのunion）
-            const invoice_targets = invoice_group
-                .flatMap((record) => {
-                    // サブテーブルのUpdateをするにあたって、サブテーブルのレコードそれぞれのオブジェクトの構造を整える
-                    return record[tableCloudSignApplies_COLLECT]["value"].map((sub_rec) => {
-                        return {
-                            "value": {
-                                [tableFieldApplyRecordNoIV_COLLECT]: {
-                                    "value": sub_rec["value"][tableFieldApplyRecordNoCS_COLLECT]["value"]
-                                },
-                                [tableFieldApplicantOfficialNameIV_COLLECT]: {
-                                    "value": sub_rec["value"][tableFieldApplicantOfficialNameCS_COLLECT]["value"]
-                                },
-                                [tableFieldReceivableIV_COLLECT]: {
-                                    "value": sub_rec["value"][tableFieldReceivableCS_COLLECT]["value"]
-                                },
-                                [tableFieldPaymentTimingIV_COLLECT]: {
-                                    "value": sub_rec["value"][tableFieldPaymentTimingCS_COLLECT]["value"]
-                                },
-                                [tableFieldPaymentDateIV_COLLECT]: {
-                                    "value": sub_rec["value"][tableFieldPaymentDateCS_COLLECT]["value"]
-                                }
-                            }
-                        };
-                    });
-                });
+            const parent_record = invoice_group.reduce(returnEarlyRecord);
+            const total_billed = invoice_group.reduce(sumInvoiceBills, 0);
+            const invoice_targets = invoice_group.flatMap(convertToKintoneSubTableObject);
 
             // apiに渡すためにオブジェクトの構造を整える
             return {
