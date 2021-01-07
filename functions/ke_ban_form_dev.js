@@ -9,6 +9,13 @@ const sendgrid = require("@sendgrid/mail");
 const fs = require("fs");
 const path = require("path");
 
+const dayjs = require("dayjs");
+dayjs.locale("ja");
+const customParseFormat = require("dayjs/plugin/customParseFormat");
+dayjs.extend(customParseFormat);
+
+const holiday_jp = require("@holiday-jp/holiday_jp");
+
 // kintone工務店マスタに登録している工務店データ一覧。締日ごとに異なるレコードを保存している。
 const KE_BAN_RECORDS_BY_CLOSING = {
     "05": { ID: "400", NAME: "株式会社ワールドフォースインターナショナル" },
@@ -24,6 +31,8 @@ const fieldConstructorID_KYORYOKU   = "工務店ID";
 const fieldCommonName_KYORYOKU      = "支払先";
 const fieldOfficialName_KYORYOKU    = "支払先正式名称";
 const fieldEmail_KYORYOKU           = "メールアドレス";
+
+const fieldPaymentDate_APPLY        = "paymentDate";
 
 exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
     if (req.method != "POST") {
@@ -285,10 +294,70 @@ const post_apply_record = async (form_data, env) => {
         }
     };
 
+    const pat = new RegExp("から(\\d{4}年\\d{1,2}月\\d{1,2}日)まで");
+    const getPaymentDate = (term_string) => {
+        const closing_string = pat.exec(term_string);
+        if (!closing_string) {
+            console.log(`フォームの入力内容から締め日の特定に失敗。入力内容: ${term_string}`);
+            return null;
+        }
+        const closing_date = dayjs(closing_string[1], "YYYY年M月D日");
+        console.log(`申込の締め日: ${closing_date.format("YYYY年MM月DD日(ddd)")}`);
+
+        // FIXME: 次の営業日を求める関数がフロントエンドにもある。共通化したい
+        const getNextBusinessDate = (base_date) => {
+            // base_dateの翌日以降の営業日を取得する。
+            let next_date = base_date.add(1, "day");
+
+            const is_holiday = (date) => {
+                // 土日は非営業日
+                if ([0, 6].includes(date.day())) {
+                    return true;
+                }
+
+                // 祝日は非営業日
+                if (holiday_jp.isHoliday(date.toDate())) {
+                    return true;
+                }
+
+                // FIXME: カスタム休日にも対応する
+                return false;
+            };
+
+            while (is_holiday(next_date)) {
+                next_date = next_date.add(1, "day");
+            }
+
+            return next_date;
+        };
+
+        // 支払日 = 締日+4営業日
+        const payment_date = ((closing_date) => {
+            let base_date = closing_date;
+            let next_business_date;
+            for (let i = 0; i < 4; i++) {
+                next_business_date = getNextBusinessDate(base_date);
+                console.log(`締め日 + ${i+1}営業日: ${next_business_date.format("YYYY年MM月DD日(ddd)")}`);
+                base_date = next_business_date;
+            }
+
+            return next_business_date;
+        })(closing_date);
+
+        return payment_date;
+    };
+
     const get_posting_payload = async (form_data, app_id) => {
         const kyoryoku_id = await get_kyoryoku_id(form_data["company"], form_data["mail"]);
         if (kyoryoku_id) {
             form_data["ルックアップ"] = kyoryoku_id;
+        }
+
+        const payment_date = getPaymentDate(form_data["targetTerm"]);
+        if (payment_date && payment_date.isValid()) {
+            form_data[fieldPaymentDate_APPLY] = payment_date.format("YYYY-MM-DD");
+        } else {
+            console.log(`支払日を自動決定できませんでした。申込レコードに支払日を手動で入力してください。対象稼働期間: ${form_data["targetTerm"]}`);
         }
 
         const record = {};
@@ -297,7 +366,6 @@ const post_apply_record = async (form_data, env) => {
         for (const key of Object.keys(form_data)) {
             // targetTermは"まで"の日付を読み取って使用する
             if (key === "targetTerm") {
-                const pat = new RegExp("から(\\d{4}年\\d{1,2}月\\d{1,2}日)まで");
                 const closing_date = pat.exec(form_data[key]);
                 if (closing_date) {
                     // YYYY-MM-DDの文字列として格納
