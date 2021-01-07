@@ -338,20 +338,7 @@ dayjs.locale("ja");
             const invoice_targets = invoice_group.flatMap(convertToKintoneSubTableObject);
 
             // apiに渡すためにオブジェクトの構造を整える
-            return {
-                "id": parent_record[fieldRecordId_COLLECT]["value"],
-                "record": {
-                    [fieldParentCollectRecord_COLLECT]: {
-                        "value": [statusParent_COLLECT] // チェックボックス型は複数選択のフィールドなので配列で値を指定
-                    },
-                    [fieldTotalBilledAmount_COLLECT]: {
-                        "value": total_billed
-                    },
-                    [tableInvoiceTargets_COLLECT]: {
-                        "value": invoice_targets
-                    }
-                }
-            };
+            return getUpdateRecordObject(parent_record[fieldRecordId_COLLECT]["value"], total_billed, invoice_targets);
         });
 
         if (include_ke_ban_records) {
