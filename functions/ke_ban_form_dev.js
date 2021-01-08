@@ -267,6 +267,14 @@ const post_apply_record = async (form_data, env) => {
         // eslint-disable-next-line no-irregular-whitespace
         const deleteSpaces = (s) => {return s.replace(/ /g, "").replace(/　/g, "");};
         const no_space_name = deleteSpaces(name);
+        const compareWithName = (kintone_record) => {
+            const is_same_name = deleteSpaces(kintone_record[fieldCommonName_KYORYOKU]["value"]) === deleteSpaces(this) ||
+                deleteSpaces(kintone_record[fieldOfficialName_KYORYOKU]["value"]) === deleteSpaces(this);
+            if (!is_same_name) {
+                console.warn(`kintoneに登録した氏名とフォームに入力した氏名が異なります。kintone: ${kintone_record[fieldOfficialName_KYORYOKU]["value"]}, フォーム: ${this}`);
+            }
+            return is_same_name;
+        };
         const payload_compare_name = {
             app: APP_ID_KYORYOKU,
             fields: [fieldID_KYORYOKU, fieldCommonName_KYORYOKU, fieldOfficialName_KYORYOKU],
@@ -276,10 +284,7 @@ const post_apply_record = async (form_data, env) => {
         const kintone_data_name = await getRecord(APP_ID_KYORYOKU, process.env.api_token_kyoryoku, payload_compare_name);
 
         // kintone保存の氏名データからwhitespaceを取り除いて比較
-        const result_from_name = kintone_data_name.data.records.filter((r) => {
-            return deleteSpaces(r[fieldCommonName_KYORYOKU]["value"]) === no_space_name ||
-                deleteSpaces(r[fieldOfficialName_KYORYOKU]["value"]) === no_space_name;
-        });
+        const result_from_name = kintone_data_name.data.records.filter(compareWithName, name);
 
         if (result_from_name.length === 1) {
             return result_from_name[0][fieldID_KYORYOKU]["value"];
