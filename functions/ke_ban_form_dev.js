@@ -26,6 +26,7 @@ const KE_BAN_RECORDS_BY_CLOSING = {
 };
 
 const APP_ID_KYORYOKU               = "88";
+const fieldRecordId_KYORYOKU        = "レコード番号";
 const fieldID_KYORYOKU              = "支払企業No_";
 const fieldConstructorID_KYORYOKU   = "工務店ID";
 const fieldCommonName_KYORYOKU      = "支払先";
@@ -277,7 +278,12 @@ const post_apply_record = async (form_data, env) => {
         const in_query_constructors = Object.values(KE_BAN_RECORDS_BY_CLOSING).map((r) => `"${r.ID}"`).join(",");
         const payload_compare_name = {
             app: APP_ID_KYORYOKU,
-            fields: [fieldID_KYORYOKU, fieldCommonName_KYORYOKU, fieldOfficialName_KYORYOKU],
+            fields: [
+                fieldRecordId_KYORYOKU,
+                fieldID_KYORYOKU,
+                fieldCommonName_KYORYOKU,
+                fieldOfficialName_KYORYOKU
+            ],
             query: `${fieldConstructorID_KYORYOKU} in (${in_query_constructors})`
                 + `and ${fieldEmail_KYORYOKU} = "${email}"`
         };
@@ -292,8 +298,8 @@ const post_apply_record = async (form_data, env) => {
             if (result_from_name.length === 0) {
                 console.warn(`協力会社マスタに未登録のドライバーです: "${name}", "${email}"`);
             } else {
-                const ids = result_from_name.map((r) => `"${r[fieldID_KYORYOKU]["value"]}"`).join(",");
-                console.warn(`協力会社マスタに重複して登録されているドライバーです: "${name}", "${email}"。レコードID: ${ids}`);
+                const ids = result_from_name.map((r) => `"${r[fieldRecordId_KYORYOKU]["value"]}"`).join(",");
+                console.warn(`協力会社マスタに重複して登録されているドライバーです: "${name}", "${email}"。レコード番号: ${ids}`);
             }
             return null;
         }
