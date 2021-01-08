@@ -222,6 +222,8 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                     .catch((err) => {
                         console.error("KE_BAN: メール送信は成功しましたが、kintoneへの登録に失敗しました。手動でkintoneへ登録してください。");
                         console.error(err);
+                        console.error("form_data", form_data);
+                        console.error("kintone uploaded filekeys", upload_results);
                     });
 
                 res.status(200).json({
