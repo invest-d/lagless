@@ -9,6 +9,13 @@ const sendgrid = require("@sendgrid/mail");
 const fs = require("fs");
 const path = require("path");
 
+const dayjs = require("dayjs");
+dayjs.locale("ja");
+const customParseFormat = require("dayjs/plugin/customParseFormat");
+dayjs.extend(customParseFormat);
+
+const holiday_jp = require("@holiday-jp/holiday_jp");
+
 // kintone工務店マスタに登録している工務店データ一覧。締日ごとに異なるレコードを保存している。
 const KE_BAN_RECORDS_BY_CLOSING = {
     "05": { ID: "400", NAME: "株式会社ワールドフォースインターナショナル" },
@@ -19,11 +26,15 @@ const KE_BAN_RECORDS_BY_CLOSING = {
 };
 
 const APP_ID_KYORYOKU               = "88";
+const fieldRecordId_KYORYOKU        = "レコード番号";
 const fieldID_KYORYOKU              = "支払企業No_";
+const fieldDriverID_KYORYOKU        = "kebanID";
 const fieldConstructorID_KYORYOKU   = "工務店ID";
 const fieldCommonName_KYORYOKU      = "支払先";
 const fieldOfficialName_KYORYOKU    = "支払先正式名称";
 const fieldEmail_KYORYOKU           = "メールアドレス";
+
+const fieldPaymentDate_APPLY        = "paymentDate";
 
 exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
     if (req.method != "POST") {
@@ -55,6 +66,7 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
     const auto_reply_message = {};
     auto_reply_message.attachments = [];
     const fieldname_dict = {
+        kebanID: "軽バンドットコムドライバーID",
         company: "会社名・屋号名",
         phone: "電話番号",
         mail: "メールアドレス",
@@ -212,6 +224,8 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                     .catch((err) => {
                         console.error("KE_BAN: メール送信は成功しましたが、kintoneへの登録に失敗しました。手動でkintoneへ登録してください。");
                         console.error(err);
+                        console.error("form_data", form_data);
+                        console.error("kintone uploaded filekeys", upload_results);
                     });
 
                 res.status(200).json({
@@ -252,42 +266,139 @@ function uploadToKintone(token, attachment, filename) {
 }
 
 const post_apply_record = async (form_data, env) => {
-    const get_kyoryoku_id = async (name, email) => {
-        // 名前とメールアドレスを条件にして協力会社マスタを検索し、協力会社IDを得る。見つからなかったり、重複している場合はnullを返す
+    const get_kyoryoku_id = async (driver_id, name, email) => {
+        // eslint-disable-next-line no-irregular-whitespace
+        const deleteSpaces = (s) => {return s.replace(/ /g, "").replace(/　/g, "");};
+        const compareWithName = (kintone_record) => {
+            // FIXME: compareWithNameに直接name変数を渡せるようにしたい
+            const is_same_name = deleteSpaces(kintone_record[fieldCommonName_KYORYOKU]["value"]) === deleteSpaces(name) ||
+                deleteSpaces(kintone_record[fieldOfficialName_KYORYOKU]["value"]) === deleteSpaces(name);
+            if (!is_same_name) {
+                console.warn(`kintoneに登録した氏名とフォームに入力した氏名が異なります。kintone: ${kintone_record[fieldOfficialName_KYORYOKU]["value"]}, フォーム: ${name}`);
+            }
+            return is_same_name;
+        };
         const in_query_constructors = Object.values(KE_BAN_RECORDS_BY_CLOSING).map((r) => `"${r.ID}"`).join(",");
-        const deleteSpaces = (s) => {return s.replace(" ", "").replace("　", "");};
-        const no_space_name = deleteSpaces(name);
-        const payload = {
+
+        // ドライバーIDを条件にして協力会社マスタを検索し、協力会社IDを得る。
+        console.log("ドライバーIDを元に協力会社マスタを検索...");
+        const payload_compare_id = {
             app: APP_ID_KYORYOKU,
-            fields: [fieldID_KYORYOKU, fieldCommonName_KYORYOKU, fieldOfficialName_KYORYOKU],
+            fields: [
+                fieldRecordId_KYORYOKU,
+                fieldID_KYORYOKU,
+                fieldCommonName_KYORYOKU,
+                fieldOfficialName_KYORYOKU
+            ],
+            query: `${fieldConstructorID_KYORYOKU} in (${in_query_constructors})`
+                + `and ${fieldDriverID_KYORYOKU} = "${driver_id}"`
+        };
+        const kintone_data_driver_id = await getRecord(APP_ID_KYORYOKU, process.env.api_token_kyoryoku, payload_compare_id);
+        // 取得したデータはそのまま返さず、一応チェックする（IDの記入ミスの可能性があるため）
+        const result_from_id = kintone_data_driver_id.data.records.filter(compareWithName);
+
+        if (result_from_id.length === 1) {
+            console.log("kintone内に登録情報が見つかりました。");
+            return result_from_id[0][fieldID_KYORYOKU]["value"];
+        }
+
+        // ドライバーIDでマスタ情報が見つからない場合は名前とメールアドレスを条件にして協力会社マスタを検索し、協力会社IDを得る。
+        console.log("ドライバー氏名とメールアドレスを元に協力会社マスタを検索...");
+        const payload_compare_name = {
+            app: APP_ID_KYORYOKU,
+            fields: [
+                fieldRecordId_KYORYOKU,
+                fieldID_KYORYOKU,
+                fieldCommonName_KYORYOKU,
+                fieldOfficialName_KYORYOKU
+            ],
             query: `${fieldConstructorID_KYORYOKU} in (${in_query_constructors})`
                 + `and ${fieldEmail_KYORYOKU} = "${email}"`
         };
-        const kintone_data = await getRecord(APP_ID_KYORYOKU, process.env.api_token_kyoryoku, payload);
+        const kintone_data_name = await getRecord(APP_ID_KYORYOKU, process.env.api_token_kyoryoku, payload_compare_name);
 
         // kintone保存の氏名データからwhitespaceを取り除いて比較
-        const result = kintone_data.data.records.filter((r) => {
-            return deleteSpaces(r[fieldCommonName_KYORYOKU]["value"]) === no_space_name ||
-                deleteSpaces(r[fieldOfficialName_KYORYOKU]["value"]) === no_space_name;
-        });
+        const result_from_name = kintone_data_name.data.records.filter(compareWithName);
 
-        if (result.length === 1) {
-            return result[0][fieldID_KYORYOKU]["value"];
+        if (result_from_name.length === 1) {
+            console.log(`kintone内に登録情報が見つかりました。ドライバーIDの追加入力を推奨します。協力会社マスタレコード番号: ${result_from_name[0][fieldRecordId_KYORYOKU]["value"]}`);
+            return result_from_name[0][fieldID_KYORYOKU]["value"];
         } else {
-            if (result.length === 0) {
+            // それでも見つからなかったり、重複している場合はnullを返す
+            if (result_from_name.length === 0) {
                 console.warn(`協力会社マスタに未登録のドライバーです: "${name}", "${email}"`);
             } else {
-                const ids = result.map((r) => `"${r[fieldID_KYORYOKU]["value"]}"`).join(",");
-                console.warn(`協力会社マスタに重複して登録されているドライバーです: "${name}", "${email}"。レコードID: ${ids}`);
+                const ids = result_from_name.map((r) => `"${r[fieldRecordId_KYORYOKU]["value"]}"`).join(",");
+                console.warn(`協力会社マスタに重複して登録されているドライバーです: "${name}", "${email}"。レコード番号: ${ids}`);
             }
             return null;
         }
     };
 
+    const pat = new RegExp("から(\\d{4}年\\d{1,2}月\\d{1,2}日)まで");
+    const getPaymentDate = (term_string) => {
+        const closing_string = pat.exec(term_string);
+        if (!closing_string) {
+            console.log(`フォームの入力内容から締め日の特定に失敗。入力内容: ${term_string}`);
+            return null;
+        }
+        const closing_date = dayjs(closing_string[1], "YYYY年M月D日");
+        console.log(`申込の締め日: ${closing_date.format("YYYY年MM月DD日(ddd)")}`);
+
+        // FIXME: 次の営業日を求める関数がフロントエンドにもある。共通化したい
+        const getNextBusinessDate = (base_date) => {
+            // base_dateの翌日以降の営業日を取得する。
+            let next_date = base_date.add(1, "day");
+
+            const is_holiday = (date) => {
+                // 土日は非営業日
+                if ([0, 6].includes(date.day())) {
+                    return true;
+                }
+
+                // 祝日は非営業日
+                if (holiday_jp.isHoliday(date.toDate())) {
+                    return true;
+                }
+
+                // FIXME: カスタム休日にも対応する
+                return false;
+            };
+
+            while (is_holiday(next_date)) {
+                next_date = next_date.add(1, "day");
+            }
+
+            return next_date;
+        };
+
+        // 支払日 = 締日+4営業日
+        const payment_date = ((closing_date) => {
+            let base_date = closing_date;
+            let next_business_date;
+            for (let i = 0; i < 4; i++) {
+                next_business_date = getNextBusinessDate(base_date);
+                console.log(`締め日 + ${i+1}営業日: ${next_business_date.format("YYYY年MM月DD日(ddd)")}`);
+                base_date = next_business_date;
+            }
+
+            return next_business_date;
+        })(closing_date);
+
+        return payment_date;
+    };
+
     const get_posting_payload = async (form_data, app_id) => {
-        const kyoryoku_id = await get_kyoryoku_id(form_data["company"], form_data["mail"]);
+        const kyoryoku_id = await get_kyoryoku_id(form_data["kebanID"], form_data["company"], form_data["mail"]);
         if (kyoryoku_id) {
             form_data["ルックアップ"] = kyoryoku_id;
+        }
+
+        const payment_date = getPaymentDate(form_data["targetTerm"]);
+        if (payment_date && payment_date.isValid()) {
+            form_data[fieldPaymentDate_APPLY] = payment_date.format("YYYY-MM-DD");
+        } else {
+            console.log(`支払日を自動決定できませんでした。申込レコードに支払日を手動で入力してください。対象稼働期間: ${form_data["targetTerm"]}`);
         }
 
         const record = {};
@@ -296,7 +407,6 @@ const post_apply_record = async (form_data, env) => {
         for (const key of Object.keys(form_data)) {
             // targetTermは"まで"の日付を読み取って使用する
             if (key === "targetTerm") {
-                const pat = new RegExp("から(\\d{4}年\\d{1,2}月\\d{1,2}日)まで");
                 const closing_date = pat.exec(form_data[key]);
                 if (closing_date) {
                     // YYYY-MM-DDの文字列として格納
@@ -306,21 +416,27 @@ const post_apply_record = async (form_data, env) => {
                 }
             }
 
+            // kintoneのレコードに入力しないフィールドは除外
+            const ignore_fields = [
+                "agree",
+                "kebanID" // 協力会社IDによるルックアップで入力するため、posting_payloadとして設定する必要はなし
+            ];
+            if (ignore_fields.includes(key)) {
+                continue;
+            }
+
             // その他フィールドは値をそのまま使用
             record[key]= {"value": form_data[key]};
         }
 
         // その他、軽バン.COMの場合にセットする値を追加
         const closing_date = `0${record["closingDay"]["value"].split("-")[2]}`.slice(-2);
-        const ke_ban_record = KE_BAN_RECORDS_BY_CLOSING[closing_date];
-        record["constructionShopId"]    = {"value": ke_ban_record.ID};
-        record["billingCompany"]        = {"value": ke_ban_record.NAME};
+        const ke_ban_constructor_record = KE_BAN_RECORDS_BY_CLOSING[closing_date];
+        record["constructionShopId"]    = {"value": ke_ban_constructor_record.ID};
+        record["billingCompany"]        = {"value": ke_ban_constructor_record.NAME};
         record["paymentTiming"]         = {"value": "早払い"};
         record["applicationAmount"]     = {"value": 0}; // レコード作成後に手動で問い合わせ→追記
         record["membership_fee"]        = {"value": 0};
-
-        // 不要な要素を削除
-        delete record["agree"];
 
         return {
             app: app_id,
