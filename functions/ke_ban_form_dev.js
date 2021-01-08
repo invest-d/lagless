@@ -263,7 +263,6 @@ function uploadToKintone(token, attachment, filename) {
 const post_apply_record = async (form_data, env) => {
     const get_kyoryoku_id = async (name, email) => {
         // 名前とメールアドレスを条件にして協力会社マスタを検索し、協力会社IDを得る。見つからなかったり、重複している場合はnullを返す
-        const in_query_constructors = Object.values(KE_BAN_RECORDS_BY_CLOSING).map((r) => `"${r.ID}"`).join(",");
         // eslint-disable-next-line no-irregular-whitespace
         const deleteSpaces = (s) => {return s.replace(/ /g, "").replace(/　/g, "");};
         const no_space_name = deleteSpaces(name);
@@ -275,6 +274,7 @@ const post_apply_record = async (form_data, env) => {
             }
             return is_same_name;
         };
+        const in_query_constructors = Object.values(KE_BAN_RECORDS_BY_CLOSING).map((r) => `"${r.ID}"`).join(",");
         const payload_compare_name = {
             app: APP_ID_KYORYOKU,
             fields: [fieldID_KYORYOKU, fieldCommonName_KYORYOKU, fieldOfficialName_KYORYOKU],
