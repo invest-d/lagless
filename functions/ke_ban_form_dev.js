@@ -267,27 +267,27 @@ const post_apply_record = async (form_data, env) => {
         // eslint-disable-next-line no-irregular-whitespace
         const deleteSpaces = (s) => {return s.replace(/ /g, "").replace(/　/g, "");};
         const no_space_name = deleteSpaces(name);
-        const payload = {
+        const payload_compare_name = {
             app: APP_ID_KYORYOKU,
             fields: [fieldID_KYORYOKU, fieldCommonName_KYORYOKU, fieldOfficialName_KYORYOKU],
             query: `${fieldConstructorID_KYORYOKU} in (${in_query_constructors})`
                 + `and ${fieldEmail_KYORYOKU} = "${email}"`
         };
-        const kintone_data = await getRecord(APP_ID_KYORYOKU, process.env.api_token_kyoryoku, payload);
+        const kintone_data_name = await getRecord(APP_ID_KYORYOKU, process.env.api_token_kyoryoku, payload_compare_name);
 
         // kintone保存の氏名データからwhitespaceを取り除いて比較
-        const result = kintone_data.data.records.filter((r) => {
+        const result_from_name = kintone_data_name.data.records.filter((r) => {
             return deleteSpaces(r[fieldCommonName_KYORYOKU]["value"]) === no_space_name ||
                 deleteSpaces(r[fieldOfficialName_KYORYOKU]["value"]) === no_space_name;
         });
 
-        if (result.length === 1) {
-            return result[0][fieldID_KYORYOKU]["value"];
+        if (result_from_name.length === 1) {
+            return result_from_name[0][fieldID_KYORYOKU]["value"];
         } else {
-            if (result.length === 0) {
+            if (result_from_name.length === 0) {
                 console.warn(`協力会社マスタに未登録のドライバーです: "${name}", "${email}"`);
             } else {
-                const ids = result.map((r) => `"${r[fieldID_KYORYOKU]["value"]}"`).join(",");
+                const ids = result_from_name.map((r) => `"${r[fieldID_KYORYOKU]["value"]}"`).join(",");
                 console.warn(`協力会社マスタに重複して登録されているドライバーです: "${name}", "${email}"。レコードID: ${ids}`);
             }
             return null;
@@ -381,9 +381,9 @@ const post_apply_record = async (form_data, env) => {
 
         // その他、軽バン.COMの場合にセットする値を追加
         const closing_date = `0${record["closingDay"]["value"].split("-")[2]}`.slice(-2);
-        const ke_ban_record = KE_BAN_RECORDS_BY_CLOSING[closing_date];
-        record["constructionShopId"]    = {"value": ke_ban_record.ID};
-        record["billingCompany"]        = {"value": ke_ban_record.NAME};
+        const ke_ban_constructor_record = KE_BAN_RECORDS_BY_CLOSING[closing_date];
+        record["constructionShopId"]    = {"value": ke_ban_constructor_record.ID};
+        record["billingCompany"]        = {"value": ke_ban_constructor_record.NAME};
         record["paymentTiming"]         = {"value": "早払い"};
         record["applicationAmount"]     = {"value": 0}; // レコード作成後に手動で問い合わせ→追記
         record["membership_fee"]        = {"value": 0};
