@@ -28,6 +28,7 @@ const KE_BAN_RECORDS_BY_CLOSING = {
 const APP_ID_KYORYOKU               = "88";
 const fieldRecordId_KYORYOKU        = "レコード番号";
 const fieldID_KYORYOKU              = "支払企業No_";
+const fieldDriverID_KYORYOKU        = "kebanID";
 const fieldConstructorID_KYORYOKU   = "工務店ID";
 const fieldCommonName_KYORYOKU      = "支払先";
 const fieldOfficialName_KYORYOKU    = "支払先正式名称";
@@ -65,6 +66,7 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
     const auto_reply_message = {};
     auto_reply_message.attachments = [];
     const fieldname_dict = {
+        kebanID: "軽バンドットコムドライバーID",
         company: "会社名・屋号名",
         phone: "電話番号",
         mail: "メールアドレス",
@@ -264,20 +266,44 @@ function uploadToKintone(token, attachment, filename) {
 }
 
 const post_apply_record = async (form_data, env) => {
-    const get_kyoryoku_id = async (name, email) => {
-        // 名前とメールアドレスを条件にして協力会社マスタを検索し、協力会社IDを得る。見つからなかったり、重複している場合はnullを返す
+    const get_kyoryoku_id = async (driver_id, name, email) => {
         // eslint-disable-next-line no-irregular-whitespace
         const deleteSpaces = (s) => {return s.replace(/ /g, "").replace(/　/g, "");};
-        const no_space_name = deleteSpaces(name);
         const compareWithName = (kintone_record) => {
-            const is_same_name = deleteSpaces(kintone_record[fieldCommonName_KYORYOKU]["value"]) === deleteSpaces(this) ||
-                deleteSpaces(kintone_record[fieldOfficialName_KYORYOKU]["value"]) === deleteSpaces(this);
+            // FIXME: compareWithNameに直接name変数を渡せるようにしたい
+            const is_same_name = deleteSpaces(kintone_record[fieldCommonName_KYORYOKU]["value"]) === deleteSpaces(name) ||
+                deleteSpaces(kintone_record[fieldOfficialName_KYORYOKU]["value"]) === deleteSpaces(name);
             if (!is_same_name) {
-                console.warn(`kintoneに登録した氏名とフォームに入力した氏名が異なります。kintone: ${kintone_record[fieldOfficialName_KYORYOKU]["value"]}, フォーム: ${this}`);
+                console.warn(`kintoneに登録した氏名とフォームに入力した氏名が異なります。kintone: ${kintone_record[fieldOfficialName_KYORYOKU]["value"]}, フォーム: ${name}`);
             }
             return is_same_name;
         };
         const in_query_constructors = Object.values(KE_BAN_RECORDS_BY_CLOSING).map((r) => `"${r.ID}"`).join(",");
+
+        // ドライバーIDを条件にして協力会社マスタを検索し、協力会社IDを得る。
+        console.log("ドライバーIDを元に協力会社マスタを検索...");
+        const payload_compare_id = {
+            app: APP_ID_KYORYOKU,
+            fields: [
+                fieldRecordId_KYORYOKU,
+                fieldID_KYORYOKU,
+                fieldCommonName_KYORYOKU,
+                fieldOfficialName_KYORYOKU
+            ],
+            query: `${fieldConstructorID_KYORYOKU} in (${in_query_constructors})`
+                + `and ${fieldDriverID_KYORYOKU} = "${driver_id}"`
+        };
+        const kintone_data_driver_id = await getRecord(APP_ID_KYORYOKU, process.env.api_token_kyoryoku, payload_compare_id);
+        // 取得したデータはそのまま返さず、一応チェックする（IDの記入ミスの可能性があるため）
+        const result_from_id = kintone_data_driver_id.data.records.filter(compareWithName);
+
+        if (result_from_id.length === 1) {
+            console.log("kintone内に登録情報が見つかりました。");
+            return result_from_id[0][fieldID_KYORYOKU]["value"];
+        }
+
+        // ドライバーIDでマスタ情報が見つからない場合は名前とメールアドレスを条件にして協力会社マスタを検索し、協力会社IDを得る。
+        console.log("ドライバー氏名とメールアドレスを元に協力会社マスタを検索...");
         const payload_compare_name = {
             app: APP_ID_KYORYOKU,
             fields: [
@@ -292,11 +318,13 @@ const post_apply_record = async (form_data, env) => {
         const kintone_data_name = await getRecord(APP_ID_KYORYOKU, process.env.api_token_kyoryoku, payload_compare_name);
 
         // kintone保存の氏名データからwhitespaceを取り除いて比較
-        const result_from_name = kintone_data_name.data.records.filter(compareWithName, name);
+        const result_from_name = kintone_data_name.data.records.filter(compareWithName);
 
         if (result_from_name.length === 1) {
+            console.log(`kintone内に登録情報が見つかりました。ドライバーIDの追加入力を推奨します。協力会社マスタレコード番号: ${result_from_name[0][fieldRecordId_KYORYOKU]["value"]}`);
             return result_from_name[0][fieldID_KYORYOKU]["value"];
         } else {
+            // それでも見つからなかったり、重複している場合はnullを返す
             if (result_from_name.length === 0) {
                 console.warn(`協力会社マスタに未登録のドライバーです: "${name}", "${email}"`);
             } else {
@@ -361,7 +389,7 @@ const post_apply_record = async (form_data, env) => {
     };
 
     const get_posting_payload = async (form_data, app_id) => {
-        const kyoryoku_id = await get_kyoryoku_id(form_data["company"], form_data["mail"]);
+        const kyoryoku_id = await get_kyoryoku_id(form_data["kebanID"], form_data["company"], form_data["mail"]);
         if (kyoryoku_id) {
             form_data["ルックアップ"] = kyoryoku_id;
         }
@@ -391,6 +419,7 @@ const post_apply_record = async (form_data, env) => {
             // kintoneのレコードに入力しないフィールドは除外
             const ignore_fields = [
                 "agree",
+                "kebanID" // 協力会社IDによるルックアップで入力するため、posting_payloadとして設定する必要はなし
             ];
             if (ignore_fields.includes(key)) {
                 continue;
