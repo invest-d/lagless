@@ -380,6 +380,14 @@ const post_apply_record = async (form_data, env) => {
                 }
             }
 
+            // kintoneのレコードに入力しないフィールドは除外
+            const ignore_fields = [
+                "agree",
+            ];
+            if (ignore_fields.includes(key)) {
+                continue;
+            }
+
             // その他フィールドは値をそのまま使用
             record[key]= {"value": form_data[key]};
         }
@@ -392,9 +400,6 @@ const post_apply_record = async (form_data, env) => {
         record["paymentTiming"]         = {"value": "早払い"};
         record["applicationAmount"]     = {"value": 0}; // レコード作成後に手動で問い合わせ→追記
         record["membership_fee"]        = {"value": 0};
-
-        // 不要な要素を削除
-        delete record["agree"];
 
         return {
             app: app_id,
