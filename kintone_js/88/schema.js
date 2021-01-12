@@ -293,9 +293,9 @@ export const schema_88 = {
                         "index": "2",
                         "label": "リノベ不動産Payment"
                     },
-                    "軽バンドットコム": {
+                    "軽バン.com": {
                         "index": "5",
-                        "label": "軽バンドットコム"
+                        "label": "軽バン.com"
                     }
                 },
                 "required": true,

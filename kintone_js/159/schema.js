@@ -512,7 +512,7 @@ export const schema_apply = {
                 "defaultValue": "",
                 "expression": "",
                 "hideExpression": false,
-                "label": "軽バンドットコムドライバーID",
+                "label": "軽バン.comドライバーID",
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
@@ -1724,7 +1724,7 @@ export const schema_apply = {
                 "fields": [
                     {
                         "type": "LABEL",
-                        "label": "<div>軽バン.COM用フィールド</div>",
+                        "label": "<div>軽バン.com用フィールド</div>",
                         "size": {}
                     }
                 ]

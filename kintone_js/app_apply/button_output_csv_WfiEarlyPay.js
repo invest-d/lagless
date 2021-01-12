@@ -44,7 +44,7 @@ import * as wfi_logics from "./logics_output_csv_WfiEarlyPay";
         const target_conditions = common_logics.getTargetConditions();
         alert(`${common_logics.fieldStatus_APPLY}フィールドが${target_conditions.join(", ")}のレコードを対象に処理します。`);
 
-        const exec_target_message = "本機能は軽バン.COMの早払い専用です。\n"
+        const exec_target_message = "本機能は軽バン.comの早払い専用です。\n"
             + `従って、工務店IDが${Object.values(wfi_logics.AVAILABLE_CONSTRUCTORS).map((c) => c.ID).join(", ")}のいずれかの申込レコードのみを対象とします。`;
         alert(exec_target_message);
 
@@ -68,12 +68,12 @@ import * as wfi_logics from "./logics_output_csv_WfiEarlyPay";
             const csv_data = common_logics.generateCsvData(applies_fixed_amount);
             const sjis_list = common_logics.encodeToSjis(csv_data);
 
-            const file_name = `軽バンドットコム早払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`;
+            const file_name = `軽バン.com早払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`;
             common_logics.downloadFile(sjis_list, file_name);
 
             await common_logics.updateToDone(target_records);
 
-            alert("軽バン.COM早払い用振込データのダウンロードを完了しました。");
+            alert("軽バン.com早払い用振込データのダウンロードを完了しました。");
             alert("ページを更新します。");
             window.location.reload();
         } catch (err) {

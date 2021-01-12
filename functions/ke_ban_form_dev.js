@@ -66,7 +66,7 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
     const auto_reply_message = {};
     auto_reply_message.attachments = [];
     const fieldname_dict = {
-        kebanID: "軽バンドットコムドライバーID",
+        kebanID: "軽バン .comドライバーID",
         company: "会社名・屋号名",
         phone: "電話番号",
         mail: "メールアドレス",
@@ -186,7 +186,7 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                 internal_message.from = env.from_address;
                 internal_message.to = env.to_address;
                 internal_message.cc = env.cc_address;
-                internal_message.subject = "軽バンドットコム登録ドライバー様より前払いのお申し込みがありました。";
+                internal_message.subject = "軽バン .com登録ドライバー様より前払いのお申し込みがありました。";
                 if (internal_message.attachments.length == 0) {
                     delete internal_message.attachments;
                 }
@@ -206,7 +206,7 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                 auto_reply_message.from = env.from_address;
                 auto_reply_message.to = form_data["mail"];
                 auto_reply_message.cc = env.cc_address;
-                auto_reply_message.subject = "【軽バン.COM前払い事務局】お申込みいただきありがとうございます。";
+                auto_reply_message.subject = "【軽バン .com前払い事務局】お申込みいただきありがとうございます。";
                 const auto_reply_text = fs.readFileSync(path.join(__dirname, "autoMailKeBan_template.txt"), "utf8");
                 auto_reply_message.text = substituteTemplate(auto_reply_text, form_data);
                 if (auto_reply_message.attachments.length == 0) {

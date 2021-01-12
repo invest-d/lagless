@@ -470,7 +470,7 @@ dayjs.locale("ja");
 
         const system_name = ((product_name) => {
             if (product_name === KE_BAN_PRODUCT_NAME) {
-                return "軽バン.COM【売上前払いシステム】";
+                return "軽バン.com【売上前払いシステム】";
             } else {
                 return product_name;
             }
@@ -478,7 +478,7 @@ dayjs.locale("ja");
 
         const office_name = ((product_name) => {
             if (product_name === KE_BAN_PRODUCT_NAME) {
-                return "軽バン.COM前払い事務局";
+                return "軽バン.com前払い事務局";
             } else {
                 return `${product_name}事務局`;
             }
