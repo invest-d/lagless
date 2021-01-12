@@ -1,10 +1,10 @@
 /*
     Version 4.1
-    軽バン.COM案件について、請求書ファイルキーを回収レコードに記入しないようにする処理を追加
+    軽バン.com案件について、請求書ファイルキーを回収レコードに記入しないようにする処理を追加
     （案件の性質上、請求書の提出が無いため）
 
     Version 4
-    軽バン.COM案件について、回収レコード作成前に申込レコードを編集して申込金額を記入する処理を追加
+    軽バン.com案件について、回収レコード作成前に申込レコードを編集して申込金額を記入する処理を追加
 
     Version 3
     申込アプリ内で対象となるレコードの種類を変更。
@@ -134,7 +134,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         this.innerText = "作成中...";
 
         try {
-            // 作成前に軽バン.COM案件の対象債権合計金額を手動で別フィールドから転記する必要がある。
+            // 作成前に軽バン.com案件の対象債権合計金額を手動で別フィールドから転記する必要がある。
             // しかし忘れていても大丈夫なように転記処理をしておく。
             await copyKebanFactoringAmount();
 
@@ -213,7 +213,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
     };
 
     const copyKebanFactoringAmount = async () => {
-        // 軽バン.COMの支払予定明細未作成レコードの更新処理を行う。
+        // 軽バン.comの支払予定明細未作成レコードの更新処理を行う。
         // 申込金額フィールドが0のレコードに限り、前払対象金額フィールドを申込金額フィールドに転記する。
         const targets = await getKebanZeroApplies();
         const payload = getCopiedPutPayload(targets);

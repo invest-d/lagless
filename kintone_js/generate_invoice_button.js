@@ -1,6 +1,6 @@
 /*
     Version 3
-    軽バン.COM案件の場合の専用レイアウトを追加
+    軽バン.com案件の場合の専用レイアウトを追加
 
     Version 2
     遅払いの申込が入ってくる場合にも対応。
@@ -311,7 +311,7 @@ dayjs.locale("ja");
             key_pairs.map((p) => [`${p[fieldConstructionShopId_COLLECT]}${DELIMITER}${p[fieldClosingDate_COLLECT]}`, p])
         ).values());
 
-        // 軽バン.COM案件は別集計する
+        // 軽バン.com案件は別集計する
         const target_pairs = unique_key_pairs.filter((p) => !KE_BAN_CONSTRUCTORS.includes(p[fieldConstructionShopId_COLLECT]));
 
         // 親レコード更新用のオブジェクトを作成
@@ -332,7 +332,7 @@ dayjs.locale("ja");
 
         let update_targets = update_targets_standard;
 
-        // 軽バン.COM案件は、実行済みの回収レコードがあっても常に振込依頼書を作成するわけではない。
+        // 軽バン.com案件は、実行済みの回収レコードがあっても常に振込依頼書を作成するわけではない。
         // 月ごとの最後の実行後に、ひと月ぶん全てまとめて振込依頼書を作成するのが基本。
         // 月ごとの最後の実行日を厳密に計算するのは煩雑になるため、最短の申込締切日(26日)〜振込依頼書送信期日（翌月第2週……遅くとも8日）までの場合のみ振込依頼書を作成できる仕様とした。
         let include_ke_ban_records = false;
@@ -424,7 +424,7 @@ dayjs.locale("ja");
             const invoice_doc = generateInvoiceDocument(parent_record);
             const file_name = ((constructor_id, constructor_name, closing_date) => {
                 if (KE_BAN_CONSTRUCTORS.includes(constructor_id)) {
-                    // 軽バン.COMの場合は締め分ではなく対象月「YYYY年M月分」
+                    // 軽バン.comの場合は締め分ではなく対象月「YYYY年M月分」
                     return `${constructor_name}様用 支払明細書兼振込依頼書${dayjs(closing_date).format("YYYY年M月")}分.pdf`;
                 } else {
                     return `${constructor_name}様用 支払明細書兼振込依頼書${formatYMD(closing_date)}締め分.pdf`;
@@ -486,7 +486,7 @@ dayjs.locale("ja");
 
         const subject = ((product_name, closing_date) => {
             if (product_name === KE_BAN_PRODUCT_NAME) {
-                // 軽バン.COMの場合は締め分ではなく対象月「YYYY年M月分」
+                // 軽バン.comの場合は締め分ではなく対象月「YYYY年M月分」
                 return `${dayjs(closing_date).format("YYYY年M月")}分`;
             } else {
                 return `${formatYMD(closing_date)}締め分`;
@@ -557,7 +557,7 @@ dayjs.locale("ja");
 
         const body_service_name_1 = ((product_name) => {
             if (product_name === KE_BAN_PRODUCT_NAME) {
-                // 軽バン.COMの場合のみ「下記のとおりお申込み受付を……」と表示
+                // 軽バン.comの場合のみ「下記のとおりお申込み受付を……」と表示
                 return "";
             } else {
                 // その他は「下記のとおりラグレスのお申込み受付を……」と表示

@@ -1,6 +1,6 @@
 /*
     Version 1
-    WFIの軽バン.COM案件の早払い用CSVデータを出力する。
+    WFIの軽バン.com案件の早払い用CSVデータを出力する。
 */
 
 import * as common_logics from "./logics_output_csv";

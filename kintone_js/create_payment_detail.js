@@ -1,7 +1,7 @@
 /* eslint-disable no-irregular-whitespace */
 /*
     Version 4
-    工務店が軽バン.COMの場合に専用の明細内容へ変更する処理を追加
+    工務店が軽バン.comの場合に専用の明細内容へ変更する処理を追加
 
     Version 3.1
     初回申込に対する振込手数料率半額CPに対応。
@@ -483,7 +483,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         };
     };
 
-    // 軽バン.COM用の支払予定明細を入力する
+    // 軽バン.com用の支払予定明細を入力する
     const generateDetailTextKeban = (apply_info) => {
         const text = [
             `${apply_info.kyoryoku_company_name}`,

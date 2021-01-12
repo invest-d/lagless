@@ -429,7 +429,7 @@ const post_apply_record = async (form_data, env) => {
             record[key]= {"value": form_data[key]};
         }
 
-        // その他、軽バン.COMの場合にセットする値を追加
+        // その他、軽バン.comの場合にセットする値を追加
         const closing_date = `0${record["closingDay"]["value"].split("-")[2]}`.slice(-2);
         const ke_ban_constructor_record = KE_BAN_RECORDS_BY_CLOSING[closing_date];
         record["constructionShopId"]    = {"value": ke_ban_constructor_record.ID};
