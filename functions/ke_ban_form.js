@@ -66,7 +66,7 @@ exports.ke_ban_form = functions.https.onRequest(async (req, res) => {
     const auto_reply_message = {};
     auto_reply_message.attachments = [];
     const fieldname_dict = {
-        kebanID: "軽バンドットコムドライバーID",
+        kebanID: "軽バン .comドライバーID",
         company: "会社名・屋号名",
         phone: "電話番号",
         mail: "メールアドレス",
@@ -186,7 +186,7 @@ exports.ke_ban_form = functions.https.onRequest(async (req, res) => {
                 internal_message.from = env.from_address;
                 internal_message.to = env.to_address;
                 internal_message.cc = env.cc_address;
-                internal_message.subject = "軽バンドットコム登録ドライバー様より前払いのお申し込みがありました。";
+                internal_message.subject = "軽バン .com登録ドライバー様より前払いのお申し込みがありました。";
                 if (internal_message.attachments.length == 0) {
                     delete internal_message.attachments;
                 }
@@ -206,7 +206,7 @@ exports.ke_ban_form = functions.https.onRequest(async (req, res) => {
                 auto_reply_message.from = env.from_address;
                 auto_reply_message.to = form_data["mail"];
                 auto_reply_message.cc = env.cc_address;
-                auto_reply_message.subject = "【軽バン.COM前払い事務局】お申込みいただきありがとうございます。";
+                auto_reply_message.subject = "【軽バン .com前払い事務局】お申込みいただきありがとうございます。";
                 const auto_reply_text = fs.readFileSync(path.join(__dirname, "autoMailKeBan_template.txt"), "utf8");
                 auto_reply_message.text = substituteTemplate(auto_reply_text, form_data);
                 if (auto_reply_message.attachments.length == 0) {
@@ -429,7 +429,7 @@ const post_apply_record = async (form_data, env) => {
             record[key]= {"value": form_data[key]};
         }
 
-        // その他、軽バン.COMの場合にセットする値を追加
+        // その他、軽バン.comの場合にセットする値を追加
         const closing_date = `0${record["closingDay"]["value"].split("-")[2]}`.slice(-2);
         const ke_ban_constructor_record = KE_BAN_RECORDS_BY_CLOSING[closing_date];
         record["constructionShopId"]    = {"value": ke_ban_constructor_record.ID};

@@ -1,7 +1,7 @@
 /* eslint-disable no-irregular-whitespace */
 /*
     Version 4
-    工務店が軽バン.COMの場合に専用の明細内容へ変更する処理を追加
+    工務店が軽バン.comの場合に専用の明細内容へ変更する処理を追加
 
     Version 3.1
     初回申込に対する振込手数料率半額CPに対応。
@@ -483,13 +483,13 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         };
     };
 
-    // 軽バン.COM用の支払予定明細を入力する
+    // 軽バン.com用の支払予定明細を入力する
     const generateDetailTextKeban = (apply_info) => {
         const text = [
             `${apply_info.kyoryoku_company_name}`,
             `${apply_info.kyoryoku_name} 様`,
             "",
-            "この度は、軽バン .COM【売上前払いシステム】のお申込みありがとうございます。",
+            "この度は、軽バン .com【売上前払いシステム】のお申込みありがとうございます。",
             "下記のとおり受付いたしましたので、お知らせいたします。",
             "",
             "",
@@ -517,7 +517,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
             "下記連絡先までお問い合わせください。",
             "",
             "──────────────────────────────────────■",
-            "【軽バン .COM前払い事務局】",
+            "【軽バン .com前払い事務局】",
             "ファクタリング実行会社：ラグレス2合同会社",
             "システム運営会社：インベストデザイン株式会社",
             "MAIL：lagless+keban@invest-d.com（インベストデザイン株式会社）",
