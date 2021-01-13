@@ -30,6 +30,16 @@
     margin-right: auto;
     margin-top: 32px;
 }
+#schedule-closing-payment-same {
+    width: 526px;
+    height: 420px;
+    background-image: url(../images/schedule-closing-payment-same.png);
+    background-repeat: no-repeat;
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 32px;
+}
 #schedule > span { position: absolute; font-size: 16px; white-space: nowrap; width: 100px; text-align: center; }
 #schedule .service-message-1 { top: 165px; left: 110px; color: #D32C25; text-align: center; width: 300px; }
 #schedule .service-message-2 { top: 216px; left: 12px; border-bottom: 1px solid #fff; color: #fff; width: auto; padding-left: 8px; padding-right: 8px; }

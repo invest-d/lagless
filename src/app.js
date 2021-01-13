@@ -61,40 +61,11 @@ $(() => {
             "early": "翌月10日",
             "schedule": [
                 {
-                    "closing": "2020-07-25",
-                    "late": "2020-10-07",
-                    "deadline": "2020-08-03",
-                    "early": "2020-08-07"
-                },
-                {
-                    "closing": "2020-08-25",
-                    "late": "2020-11-07",
-                    "deadline": "2020-09-03",
-                    "early": "2020-09-10"
-                },
-                {
-                    "closing": "2020-09-25",
-                    "late": "2020-12-07",
-                    "deadline": "2020-10-05",
-                    "early": "2020-10-12"
-                },
-                {
-                    "closing": "2020-10-25",
-                    "late": "2021-01-07",
-                    "deadline": "2020-11-03",
-                    "early": "2020-11-10"
-                },
-                {
-                    "closing": "2020-11-25",
-                    "late": "2021-02-07",
-                    "deadline": "2020-12-03",
-                    "early": "2020-12-10"
-                },
-                {
-                    "closing": "2020-12-25",
-                    "late": "2021-03-07",
-                    "deadline": "2021-01-04",
-                    "early": "2021-01-12"
+                    "pattern": "31-31-N31-64",
+                    "closing": "2021-01-31",
+                    "late": "2021-05-04",
+                    "deadline": "2021-01-25",
+                    "early": "2021-02-01"
                 }
             ]
         }, param);
@@ -152,11 +123,10 @@ const show = function(client, param) {
     $(".mail").text(client.mail).attr("href", `mailto:${client.mail}`);
 
     $(".closing").text(client.closing);
+    $(".original").text(client.original);
+    $(".lag").text(client.lag);
     $(".deadline").text(client.deadline);
     $(".early").text(client.early);
-    $(".original").text(client.original);
-    $(".closing").text(client.closing);
-    $(".lag").text(client.lag);
     $(".effect").text(client.effect);
 
     let now = new Date();
@@ -166,11 +136,24 @@ const show = function(client, param) {
         const t = new Date(ymd[0], parseInt(ymd[1])-1, ymd[2]);
         return now.getTime() <= t.getTime();
     });
+
+    $("#schedule-closing-payment-same").hide();
+
     if(schedule) {
         $(".schedule_closing").text(format_date(schedule.closing));
         $(".schedule_early").text(format_date(schedule.early));
         $(".schedule_deadline").text(format_date(schedule.deadline));
         $(".schedule_late").text(format_date(schedule.late));
+
+        // 締日と早期支払日が同じパターンか異なるパターンかによって表示を切り替える
+        // closingプロパティとearlyプロパティを直接比較することはしない。本来のearlyの日付が休日のためにずれている場合などがある
+        const closing_payment_same_patterns = [
+            "31-31-N31-65"
+        ];
+        if (closing_payment_same_patterns.includes(schedule.pattern)) {
+            $("#schedule-closing-payment-same").show();
+            $("#schedule").hide();
+        }
 
         client.default_pay_date_list.find((pair) => {
             if(pair.closing_date == schedule.closing) {
