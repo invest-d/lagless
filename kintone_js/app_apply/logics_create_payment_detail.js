@@ -19,7 +19,7 @@ const HALF_COMMISION_START_DATE = dayjs("2020-12-17");
 // 現状は終了日未定
 const HALF_COMMISION_END_DATE = dayjs("9999-12-31");
 
-export const fieldRecordId_COMMON = "$id";
+const fieldRecordId_COMMON = "$id";
 
 const fieldDetail_APPLY                     = "paymentDetail";
 export const fieldStatus_APPLY              = "状態";
@@ -28,7 +28,7 @@ export const statusConfirming_APPLY         = "支払予定明細確認中";
 export const statusConfirmed_APPLY          = "支払予定明細送信前確認完了";
 const statusPaid_APPLY                      = "実行完了";
 const fieldCustomerId_APPLY                 = "ルックアップ";
-export const fieldCustomerCompanyName_APPLY = "支払先正式名称";
+const fieldCustomerCompanyName_APPLY        = "支払先正式名称";
 const fieldAddresseeName_APPLY              = "担当者名";
 const fieldAddresseeTitle_APPLY             = "役職名";
 const fieldProductName_APPLY                = "productName";
@@ -37,7 +37,7 @@ const statusProductName_Dandori_APPLY       = "ダンドリペイメント";
 const statusProductName_Renove_APPLY        = "リノベ不動産Payment";
 const fieldClosingDate_APPLY                = "closingDay";
 const fieldPaymentDate_APPLY                = "paymentDate";
-export const fieldDaysLater_APPLY           = "daysLater";
+const fieldDaysLater_APPLY                  = "daysLater";
 const fieldBillingCompanyName_APPLY         = "billingCompanyOfficialName";
 const fieldApplicantAmount_APPLY            = "applicationAmount";
 const fieldMembershipFee_APPLY              = "membership_fee";
@@ -55,7 +55,7 @@ const fieldCommissionRateEarlyFirst_APPLY   = "commissionRateEarlyFirst";
 const fieldCommissionAmountEarlyFirst_APPLY = "commissionAmountEarlyFirst";
 const fieldTransferAmountEarlyFirst_APPLY   = "transferAmountEarlyFirst";
 const fieldPaymentAccount_APPLY             = "paymentAccount";
-export const fieldConstructorID_APPLY       = "constructionShopId";
+const fieldConstructorID_APPLY              = "constructionShopId";
 const fieldFactorableAmountPerDayWFI_APPLY  = "factorableAmountPerDayWFI";
 const fieldWorkedDaysWFI_APPLY              = "workedDaysWFI";
 const fieldFactorableTotalAmountWFI_APPLY   = "factorableTotalAmountWFI";
@@ -88,7 +88,7 @@ export const getConstructors = () => {
     return kintone.api("/k/v1/records", "GET", { app: APP_ID_CONSTRUCTOR });
 };
 
-export async function attachDetail(target_records) {
+async function attachDetail(target_records) {
     // エラーが発生した時、どのレコードで発生したかの情報をthrowするためのlet
     let error_num = 0;
     try {
@@ -128,6 +128,26 @@ export async function attachDetail(target_records) {
         + `エラー内容：${err.message}`);
     }
 }
+
+export const generateDetails = (target_records, constructors) => {
+    // 申込レコードに遅払い日数フィールドを紐付ける
+    for (const apply of target_records) {
+        const constructor = constructors.records.find((r) => r["id"]["value"] === apply[fieldConstructorID_APPLY]["value"]);
+
+        if (!constructor) {
+            const no_constructor = "申込レコードに対応する工務店レコードが見つかりませんでした。申込レコードに記入している工務店IDが正しいかどうか確認してください。\n"
+            + "この申込レコードの処理をスキップし、残りのレコードについて処理を続けます。\n\n"
+            + `申込レコード番号: ${apply[fieldRecordId_COMMON]["value"]}, 協力会社名: ${apply[fieldCustomerCompanyName_APPLY]["value"]}, 工務店ID: ${apply[fieldConstructorID_APPLY]["value"]}`;
+            alert(no_constructor);
+            return;
+        }
+
+        apply[fieldDaysLater_APPLY] = { "value": constructor[fieldDaysLater_APPLY]["value"] };
+    }
+
+    // 支払明細を各レコードにセット
+    return attachDetail(target_records, constructors);
+};
 
 const getFormattedYYYYMMDD = (kintone_date_value) => {
     // YYYY年MM月DD日のフォーマットで返す

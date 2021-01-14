@@ -105,27 +105,12 @@ import * as detail_logics from "./logics_create_payment_detail";
             return;
         }
 
-        // 申込レコードに遅払い日数フィールドを紐付ける
-        for (const apply of ready_to_generate.records) {
-            const constructor = constructors.records.find((r) => r["id"]["value"] === apply[detail_logics.fieldConstructorID_APPLY]["value"]);
-
-            if (!constructor) {
-                const no_constructor = "申込レコードに対応する工務店レコードが見つかりませんでした。申込レコードに記入している工務店IDが正しいかどうか確認してください。\n"
-                + "この申込レコードの処理をスキップし、残りのレコードについて処理を続けます。\n\n"
-                + `申込レコード番号: ${apply[detail_logics.fieldRecordId_COMMON]["value"]}, 協力会社名: ${apply[detail_logics.fieldCustomerCompanyName_APPLY]["value"]}, 工務店ID: ${apply[detail_logics.fieldConstructorID_APPLY]["value"]}`;
-                alert(no_constructor);
+        const records_with_detail = await detail_logics.generateDetails(ready_to_generate.records, constructors)
+            .catch((err) => {
+                alert(err.message);
                 return;
-            }
-
-            apply[detail_logics.fieldDaysLater_APPLY] = { "value": constructor[detail_logics.fieldDaysLater_APPLY]["value"] };
-        }
-
-        // 支払明細を各レコードにセット
-        let records_with_detail = [];
-        try {
-            records_with_detail = await detail_logics.attachDetail(ready_to_generate.records);
-        } catch (err) {
-            alert(err.message);
+            });
+        if (!records_with_detail) {
             return;
         }
 
