@@ -330,6 +330,8 @@ const post_apply_record = async (form_data, env) => {
             } else {
                 const ids = result_from_name.map((r) => `"${r[fieldRecordId_KYORYOKU]["value"]}"`).join(",");
                 console.warn(`協力会社マスタに重複して登録されているドライバーです: "${name}", "${email}"。レコード番号: ${ids}`);
+                // 警告は出すが、協力会社IDは返すようにする
+                return result_from_name[0][fieldID_KYORYOKU]["value"];
             }
             return null;
         }
