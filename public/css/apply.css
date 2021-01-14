@@ -127,3 +127,7 @@ img.renove-v2-logo {
 .strong {
     font-weight: 700;
 }
+
+span.wrap-block {
+  display: inline-block;
+}

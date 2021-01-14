@@ -115,17 +115,17 @@
       <!-- /軽バン.comドライバーID -->
 
 
-      <!-- 貴社名 -->
+      <!-- 代表者名 -->
       <div class="form-group">
-        <label for="company">貴社名（個人事業主の場合は屋号名）</label>
-        <span class="badge badge-danger">必須</span>
+        <label for="representative">代表者名</label>
+        <span class="badge badge-default badge-danger">必須</span>
         <input type="text" class="form-control no-blank"
-          name="company" id="company" required>
+          name="representative" id="representative" required />
         <span class="fas fa-check valid-status-icon valid-input"></span>
         <span class="fas fa-times valid-status-icon invalid-input"></span>
-        <div class="invalid-feedback">入力してください。</div>
+        <div class="invalid-feedback">入力してください</div>
       </div>
-      <!-- /貴社名 -->
+      <!-- /代表者名 -->
 
 
       <!-- 電話番号 -->
@@ -146,7 +146,7 @@
       <div class="form-group">
         <label for="mail">メールアドレス</label>
         <span class="badge badge-default badge-danger">必須</span>
-        <span class="small pl-1">※申込み受付後に支払予定明細をメールでお送りします。</span>
+        <span class="small pl-1"><span class="wrap-block">※申込み受付後に</span><span class="wrap-block">支払予定明細を</span><span class="wrap-block">メールでお送りします。</span></span>
         <input type="email" class="form-control pattern-required"
         name="mail" id="mail"
         pattern="[^\s]+@[^\s]+" />
@@ -165,7 +165,7 @@
 
 
       <div class="form-group mb-1" name="arbitrary_second">
-        <label for="">貴社住所（本店所在地）</label>
+        <label for=""><span class="wrap-block">お客様住所</span> <span class="text-danger" name="only_first"><span class="wrap-block">※本人確認書類と</span><span class="wrap-block">同じ住所を</span><span class="wrap-block">ご記入ください。</span></span></label>
 
         <!-- 郵便番号と都道府県を横並び -->
         <div class="form-row">
@@ -296,19 +296,6 @@
         <div class="invalid-feedback">入力してください</div>
       </div>
       <!-- /番地・建物名・部屋番号 -->
-
-
-      <!-- 代表者名 -->
-      <div class="form-group" name="arbitrary_second">
-        <label for="representative">代表者名</label>
-        <span class="badge badge-default badge-danger">必須</span>
-        <input type="text" class="form-control no-blank"
-          name="representative" id="representative" required />
-        <span class="fas fa-check valid-status-icon valid-input"></span>
-        <span class="fas fa-times valid-status-icon invalid-input"></span>
-        <div class="invalid-feedback">入力してください</div>
-      </div>
-      <!-- /代表者名 -->
 
 
       <div class="form-group pt-5">
