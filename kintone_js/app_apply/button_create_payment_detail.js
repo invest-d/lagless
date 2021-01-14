@@ -71,23 +71,14 @@ import * as detail_logics from "./logics_create_payment_detail";
     }
 
     async function clickButton() {
-        const before_process = `${detail_logics.statusReady_APPLY}の各レコードについて、支払予定明細書を作成しますか？\n\n`
-            + "※このボタンでは文面を作成するだけで、メールは送信されません。\n"
-            + "※既に文面が作成済みでも、文面を削除してもう一度文面を作成・上書きします。";
-        const generate_ok = window.confirm(before_process);
+        const generate_ok = detail_logics.confirmBeforeExec();
 
         if (!generate_ok) {
             alert("処理は中断されました。");
             return;
         }
 
-        const body_generate_target = {
-            app: kintone.app.getId(),
-            query: `${detail_logics.fieldStatus_APPLY} in ("${detail_logics.statusReady_APPLY}")
-                and ${detail_logics.fieldPaymentTiming_APPLY} not in ("${detail_logics.statusOriginalPayment_APPLY}")`
-            // 通常払いは債権譲渡行為を伴わない単なる業務代行。従って支払予定明細を送信する必要がない。
-        };
-        const ready_to_generate = await kintone.api("/k/v1/records", "GET", body_generate_target)
+        const ready_to_generate = await detail_logics.getGenerateTarget()
             .catch((err) => {
                 console.error(err);
                 alert("申込レコード取得時にエラーが発生しました。システム管理者に連絡してください。\n本文は作成されていません。");
@@ -104,7 +95,7 @@ import * as detail_logics from "./logics_create_payment_detail";
         }
 
         // 工務店マスタの「遅払い日数」フィールドが必要なので取得する
-        const constructors = await kintone.api("/k/v1/records", "GET", { app: detail_logics.APP_ID_CONSTRUCTOR })
+        const constructors = await detail_logics.getConstructors()
             .catch((err) => {
                 console.error(err);
                 alert("工務店レコード取得時にエラーが発生しました。本文は作成されていません。処理を終了します。");
@@ -139,12 +130,7 @@ import * as detail_logics from "./logics_create_payment_detail";
         }
 
         if (records_with_detail.length !== 0) {
-            // セットした内容でPUT
-            const put_params = {
-                app: kintone.app.getId(),
-                records: records_with_detail
-            };
-            const result = await kintone.api("/k/v1/records", "PUT", put_params)
+            const result = await detail_logics.updateRecords(records_with_detail)
                 .catch((err) => {
                     console.error(err);
                     alert("レコードの更新中にエラーが発生しました。本文は作成されていません。");

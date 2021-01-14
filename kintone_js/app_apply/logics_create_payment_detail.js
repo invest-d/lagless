@@ -42,9 +42,9 @@ const fieldBillingCompanyName_APPLY         = "billingCompanyOfficialName";
 const fieldApplicantAmount_APPLY            = "applicationAmount";
 const fieldMembershipFee_APPLY              = "membership_fee";
 const fieldTransferFee_APPLY                = "transferFeeTaxIncl";
-export const fieldPaymentTiming_APPLY       = "paymentTiming";
+const fieldPaymentTiming_APPLY              = "paymentTiming";
 const statusLatePayment_APPLY               = "遅払い";
-export const statusOriginalPayment_APPLY    = "通常払い";
+const statusOriginalPayment_APPLY           = "通常払い";
 const fieldCommissionRate_Late_APPLY        = "commissionRate_late";
 const fieldCommissionAmount_Late_APPLY      = "commissionAmount_late";
 const fieldTransferAmount_Late_APPLY        = "transferAmount_late";
@@ -64,7 +64,29 @@ const contractor_mail_lagless               = "lagless@invest-d.com";
 const contractor_mail_dandori               = "d-p@invest-d.com";
 const contractor_mail_renove                = "lagless@invest-d.com"; // ラグレスと同じ
 
-export const APP_ID_CONSTRUCTOR             = "96";
+const APP_ID_CONSTRUCTOR                    = "96";
+
+export const confirmBeforeExec = () => {
+    const before_process = `${statusReady_APPLY}の各レコードについて、支払予定明細書を作成しますか？\n\n`
+        + "※このボタンでは文面を作成するだけで、メールは送信されません。\n"
+        + "※既に文面が作成済みでも、文面を削除してもう一度文面を作成・上書きします。";
+    return window.confirm(before_process);
+};
+
+export const getGenerateTarget = () => {
+    const body_generate_target = {
+        app: kintone.app.getId(),
+        query: `${fieldStatus_APPLY} in ("${statusReady_APPLY}")
+            and ${fieldPaymentTiming_APPLY} not in ("${statusOriginalPayment_APPLY}")`
+        // 通常払いは債権譲渡行為を伴わない単なる業務代行。従って支払予定明細を送信する必要がない。
+    };
+
+    return kintone.api("/k/v1/records", "GET", body_generate_target);
+};
+
+export const getConstructors = () => {
+    return kintone.api("/k/v1/records", "GET", { app: APP_ID_CONSTRUCTOR });
+};
 
 export async function attachDetail(target_records) {
     // エラーが発生した時、どのレコードで発生したかの情報をthrowするためのlet
@@ -376,3 +398,13 @@ function addComma(num) {
     // 数字に3桁区切りのコンマを挿入した文字列を返す。整数のみ考慮
     return String(num).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
 }
+
+export const updateRecords = (records_with_detail) => {
+    // セットした内容でPUT
+    const put_params = {
+        app: kintone.app.getId(),
+        records: records_with_detail
+    };
+
+    return kintone.api("/k/v1/records", "PUT", put_params);
+};
