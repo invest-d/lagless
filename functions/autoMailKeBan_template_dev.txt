@@ -1,6 +1,6 @@
 このメールはシステムからの自動返信です。
 
-{company} 様
+{representative} 様
 
 お世話になっております。
 軽バン .com前払い事務局です。
@@ -14,14 +14,13 @@
 ▼お申込み内容▼
 -------------------------------------------
 ドライバーID: {kebanID}
-会社名・屋号名: {company}
+代表者名: {representative}
 電話番号: {phone}
 メールアドレス: {mail}
 郵便番号: {postalCode}
 都道府県: {prefecture}
 住所: {address}
 番地等: {streetAddress}
-代表者名: {representative}
 本人確認書類: （初回申込の方のみ）添付ファイルをご参照ください
 
 前払いを希望する稼働期間: {targetTerm}

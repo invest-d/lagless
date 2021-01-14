@@ -32,6 +32,7 @@ const fieldDriverID_KYORYOKU        = "kebanID";
 const fieldConstructorID_KYORYOKU   = "工務店ID";
 const fieldCommonName_KYORYOKU      = "支払先";
 const fieldOfficialName_KYORYOKU    = "支払先正式名称";
+const fieldPersonInCharge_KYORYOKU  = "担当者名";
 const fieldEmail_KYORYOKU           = "メールアドレス";
 
 const fieldPaymentDate_APPLY        = "paymentDate";
@@ -67,7 +68,6 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
     auto_reply_message.attachments = [];
     const fieldname_dict = {
         kebanID: "軽バン .comドライバーID",
-        company: "会社名・屋号名",
         phone: "電話番号",
         mail: "メールアドレス",
         postalCode: "郵便番号",
@@ -271,13 +271,26 @@ const post_apply_record = async (form_data, env) => {
         const deleteSpaces = (s) => {return s.replace(/ /g, "").replace(/　/g, "");};
         const compareWithName = (kintone_record) => {
             // FIXME: compareWithNameに直接name変数を渡せるようにしたい
-            const is_same_name = deleteSpaces(kintone_record[fieldCommonName_KYORYOKU]["value"]) === deleteSpaces(name) ||
-                deleteSpaces(kintone_record[fieldOfficialName_KYORYOKU]["value"]) === deleteSpaces(name);
+            const official_name         = kintone_record[fieldOfficialName_KYORYOKU]["value"];
+            const common_name           = kintone_record[fieldCommonName_KYORYOKU]["value"];
+            const person_in_charge_name = kintone_record[fieldPersonInCharge_KYORYOKU]["value"];
+
+            // いずれかの名称と一致すればOK（申込者がどの名称を入力してくるかバラバラのため）
+            const is_same_name =
+                deleteSpaces(official_name)         === deleteSpaces(name) ||
+                deleteSpaces(common_name)           === deleteSpaces(name) ||
+                deleteSpaces(person_in_charge_name) === deleteSpaces(name);
+
             if (!is_same_name) {
-                console.warn(`kintoneに登録した氏名とフォームに入力した氏名が異なります。kintone: ${kintone_record[fieldOfficialName_KYORYOKU]["value"]}, フォーム: ${name}`);
+                const message = "kintoneに登録した名前とフォームに入力した名前が異なります。\n"
+                    + `kintoneの入力内容→正式名称: ${deleteSpaces(official_name)}, 通称: ${deleteSpaces(common_name)}, 担当者名: ${deleteSpaces(person_in_charge_name)}\n`
+                    + `フォームの入力内容→${deleteSpaces(name)}`;
+                console.warn(message);
             }
+
             return is_same_name;
         };
+
         const in_query_constructors = Object.values(KE_BAN_RECORDS_BY_CLOSING).map((r) => `"${r.ID}"`).join(",");
 
         // ドライバーIDを条件にして協力会社マスタを検索し、協力会社IDを得る。
@@ -288,7 +301,8 @@ const post_apply_record = async (form_data, env) => {
                 fieldRecordId_KYORYOKU,
                 fieldID_KYORYOKU,
                 fieldCommonName_KYORYOKU,
-                fieldOfficialName_KYORYOKU
+                fieldOfficialName_KYORYOKU,
+                fieldPersonInCharge_KYORYOKU
             ],
             query: `${fieldConstructorID_KYORYOKU} in (${in_query_constructors})`
                 + `and ${fieldDriverID_KYORYOKU} = "${driver_id}"`
@@ -310,7 +324,8 @@ const post_apply_record = async (form_data, env) => {
                 fieldRecordId_KYORYOKU,
                 fieldID_KYORYOKU,
                 fieldCommonName_KYORYOKU,
-                fieldOfficialName_KYORYOKU
+                fieldOfficialName_KYORYOKU,
+                fieldPersonInCharge_KYORYOKU
             ],
             query: `${fieldConstructorID_KYORYOKU} in (${in_query_constructors})`
                 + `and ${fieldEmail_KYORYOKU} = "${email}"`
@@ -391,7 +406,7 @@ const post_apply_record = async (form_data, env) => {
     };
 
     const get_posting_payload = async (form_data, app_id) => {
-        const kyoryoku_id = await get_kyoryoku_id(form_data["kebanID"], form_data["company"], form_data["mail"]);
+        const kyoryoku_id = await get_kyoryoku_id(form_data["kebanID"], form_data["representative"], form_data["mail"]);
         if (kyoryoku_id) {
             form_data["ルックアップ"] = kyoryoku_id;
         }
@@ -434,6 +449,8 @@ const post_apply_record = async (form_data, env) => {
         // その他、軽バン.comの場合にセットする値を追加
         const closing_date = `0${record["closingDay"]["value"].split("-")[2]}`.slice(-2);
         const ke_ban_constructor_record = KE_BAN_RECORDS_BY_CLOSING[closing_date];
+        // 申込者は全員が個人事業主を想定。屋号がないパターンが大多数のため、便宜上 協力会社名と代表者名を同じ値とする。
+        record["company"]               = {"value": form_data["representative"]};
         record["constructionShopId"]    = {"value": ke_ban_constructor_record.ID};
         record["billingCompany"]        = {"value": ke_ban_constructor_record.NAME};
         record["paymentTiming"]         = {"value": "早払い"};
