@@ -117,3 +117,7 @@ div#unavailable > div {
 .text-emphasize {
   color: #0055c4;
 }
+
+span.wrap-block {
+  display: inline-block;
+}
