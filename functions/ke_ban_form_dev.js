@@ -207,7 +207,7 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                 auto_reply_message.to = form_data["mail"];
                 auto_reply_message.cc = env.cc_address;
                 auto_reply_message.subject = "【軽バン .com前払い事務局】お申込みいただきありがとうございます。";
-                const auto_reply_text = fs.readFileSync(path.join(__dirname, "autoMailKeBan_template.txt"), "utf8");
+                const auto_reply_text = fs.readFileSync(env.mail_template, "utf8");
                 auto_reply_message.text = substituteTemplate(auto_reply_text, form_data);
                 if (auto_reply_message.attachments.length == 0) {
                     delete auto_reply_message.attachments;
@@ -494,6 +494,8 @@ class Environ {
             this.api_token_record       = process.env.api_token_apply_record_dev;
             this.api_token_files        = process.env.api_token_apply_files_dev;
             this.success_redirect_to    = `https://${this.host}/apply_complete.html`;
+
+            this.mail_template          = path.join(__dirname, "autoMailKeBan_template_dev.txt");
         } else if (this.host === process.env.form_wfi_prod) {
             // 本番環境
             this.from_address           = process.env.wfi_prod_from_address;
@@ -504,6 +506,7 @@ class Environ {
             this.api_token_record       = process.env.api_token_apply_record_prod;
             this.api_token_files        = process.env.api_token_apply_files_prod;
             this.success_redirect_to    = `https://${this.host}/apply_complete.html`;
+            this.mail_template          = path.join(__dirname, "autoMailKeBan_template.txt");
         }
         else {
             // それ以外
