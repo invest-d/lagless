@@ -61,7 +61,7 @@ export const inputPaymentDate = () => {
 export const getTargetConditions = () => {
     const message = "未出力の振込データだけを出力しますか？\n"
         + "OK：未出力のものは出力し、出力済みのものは出力しない\n"
-        + "キャンセル：未出力のものも、未出力のものも、全て出力する";
+        + "キャンセル：未出力のものも、出力済みのものも、全て出力する";
     const only_undownloaded = confirm(message);
 
     const conditions = [
