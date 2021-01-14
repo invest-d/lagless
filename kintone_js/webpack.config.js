@@ -25,7 +25,7 @@ module.exports = (env, argv) => {
                 generate_acceptance_letter_button: "./generate_acceptance_letter_button.js",
                 post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
                 174: "./174.js",
-                create_payment_detail: "./create_payment_detail.js",
+                create_payment_detail: "./app_apply/button_create_payment_detail.js",
                 insert_collect_credit_button: "./insert_collect_credit_button.js",
             },
 
@@ -66,7 +66,7 @@ module.exports = (env, argv) => {
                 generate_acceptance_letter_button: "./generate_acceptance_letter_button.js",
                 post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
                 174: "./174.js",
-                create_payment_detail: "./create_payment_detail.js",
+                create_payment_detail: "./app_apply/button_create_payment_detail.js",
                 insert_collect_credit_button: "./insert_collect_credit_button.js",
             },
 
