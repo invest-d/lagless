@@ -16,15 +16,12 @@ $(() => {
         show( {
             "cost": "9.99%",
             "yield": "1.11%",
-            "original": "翌々月10日",
             "mail": "hogehoge@invest-d.com",
             "link": "",
-            "pattern": "25-10B",
             "工務店正式名称": "株式会社サンプル工務店3",
-            "closing": "25日",
-            "lag": "45日",
             "transfer_fee": "275円（税込）",
             "service": "ラグレス",
+            "limit": "なし",
             "default_pay_date_list": [
                 {
                     "closing_date": "2020-07-25",
@@ -55,13 +52,16 @@ $(() => {
                     "default_pay_date": "2021-03-10"
                 }
             ],
+            "closing": "月末",
+            "original": "翌月末",
+            "lag": "35日",
+            "deadline": "25日",
+            "early": "当月末",
             "effect": "30日",
-            "limit": "なし",
-            "deadline": "翌月3日",
-            "early": "翌月10日",
+            "pattern": "25-10B",
             "schedule": [
                 {
-                    "pattern": "31-31-N31-64",
+                    "pattern": "25-10B",
                     "closing": "2021-01-31",
                     "late": "2021-05-04",
                     "deadline": "2021-01-25",
