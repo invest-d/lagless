@@ -1,5 +1,13 @@
 /* eslint-disable no-irregular-whitespace */
 /*
+    Version 1.1
+    支払予定明細の宛名部分の文面を変更。
+    協力会社名(A)、代表者役職名(B)、代表者氏名(C)について、下記のように宛名を表記する。
+    1. 基本は"A B C 様"と改行なしで表示。
+    2. Bが空欄の場合、Bの後ろのスペースも削除する
+    3. Cが空欄の場合、Cの後ろのスペースも削除する
+    4. AとCが同じ場合（AおよびCが個人名と考えられるため）、"B C 様"と表示
+
     Version 1
     ボタンの定義ファイルからロジックの定義部分を分離
 */
@@ -253,9 +261,7 @@ const getLaglessPaymentDetail = async (record) => {
 
     const apply_info = {
         timing:                         timing,
-        kyoryoku_company_name:          kyoryoku_company_name,
-        // eslint-disable-next-line no-irregular-whitespace
-        kyoryoku_ceo_title_and_name:    getAddresseeName(kyoryoku_ceo_title, kyoryoku_ceo_name),
+        addressee_name:                 getAddresseeName(kyoryoku_company_name, kyoryoku_ceo_title, kyoryoku_ceo_name),
         product_name:                   product_name,
         closing_YYYYnenMMgatsuDDhi:     closing_YYYYnenMMgatsuDDhi,
         payment_YYYYnenMMgatsuDDhi:     payment_YYYYnenMMgatsuDDhi,
@@ -273,8 +279,27 @@ const getLaglessPaymentDetail = async (record) => {
     return generateLaglessDetailText(apply_info, should_discount_for_first);
 };
 
-const getAddresseeName = (title, name) => {
-    return (`${title} ${name}`).replace(/^( |　)+/,""); //titleが無い場合はreplaceで最初のスペースを取り除く
+const deleteSpaces = (s) => {return s.replace(/ /g, "").replace(/　/g, "");};
+
+const getAddresseeName = (company, title, name) => {
+    const display_company = ((company, name) => {
+        // 一致する場合は重複しないように会社名を非表示にする
+        if (deleteSpaces(company) === deleteSpaces(name)) {
+            return "";
+        } else {
+            return `${company} `; // 半角スペース追加
+        }
+    })(company, name);
+
+    const display_title = deleteSpaces(title) === ""
+        ? ""
+        : `${title} `;
+
+    const display_name = deleteSpaces(name) === ""
+        ? ""
+        : `${name} `;
+
+    return `${display_company}${display_title}${display_name}`;
 };
 
 // 支払予定明細本文を生成する。各変数の加工はせず、受け取ったものをそのまま入れ込む
@@ -291,8 +316,7 @@ function generateLaglessDetailText(apply_info, should_discount_for_first) {
 
     // 行ごとに配列で格納し、最後に改行コードでjoinする
     const text = [
-        `${apply_info.kyoryoku_company_name}`,
-        `${apply_info.kyoryoku_ceo_title_and_name} 様`,
+        `${apply_info.addressee_name}様`,
         "",
         `この度は、${apply_info.product_name}のお申込みありがとうございます。`,
         "下記のとおり受付いたしましたので、お知らせいたします。",
@@ -354,8 +378,7 @@ const getKebanDetailDisplayData = (record) => {
     const term = getKebanApplyableTerm(record[fieldClosingDate_APPLY]["value"]);
 
     return {
-        kyoryoku_company_name:              record[fieldCustomerCompanyName_APPLY]["value"],
-        kyoryoku_name:                      getAddresseeName(record[fieldAddresseeTitle_APPLY]["value"], record[fieldAddresseeName_APPLY]["value"]),
+        addressee_name:                     getAddresseeName(record[fieldCustomerCompanyName_APPLY]["value"], record[fieldAddresseeTitle_APPLY]["value"], record[fieldAddresseeName_APPLY]["value"]),
         closing_YYYYnenMMgatsuDDhi:         `${term.start.format("YYYY年MM月DD日")}〜${term.end.format("YYYY年MM月DD日")}`,
         payment_YYYYnenMMgatsuDDhi:         `${dayjs(record[fieldPaymentDate_APPLY]["value"]).format("YYYY年MM月DD日")}`,
         factorableAmountPerDayWFI_comma:    addComma(record[fieldFactorableAmountPerDayWFI_APPLY]["value"]),
@@ -371,8 +394,7 @@ const getKebanDetailDisplayData = (record) => {
 // 軽バン.com用の支払予定明細を入力する
 const generateDetailTextKeban = (apply_info) => {
     const text = [
-        `${apply_info.kyoryoku_company_name}`,
-        `${apply_info.kyoryoku_name} 様`,
+        `${apply_info.addressee_name}様`,
         "",
         "この度は、軽バン .com【売上前払いシステム】のお申込みありがとうございます。",
         "下記のとおり受付いたしましたので、お知らせいたします。",
