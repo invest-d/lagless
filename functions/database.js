@@ -53,7 +53,7 @@ const fetch_pattern = function(env) {
                 if(!by_pattern[r.pattern]) {
                     by_pattern[r.pattern] = [ ];
                 }
-                by_pattern[r.pattern].push(except(r, [ "pattern" ]));
+                by_pattern[r.pattern].push(r);
             });
             return by_pattern;
         });
