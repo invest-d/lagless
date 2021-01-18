@@ -127,6 +127,7 @@ dayjs.locale("ja");
     const white = "#ffffff";
     const black = "#000000";
 
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         // ボタンを表示するか判定
         if (needShowButton()) {
@@ -354,7 +355,7 @@ dayjs.locale("ja");
         }
         if (include_ke_ban_records) {
             const ke_ban_records = records.filter((r) => {
-                return KE_BAN_CONSTRUCTORS.includes(r[fieldConstructionShopId_COLLECT]["value"])
+                return KE_BAN_CONSTRUCTORS.includes(r[fieldConstructionShopId_COLLECT]["value"]);
             });
 
             const closing_months = Array.from(new Set(ke_ban_records
