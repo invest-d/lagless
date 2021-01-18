@@ -127,6 +127,7 @@ dayjs.locale("ja");
     const white = "#ffffff";
     const black = "#000000";
 
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         // ボタンを表示するか判定
         if (needShowButton()) {
@@ -354,7 +355,7 @@ dayjs.locale("ja");
         }
         if (include_ke_ban_records) {
             const ke_ban_records = records.filter((r) => {
-                return KE_BAN_CONSTRUCTORS.includes(r[fieldConstructionShopId_COLLECT]["value"])
+                return KE_BAN_CONSTRUCTORS.includes(r[fieldConstructionShopId_COLLECT]["value"]);
             });
 
             const closing_months = Array.from(new Set(ke_ban_records
@@ -594,6 +595,10 @@ dayjs.locale("ja");
         };
 
         const mail = parent_record[fieldMailToInvest_COLLECT]["value"];
+        // FIXME: 軽バン.comかどうかの判定をするコードを一箇所にまとめたい
+        const tel = (KE_BAN_CONSTRUCTORS.includes(parent_record[fieldConstructionShopId_COLLECT]["value"]))
+            ? "050-3188-8481"
+            : "050-3188-6800";
         const invoice_from = {
             text: [
                 `【${office_name}】\n`,
@@ -604,7 +609,7 @@ dayjs.locale("ja");
                 "東京都千代田区神田神保町三丁目\n",
                 "5番地 住友不動産九段下ビル7F\n",
                 `Mail:${mail}\n`,
-                "TEL:050-3188-6800\n"
+                `TEL:${tel}\n`
             ],
             fontSize: 7,
             border: [false]

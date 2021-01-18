@@ -512,7 +512,7 @@ class Environ {
             this.app_id                 = process.env.app_id_apply_dev;
             this.api_token_record       = process.env.api_token_apply_record_dev;
             this.api_token_files        = process.env.api_token_apply_files_dev;
-            this.success_redirect_to    = `https://${this.host}/apply_complete.html`;
+            this.success_redirect_to    = `https://${this.host}/ke_ban_complete.html`;
 
             this.mail_template          = path.join(__dirname, "autoMailKeBan_template_dev.txt");
         } else if (this.host === process.env.form_wfi_prod) {
@@ -524,7 +524,7 @@ class Environ {
             this.app_id                 = process.env.app_id_apply_prod;
             this.api_token_record       = process.env.api_token_apply_record_prod;
             this.api_token_files        = process.env.api_token_apply_files_prod;
-            this.success_redirect_to    = `https://${this.host}/apply_complete.html`;
+            this.success_redirect_to    = `https://${this.host}/ke_ban_complete.html`;
             this.mail_template          = path.join(__dirname, "autoMailKeBan_template.txt");
         }
         else {
