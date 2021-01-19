@@ -16,9 +16,36 @@ const PRODUCT_NAME = "ダンドリペイメント";
 
 const commonRecordID = "$id";
 
-// FIXME: 開発環境と本番環境で、申込アプリのスキーマの読み込みを自動的に切り替えたい
+import { schema_174 } from "../174/schema";
+const APP_ID_DANDORI                    = kintone.app.getId();
+const fieldStatus_DANDORI               = schema_174.fields.properties.status.code;
+const statusReady_DANDORI               = schema_174.fields.properties.status.options.未処理.label;
+const statusCompleted_DANDORI           = schema_174.fields.properties.status.options.通常払いレコード作成済み.label;
+const statusIgnored_DANDORI             = schema_174.fields.properties.status.options.データ作成不要.label;
+const fieldInvoiceID_DANDORI            = schema_174.fields.properties.invoiceID.code;
+const fieldKyoryokuID_DANDORI           = schema_174.fields.properties.kyoryokuID.code;
+const fieldClosingDate_DANDORI          = schema_174.fields.properties.closingDate.code;
+const fieldPaymentDate_DANDORI          = schema_174.fields.properties.paymentDate.code;
+const fieldKyoryokuName_DANDORI         = schema_174.fields.properties.kyoryokuName.code;
+const fieldKyoryokuPhone_DANDORI        = schema_174.fields.properties.kyoryokuPhone.code;
+const fieldBillingDetail_DANDORI        = schema_174.fields.properties.constructionBillTaxInclDetail.code;
+const fieldBillingSum_DANDORI           = schema_174.fields.properties.constructionBillTaxInclSum.code;
+const fieldMemberFeeSum_DANDORI         = schema_174.fields.properties.memberShipFeeSum.code;
+const fieldReceivableSum_DANDORI        = schema_174.fields.properties.receivableAmountSum.code;
+const fieldDandoriID_DANDORI            = schema_174.fields.properties.kyoryokuID.code;
+
 import { schema_apply } from "../161/schema";
-const APP_ID_APPLY                      = schema_apply.id.appId;
+const APP_ID_APPLY = ((dandori_app_id) => {
+    if (dandori_app_id === 174) {
+        // 本番
+        return 161;
+    } else if (dandori_app_id === 175) {
+        // 開発
+        return 159;
+    } else {
+        throw new Error(`invalid apply app: ${dandori_app_id}`);
+    }
+})(APP_ID_DANDORI);
 const fieldStatus_APPLY                 = schema_apply.fields.properties.状態.code;
 const statusInserted_APPLY              = schema_apply.fields.properties.状態.options.通常払い確認待ち.label;
 const statusDiscarded_APPLY             = schema_apply.fields.properties.状態.options.取下げ.label;
@@ -36,22 +63,19 @@ const fieldPhone_APPLY                  = schema_apply.fields.properties.phone.c
 const fieldConstructorID_APPLY          = schema_apply.fields.properties.constructionShopId.code;
 const fieldKyoryokuID_APPLY             = schema_apply.fields.properties.ルックアップ.code;
 
-import { schema_174 } from "../174/schema";
-const APP_ID_DANDORI                    = schema_174.id.appId;
-const fieldStatus_DANDORI               = schema_174.fields.properties.status.code;
-const statusReady_DANDORI               = schema_174.fields.properties.status.options.未処理.label;
-const statusCompleted_DANDORI           = schema_174.fields.properties.status.options.通常払いレコード作成済み.label;
-const statusIgnored_DANDORI             = schema_174.fields.properties.status.options.データ作成不要.label;
-const fieldInvoiceID_DANDORI            = schema_174.fields.properties.invoiceID.code;
-const fieldKyoryokuID_DANDORI           = schema_174.fields.properties.kyoryokuID.code;
-const fieldClosingDate_DANDORI          = schema_174.fields.properties.closingDate.code;
-const fieldPaymentDate_DANDORI          = schema_174.fields.properties.paymentDate.code;
-const fieldKyoryokuName_DANDORI         = schema_174.fields.properties.kyoryokuName.code;
-const fieldKyoryokuPhone_DANDORI        = schema_174.fields.properties.kyoryokuPhone.code;
-const fieldBillingDetail_DANDORI        = schema_174.fields.properties.constructionBillTaxInclDetail.code;
-const fieldBillingSum_DANDORI           = schema_174.fields.properties.constructionBillTaxInclSum.code;
-const fieldMemberFeeSum_DANDORI         = schema_174.fields.properties.memberShipFeeSum.code;
-const fieldReceivableSum_DANDORI        = schema_174.fields.properties.receivableAmountSum.code;
+import { schema_177 } from "../177/schema";
+const APP_ID_EXCLUDE = ((dandori_app_id) => {
+    if (dandori_app_id === 174) {
+        // 本番
+        return 177;
+    } else if (dandori_app_id === 175) {
+        // 開発
+        return 176;
+    } else {
+        throw new Error(`invalid dandori app: ${dandori_app_id}`);
+    }
+})(APP_ID_DANDORI);
+const fieldDandoriId_EXCLUDE            = schema_177.fields.properties.dandoriID.code;
 
 import { schema_96 } from "../96/schema";
 const APP_ID_CONSTRUCTOR                = schema_96.id.appId;
@@ -65,12 +89,14 @@ const fieldConstructorID_KYORYOKU       = schema_88.fields.properties.工務店I
 const fieldCommonName_KYORYOKU          = schema_88.fields.properties.支払先.code;
 const fieldFormalName_KYORYOKU          = schema_88.fields.properties.支払先正式名称.code;
 const fieldPhone_KYORYOKU               = schema_88.fields.properties.電話番号.code;
+const fieldPhone2_KYORYOKU              = schema_88.fields.properties.電話番号２.code;
 const fieldBankCode_KYORYOKU            = schema_88.fields.properties.金融機関コード.code;
 const fieldBranchCode_KYORYOKU          = schema_88.fields.properties.支店コード.code;
 const fieldDepositType_KYORYOKU         = schema_88.fields.properties.預金種目.code;
 const fieldAccountNumber_KYORYOKU       = schema_88.fields.properties.口座番号.code;
 const fieldAccountName_KYORYOKU         = schema_88.fields.properties.口座名義.code;
 const statusUndefinedDeposit_KYORYOKU   = schema_88.fields.properties.預金種目.options["(未設定)"].label;
+const fieldDandoriID_KYORYOKU           = schema_88.fields.properties.dandoriID.code;
 
 export const confirmBeforeExec = () => {
     const message = `${schema_174.fields.properties.status.label}が${statusReady_DANDORI}のレコードを請求IDごとに集計し、申込アプリに新規レコードを作成します。`;
@@ -129,7 +155,7 @@ export const getUndefinedKyoryokuList = async (invoice_kyoryoku_list, master) =>
     for (const dandori_kyoryoku_id of Object.keys(invoice_kyoryoku_list)) {
         const invoice_name = invoice_kyoryoku_list[dandori_kyoryoku_id]["name"];
         const invoice_phone = invoice_kyoryoku_list[dandori_kyoryoku_id]["phone"];
-        const kintone_kyoryoku_id = await getKyoryokuID(invoice_name, invoice_phone, master);
+        const kintone_kyoryoku_id = await getKyoryokuID(dandori_kyoryoku_id, invoice_name, invoice_phone, master);
         if (!kintone_kyoryoku_id) {
             // そもそもkintoneに未登録の場合
             undefined_kyoryoku_list[dandori_kyoryoku_id] = {
@@ -140,6 +166,7 @@ export const getUndefinedKyoryokuList = async (invoice_kyoryoku_list, master) =>
             };
         } else {
             const master_record = master.find((m) => m[fieldKyoryokuID_KYORYOKU]["value"] === kintone_kyoryoku_id);
+
             const bank_code = master_record[fieldBankCode_KYORYOKU]["value"];
             const branch_code = master_record[fieldBranchCode_KYORYOKU]["value"];
             const deposit_type = master_record[fieldDepositType_KYORYOKU]["value"];
@@ -161,10 +188,11 @@ export const getUndefinedKyoryokuList = async (invoice_kyoryoku_list, master) =>
     return undefined_kyoryoku_list;
 };
 
-export const downloadUndefinedKyoryokuCsv = (undefined_kyoryoku_list, constructor_id) => {
-    const generateCsvData = (undefined_kyoryoku_list, constructor_id) => {
+export const downloadUndefinedKyoryokuCsv = async (undefined_kyoryoku_list, constructor_id) => {
+    const generateCsvData = async (undefined_kyoryoku_list, constructor_id) => {
         const original_pay_require_fields = [
             schema_88.fields.properties.支払企業No_.label,
+            schema_88.fields.properties.dandoriID.label,
             schema_88.fields.properties.支払先.label,
             schema_88.fields.properties.支払先正式名称.label,
             schema_88.fields.properties.電話番号.label,
@@ -191,10 +219,18 @@ export const downloadUndefinedKyoryokuCsv = (undefined_kyoryoku_list, constructo
             .map(csv_format)
             .join(",");
 
+        const constructor_record = await client.record.getRecords({
+            app: APP_ID_CONSTRUCTOR,
+            fields: fieldConstructorName_CONSTRUCTOR,
+            query: `${fieldConstructorID_CONSTRUCTOR} = "${constructor_id}"`
+        });
+        const constructor_name = constructor_record.records[0][fieldConstructorName_CONSTRUCTOR]["value"];
+
         const csv_rows = Object.keys(undefined_kyoryoku_list).map((dandori_kyoryoku_id) => {
             const target = undefined_kyoryoku_list[dandori_kyoryoku_id];
             return [
                 target.kintone_id,
+                target.dandori_id,
                 target.name, //通名
                 target.name, //正式名称。とりあえず同じにしておく
                 target.phone,
@@ -206,7 +242,7 @@ export const downloadUndefinedKyoryokuCsv = (undefined_kyoryoku_list, constructo
                 "",
                 "",
                 constructor_id,
-                "",
+                constructor_name,
                 PRODUCT_NAME
             ].concat(other_required_fields.map((prop) => prop.defaultValue))
                 .map(csv_format)
@@ -232,7 +268,7 @@ export const downloadUndefinedKyoryokuCsv = (undefined_kyoryoku_list, constructo
         return Encoding.convert(unicode_list, "sjis", "unicode");
     };
 
-    const csv_data = generateCsvData(undefined_kyoryoku_list, constructor_id);
+    const csv_data = await generateCsvData(undefined_kyoryoku_list, constructor_id);
     const sjis_list = encodeToSjis(csv_data);
 
     // 生成したデータをCSVファイルとしてローカルにダウンロードする。
@@ -318,19 +354,38 @@ export const getKyoryokuMaster = (constructor_id) => {
     return client.record.getAllRecords(request_body);
 };
 
-export const getKyoryokuID = async (invoice_name, invoice_phone, kyoryoku_master) => {
-    // 通名もしくは正式名称のフィールドと、電話番号のフィールドの両方が完全一致するレコードがあればそれを返す
-    // なければ空文字
+export const getKyoryokuID = async (dandori_id, dandori_name, dandori_phone, kyoryoku_master) => {
+    // 1. 請求データのダンドリワークIDを、マスタの中からサーチ。見つかったレコードのIDを返す
+    // 2. 通名もしくは正式名称のフィールドと、電話番号のフィールドの両方が完全一致するレコードがあればそれを返す
+    // 1, 2どちらもなければ空文字を返す
     const found_master_data = kyoryoku_master.find((master) => {
-        const equal_name = (master[fieldCommonName_KYORYOKU]["value"] === invoice_name)
-                || (master[fieldFormalName_KYORYOKU]["value"] === invoice_name);
+        const equal_id = (master[fieldDandoriID_KYORYOKU]["value"] === dandori_id);
+        if (equal_id) {
+            return true;
+        }
 
-        const equal_phone = ((invoice_phone) => {
-            if (!invoice_phone) {
+        const equal_name = (master[fieldCommonName_KYORYOKU]["value"] === dandori_name)
+                || (master[fieldFormalName_KYORYOKU]["value"] === dandori_name);
+
+        const equal_phone = ((dandori_phone, master) => {
+            if (!dandori_phone) {
                 return false;
             }
-            return master[fieldPhone_KYORYOKU]["value"] === invoice_phone;
-        })(invoice_phone);
+
+            const normalized_phone = (num) => {
+                // ハイフンなし半角数字の文字列を取得する
+                return num
+                    // 全角数字を全て半角にする
+                    .replace(/[０-９]/g, (s) => {
+                        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+                    })
+                    // 半角数字以外を空文字に置換する
+                    .replace(/[^0-9]/g, "");
+            };
+
+            return normalized_phone(master[fieldPhone_KYORYOKU]["value"]) === normalized_phone(dandori_phone) ||
+                normalized_phone(master[fieldPhone2_KYORYOKU]["value"]) === normalized_phone(dandori_phone);
+        })(dandori_phone, master);
 
         return equal_name && equal_phone;
     });
@@ -343,10 +398,11 @@ export const getKyoryokuID = async (invoice_name, invoice_phone, kyoryoku_master
 };
 
 const existsApplyRecord = async (dandori_record, constructor_id) => {
+    const id = dandori_record[fieldDandoriID_DANDORI]["value"];
     const name = dandori_record[fieldKyoryokuName_DANDORI]["value"];
     const phone = dandori_record[fieldKyoryokuPhone_DANDORI]["value"];
     const master = await getKyoryokuMaster(constructor_id);
-    const kintone_kyoryoku_id = await getKyoryokuID(name, phone, master);
+    const kintone_kyoryoku_id = await getKyoryokuID(id, name, phone, master);
 
     const closing_date = dandori_record[fieldClosingDate_DANDORI]["value"];
     const applies = await getApplyRecordsThisClosing(closing_date, constructor_id);
@@ -374,28 +430,46 @@ const getApplyRecordsThisClosing = async (closing_date, constructor_id) => {
     return client.record.getAllRecords(request_body);
 };
 
+const existsExcludeRecord = async (dandori_record) => {
+    const dandori_id = dandori_record[fieldDandoriID_DANDORI]["value"];
+    const body = {
+        app: APP_ID_EXCLUDE,
+        query: `${fieldDandoriId_EXCLUDE} = "${dandori_id}"`
+    };
+    const result = await client.record.getRecords(body);
+    return result.records.length > 0;
+};
+
 export const divideInvoices = async (invoice_groups, constructor_id) => {
     // ダンドリワークのデータを、通常払いすべき請求とすべきでない請求に振り分ける。
-    // 通常払いすべきでない請求とは、早払いもしくは遅払いで処理するように既に申込を受け付けている請求のこと。
-    const search_exists_result = await Promise.all(invoice_groups.map((i) => existsApplyRecord(i.main, constructor_id)));
-    const using_factoring_groups = invoice_groups.filter((_, i) => search_exists_result[i]);
-    const original_pay_groups = invoice_groups.filter((_, i) => !search_exists_result[i]);
+    // 通常払いすべきでない請求とは、下記いずれかに当てはまる請求のこと。
+    // 1. 早払いもしくは遅払いで処理するように既に申込を受け付けている請求
+    // 2. 別途、インベストデザインが通常払いを担当しないと定めた協力会社からの請求
+    const existsApplies = await Promise.all(invoice_groups.map((i) => existsApplyRecord(i.main, constructor_id)));
+    const existsExcludeRecords = await Promise.all(invoice_groups.map((i) => existsExcludeRecord(i.main)));
+    const should_not_original_pay_groups = invoice_groups.filter((_, i) => existsApplies[i] || existsExcludeRecords[i]);
+    const original_pay_groups = invoice_groups.filter((_, i) => !existsApplies[i] && !existsExcludeRecords[i]);
 
     return {
         original_pay_groups: original_pay_groups,
-        using_factoring_groups: using_factoring_groups
+        should_not_original_pay_groups: should_not_original_pay_groups
     };
 };
 
 export const convertToApplyRecord = async (invoice_groups, constructor) => {
     // ダンドリワーク請求データアプリのレコードを加工して、ラグレス申込アプリにinsertできるオブジェクトにする
     const processes = invoice_groups.map(async (invoice_group) => {
+        const id = invoice_group.main[fieldDandoriID_DANDORI]["value"];
+
+        const name = invoice_group.main[fieldKyoryokuName_DANDORI]["value"];
+
         const phone = (invoice_group.main[fieldKyoryokuPhone_DANDORI]["value"] === "")
             ? "000-0000-0000"
             : invoice_group.main[fieldKyoryokuPhone_DANDORI]["value"];
 
         const kyoryoku_master = await getKyoryokuMaster(constructor.id);
-        const kyoryoku_id = await getKyoryokuID(invoice_group.main[fieldKyoryokuName_DANDORI]["value"], invoice_group.main[fieldKyoryokuPhone_DANDORI]["value"], kyoryoku_master);
+
+        const kyoryoku_id = await getKyoryokuID(id, name, phone, kyoryoku_master);
 
         return {
             [fieldStatus_APPLY]: {
@@ -420,7 +494,7 @@ export const convertToApplyRecord = async (invoice_groups, constructor) => {
                 "value": invoice_group.main[fieldPaymentDate_DANDORI]["value"]
             },
             [fieldKyoryokuName_APPLY]: {
-                "value": invoice_group.main[fieldKyoryokuName_DANDORI]["value"]
+                "value": name
             },
             [fieldConstructorName_APPLY]: {
                 "value": constructor.name
@@ -477,4 +551,45 @@ const updateStatus = (invoice_groups, status) => {
     };
 
     return client.record.updateAllRecords(request_body);
+};
+
+export const getNoDandoriIdList = async (invoice_kyoryoku_list, master) => {
+    /* return is:
+    {
+        [dandori_id]: kyoryoku_master_record_number
+    }
+    */
+    const no_id_list = {};
+
+    for (const dandori_id of Object.keys(invoice_kyoryoku_list)) {
+        const invoice_kyoryoku = invoice_kyoryoku_list[dandori_id];
+        const kyoryoku_id = await getKyoryokuID(dandori_id, invoice_kyoryoku.name, invoice_kyoryoku.phone, master);
+
+        if (kyoryoku_id) {
+            const master_record = master.find((r) => r[fieldKyoryokuID_KYORYOKU]["value"] === kyoryoku_id);
+            if (!master_record[fieldDandoriID_KYORYOKU]["value"]) {
+                no_id_list[dandori_id] = master_record[commonRecordID]["value"];
+            }
+        }
+    }
+
+    return no_id_list;
+};
+
+export const updateDandoriId = (no_dandori_id_list) => {
+    const records = Object.keys(no_dandori_id_list).map((dandori_id) => {
+        return {
+            id: no_dandori_id_list[dandori_id],
+            record: {
+                [fieldDandoriID_KYORYOKU]: {
+                    value: dandori_id
+                }
+            }
+        };
+    });
+
+    return client.record.updateRecords({
+        app: APP_ID_KYORYOKU,
+        records: records
+    });
 };

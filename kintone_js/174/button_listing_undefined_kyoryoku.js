@@ -29,6 +29,13 @@ async function clickButton() {
         const invoice_kyoryoku_list = logic.getInvoiceKyoryokuList(targets);
 
         const master = await logic.getKyoryokuMaster(constructor_id);
+
+        // 協力会社マスタにレコードが存在するものの、ダンドリワークIDが登録されていない協力会社があった場合、ダンドリワークIDを上書きする
+        const no_dandori_id_list = await logic.getNoDandoriIdList(invoice_kyoryoku_list, master);
+        if (Object.keys(no_dandori_id_list).length > 0) {
+            await logic.updateDandoriId(no_dandori_id_list);
+        }
+
         const undefined_list = await logic.getUndefinedKyoryokuList(invoice_kyoryoku_list, master);
         if (Object.keys(undefined_list).length === 0) {
             alert("口座情報が未登録の協力会社はありませんでした");
@@ -36,7 +43,7 @@ async function clickButton() {
         }
 
         // csvファイルにしてダウンロード
-        logic.downloadUndefinedKyoryokuCsv(undefined_list, constructor_id);
+        await logic.downloadUndefinedKyoryokuCsv(undefined_list, constructor_id);
         const completed_message =
             "口座情報が未登録の協力会社（社名と電話番号の両方が一致するレコードがkintoneにない協力会社）をCSVファイルにしてダウンロードしました。\n"
             + "工務店に口座情報を問い合わせてCSVファイルに記入し、協力会社マスタへインポートしてください。";

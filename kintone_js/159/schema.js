@@ -399,15 +399,17 @@ export const schema_apply = {
             "dandoriID": {
                 "code": "dandoriID",
                 "defaultValue": "",
-                "expression": "",
-                "hideExpression": false,
+                "digit": false,
+                "displayScale": "",
                 "label": "ダンドリワークID",
-                "maxLength": "",
-                "minLength": "",
+                "maxValue": "",
+                "minValue": "",
                 "noLabel": false,
                 "required": false,
-                "type": "SINGLE_LINE_TEXT",
-                "unique": false
+                "type": "NUMBER",
+                "unique": false,
+                "unit": "",
+                "unitPosition": "BEFORE"
             },
             "deposit": {
                 "align": "HORIZONTAL",
@@ -873,16 +875,16 @@ export const schema_apply = {
                             "relatedField": "役職名"
                         },
                         {
-                            "field": "dandoriID",
-                            "relatedField": "dandoriID"
-                        },
-                        {
                             "field": "kebanID",
                             "relatedField": "kebanID"
                         },
                         {
                             "field": "kebanStartDate",
                             "relatedField": "kebanStartDate"
+                        },
+                        {
+                            "field": "dandoriID",
+                            "relatedField": "dandoriID"
                         }
                     ],
                     "filterCond": "",
@@ -1555,7 +1557,7 @@ export const schema_apply = {
                 "type": "ROW",
                 "fields": [
                     {
-                        "type": "SINGLE_LINE_TEXT",
+                        "type": "NUMBER",
                         "code": "dandoriID",
                         "size": {}
                     }
