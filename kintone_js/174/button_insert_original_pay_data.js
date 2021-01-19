@@ -48,7 +48,7 @@ async function clickButton() {
 
         const invoice_groups = logic.groupDandoriInvoices(target_invoices);
 
-        const { original_pay_groups, using_factoring_groups } = await logic.divideInvoices(invoice_groups, constructor.id);
+        const { original_pay_groups, should_not_original_pay_groups } = await logic.divideInvoices(invoice_groups, constructor.id);
 
         const new_apply_records = await logic.convertToApplyRecord(original_pay_groups, constructor);
 
@@ -60,7 +60,7 @@ async function clickButton() {
 
         await Promise.all([
             logic.updateToDone(original_pay_groups),
-            logic.updateToIgnored(using_factoring_groups)
+            logic.updateToIgnored(should_not_original_pay_groups)
         ]);
 
         alert(`${inserted_ids.length}件 の請求書を申込アプリに登録しました。\n申込アプリの各レコードを確認し、協力会社ID（と口座情報）が入っていない場合は手動で入力してください。`);

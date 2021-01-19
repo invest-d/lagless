@@ -63,6 +63,19 @@ const fieldPhone_APPLY                  = schema_apply.fields.properties.phone.c
 const fieldConstructorID_APPLY          = schema_apply.fields.properties.constructionShopId.code;
 const fieldKyoryokuID_APPLY             = schema_apply.fields.properties.ルックアップ.code;
 
+import { schema_177 } from "../177/schema";
+const APP_ID_EXCLUDE = ((dandori_app_id) => {
+    if (dandori_app_id === 174) {
+        // 本番
+        return 177;
+    } else if (dandori_app_id === 175) {
+        // 開発
+        return 176;
+    } else {
+        throw new Error(`invalid dandori app: ${dandori_app_id}`);
+    }
+})(APP_ID_DANDORI);
+const fieldDandoriId_EXCLUDE            = schema_177.fields.properties.dandoriID.code;
 
 import { schema_96 } from "../96/schema";
 const APP_ID_CONSTRUCTOR                = schema_96.id.appId;
@@ -417,16 +430,29 @@ const getApplyRecordsThisClosing = async (closing_date, constructor_id) => {
     return client.record.getAllRecords(request_body);
 };
 
+const existsExcludeRecord = async (dandori_record) => {
+    const dandori_id = dandori_record[fieldDandoriID_DANDORI]["value"];
+    const body = {
+        app: APP_ID_EXCLUDE,
+        query: `${fieldDandoriId_EXCLUDE} = "${dandori_id}"`
+    };
+    const result = await client.record.getRecords(body);
+    return result.records.length > 0;
+};
+
 export const divideInvoices = async (invoice_groups, constructor_id) => {
     // ダンドリワークのデータを、通常払いすべき請求とすべきでない請求に振り分ける。
-    // 通常払いすべきでない請求とは、早払いもしくは遅払いで処理するように既に申込を受け付けている請求のこと。
-    const search_exists_result = await Promise.all(invoice_groups.map((i) => existsApplyRecord(i.main, constructor_id)));
-    const using_factoring_groups = invoice_groups.filter((_, i) => search_exists_result[i]);
-    const original_pay_groups = invoice_groups.filter((_, i) => !search_exists_result[i]);
+    // 通常払いすべきでない請求とは、下記いずれかに当てはまる請求のこと。
+    // 1. 早払いもしくは遅払いで処理するように既に申込を受け付けている請求
+    // 2. 別途、インベストデザインが通常払いを担当しないと定めた協力会社からの請求
+    const existsApplies = await Promise.all(invoice_groups.map((i) => existsApplyRecord(i.main, constructor_id)));
+    const existsExcludeRecords = await Promise.all(invoice_groups.map((i) => existsExcludeRecord(i.main)));
+    const should_not_original_pay_groups = invoice_groups.filter((_, i) => existsApplies[i] || existsExcludeRecords[i]);
+    const original_pay_groups = invoice_groups.filter((_, i) => !existsApplies[i] && !existsExcludeRecords[i]);
 
     return {
         original_pay_groups: original_pay_groups,
-        using_factoring_groups: using_factoring_groups
+        should_not_original_pay_groups: should_not_original_pay_groups
     };
 };
 
