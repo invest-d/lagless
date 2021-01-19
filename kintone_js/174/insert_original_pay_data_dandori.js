@@ -37,7 +37,7 @@ const fieldConstructorID_APPLY          = schema_apply.fields.properties.constru
 const fieldKyoryokuID_APPLY             = schema_apply.fields.properties.ルックアップ.code;
 
 import { schema_174 } from "../174/schema";
-const APP_ID_DANDORI                    = schema_174.id.appId;
+const APP_ID_DANDORI                    = kintone.app.getId();
 const fieldStatus_DANDORI               = schema_174.fields.properties.status.code;
 const statusReady_DANDORI               = schema_174.fields.properties.status.options.未処理.label;
 const statusCompleted_DANDORI           = schema_174.fields.properties.status.options.通常払いレコード作成済み.label;
