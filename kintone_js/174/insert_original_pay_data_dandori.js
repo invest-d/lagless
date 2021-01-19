@@ -66,6 +66,7 @@ const fieldConstructorID_KYORYOKU       = schema_88.fields.properties.工務店I
 const fieldCommonName_KYORYOKU          = schema_88.fields.properties.支払先.code;
 const fieldFormalName_KYORYOKU          = schema_88.fields.properties.支払先正式名称.code;
 const fieldPhone_KYORYOKU               = schema_88.fields.properties.電話番号.code;
+const fieldPhone2_KYORYOKU              = schema_88.fields.properties.電話番号２.code;
 const fieldBankCode_KYORYOKU            = schema_88.fields.properties.金融機関コード.code;
 const fieldBranchCode_KYORYOKU          = schema_88.fields.properties.支店コード.code;
 const fieldDepositType_KYORYOKU         = schema_88.fields.properties.預金種目.code;
@@ -334,12 +335,25 @@ export const getKyoryokuID = async (dandori_id, dandori_name, dandori_phone, kyo
         const equal_name = (master[fieldCommonName_KYORYOKU]["value"] === dandori_name)
                 || (master[fieldFormalName_KYORYOKU]["value"] === dandori_name);
 
-        const equal_phone = ((invoice_phone) => {
-            if (!invoice_phone) {
+        const equal_phone = ((dandori_phone, master) => {
+            if (!dandori_phone) {
                 return false;
             }
-            return master[fieldPhone_KYORYOKU]["value"] === invoice_phone;
-        })(invoice_phone);
+
+            const normalized_phone = (num) => {
+                // ハイフンなし半角数字の文字列を取得する
+                return num
+                    // 全角数字を全て半角にする
+                    .replace(/[０-９]/g, (s) => {
+                        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+                    })
+                    // 半角数字以外を空文字に置換する
+                    .replace(/[^0-9]/g, "");
+            };
+
+            return normalized_phone(master[fieldPhone_KYORYOKU]["value"]) === normalized_phone(dandori_phone) ||
+                normalized_phone(master[fieldPhone2_KYORYOKU]["value"]) === normalized_phone(dandori_phone);
+        })(dandori_phone, master);
 
         return equal_name && equal_phone;
     });

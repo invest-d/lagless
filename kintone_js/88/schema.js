@@ -565,7 +565,19 @@ export const schema_88 = {
             "電話番号": {
                 "code": "電話番号",
                 "defaultValue": "",
-                "label": "電話番号",
+                "label": "電話番号（携帯）",
+                "maxLength": "",
+                "minLength": "",
+                "noLabel": false,
+                "protocol": "CALL",
+                "required": false,
+                "type": "LINK",
+                "unique": false
+            },
+            "電話番号２": {
+                "code": "電話番号２",
+                "defaultValue": "",
+                "label": "電話番号（固定）",
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
@@ -856,6 +868,11 @@ export const schema_88 = {
                     {
                         "type": "LINK",
                         "code": "電話番号",
+                        "size": {}
+                    },
+                    {
+                        "type": "LINK",
+                        "code": "電話番号２",
                         "size": {}
                     }
                 ]
