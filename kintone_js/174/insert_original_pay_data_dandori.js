@@ -480,3 +480,44 @@ const updateStatus = (invoice_groups, status) => {
 
     return client.record.updateAllRecords(request_body);
 };
+
+export const getNoDandoriIdList = async (invoice_kyoryoku_list, master) => {
+    /* return is:
+    {
+        [dandori_id]: kyoryoku_master_record_number
+    }
+    */
+    const no_id_list = {};
+
+    for (const dandori_id of Object.keys(invoice_kyoryoku_list)) {
+        const invoice_kyoryoku = invoice_kyoryoku_list[dandori_id];
+        const kyoryoku_id = await getKyoryokuID(dandori_id, invoice_kyoryoku.name, invoice_kyoryoku.phone, master);
+
+        if (kyoryoku_id) {
+            const master_record = master.find((r) => r[fieldKyoryokuID_KYORYOKU]["value"] === kyoryoku_id);
+            if (!master_record[fieldDandoriID_KYORYOKU]["value"]) {
+                no_id_list[dandori_id] = master_record[commonRecordID]["value"];
+            }
+        }
+    }
+
+    return no_id_list;
+};
+
+export const updateDandoriId = (no_dandori_id_list) => {
+    const records = Object.keys(no_dandori_id_list).map((dandori_id) => {
+        return {
+            id: no_dandori_id_list[dandori_id],
+            record: {
+                [fieldDandoriID_KYORYOKU]: {
+                    value: dandori_id
+                }
+            }
+        };
+    });
+
+    return client.record.updateRecords({
+        app: APP_ID_KYORYOKU,
+        records: records
+    });
+};
