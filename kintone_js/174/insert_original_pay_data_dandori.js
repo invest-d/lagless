@@ -169,6 +169,7 @@ export const downloadUndefinedKyoryokuCsv = (undefined_kyoryoku_list, constructo
     const generateCsvData = (undefined_kyoryoku_list, constructor_id) => {
         const original_pay_require_fields = [
             schema_88.fields.properties.支払企業No_.label,
+            schema_88.fields.properties.dandoriID.label,
             schema_88.fields.properties.支払先.label,
             schema_88.fields.properties.支払先正式名称.label,
             schema_88.fields.properties.電話番号.label,
@@ -199,6 +200,7 @@ export const downloadUndefinedKyoryokuCsv = (undefined_kyoryoku_list, constructo
             const target = undefined_kyoryoku_list[dandori_kyoryoku_id];
             return [
                 target.kintone_id,
+                target.dandori_id,
                 target.name, //通名
                 target.name, //正式名称。とりあえず同じにしておく
                 target.phone,
