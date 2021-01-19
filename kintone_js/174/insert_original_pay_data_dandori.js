@@ -131,7 +131,7 @@ export const getUndefinedKyoryokuList = async (invoice_kyoryoku_list, master) =>
     for (const dandori_kyoryoku_id of Object.keys(invoice_kyoryoku_list)) {
         const invoice_name = invoice_kyoryoku_list[dandori_kyoryoku_id]["name"];
         const invoice_phone = invoice_kyoryoku_list[dandori_kyoryoku_id]["phone"];
-        const kintone_kyoryoku_id = await getKyoryokuID(invoice_name, invoice_phone, master);
+        const kintone_kyoryoku_id = await getKyoryokuID(dandori_kyoryoku_id, invoice_name, invoice_phone, master);
         if (!kintone_kyoryoku_id) {
             // そもそもkintoneに未登録の場合
             undefined_kyoryoku_list[dandori_kyoryoku_id] = {
@@ -142,6 +142,7 @@ export const getUndefinedKyoryokuList = async (invoice_kyoryoku_list, master) =>
             };
         } else {
             const master_record = master.find((m) => m[fieldKyoryokuID_KYORYOKU]["value"] === kintone_kyoryoku_id);
+
             const bank_code = master_record[fieldBankCode_KYORYOKU]["value"];
             const branch_code = master_record[fieldBranchCode_KYORYOKU]["value"];
             const deposit_type = master_record[fieldDepositType_KYORYOKU]["value"];
@@ -320,12 +321,18 @@ export const getKyoryokuMaster = (constructor_id) => {
     return client.record.getAllRecords(request_body);
 };
 
-export const getKyoryokuID = async (invoice_name, invoice_phone, kyoryoku_master) => {
-    // 通名もしくは正式名称のフィールドと、電話番号のフィールドの両方が完全一致するレコードがあればそれを返す
-    // なければ空文字
+export const getKyoryokuID = async (dandori_id, dandori_name, dandori_phone, kyoryoku_master) => {
+    // 1. 請求データのダンドリワークIDを、マスタの中からサーチ。見つかったレコードのIDを返す
+    // 2. 通名もしくは正式名称のフィールドと、電話番号のフィールドの両方が完全一致するレコードがあればそれを返す
+    // 1, 2どちらもなければ空文字を返す
     const found_master_data = kyoryoku_master.find((master) => {
-        const equal_name = (master[fieldCommonName_KYORYOKU]["value"] === invoice_name)
-                || (master[fieldFormalName_KYORYOKU]["value"] === invoice_name);
+        const equal_id = (master[fieldDandoriID_KYORYOKU]["value"] === dandori_id);
+        if (equal_id) {
+            return true;
+        }
+
+        const equal_name = (master[fieldCommonName_KYORYOKU]["value"] === dandori_name)
+                || (master[fieldFormalName_KYORYOKU]["value"] === dandori_name);
 
         const equal_phone = ((invoice_phone) => {
             if (!invoice_phone) {
@@ -345,10 +352,11 @@ export const getKyoryokuID = async (invoice_name, invoice_phone, kyoryoku_master
 };
 
 const existsApplyRecord = async (dandori_record, constructor_id) => {
+    const id = dandori_record[fieldDandoriID_DANDORI]["value"];
     const name = dandori_record[fieldKyoryokuName_DANDORI]["value"];
     const phone = dandori_record[fieldKyoryokuPhone_DANDORI]["value"];
     const master = await getKyoryokuMaster(constructor_id);
-    const kintone_kyoryoku_id = await getKyoryokuID(name, phone, master);
+    const kintone_kyoryoku_id = await getKyoryokuID(id, name, phone, master);
 
     const closing_date = dandori_record[fieldClosingDate_DANDORI]["value"];
     const applies = await getApplyRecordsThisClosing(closing_date, constructor_id);
@@ -392,12 +400,17 @@ export const divideInvoices = async (invoice_groups, constructor_id) => {
 export const convertToApplyRecord = async (invoice_groups, constructor) => {
     // ダンドリワーク請求データアプリのレコードを加工して、ラグレス申込アプリにinsertできるオブジェクトにする
     const processes = invoice_groups.map(async (invoice_group) => {
+        const id = invoice_group.main[fieldDandoriID_DANDORI]["value"];
+
+        const name = invoice_group.main[fieldKyoryokuName_DANDORI]["value"];
+
         const phone = (invoice_group.main[fieldKyoryokuPhone_DANDORI]["value"] === "")
             ? "000-0000-0000"
             : invoice_group.main[fieldKyoryokuPhone_DANDORI]["value"];
 
         const kyoryoku_master = await getKyoryokuMaster(constructor.id);
-        const kyoryoku_id = await getKyoryokuID(invoice_group.main[fieldKyoryokuName_DANDORI]["value"], invoice_group.main[fieldKyoryokuPhone_DANDORI]["value"], kyoryoku_master);
+
+        const kyoryoku_id = await getKyoryokuID(id, name, phone, kyoryoku_master);
 
         return {
             [fieldStatus_APPLY]: {
@@ -422,7 +435,7 @@ export const convertToApplyRecord = async (invoice_groups, constructor) => {
                 "value": invoice_group.main[fieldPaymentDate_DANDORI]["value"]
             },
             [fieldKyoryokuName_APPLY]: {
-                "value": invoice_group.main[fieldKyoryokuName_DANDORI]["value"]
+                "value": name
             },
             [fieldConstructorName_APPLY]: {
                 "value": constructor.name
