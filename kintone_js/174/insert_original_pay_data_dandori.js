@@ -165,8 +165,8 @@ export const getUndefinedKyoryokuList = async (invoice_kyoryoku_list, master) =>
     return undefined_kyoryoku_list;
 };
 
-export const downloadUndefinedKyoryokuCsv = (undefined_kyoryoku_list, constructor_id) => {
-    const generateCsvData = (undefined_kyoryoku_list, constructor_id) => {
+export const downloadUndefinedKyoryokuCsv = async (undefined_kyoryoku_list, constructor_id) => {
+    const generateCsvData = async (undefined_kyoryoku_list, constructor_id) => {
         const original_pay_require_fields = [
             schema_88.fields.properties.支払企業No_.label,
             schema_88.fields.properties.dandoriID.label,
@@ -196,6 +196,13 @@ export const downloadUndefinedKyoryokuCsv = (undefined_kyoryoku_list, constructo
             .map(csv_format)
             .join(",");
 
+        const constructor_record = await client.record.getRecords({
+            app: APP_ID_CONSTRUCTOR,
+            fields: fieldConstructorName_CONSTRUCTOR,
+            query: `${fieldConstructorID_CONSTRUCTOR} = "${constructor_id}"`
+        });
+        const constructor_name = constructor_record.records[0][fieldConstructorName_CONSTRUCTOR]["value"];
+
         const csv_rows = Object.keys(undefined_kyoryoku_list).map((dandori_kyoryoku_id) => {
             const target = undefined_kyoryoku_list[dandori_kyoryoku_id];
             return [
@@ -212,7 +219,7 @@ export const downloadUndefinedKyoryokuCsv = (undefined_kyoryoku_list, constructo
                 "",
                 "",
                 constructor_id,
-                "",
+                constructor_name,
                 PRODUCT_NAME
             ].concat(other_required_fields.map((prop) => prop.defaultValue))
                 .map(csv_format)
@@ -238,7 +245,7 @@ export const downloadUndefinedKyoryokuCsv = (undefined_kyoryoku_list, constructo
         return Encoding.convert(unicode_list, "sjis", "unicode");
     };
 
-    const csv_data = generateCsvData(undefined_kyoryoku_list, constructor_id);
+    const csv_data = await generateCsvData(undefined_kyoryoku_list, constructor_id);
     const sjis_list = encodeToSjis(csv_data);
 
     // 生成したデータをCSVファイルとしてローカルにダウンロードする。

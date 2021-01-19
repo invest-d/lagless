@@ -43,7 +43,7 @@ async function clickButton() {
         }
 
         // csvファイルにしてダウンロード
-        logic.downloadUndefinedKyoryokuCsv(undefined_list, constructor_id);
+        await logic.downloadUndefinedKyoryokuCsv(undefined_list, constructor_id);
         const completed_message =
             "口座情報が未登録の協力会社（社名と電話番号の両方が一致するレコードがkintoneにない協力会社）をCSVファイルにしてダウンロードしました。\n"
             + "工務店に口座情報を問い合わせてCSVファイルに記入し、協力会社マスタへインポートしてください。";
