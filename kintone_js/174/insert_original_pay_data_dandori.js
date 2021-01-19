@@ -16,26 +16,6 @@ const PRODUCT_NAME = "ダンドリペイメント";
 
 const commonRecordID = "$id";
 
-// FIXME: 開発環境と本番環境で、申込アプリのスキーマの読み込みを自動的に切り替えたい
-import { schema_apply } from "../161/schema";
-const APP_ID_APPLY                      = schema_apply.id.appId;
-const fieldStatus_APPLY                 = schema_apply.fields.properties.状態.code;
-const statusInserted_APPLY              = schema_apply.fields.properties.状態.options.通常払い確認待ち.label;
-const statusDiscarded_APPLY             = schema_apply.fields.properties.状態.options.取下げ.label;
-const fieldPaymentTiming_APPLY          = schema_apply.fields.properties.paymentTiming.code;
-const statusOriginalPay_APPLY           = schema_apply.fields.properties.paymentTiming.options.通常払い.label;
-const fieldBillingAmount_APPLY          = schema_apply.fields.properties.applicationAmount.code;
-const fieldMemberFee_APPLY              = schema_apply.fields.properties.membership_fee.code;
-const fieldReceivable_APPLY             = schema_apply.fields.properties.totalReceivables.code;
-const fieldClosingDate_APPLY            = schema_apply.fields.properties.closingDay.code;
-const fieldPaymentDate_APPLY            = schema_apply.fields.properties.paymentDate.code;
-const fieldKyoryokuName_APPLY           = schema_apply.fields.properties.company.code;
-const fieldKyoryokuPhone_APPLY          = schema_apply.fields.properties.phone.code;
-const fieldConstructorName_APPLY        = schema_apply.fields.properties.billingCompany.code;
-const fieldPhone_APPLY                  = schema_apply.fields.properties.phone.code;
-const fieldConstructorID_APPLY          = schema_apply.fields.properties.constructionShopId.code;
-const fieldKyoryokuID_APPLY             = schema_apply.fields.properties.ルックアップ.code;
-
 import { schema_174 } from "../174/schema";
 const APP_ID_DANDORI                    = kintone.app.getId();
 const fieldStatus_DANDORI               = schema_174.fields.properties.status.code;
@@ -53,6 +33,36 @@ const fieldBillingSum_DANDORI           = schema_174.fields.properties.construct
 const fieldMemberFeeSum_DANDORI         = schema_174.fields.properties.memberShipFeeSum.code;
 const fieldReceivableSum_DANDORI        = schema_174.fields.properties.receivableAmountSum.code;
 const fieldDandoriID_DANDORI            = schema_174.fields.properties.kyoryokuID.code;
+
+import { schema_apply } from "../161/schema";
+const APP_ID_APPLY = ((dandori_app_id) => {
+    if (dandori_app_id === 174) {
+        // 本番
+        return 161;
+    } else if (dandori_app_id === 175) {
+        // 開発
+        return 159;
+    } else {
+        throw new Error(`invalid apply app: ${dandori_app_id}`);
+    }
+})(APP_ID_DANDORI);
+const fieldStatus_APPLY                 = schema_apply.fields.properties.状態.code;
+const statusInserted_APPLY              = schema_apply.fields.properties.状態.options.通常払い確認待ち.label;
+const statusDiscarded_APPLY             = schema_apply.fields.properties.状態.options.取下げ.label;
+const fieldPaymentTiming_APPLY          = schema_apply.fields.properties.paymentTiming.code;
+const statusOriginalPay_APPLY           = schema_apply.fields.properties.paymentTiming.options.通常払い.label;
+const fieldBillingAmount_APPLY          = schema_apply.fields.properties.applicationAmount.code;
+const fieldMemberFee_APPLY              = schema_apply.fields.properties.membership_fee.code;
+const fieldReceivable_APPLY             = schema_apply.fields.properties.totalReceivables.code;
+const fieldClosingDate_APPLY            = schema_apply.fields.properties.closingDay.code;
+const fieldPaymentDate_APPLY            = schema_apply.fields.properties.paymentDate.code;
+const fieldKyoryokuName_APPLY           = schema_apply.fields.properties.company.code;
+const fieldKyoryokuPhone_APPLY          = schema_apply.fields.properties.phone.code;
+const fieldConstructorName_APPLY        = schema_apply.fields.properties.billingCompany.code;
+const fieldPhone_APPLY                  = schema_apply.fields.properties.phone.code;
+const fieldConstructorID_APPLY          = schema_apply.fields.properties.constructionShopId.code;
+const fieldKyoryokuID_APPLY             = schema_apply.fields.properties.ルックアップ.code;
+
 
 import { schema_96 } from "../96/schema";
 const APP_ID_CONSTRUCTOR                = schema_96.id.appId;
