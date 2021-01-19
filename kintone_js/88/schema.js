@@ -19,15 +19,17 @@ export const schema_88 = {
             "dandoriID": {
                 "code": "dandoriID",
                 "defaultValue": "",
-                "expression": "",
-                "hideExpression": false,
+                "digit": false,
+                "displayScale": "",
                 "label": "ダンドリワーク協力会社ID",
-                "maxLength": "",
-                "minLength": "",
+                "maxValue": "",
+                "minValue": "",
                 "noLabel": false,
                 "required": false,
-                "type": "SINGLE_LINE_TEXT",
-                "unique": false
+                "type": "NUMBER",
+                "unique": false,
+                "unit": "",
+                "unitPosition": "BEFORE"
             },
             "kebanID": {
                 "code": "kebanID",
@@ -1013,7 +1015,7 @@ export const schema_88 = {
                 "type": "ROW",
                 "fields": [
                     {
-                        "type": "SINGLE_LINE_TEXT",
+                        "type": "NUMBER",
                         "code": "dandoriID",
                         "size": {}
                     }

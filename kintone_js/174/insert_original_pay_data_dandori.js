@@ -52,6 +52,7 @@ const fieldBillingDetail_DANDORI        = schema_174.fields.properties.construct
 const fieldBillingSum_DANDORI           = schema_174.fields.properties.constructionBillTaxInclSum.code;
 const fieldMemberFeeSum_DANDORI         = schema_174.fields.properties.memberShipFeeSum.code;
 const fieldReceivableSum_DANDORI        = schema_174.fields.properties.receivableAmountSum.code;
+const fieldDandoriID_DANDORI            = schema_174.fields.properties.kyoryokuID.code;
 
 import { schema_96 } from "../96/schema";
 const APP_ID_CONSTRUCTOR                = schema_96.id.appId;
@@ -71,6 +72,7 @@ const fieldDepositType_KYORYOKU         = schema_88.fields.properties.預金種�
 const fieldAccountNumber_KYORYOKU       = schema_88.fields.properties.口座番号.code;
 const fieldAccountName_KYORYOKU         = schema_88.fields.properties.口座名義.code;
 const statusUndefinedDeposit_KYORYOKU   = schema_88.fields.properties.預金種目.options["(未設定)"].label;
+const fieldDandoriID_KYORYOKU           = schema_88.fields.properties.dandoriID.code;
 
 export const confirmBeforeExec = () => {
     const message = `${schema_174.fields.properties.status.label}が${statusReady_DANDORI}のレコードを請求IDごとに集計し、申込アプリに新規レコードを作成します。`;
