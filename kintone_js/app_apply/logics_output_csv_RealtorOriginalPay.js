@@ -50,8 +50,9 @@ export const getOriginalPaymentAmount = (record) => {
     // ①サービス利用手数料を差し引かない（対象債権金額をそのまま利用する）
     // ②工務店が支払する場合と同額の振込手数料を差し引く
     const receiver_account = {
-        bank_code: record[common_logics.fieldBankCode_APPLY]["value"],
-        branch_code: record[common_logics.fieldBranchCode_APPLY]["value"],
+        // ゼロ埋めして比較する
+        bank_code: (`0000${record[common_logics.fieldBankCode_APPLY]["value"]}`).slice(-4),
+        branch_code: (`000${record[common_logics.fieldBranchCode_APPLY]["value"]}`).slice(-3),
     };
     const receivable_amount = Number(record[common_logics.fieldTotalReceivables_APPLY]["value"]);
 
