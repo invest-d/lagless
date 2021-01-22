@@ -423,19 +423,19 @@ dayjs.locale("ja");
 
                 // 申込が何件あったとしても、1行だけで代表して全て表現してよい取り決め。
                 const summary_row = ((collect_record) => {
-                    // 申込が最も早い人の名前を代表して使用する
+                    // 申込が最も遅い人の名前を代表して使用する
                     const applies = collect_record[fieldSubtableCS_COLLECT]["value"];
-                    const first_apply = applies.reduce((first, apply) => {
-                        const first_is_older = Number(first["value"][tableFieldApplyNo_COLLECT]["value"]) < Number(apply["value"][tableFieldApplyNo_COLLECT]["value"]);
-                        return first_is_older ? first : apply;
+                    const latest_apply = applies.reduce((latest, other_apply) => {
+                        const latest_is_later = Number(latest["value"][tableFieldApplyNo_COLLECT]["value"]) > Number(other_apply["value"][tableFieldApplyNo_COLLECT]["value"]);
+                        return latest_is_later ? latest : other_apply;
                     });
 
-                    let names = `${first_apply["value"][tableFieldCustomerName_COLLECT]["value"]} 様`;
+                    let names = `${latest_apply["value"][tableFieldCustomerName_COLLECT]["value"]} 様`;
                     if (applies.length >= 2) {
                         names = `${names}、他${applies.length - 1}名`;
                     }
 
-                    const payment_date = dayjs(first_apply["value"][tableFieldPaymentDate_COLLECT]["value"]);
+                    const payment_date = dayjs(latest_apply["value"][tableFieldPaymentDate_COLLECT]["value"]);
 
                     const sum_of_receivables = record[fieldTotalAmount_COLLECT]["value"];
 
