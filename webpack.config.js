@@ -34,7 +34,6 @@ module.exports = (env, argv) => {
                         use: {
                             loader: "babel-loader",
                             options: {
-                                plugins: ["@babel/plugin-transform-runtime"],
                                 presets: [
                                     [
                                         "@babel/preset-env",
@@ -45,6 +44,10 @@ module.exports = (env, argv) => {
                                             "modules": "commonjs"
                                         }
                                     ]
+                                ],
+                                plugins: [
+                                    "@babel/plugin-transform-runtime",
+                                    "add-module-exports"
                                 ],
                             }
                         }
@@ -108,7 +111,6 @@ module.exports = (env, argv) => {
                         use: {
                             loader: "babel-loader",
                             options: {
-                                plugins: ["@babel/plugin-transform-runtime"],
                                 presets: [
                                     [
                                         "@babel/preset-env",
@@ -119,6 +121,10 @@ module.exports = (env, argv) => {
                                             "modules": "commonjs"
                                         }
                                     ]
+                                ],
+                                plugins: [
+                                    "@babel/plugin-transform-runtime",
+                                    "add-module-exports"
                                 ],
                             }
                         }
