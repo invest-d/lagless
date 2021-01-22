@@ -25,12 +25,27 @@ module.exports = (env, argv) => {
                 rules: [
                     {
                         test: /\.js$/,
-                        exclude: /node_modules/,
+                        exclude: {
+                            test: /node_modules/,
+                            not: [
+                                /exif-rotate-js/
+                            ]
+                        },
                         use: {
                             loader: "babel-loader",
                             options: {
-                                presets: ["@babel/preset-env"],
                                 plugins: ["@babel/plugin-transform-runtime"],
+                                presets: [
+                                    [
+                                        "@babel/preset-env",
+                                        {
+                                            "targets": {
+                                                "ie": "11"
+                                            },
+                                            "modules": "commonjs"
+                                        }
+                                    ]
+                                ],
                             }
                         }
                     }
@@ -84,12 +99,27 @@ module.exports = (env, argv) => {
                 rules: [
                     {
                         test: /\.js$/,
-                        exclude: /node_modules/,
+                        exclude: {
+                            test: /node_modules/,
+                            not: [
+                                /exif-rotate-js/
+                            ]
+                        },
                         use: {
                             loader: "babel-loader",
                             options: {
-                                presets: ["@babel/preset-env"],
                                 plugins: ["@babel/plugin-transform-runtime"],
+                                presets: [
+                                    [
+                                        "@babel/preset-env",
+                                        {
+                                            "targets": {
+                                                "ie": "11"
+                                            },
+                                            "modules": "commonjs"
+                                        }
+                                    ]
+                                ],
                             }
                         }
                     }

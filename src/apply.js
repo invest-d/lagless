@@ -21,6 +21,8 @@ defineIncludesPolyfill();
 import { defineArrayFromPolyfill } from "./defineArrayFromPolyfill";
 defineArrayFromPolyfill();
 
+import { getBase64Strings } from "exif-rotate-js/lib";
+
 import { get_kintone_data } from "./app";
 
 // URLパラメータを引き継いでkintoneに送信できるようにする
@@ -347,7 +349,43 @@ const upload_attachment_files = async (inputs) => {
         });
     };
 
-    const upload_file = (signed_url, file) => {
+    const upload_file = async (signed_url, file) => {
+        const getHeightAndWidthFromDataUrl = (dataURL) => new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                resolve({
+                    height: img.height,
+                    width: img.width
+                });
+            };
+            img.src = dataURL;
+        });
+
+        const getFixedFile = async (file) => {
+            if (file.type === "image/jpeg" || file.type === "image/png") {
+                // 画像の場合はfileの回転を補正する
+                // script by https://stackoverflow.com/questions/7460272/getting-image-dimensions-using-javascript-file-api
+                const fileAsDataURL = window.URL.createObjectURL(file);
+                const dimensions = await getHeightAndWidthFromDataUrl(fileAsDataURL);
+                const max_size = Math.max(dimensions.height, dimensions.width);
+                const fixed_dataUri = await getBase64Strings([file], { maxSize: max_size, type: file.type });
+                // script by https://lab.syncer.jp/Web/JavaScript/Snippet/26/
+                const byteString = atob( fixed_dataUri[0].split(",")[1] ) ;
+                const l = byteString.length;
+                const content = new Uint8Array(l);
+                for(let i = 0; l > i; i++) {
+                    content[i] = byteString.charCodeAt(i) ;
+                }
+                const fixed_file = new Blob([content], { type: file.type});
+                return fixed_file;
+            } else {
+                // 何も処理しない
+                return file;
+            }
+        };
+
+        const fixed_file = await getFixedFile(file);
+
         return new Promise((resolve, reject) => {
             $.ajax({
                 type : "PUT",
@@ -355,7 +393,7 @@ const upload_attachment_files = async (inputs) => {
                 headers: {
                     "Content-Type": file.type
                 },
-                data : file,
+                data : fixed_file,
                 cache : false,
                 processData: false,
             })
