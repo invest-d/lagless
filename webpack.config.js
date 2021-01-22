@@ -25,12 +25,30 @@ module.exports = (env, argv) => {
                 rules: [
                     {
                         test: /\.js$/,
-                        exclude: /node_modules/,
+                        exclude: {
+                            test: /node_modules/,
+                            not: [
+                                /exif-rotate-js/
+                            ]
+                        },
                         use: {
                             loader: "babel-loader",
                             options: {
-                                presets: ["@babel/preset-env"],
-                                plugins: ["@babel/plugin-transform-runtime"],
+                                presets: [
+                                    [
+                                        "@babel/preset-env",
+                                        {
+                                            "targets": {
+                                                "ie": "11"
+                                            },
+                                            "modules": "commonjs"
+                                        }
+                                    ]
+                                ],
+                                plugins: [
+                                    "@babel/plugin-transform-runtime",
+                                    "add-module-exports"
+                                ],
                             }
                         }
                     }
@@ -84,12 +102,30 @@ module.exports = (env, argv) => {
                 rules: [
                     {
                         test: /\.js$/,
-                        exclude: /node_modules/,
+                        exclude: {
+                            test: /node_modules/,
+                            not: [
+                                /exif-rotate-js/
+                            ]
+                        },
                         use: {
                             loader: "babel-loader",
                             options: {
-                                presets: ["@babel/preset-env"],
-                                plugins: ["@babel/plugin-transform-runtime"],
+                                presets: [
+                                    [
+                                        "@babel/preset-env",
+                                        {
+                                            "targets": {
+                                                "ie": "11"
+                                            },
+                                            "modules": "commonjs"
+                                        }
+                                    ]
+                                ],
+                                plugins: [
+                                    "@babel/plugin-transform-runtime",
+                                    "add-module-exports"
+                                ],
                             }
                         }
                     }
