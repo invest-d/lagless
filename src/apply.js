@@ -18,6 +18,9 @@ import "formdata-polyfill";
 import { defineIncludesPolyfill } from "./defineIncludesPolyfill";
 defineIncludesPolyfill();
 
+import { defineArrayFromPolyfill } from "./defineArrayFromPolyfill";
+defineArrayFromPolyfill();
+
 import { get_kintone_data } from "./app";
 
 // URLパラメータを引き継いでkintoneに送信できるようにする
