@@ -150,9 +150,21 @@ export function updateStatus(records, status) {
                     throw new Error(`振込依頼書明細の申込レコードの支払状況を確認している最中にエラーが発生しました。\n\nエラーログ：${err}`);
                 });
 
-            // それぞれのレコード番号の状態を全て確認するのが目的なので、件数が合っていなければエラーにする
-            if (applies_resp.records.length !== apply_ids.length) {
-                throw new Error(`一部もしくは全ての申込レコードが申込アプリに存在しませんでした。\n取得を試みたレコード番号：${apply_ids.join(",")}`);
+            // それぞれのレコード番号の状態を全て確認する。
+            // 振込依頼書対象になっているのに申込アプリに存在しないレコードがあればエラーとする。
+            const expected_id_set = new Set(apply_ids);
+            const retlieved_id_set = new Set(applies_resp.records.map((r) => r[fieldRecordId_APPLY]["value"]));
+            // script by https://qiita.com/toshihikoyanase/items/7b07ca6a94eb72164257
+            Set.prototype.difference = function(setB) {
+                const difference = new Set(this);
+                for (const elem of setB) {
+                    difference.delete(elem);
+                }
+                return difference;
+            };
+            const diff = expected_id_set.difference(retlieved_id_set);
+            if (diff.size > 0) {
+                throw new Error(`申込アプリの中に、下記のレコード番号が見つかりませんでした。\n${Array.from(diff).join(",")}`);
             }
 
             const is_all_paid = applies_resp.records.every((r) => r[fieldStatus_APPLY]["value"] === statusPaid_APPLY);
@@ -183,7 +195,10 @@ export function updateStatus(records, status) {
     function getApplies(apply_ids) {
         const get_body = {
             "app": APP_ID_APPLY,
-            "fields": [fieldStatus_APPLY],
+            "fields": [
+                fieldRecordId_APPLY,
+                fieldStatus_APPLY
+            ],
             "query": `${fieldRecordId_APPLY} in ("${apply_ids.join('","')}")`
         };
 
