@@ -187,6 +187,6 @@ export function updateStatus(records, status) {
             "query": `${fieldRecordId_APPLY} in ("${apply_ids.join('","')}")`
         };
 
-        return kintoneRecord.getRecords(get_body);
+        return kintoneRecord.getAllRecordsByQuery(get_body);
     }
 })();
