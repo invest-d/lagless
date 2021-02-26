@@ -138,13 +138,14 @@ exports.send_apply_dev = functions.https.onRequest((req, res) => {
                 }
 
                 if (post_succeed.record["mail"]["value"]) {
+                    // reference: https://sendgrid.kke.co.jp/docs/API_Reference/SMTP_API/integrating_with_the_smtp_api.html
                     const options = {
                         host: "smtp.sendgrid.net",
-                        port: 587,
+                        port: 465,
                         requiresAuth: true,
                         auth: {
-                            user: process.env.SENDGRID_USERNAME,
-                            pass: process.env.SENDGRID_PASSWORD,
+                            user: "apikey",
+                            pass: process.env.SENDGRID_APIKEY,
                         },
                     };
 
