@@ -1,4 +1,9 @@
 /*
+    Version 2
+    親子レコードの判定時に、「工務店IDや締め日が異なるものの、同じ親子グループとして判定すべき」という
+    軽バン.comの回収レコードについての考慮が漏れていた問題を修正。
+    これにより、本来「振込依頼書送信可」に更新されるべき軽バン.comの回収レコードが更新されないバグが起きないようにした。
+
     Version 1
     回収アプリの親レコードのレコード詳細画面に設置するボタン。
     ボタンクリックすると、その親に属する親子全てのレコードの状態を「振込依頼書送信可」に更新する。
@@ -9,6 +14,9 @@
     （実際に送信するのは親だけなのにも関わらず）親子両方とも状態を変更する理由は、
     振込依頼書作成処理をもう一度実行した時に、状態が取り残されたままの子たちの中で新たな親が出来てしまうのを防ぐため。
 */
+
+const dayjs = require("dayjs");
+import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
 const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
@@ -50,8 +58,22 @@ export function getParentAndChildCollectRecords(record) {
         // 親自身よりも後に作成されたレコードが対象。（generate_invoice_button.jsにおいて、親子グループ内でレコード番号が最も小さいレコードが親になるという前提）
         queries.push(`${fieldRecordId_COLLECT} >= ${record[fieldRecordId_COLLECT]["value"]}`);
 
-        // 工務店IDと締め日の両方が等しい。親自身も取得対象に含める。
-        queries.push(`${fieldConstructorId_COLLECT} = "${constructor_id}" and ${fieldClosingDate_COLLECT} = "${closing_date}"`);
+        if (KE_BAN_CONSTRUCTORS.includes(constructor_id)) {
+            // 軽バン.comの場合、親子レコードの判定を次のように変更する。
+            // ①軽バン.comの工務店IDのいずれかを持っている
+            // ②recordのclosing_dateと同じ年, 月を持っている（日は異なっていても良い）
+            // 上記の①と②の両方を満たすレコードである。
+            const in_query = KE_BAN_CONSTRUCTORS.map((id) => `"${id}"`).join(",");
+            queries.push(`${fieldConstructorId_COLLECT} in (${in_query})`);
+
+            const from_date = dayjs(closing_date).startOf("month").format("YYYY-MM-DDTHH:mm:ssZ");
+            const to_date = dayjs(closing_date).endOf("month").format("YYYY-MM-DDTHH:mm:ssZ");
+            queries.push(`${fieldClosingDate_COLLECT} >= "${from_date}"`);
+            queries.push(`${fieldClosingDate_COLLECT} <= "${to_date}"`);
+        } else {
+            // 工務店IDと締め日の両方が等しい。親自身も取得対象に含める。
+            queries.push(`${fieldConstructorId_COLLECT} = "${constructor_id}" and ${fieldClosingDate_COLLECT} = "${closing_date}"`);
+        }
 
         // 取り下げは除外
         queries.push(`${fieldStatus_COLLECT} not in ("${statusRejected_COLLECT}")`);
