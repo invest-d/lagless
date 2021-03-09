@@ -41,20 +41,23 @@ const statusRejected_COLLECT = "クラウドサイン却下・再作成待ち";
 
 export function getParentAndChildCollectRecords(record) {
     console.log("親子レコードを全て取得する。");
-    // 親レコードと①工務店ID、②締め日の二つが両方とも等しいレコードを子レコードとする。親自身も取得対象に含める。
     const constructor_id = record[fieldConstructorId_COLLECT]["value"];
     const closing_date = record[fieldClosingDate_COLLECT]["value"];
 
-    const queries = [
-        // 親自身よりも後に作成されたレコードが対象。（generate_invoice_button.jsにおいて、親子グループ内でレコード番号が最も小さいレコードが親になるという前提）
-        `${fieldRecordId_COLLECT} >= ${record[fieldRecordId_COLLECT]["value"]}`,
+    const queries = ((constructor_id, closing_date) => {
+        const queries = [];
 
-        // 子レコード
-        `${fieldConstructorId_COLLECT} = "${constructor_id}" and ${fieldClosingDate_COLLECT} = "${closing_date}"`,
+        // 親自身よりも後に作成されたレコードが対象。（generate_invoice_button.jsにおいて、親子グループ内でレコード番号が最も小さいレコードが親になるという前提）
+        queries.push(`${fieldRecordId_COLLECT} >= ${record[fieldRecordId_COLLECT]["value"]}`);
+
+        // 工務店IDと締め日の両方が等しい。親自身も取得対象に含める。
+        queries.push(`${fieldConstructorId_COLLECT} = "${constructor_id}" and ${fieldClosingDate_COLLECT} = "${closing_date}"`);
 
         // 取り下げは除外
-        `${fieldStatus_COLLECT} not in ("${statusRejected_COLLECT}")`,
-    ];
+        queries.push(`${fieldStatus_COLLECT} not in ("${statusRejected_COLLECT}")`);
+
+        return queries;
+    })(constructor_id, closing_date);
 
     const query = queries.map((q) => `(${q})`).join(" and ");
 
