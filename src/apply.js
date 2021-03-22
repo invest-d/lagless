@@ -23,7 +23,7 @@ defineArrayFromPolyfill();
 
 import { getBase64Strings } from "exif-rotate-js/lib";
 
-import { get_kintone_data } from "./app";
+import { get_kintone_data, get_schedule } from "./app";
 
 // URLパラメータを引き継いでkintoneに送信できるようにする
 $(() => {
@@ -77,6 +77,28 @@ $(() => {
         $("span.timing").text("遅払い");
     } else {
         $("span.timing").text("早払い");
+    }
+});
+
+// URLのパラメータによってデフォルトの入力値を設定する
+$(async () => {
+    // cパラメータから、工務店マスタの値をセット
+    const data = (await get_kintone_data())[params.get("c")];
+    if (!data) {
+        // データが見当たらない場合は何もしない
+        return;
+    }
+
+    if (data["工務店正式名称"]) {
+        $("#billingCompany").val(data["工務店正式名称"]);
+    }
+
+    let now = new Date();
+    now = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const schedule = get_schedule(data.schedule, now);
+
+    if (schedule) {
+        $("#closingDay").val(schedule.closing);
     }
 });
 
