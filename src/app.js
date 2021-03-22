@@ -131,11 +131,7 @@ const show = function(client, param) {
 
     let now = new Date();
     now = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const schedule = client.schedule.find((s) => {
-        const ymd = s.deadline.split(/\D/);
-        const t = new Date(ymd[0], parseInt(ymd[1])-1, ymd[2]);
-        return now.getTime() <= t.getTime();
-    });
+    const schedule = get_schedule(client.schedule, now);
 
     $("#schedule-closing-payment-same").hide();
 
@@ -168,4 +164,12 @@ const show = function(client, param) {
     if(param.f) {
         $(".first").show();
     }
+};
+
+export const get_schedule = (schedules, now) => {
+    return schedules.find((s) => {
+        const ymd = s.deadline.split(/\D/);
+        const t = new Date(ymd[0], parseInt(ymd[1])-1, ymd[2]);
+        return now.getTime() <= t.getTime();
+    });
 };
