@@ -232,8 +232,14 @@ async function post_apply_record(form_text_data, env) {
             record["paymentTiming"] = {"value": ja_payment_timing};
         }
 
-        // 不要な要素を削除
-        delete record["agree"];
+        // 申込アプリに書き込み不要な項目を削除
+        const not_to_be_written_fields = [
+            "agree",
+            "submitted"
+        ];
+        for (const field of not_to_be_written_fields) {
+            delete record[field];
+        }
 
         return {
             app: app_id,
