@@ -156,6 +156,7 @@ $(() => {
     flatpickr.l10ns.ja.firstDayOfWeek = 0;
     flatpickr("#closingDay", {
         "dateFormat": "Y-m-d",
+        "disableMobile": "true", // モバイルだと"Y/m/d"になってしまい、デフォルト値のセットがうまくいかなくなる。なのでdisableが必要
         "locale": "ja"
     });
 });
