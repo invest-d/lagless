@@ -76,8 +76,9 @@ const clickProcessButton = () => {
     const files = document.getElementById(file_input_id).files;
     reader.readAsText(files[0]);
     reader.onload = (event) => {
-        console.log(event.target.result);
-        alert("読み込みが完了しました（consoleに出力済み");
+        const orderers = new WorkshipOrderers(event.target.result);
+        const list = orderers.getList();
+        alert("読み込みが完了しました");
     };
     reader.onerror = () => {
         alert(`読み込みに失敗しました\n\n${reader.error}`);
@@ -86,3 +87,53 @@ const clickProcessButton = () => {
     // キャンセルボタンをクリックした時のように、初期状態に戻す
     clickCancelButton();
 };
+
+class WorkshipOrderers {
+    constructor(html_string) {
+        const parser = new DOMParser();
+        this.doc = parser.parseFromString(html_string, target_mime);
+    }
+
+    getList() {
+        return Array.from(this.doc.querySelectorAll("#right-panel > div.content.mt-3 > table > tbody > tr"))
+            .map((e) => new WorkshipOrderer(e));
+    }
+}
+
+class WorkshipOrderer {
+    constructor(row_element) {
+        const columns = row_element.getElementsByTagName("td");
+        // 列の並び順は固定とする
+        this.audited = columns[0].innerText.includes("監査済");
+        this.name = columns[1].innerText.replaceAll(/\n/g, "");
+        this.address = columns[2].innerText.replaceAll(/ |\n/g, "");
+
+        const tel_matches = columns[3].innerText.match(/0\d{9,10}|0\d{1,3}-\d{1,4}-\d{4}|(070|080|090)-\d{4}-\d{4}/g);
+        if (tel_matches) {
+            this.tel = tel_matches[0];
+        } else {
+            this.tel = null;
+        }
+
+        const email_matches = columns[3].innerText.match(/[a-zA-Z0-9-_\.]+@[a-zA-Z0-9-_\.]+/g);
+        if (email_matches) {
+            this.email = email_matches[0];
+        } else {
+            this.email = null;
+        }
+
+        const credit_facility_matches = columns[4].innerText.match(/(\d|,)+円/g);
+        if (credit_facility_matches) {
+            this.credit_facility = Number(credit_facility_matches[0].replaceAll(/\D/g, ""));
+        } else {
+            this.credit_facility = null;
+        }
+
+        const commission_rate_matches = columns[4].innerText.match(/(\d|\.)+%/g);
+        if (commission_rate_matches) {
+            this.commission_rate = Number(commission_rate_matches[0].replaceAll(/%/g, ""));
+        } else {
+            this.commission_rate = null;
+        }
+    }
+}
