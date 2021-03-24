@@ -77,6 +77,9 @@ const clickCancelButton = () => {
 };
 
 const clickProcessButton = () => {
+    document.getElementById(process_button_id).innerText = "処理中...";
+    const processes = [];
+
     // inputに入力されたファイル内容を読み取る
     const reader = new FileReader();
     const files = document.getElementById(file_input_id).files;
@@ -85,18 +88,24 @@ const clickProcessButton = () => {
         const {exists, new_orderers} = await getOrderersList(event.target.result);
 
         if (exists.length > 0) {
-            downloadUpdateCsv(exists);
+            processes.push(downloadUpdateCsv(exists));
         }
 
         if (new_orderers.length > 0){
-            downloadInsertCsv(new_orderers);
+            processes.push(downloadInsertCsv(new_orderers));
         }
-        alert("完了しました");
+
+        Promise.all(processes).then(() => {
+            document.getElementById(process_button_id).innerText = process_button_title;
+            alert("完了しました");
+            // キャンセルボタンをクリックした時のように、初期状態に戻す
+            clickCancelButton();
+        });
     };
     reader.onerror = () => {
+        document.getElementById(process_button_id).innerText = process_button_title;
         alert(`読み込みに失敗しました\n\n${reader.error}`);
+        clickCancelButton();
     };
 
-    // キャンセルボタンをクリックした時のように、初期状態に戻す
-    clickCancelButton();
 };
