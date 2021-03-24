@@ -7,6 +7,7 @@ import {
     needShow as needShowConvertElements,
     createExecuteButton,
     createFileInput,
+    createProcessButton,
     createCancelButton,
 } from "./96/button_convert_workship_list";
 
@@ -17,6 +18,7 @@ import {
         if (needShowConvertElements()) {
             kintone.app.getHeaderMenuSpaceElement().appendChild(createExecuteButton());
             kintone.app.getHeaderMenuSpaceElement().appendChild(createFileInput());
+            kintone.app.getHeaderMenuSpaceElement().appendChild(createProcessButton());
             kintone.app.getHeaderMenuSpaceElement().appendChild(createCancelButton());
         }
     });
