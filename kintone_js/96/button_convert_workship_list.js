@@ -6,6 +6,7 @@
 
 const execute_button_id = "convertWorkshipList";
 const execute_button_title = "Workship企業リストを変換";
+const file_input_id = "workshipDataHtmlInput";
 const cancel_button_id = "cancelConvertWorkshipList";
 const cancel_button_title = "キャンセル";
 
@@ -19,6 +20,15 @@ export const needShow = () => {
 
 export const createExecuteButton = () => {
     return createButton(execute_button_id, execute_button_title, clickExecuteButton);
+};
+
+export const createFileInput = () => {
+    const input = document.createElement("input");
+    input.id = file_input_id;
+    input.accept = "text/html";
+    input.type = "file";
+    input.style.display = "none";
+    return input;
 };
 
 export const createCancelButton = () => {
@@ -37,12 +47,13 @@ const createButton = (button_name, button_title, click_event) => {
 };
 
 const clickExecuteButton = () => {
-    // キャンセルボタンを表示する
     document.getElementById(cancel_button_id).style.display = "inline";
+    document.getElementById(file_input_id).style.display = "inline";
     document.getElementById(execute_button_id).style.display = "none";
 };
 
 const clickCancelButton = () => {
     document.getElementById(execute_button_id).style.display = "inline";
+    document.getElementById(file_input_id).style.display = "none";
     document.getElementById(cancel_button_id).style.display = "none";
 };
