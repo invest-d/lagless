@@ -45,7 +45,7 @@ const fielddspCreditFacility_CONSTRUCTOR            = schema_96.fields.propertie
 import {
     encodeToSjis,
     downloadFile
-} from "../app_apply/logics_output_csv";
+} from "../util/output_csv";
 
 export const target_mime = "text/html";
 
