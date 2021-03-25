@@ -31,11 +31,11 @@ function getGigMailData() {
     const logSheet = SpreadsheetApp.openById(LOG_SHEET_ID).getSheetByName("list");
 
     const data = [];
-    threads.forEach((thread) => {
+    for (const thread of threads) {
         const messages = thread.getMessages();
 
         // メールを一つずつ取り出す
-        messages.forEach((message) => {
+        for (const message of messages) {
             if (message.getFrom().includes("Workship 運営事務局")) {
                 const msgId = message.getId();
                 const textFinder = logSheet.createTextFinder(msgId);
@@ -53,8 +53,8 @@ function getGigMailData() {
                     logSheet.getRange("A2").setValue(msgId);
                 }
             }
-        });
-    });
+        }
+    }
 
     return data;
 }
