@@ -3,6 +3,8 @@ const KINTONE_APPLY_APP = "";
 const KINTONE_APPLY_TOKEN = "";
 const LOG_SHEET_ID = "";
 
+const KINTONE_CONSTRUCTOR_APP = "";
+const KINTONE_CONSTRUCTOR_TOKEN = "";
 
 function main() {
     const gig_data = getGigMailData();
@@ -130,6 +132,29 @@ function postKintoneRecords(gig_data) {
     }
 }
 
+function getConstructorMaster(name) {
+    const params = {
+        "app" : KINTONE_CONSTRUCTOR_APP,
+        "query": `工務店名 = "${name}" or 工務店正式名称 = "${name}"`,
+        "fields": ["id"]
+    };
+
+    const options = {
+        "headers": {
+            "X-Cybozu-API-Token": KINTONE_CONSTRUCTOR_TOKEN,
+            "Authorization": `Basic ${KINTONE_CONSTRUCTOR_TOKEN}`,
+        },
+    };
+
+    const base_url = "https://investdesign.cybozu.com/k/v1/records.json";
+    const url = `${base_url}?${Object.entries(params).map((e) => `${e[0]}=${encodeURI(e[1])}`).join("&")}`;
+    const response = UrlFetchApp.fetch(url, options);
+    const data = JSON.parse(response.getContentText());
+    return data.records.length === 0
+        ? null
+        : data.records[0]["id"]["value"];
+}
+
 function getKintoneRecordsPayload(mail_data) {
     const records = [];
 
@@ -139,6 +164,10 @@ function getKintoneRecordsPayload(mail_data) {
     const closing_field_value = [clo.getFullYear(), clo.getMonth()+1, clo.getDate()].join("-");
 
     for (const single_mail of mail_data) {
+        const kintone_data = getConstructorMaster(single_mail["ordererGig"]);
+        // もし工務店マスタに当該レコードがなかった場合はとりあえず500を入れておく
+        const constructor_id = kintone_data ? kintone_data : "500";
+
         const record = {
             // まず固定値を入力しておく
             "paymentTiming": {
@@ -159,7 +188,7 @@ function getKintoneRecordsPayload(mail_data) {
                 "value": "株式会社GIG"
             },
             "constructionShopId": {
-                "value": "500"
+                "value":  constructor_id
             },
             "deposit_Form": {
                 "value": "普通"
