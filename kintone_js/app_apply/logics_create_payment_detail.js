@@ -108,6 +108,9 @@ async function attachDetail(target_records) {
                 if (KE_BAN_CONSTRUCTORS.includes(constructor_id)) {
                     const display_record_data = getKebanDetailDisplayData(record);
                     return generateDetailTextKeban(display_record_data);
+                } else if (/^5\d{2,3}$/g.test(constructor_id)) {
+                    // GIG(工務店ID 500番台 or 5000番台)は文面が異なる
+                    return getGigPaymentDetail(record);
                 } else {
                     return await getLaglessPaymentDetail(record);
                 }
@@ -162,6 +165,85 @@ const getFormattedYYYYMMDD = (kintone_date_value) => {
     // YYYY年MM月DD日のフォーマットで返す
     return `${kintone_date_value.split("-")[0]}年${kintone_date_value.split("-")[1]}月${kintone_date_value.split("-")[2]}日`;
 };
+
+const getGigPaymentDetail = (record) => {
+    // GIG案件のファクタリング支払予定明細の本文を取得する
+    const kyoryoku_company_name         = record[fieldCustomerCompanyName_APPLY]["value"];
+    const kyoryoku_ceo_name             = record[fieldAddresseeName_APPLY]["value"];
+    const kyoryoku_ceo_title            = record[fieldAddresseeTitle_APPLY]["value"];
+    const closing_YYYYnenMMgatsuDDhi    = getFormattedYYYYMMDD(record[fieldClosingDate_APPLY]["value"]);
+    const payment_YYYYnenMMgatsuDDhi    = getFormattedYYYYMMDD(record[fieldPaymentDate_APPLY]["value"]);
+    const billing_amount                = record[fieldApplicantAmount_APPLY]["value"];
+    const transfer_fee_tax_incl         = record[fieldTransferFee_APPLY]["value"];
+
+    const service_fees = {
+        fee_rate: record[fieldCommissionRate_Early_APPLY]["value"],
+        fee_amount: record[fieldCommissionAmount_Early_APPLY]["value"],
+        transfer_amount: record[fieldTransferAmount_Early_APPLY]["value"],
+    };
+
+    const apply_info = {
+        addressee_name:                 getAddresseeName(kyoryoku_company_name, kyoryoku_ceo_title, kyoryoku_ceo_name),
+        closing_YYYYnenMMgatsuDDhi:     closing_YYYYnenMMgatsuDDhi,
+        payment_YYYYnenMMgatsuDDhi:     payment_YYYYnenMMgatsuDDhi,
+        billing_amount_comma:           addComma(billing_amount),
+        commission_percentage:          Number(service_fees.fee_rate) * 100,
+        commission_amount_comma:        addComma(service_fees.fee_amount),
+        transfer_fee_tax_incl_comma:    addComma(transfer_fee_tax_incl),
+        transfer_amount_of_money_comma: addComma(service_fees.transfer_amount),
+    };
+
+    return generateGigDetailText(apply_info);
+};
+
+function generateGigDetailText(apply_info) {
+    // 行ごとに配列で格納し、最後に改行コードでjoinする
+    const text = [
+        `${apply_info.addressee_name}様`,
+        "",
+        "この度は、Workship前払いオプションのお申込みありがとうございます。",
+        "下記のとおり受付いたしましたので、お知らせいたします。",
+        "",
+        `対象となる締め日：${apply_info.closing_YYYYnenMMgatsuDDhi}`,
+        "",
+        // eslint-disable-next-line no-irregular-whitespace
+        `お振込予定日　　：${apply_info.payment_YYYYnenMMgatsuDDhi}`,
+        "",
+        "※天災、通信インフラの故障及びその他の事象により、実行日が遅れる可能性がございます。",
+        "",
+        "",
+        // 請求の宛先はGIG固定になる
+        // eslint-disable-next-line no-irregular-whitespace
+        `株式会社ＧＩＧ宛 請求金額（税込）①　${apply_info.billing_amount_comma}円`,
+        // eslint-disable-next-line no-irregular-whitespace
+        `前払いオプション利用手数料 ①×${apply_info.commission_percentage}％　-${apply_info.commission_amount_comma}円`,
+        // eslint-disable-next-line no-irregular-whitespace
+        `振込手数料（お客様負担）　-${apply_info.transfer_fee_tax_incl_comma}円`,
+        "──────────────────────────────",
+        // eslint-disable-next-line no-irregular-whitespace
+        `お振込み予定金額　${apply_info.transfer_amount_of_money_comma}円`,
+        "",
+        "",
+        "",
+        "ご不明な点などがございましたら、",
+        "下記連絡先までお問い合わせください。",
+        "",
+        "──────────────────────────────■",
+        "Workship 運命の仕事相手がみつかるスキルシェアサービス",
+        "https://goworkship.com/",
+        "",
+        "【Workship前払い】",
+        "ラグレス2合同会社",
+        "運営会社 : インベストデザイン株式会社",
+        "Mail：factoring@goworkship.com",
+        "TEL：050-3188-6800",
+        "営業時間 : 10時〜18時(平日のみ)",
+        "──────────────────────────────■",
+        ""
+    ];
+
+    return text.join("\r\n");
+}
 
 const getLaglessPaymentDetail = async (record) => {
     // ラグレスのファクタリング支払予定明細の本文を取得する
