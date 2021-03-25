@@ -9,7 +9,7 @@ const KINTONE_CONSTRUCTOR_TOKEN = "";
 function main() {
     const gig_data = getGigMailData();
 
-    if (!gig_data) {
+    if (!gig_data || gig_data.length === 0) {
         return;
     }
 
@@ -24,7 +24,7 @@ function labelThreads() {
 
 function getGigMailData() {
     const threads = GmailApp.search('subject:+"【Workship】フリーランスから前払い申請が届きました" -label:kintone追加済み');
-    if (!threads) {
+    if (!threads || threads.length === 0) {
         return;
     }
 
