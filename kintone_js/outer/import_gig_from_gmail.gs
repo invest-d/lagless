@@ -1,6 +1,6 @@
 // kintoneに関するjsファイル（gsファイル）ではあるが、Google Apps ScriptとしてGoogle Driveから実行する。
-const KINTONE_APP = "";
-const KINTONE_TOKEN = "";
+const KINTONE_APPLY_APP = "";
+const KINTONE_APPLY_TOKEN = "";
 
 
 function main() {
@@ -113,8 +113,8 @@ function postKintoneRecords(gig_data) {
         "method" : "post",
         "contentType": "application/json",
         "headers": {
-            "X-Cybozu-API-Token": KINTONE_TOKEN,
-            "Authorization": `Basic ${KINTONE_TOKEN}`,
+            "X-Cybozu-API-Token": KINTONE_APPLY_TOKEN,
+            "Authorization": `Basic ${KINTONE_APPLY_TOKEN}`,
         },
         "payload" : JSON.stringify(payload)
     };
@@ -178,7 +178,7 @@ function getKintoneRecordsPayload(mail_data) {
     }
 
     return {
-        "app": KINTONE_APP,
+        "app": KINTONE_APPLY_APP,
         "records": records
     };
 }
