@@ -104,7 +104,8 @@ async function attachDetail(target_records) {
             error_num = record[fieldRecordId_COMMON]["value"];
 
             const multiline_detail_text = await (async (record) => {
-                if (KE_BAN_CONSTRUCTORS.includes(record[fieldConstructorID_APPLY]["value"])) {
+                const constructor_id = record[fieldConstructorID_APPLY]["value"];
+                if (KE_BAN_CONSTRUCTORS.includes(constructor_id)) {
                     const display_record_data = getKebanDetailDisplayData(record);
                     return generateDetailTextKeban(display_record_data);
                 } else {
