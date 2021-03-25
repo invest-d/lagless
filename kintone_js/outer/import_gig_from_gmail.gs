@@ -1,6 +1,7 @@
 // kintoneに関するjsファイル（gsファイル）ではあるが、Google Apps ScriptとしてGoogle Driveから実行する。
 const KINTONE_APPLY_APP = "";
 const KINTONE_APPLY_TOKEN = "";
+const LOG_SHEET_ID = "";
 
 
 function main() {
