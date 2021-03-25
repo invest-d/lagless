@@ -16,6 +16,21 @@ export const schema_96 = {
                 "unit": "回",
                 "unitPosition": "AFTER"
             },
+            "businessDealsNumber_old": {
+                "code": "businessDealsNumber_old",
+                "defaultValue": "",
+                "digit": false,
+                "displayScale": "",
+                "label": "営業案件管理(過去の記録用)",
+                "maxValue": "",
+                "minValue": "",
+                "noLabel": false,
+                "required": false,
+                "type": "NUMBER",
+                "unique": false,
+                "unit": "",
+                "unitPosition": "BEFORE"
+            },
             "ceo": {
                 "code": "ceo",
                 "defaultValue": "",
@@ -148,9 +163,9 @@ export const schema_96 = {
                 "label": "通常払いの担当",
                 "noLabel": false,
                 "options": {
-                    "インベストデザイン": {
+                    "ID": {
                         "index": "1",
-                        "label": "インベストデザイン"
+                        "label": "ID"
                     },
                     "工務店": {
                         "index": "0",
@@ -300,7 +315,7 @@ export const schema_96 = {
                 "defaultValue": "",
                 "expression": "",
                 "hideExpression": false,
-                "label": "年間回数制限（コピー元：営業案件管理）",
+                "label": "年間回数制限",
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
@@ -558,7 +573,7 @@ export const schema_96 = {
                 "defaultValue": "",
                 "expression": "",
                 "hideExpression": false,
-                "label": "商品名（コピー元：営業案件管理）",
+                "label": "商品名",
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
@@ -683,7 +698,7 @@ export const schema_96 = {
                         "early",
                         "late"
                     ],
-                    "filterCond": "deadline >= TODAY()",
+                    "filterCond": "deadline >= FROM_TODAY(-2, MONTHS)",
                     "relatedApp": {
                         "app": "95",
                         "code": ""
@@ -746,41 +761,6 @@ export const schema_96 = {
                     "sort": "レコード番号 desc"
                 },
                 "type": "REFERENCE_TABLE"
-            },
-            "営業案件管理": {
-                "code": "営業案件管理",
-                "label": "営業案件管理",
-                "lookup": {
-                    "fieldMappings": [
-                        {
-                            "field": "service",
-                            "relatedField": "商品名"
-                        },
-                        {
-                            "field": "limit",
-                            "relatedField": "年間回数制限"
-                        },
-                        {
-                            "field": "customerCode",
-                            "relatedField": "取引企業管理レコード番号"
-                        }
-                    ],
-                    "filterCond": "",
-                    "lookupPickerFields": [
-                        "法人名・屋号",
-                        "商品名",
-                        "年間回数制限"
-                    ],
-                    "relatedApp": {
-                        "app": "35",
-                        "code": ""
-                    },
-                    "relatedKeyField": "レコード番号",
-                    "sort": "レコード番号 desc"
-                },
-                "noLabel": false,
-                "required": true,
-                "type": "NUMBER"
             },
             "工務店名": {
                 "code": "工務店名",
@@ -846,7 +826,7 @@ export const schema_96 = {
                 "minLength": "",
                 "noLabel": false,
                 "protocol": "WEB",
-                "required": true,
+                "required": false,
                 "type": "LINK",
                 "unique": false
             }
@@ -911,11 +891,6 @@ export const schema_96 = {
             {
                 "type": "ROW",
                 "fields": [
-                    {
-                        "type": "NUMBER",
-                        "code": "営業案件管理",
-                        "size": {}
-                    },
                     {
                         "type": "DROP_DOWN",
                         "code": "支払元口座",
@@ -1082,6 +1057,11 @@ export const schema_96 = {
                 "type": "ROW",
                 "fields": [
                     {
+                        "type": "LABEL",
+                        "label": "<div>　　</div><div><b>　旧案内ページに反映する項目→</b><div><b>&#xff08;新案内ページには影響なし&#xff09;</b></div></div>",
+                        "size": {}
+                    },
+                    {
                         "type": "SINGLE_LINE_TEXT",
                         "code": "closing",
                         "size": {}
@@ -1138,6 +1118,16 @@ export const schema_96 = {
                     {
                         "type": "REFERENCE_TABLE",
                         "code": "スケジュール"
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "LABEL",
+                        "label": "<div><b><font color=\"#ff0000\">↓新説明ページに反映されるため入力必須&#xff08;※通常支払日は営業日を入力&#xff09;</font></b></div>",
+                        "size": {}
                     }
                 ]
             },
@@ -1388,6 +1378,21 @@ export const schema_96 = {
                         "size": {}
                     }
                 ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
+                        "type": "NUMBER",
+                        "code": "businessDealsNumber_old",
+                        "size": {}
+                    },
+                    {
+                        "type": "LABEL",
+                        "label": "<div>←営業案件管理フィールドが必須だった時の入力値を保存しておくためのもの。<div>現在新規に作成するレコードでは空欄でOK</div></div>",
+                        "size": {}
+                    }
+                ]
             }
         ]
     },
@@ -1416,6 +1421,109 @@ export const schema_96 = {
                 "sort": "id asc",
                 "type": "LIST"
             },
+            "★ラグレスGK案件": {
+                "fields": [
+                    "id",
+                    "工務店正式名称",
+                    "startMailScheduled",
+                    "daysLater",
+                    "service",
+                    "pattern",
+                    "handleForHolidays",
+                    "closing",
+                    "original",
+                    "lag",
+                    "early",
+                    "effect",
+                    "deadline",
+                    "cost",
+                    "transfer_fee",
+                    "説明ページ"
+                ],
+                "filterCond": "id in (\"200\", \"206\", \"207\", \"106\", \"210\")",
+                "index": "8",
+                "name": "★ラグレスGK案件",
+                "sort": "id asc",
+                "type": "LIST"
+            },
+            "★新ラグレス契約先（2021.02.19時点）": {
+                "fields": [
+                    "id",
+                    "工務店正式名称",
+                    "startMailScheduled",
+                    "daysLater",
+                    "service",
+                    "pattern",
+                    "handleForHolidays",
+                    "closing",
+                    "original",
+                    "lag",
+                    "early",
+                    "effect",
+                    "deadline",
+                    "cost",
+                    "transfer_fee",
+                    "説明ページ",
+                    "default_pay_date_list"
+                ],
+                "filterCond": "id in (\"107\", \"303\", \"209\", \"211\", \"201\", \"202\", \"203\", \"300\", \"215\", \"304\", \"204\", \"105\", \"212\", \"222\", \"217\", \"218\", \"214\", \"219\", \"220\", \"221\")",
+                "index": "5",
+                "name": "★新ラグレス契約先（2021.02.19時点）",
+                "sort": "id asc",
+                "type": "LIST"
+            },
+            "★旧ラグレス契約先（ラグレスGK案件は除外）": {
+                "fields": [
+                    "id",
+                    "工務店正式名称",
+                    "startMailScheduled",
+                    "daysLater",
+                    "service",
+                    "pattern",
+                    "handleForHolidays",
+                    "closing",
+                    "original",
+                    "lag",
+                    "early",
+                    "effect",
+                    "deadline",
+                    "cost",
+                    "transfer_fee",
+                    "説明ページ",
+                    "default_pay_date_list"
+                ],
+                "filterCond": "id in (\"101\", \"102\", \"104\")",
+                "index": "7",
+                "name": "★旧ラグレス契約先（ラグレスGK案件は除外）",
+                "sort": "id asc",
+                "type": "LIST"
+            },
+            "★通常支払＆新ラグレス先（2021.01.15時点）": {
+                "fields": [
+                    "id",
+                    "工務店正式名称",
+                    "startMailScheduled",
+                    "daysLater",
+                    "service",
+                    "pattern",
+                    "handleForHolidays",
+                    "closing",
+                    "original",
+                    "lag",
+                    "early",
+                    "effect",
+                    "deadline",
+                    "cost",
+                    "transfer_fee",
+                    "説明ページ",
+                    "default_pay_date_list"
+                ],
+                "filterCond": "id in (\"213\", \"100\", \"216\")",
+                "index": "6",
+                "name": "★通常支払＆新ラグレス先（2021.01.15時点）",
+                "sort": "id asc",
+                "type": "LIST"
+            },
             "テスト用レコード": {
                 "fields": [
                     "レコード番号",
@@ -1425,7 +1533,6 @@ export const schema_96 = {
                     "工務店正式名称",
                     "ceoTitle",
                     "ceo",
-                    "営業案件管理",
                     "customerCode",
                     "service",
                     "startMailScheduled",
@@ -1467,18 +1574,17 @@ export const schema_96 = {
                     "defaultPaymentResponsible",
                     "id",
                     "工務店正式名称",
-                    "creditFacility",
-                    "uncollectedAmount",
-                    "remainingCreditFacility",
+                    "pattern",
                     "closing",
                     "original",
                     "handleForHolidays",
                     "early",
                     "cost",
+                    "creditFacility",
+                    "uncollectedAmount",
+                    "remainingCreditFacility",
                     "daysLater",
                     "yield",
-                    "transfer_fee",
-                    "pattern",
                     "limit",
                     "service",
                     "nextCheckStatus"
@@ -1486,7 +1592,7 @@ export const schema_96 = {
                 "filterCond": "工務店名 not like \"テスト\"",
                 "index": "0",
                 "name": "一覧1",
-                "sort": "レコード番号 desc",
+                "sort": "id asc",
                 "type": "LIST"
             },
             "一覧（支払パターン）": {
@@ -1507,6 +1613,32 @@ export const schema_96 = {
                 "index": "1",
                 "name": "一覧（支払パターン）",
                 "sort": "レコード番号 desc",
+                "type": "LIST"
+            },
+            "末締め当月末支払い承諾先一覧": {
+                "fields": [
+                    "id",
+                    "工務店正式名称",
+                    "startMailScheduled",
+                    "daysLater",
+                    "service",
+                    "pattern",
+                    "handleForHolidays",
+                    "closing",
+                    "original",
+                    "lag",
+                    "early",
+                    "effect",
+                    "deadline",
+                    "cost",
+                    "transfer_fee",
+                    "説明ページ",
+                    "default_pay_date_list"
+                ],
+                "filterCond": "id in (\"201\", \"206\", \"303\", \"209\", \"210\", \"214\", \"216\", \"220\")",
+                "index": "4",
+                "name": "末締め当月末支払い承諾先一覧",
+                "sort": "id asc",
                 "type": "LIST"
             }
         }
