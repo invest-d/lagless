@@ -163,6 +163,9 @@ function getKintoneRecordsPayload(mail_data) {
     const clo = new Date(today.getFullYear(), today.getMonth(), 0);
     const closing_field_value = [clo.getFullYear(), clo.getMonth()+1, clo.getDate()].join("-");
 
+    const pay = new Date(today.getFullYear(), today.getMonth(), today.getDate()+1);
+    const payment_field_value = [pay.getFullYear(), pay.getMonth()+1, pay.getDate()].join("-");
+
     for (const single_mail of mail_data) {
         const kintone_data = getConstructorMaster(single_mail["ordererGig"]);
         // もし工務店マスタに当該レコードがなかった場合はとりあえず500を入れておく
@@ -183,6 +186,10 @@ function getKintoneRecordsPayload(mail_data) {
             "closingDay": {
                 // 常に「今日の日付から見た先月末」を入力
                 "value": closing_field_value
+            },
+            "paymentDate": {
+                // 常に「今日の翌日」を入力
+                "value": payment_field_value
             },
             "billingCompany": {
                 "value": "株式会社GIG"
