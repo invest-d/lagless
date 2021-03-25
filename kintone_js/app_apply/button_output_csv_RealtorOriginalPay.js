@@ -24,6 +24,11 @@
     保存後、出力したデータの状態フィールドを振込データ出力済みに更新する。
 */
 
+import {
+    encodeToSjis,
+    downloadFile
+} from "../util/output_csv";
+
 import * as common_logics from "./logics_output_csv";
 import * as realtor_logics from "./logics_output_csv_RealtorOriginalPay";
 
@@ -88,10 +93,10 @@ import * as realtor_logics from "./logics_output_csv_RealtorOriginalPay";
                 return r;
             });
             const csv_data = common_logics.generateCsvData(applies_fixed_amount);
-            const sjis_list = common_logics.encodeToSjis(csv_data);
+            const sjis_list = encodeToSjis(csv_data);
 
             const file_name = `リライト通常払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`;
-            common_logics.downloadFile(sjis_list, file_name);
+            downloadFile(sjis_list, file_name);
 
             await common_logics.updateToDone(target_records);
 
