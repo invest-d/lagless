@@ -139,26 +139,26 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
             await copyKebanFactoringAmount();
 
             // 対象となるレコードを申込みアプリから全件取得
-            const insert_targets = await getAppliesReadyForCollect()
+            const target_applies = await getAppliesReadyForCollect()
                 .catch((err) => {
                     console.error(err);
                     throw new Error("申込みレコードの取得中にエラーが発生しました。");
                 });
 
-            if (insert_targets.length <= 0) {
+            if (target_applies.length <= 0) {
                 alert(`状態が ${statusReady_APPLY} かつ\n回収IDが 未入力 のレコードは存在しませんでした。\n回収アプリのレコードを作り直したい場合は、\n回収アプリのレコード詳細画面から\n「回収レコード削除」ボタンを押してください。`);
                 return;
             }
 
             // 取得したレコードを元に、回収アプリにレコードを追加する。
-            const inserted_ids = await insertCollectRecords(insert_targets)
+            const inserted_ids = await insertCollectRecords(target_applies)
                 .catch((err) => {
                     console.error(err);
                     throw new Error("回収アプリへのレコード挿入中にエラーが発生しました。");
                 });
 
             // 回収アプリのレコード番号を、申込みレコードに紐付ける
-            const updated_apply = await assignCollectIdsToApplies(insert_targets, inserted_ids)
+            const updated_apply = await assignCollectIdsToApplies(target_applies, inserted_ids)
                 .catch((err) => {
                     console.error(err);
                     throw new Error("回収アプリにはレコードを作成できましたが、\n申込みレコードとの紐付け中にエラーが発生しました。");
