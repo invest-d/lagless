@@ -369,15 +369,16 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
     }
 
     async function insertCollectRecords(insert_object) {
-        const request_body = {
-            "app": APP_ID_COLLECT,
-            "records": insert_object.map((o) => o.new_collect_record)
-        };
+        const resp = await Promise.all(insert_object.map((o) => {
+            const request_body = {
+                "app": APP_ID_COLLECT,
+                "record": o.new_collect_record
+            };
 
-        // INSERT実行
-        const resp = await client.record.addAllRecords(request_body);
-        // 新規作成されたレコードID一覧を返す
-        return resp.records.map((r) => r.id);
+            return client.record.addRecord(request_body);
+        }));
+
+        return resp.map((r) => r.id);
     }
 
     // YYYY-MM-DDの日付書式と'翌月15日'などの文字列から、締め日をYYYY-MM-DDにして返す
