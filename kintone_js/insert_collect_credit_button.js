@@ -248,13 +248,13 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         return client.record.getAllRecords(request_body);
     }
 
-    async function getInsertObject(insert_targets_array) {
+    async function getInsertObject(target_applies) {
         // 回収アプリにレコード挿入できる形にデータを加工する。
         // 渡されてくるのは {constructionShopId: {…}, 支払先正式名称: {…}, totalReceivables: {…}, closingDay: {…}, paymentDate: {…}} のオブジェクトの配列
         // 各keyに対応するフィールド値へのアクセスは、array[0].constructionShopId.valueのようにする。
 
         // まず工務店IDと締日だけ全て抜き出す
-        const key_pairs = insert_targets_array.map((obj) => {
+        const key_pairs = target_applies.map((obj) => {
             return {
                 [fieldConstructionShopId_APPLY]: obj[fieldConstructionShopId_APPLY]["value"],
                 [fieldClosingDay_APPLY]: obj[fieldClosingDay_APPLY]["value"]
@@ -286,7 +286,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         // 申込レコード一覧の中から重複なしの工務店IDと締日のペアをキーに、INSERT用のレコードを作成。
         const insert_object = unique_key_pairs.map((key_pair) => {
             // 工務店IDと締日が同じ申込みレコードを抽出
-            const target_records = insert_targets_array.filter((obj) => {
+            const target_records = target_applies.filter((obj) => {
                 return (obj[fieldConstructionShopId_APPLY]["value"] === key_pair[fieldConstructionShopId_APPLY]
                 && obj[fieldClosingDay_APPLY]["value"] === key_pair[fieldClosingDay_APPLY]);
             });
