@@ -302,7 +302,7 @@
       </div>
 
 
-      <!-- 請求書の締日From -->
+      <!-- 稼働期間の選択 -->
       <div class="form-group" id="targetTermGroup">
         <label for="targetTerm">前払いを希望する稼働日が含まれる期間</label>
         <span class="badge badge-danger">必須</span>
@@ -313,7 +313,26 @@
         <span class="fas fa-times valid-status-icon invalid-input"></span>
         <div class="invalid-feedback">選択してください。</div>
       </div>
-      <!-- /請求書の締日From -->
+      <!-- /稼働期間の選択 -->
+
+
+      <!-- 稼働日数の選択 -->
+      <div class="form-group" id="workedDaysWFIGroup">
+        <label for="workedDaysWFI">稼働日数</label>
+        <span class="badge badge-danger">必須</span>
+        <select type="text" class="form-control no-blank"
+          name="workedDaysWFI" id="workedDaysWFI" required>
+          <option value="1">1日</option>
+          <option value="2">2日</option>
+          <option value="3">3日</option>
+          <option value="4">4日</option>
+          <option value="5">5日</option>
+        </select>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">選択してください。</div>
+      </div>
+      <!-- /稼働日数の選択 -->
 
 
       <div class="form-group pt-5" name="only_first">
