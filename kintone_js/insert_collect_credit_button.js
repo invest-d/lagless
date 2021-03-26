@@ -157,14 +157,14 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
             const insert_object = await aggregateApplies(target_applies);
 
             // 取得したレコードを元に、回収アプリにレコードを追加する。
-            const inserted_ids = await insertCollectRecords(insert_object)
+            const aggregate_object = await insertCollectRecords(insert_object)
                 .catch((err) => {
                     console.error(err);
                     throw new Error("回収アプリへのレコード挿入中にエラーが発生しました。");
                 });
 
             // 回収アプリのレコード番号を、申込みレコードに紐付ける
-            const updated_apply = await assignCollectIdsToApplies(target_applies, inserted_ids)
+            const updated_apply = await assignCollectIds(aggregate_object)
                 .catch((err) => {
                     console.error(err);
                     throw new Error("回収アプリにはレコードを作成できましたが、\n申込みレコードとの紐付け中にエラーが発生しました。");
@@ -369,7 +369,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
     }
 
     async function insertCollectRecords(insert_object) {
-        const resp = await Promise.all(insert_object.map(async (o) => {
+        const result = await Promise.all(insert_object.map(async (o) => {
             const request_body = {
                 "app": APP_ID_COLLECT,
                 "record": o.new_collect_record
@@ -377,11 +377,55 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
             const inserted = await client.record.addRecord(request_body);
             o.new_record_id = inserted.id;
-            return inserted;
+            return o;
         }));
 
-        return resp.map((r) => r.id);
+        return result;
     }
+
+    const assignCollectIds = async (aggregate_object) => {
+        const body = {
+            "app": APP_ID_APPLY,
+            "records": aggregate_object.flatMap((o) => {
+                // oのoriginal_applies全てに同じ回収レコードIDを付与する。
+                /* イメージ(flatMapじゃなくてmapの場合)
+                    [
+                        [
+                            {id: 101, collectID: 11},
+                            {id: 102, collectID: 11},
+                            {id: 103, collectID: 11},
+                        ],
+                        [
+                            {id: 104, collectID: 12},
+                            {id: 105, collectID: 12},
+                            {id: 106, collectID: 12},
+                        ],
+                    ]
+                    →flatMapにした場合
+                    [
+                        {id: 101, collectID: 11},
+                        {id: 102, collectID: 11},
+                        {id: 103, collectID: 11},
+                        {id: 104, collectID: 12},
+                        {id: 105, collectID: 12},
+                        {id: 106, collectID: 12},
+                    ]
+                */
+                return o.original_applies.map((a) => {
+                    return {
+                        "id": a[fieldRecordId_APPLY]["value"],
+                        "record": {
+                            [fieldCollectId_APPLY]: {
+                                "value": o.new_record_id
+                            }
+                        }
+                    };
+                });
+            })
+        };
+
+        return client.record.updateAllRecords(body);
+    };
 
     // YYYY-MM-DDの日付書式と'翌月15日'などの文字列から、締め日をYYYY-MM-DDにして返す
     function getDeadline(closingDay, original_payment_date_str) {
@@ -411,41 +455,5 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         }
 
         return [deadline.getFullYear(), deadline.getMonth()+1, deadline.getDate()].join("-");
-    }
-
-    async function assignCollectIdsToApplies(applies, inserted_ids) {
-        // 申込みレコードに回収レコードのレコード番号を振る
-        // 先ほど回収アプリに挿入したレコードのidを使って、そのまま回収アプリからGET
-        const in_query = `("${  inserted_ids.join('","')  }")`;
-        const body_new_collects = {
-            "app": APP_ID_COLLECT,
-            "fields": [fieldRecordId_COLLECT, fieldConstructionShopId_COLLECT, fieldClosingDate_COLLECT],
-            "condition": `${fieldRecordId_COLLECT} in ${in_query}`
-        };
-        const inserted_collects = await client.record.getAllRecords(body_new_collects);
-
-        // 申込みレコードがどの回収レコードに紐づいているかわかるように、回収IDフィールドに回収レコードのレコード番号をセットする
-        const body_add_collect_id = {
-            "app": APP_ID_APPLY,
-            "records": applies.map((apply) => {
-                // どの回収レコードにまとめられているかを特定
-                const collect_dist_record = inserted_collects.find((collect) => {
-                    // 工務店IDの一致
-                    return apply[fieldConstructionShopId_APPLY]["value"] === collect[fieldConstructionShopId_COLLECT]["value"]
-                    // 締日の一致
-                    && apply[fieldClosingDay_APPLY]["value"] === collect[fieldClosingDate_COLLECT]["value"];
-                });
-
-                return {
-                    "id": apply[fieldRecordId_APPLY]["value"],
-                    "record": {
-                        [fieldCollectId_APPLY]: {
-                            "value": collect_dist_record[fieldRecordId_COLLECT]["value"]
-                        }
-                    }
-                };
-            })
-        };
-        return client.record.updateAllRecords(body_add_collect_id);
     }
 })();
