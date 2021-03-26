@@ -1,4 +1,8 @@
 /*
+    Version 5
+    GIG案件の回収レコードを作成するとき、
+    工務店IDが異なっていても工務店ID 500で回収レコードがまとまるようにした
+
     Version 4.1
     軽バン.com案件について、請求書ファイルキーを回収レコードに記入しないようにする処理を追加
     （案件の性質上、請求書の提出が無いため）
@@ -150,8 +154,10 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
                 return;
             }
 
+            const insert_object = await getInsertObject(target_applies);
+
             // 取得したレコードを元に、回収アプリにレコードを追加する。
-            const inserted_ids = await insertCollectRecords(target_applies)
+            const inserted_ids = await insertCollectRecords(insert_object)
                 .catch((err) => {
                     console.error(err);
                     throw new Error("回収アプリへのレコード挿入中にエラーが発生しました。");
@@ -242,7 +248,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         return client.record.getAllRecords(request_body);
     }
 
-    async function insertCollectRecords(insert_targets_array) {
+    async function getInsertObject(insert_targets_array) {
         // 回収アプリにレコード挿入できる形にデータを加工する。
         // 渡されてくるのは {constructionShopId: {…}, 支払先正式名称: {…}, totalReceivables: {…}, closingDay: {…}, paymentDate: {…}} のオブジェクトの配列
         // 各keyに対応するフィールド値へのアクセスは、array[0].constructionShopId.valueのようにする。
@@ -351,6 +357,10 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
             };
         });
 
+        return insert_object;
+    }
+
+    async function insertCollectRecords(insert_object) {
         const request_body = {
             "app": APP_ID_COLLECT,
             "records": insert_object
