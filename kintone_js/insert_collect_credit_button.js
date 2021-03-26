@@ -1,4 +1,8 @@
 /*
+    Version 5
+    GIG案件の回収レコードを作成するとき、
+    工務店IDが異なっていても工務店ID 500で回収レコードがまとまるようにした
+
     Version 4.1
     軽バン.com案件について、請求書ファイルキーを回収レコードに記入しないようにする処理を追加
     （案件の性質上、請求書の提出が無いため）
@@ -29,6 +33,8 @@
     申込みレコードの回収IDフィールドに回収アプリ側のレコード番号を入力する。
 */
 import { KE_BAN_CONSTRUCTORS } from "./96/common";
+
+import { GIG_ID, isGigConstructorID } from "./util/gig_utils";
 
 (function () {
     "use strict";
@@ -139,26 +145,28 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
             await copyKebanFactoringAmount();
 
             // 対象となるレコードを申込みアプリから全件取得
-            const insert_targets = await getAppliesReadyForCollect()
+            const target_applies = await getAppliesReadyForCollect()
                 .catch((err) => {
                     console.error(err);
                     throw new Error("申込みレコードの取得中にエラーが発生しました。");
                 });
 
-            if (insert_targets.length <= 0) {
+            if (target_applies.length <= 0) {
                 alert(`状態が ${statusReady_APPLY} かつ\n回収IDが 未入力 のレコードは存在しませんでした。\n回収アプリのレコードを作り直したい場合は、\n回収アプリのレコード詳細画面から\n「回収レコード削除」ボタンを押してください。`);
                 return;
             }
 
+            const insert_object = await aggregateApplies(target_applies);
+
             // 取得したレコードを元に、回収アプリにレコードを追加する。
-            const inserted_ids = await insertCollectRecords(insert_targets)
+            const aggregate_object = await insertCollectRecords(insert_object)
                 .catch((err) => {
                     console.error(err);
                     throw new Error("回収アプリへのレコード挿入中にエラーが発生しました。");
                 });
 
             // 回収アプリのレコード番号を、申込みレコードに紐付ける
-            const updated_apply = await assignCollectIdsToApplies(insert_targets, inserted_ids)
+            const updated_apply = await assignCollectIds(aggregate_object)
                 .catch((err) => {
                     console.error(err);
                     throw new Error("回収アプリにはレコードを作成できましたが、\n申込みレコードとの紐付け中にエラーが発生しました。");
@@ -242,13 +250,13 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         return client.record.getAllRecords(request_body);
     }
 
-    async function insertCollectRecords(insert_targets_array) {
+    async function aggregateApplies(target_applies) {
         // 回収アプリにレコード挿入できる形にデータを加工する。
         // 渡されてくるのは {constructionShopId: {…}, 支払先正式名称: {…}, totalReceivables: {…}, closingDay: {…}, paymentDate: {…}} のオブジェクトの配列
         // 各keyに対応するフィールド値へのアクセスは、array[0].constructionShopId.valueのようにする。
 
         // まず工務店IDと締日だけ全て抜き出す
-        const key_pairs = insert_targets_array.map((obj) => {
+        const key_pairs = target_applies.map((obj) => {
             return {
                 [fieldConstructionShopId_APPLY]: obj[fieldConstructionShopId_APPLY]["value"],
                 [fieldClosingDay_APPLY]: obj[fieldClosingDay_APPLY]["value"]
@@ -261,6 +269,9 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         const unique_key_pairs = Array.from(new Map(
             key_pairs.map((p) => [`${p[fieldConstructionShopId_APPLY]}${DELIMITER}${p[fieldClosingDay_APPLY]}`, p])
         ).values());
+
+        // GIGは別集計にするため、一度リストから除く。
+        const standard_pairs = unique_key_pairs.filter((p) => !isGigConstructorID(p[fieldConstructionShopId_APPLY]));
 
         // 工務店マスタから回収日の情報を取得。申込レコードに含まれる工務店の情報のみ取得する
         const body_komuten_payment_date = {
@@ -278,87 +289,220 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         });
 
         // 申込レコード一覧の中から重複なしの工務店IDと締日のペアをキーに、INSERT用のレコードを作成。
-        const request_body = {
-            "app": APP_ID_COLLECT,
-            "records": unique_key_pairs.map((key_pair) => {
-                // 工務店IDと締日が同じ申込みレコードを抽出
-                const target_records = insert_targets_array.filter((obj) => {
-                    return (obj[fieldConstructionShopId_APPLY]["value"] === key_pair[fieldConstructionShopId_APPLY]
-                    && obj[fieldClosingDay_APPLY]["value"] === key_pair[fieldClosingDay_APPLY]);
-                });
+        const standard_insert_object = standard_pairs.map((key_pair) => {
+            // 工務店IDと締日が同じ申込みレコードを抽出
+            const aggregate_applies = target_applies.filter((obj) => {
+                return (obj[fieldConstructionShopId_APPLY]["value"] === key_pair[fieldConstructionShopId_APPLY]
+                && obj[fieldClosingDay_APPLY]["value"] === key_pair[fieldClosingDay_APPLY]);
+            });
 
-                // 抽出した中から申込金額を合計（ここで合計する金額はクラウドサイン送信用。振込依頼書送信用の合計金額は振込依頼書の送信時に別途計算する）
-                const totalAmount = target_records.reduce((total, record_obj) => {
-                    return total + Number(record_obj[fieldTotalReceivables_APPLY]["value"]);
-                }, 0);
+            // 抽出した中から申込金額を合計（ここで合計する金額はクラウドサイン送信用。振込依頼書送信用の合計金額は振込依頼書の送信時に別途計算する）
+            const totalAmount = aggregate_applies.reduce((total, record_obj) => {
+                return total + Number(record_obj[fieldTotalReceivables_APPLY]["value"]);
+            }, 0);
 
-                // サブテーブルに申し込みレコードの情報一覧を転記
-                // レコード内のサブテーブルを操作する方法のリファレンス：https://developer.cybozu.io/hc/ja/articles/200752984-%E3%83%AC%E3%82%B3%E3%83%BC%E3%83%89%E6%9B%B4%E6%96%B0%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%E6%93%8D%E4%BD%9C%E3%81%AE%E3%83%86%E3%82%AF%E3%83%8B%E3%83%83%E3%82%AF
-                return {
-                    [fieldConstructionShopId_COLLECT]: {
-                        "value": key_pair[fieldConstructionShopId_APPLY]
-                    },
-                    [fieldClosingDate_COLLECT]: {
-                        "value": key_pair[fieldClosingDay_APPLY]
-                    },
-                    // 工務店マスタの入力内容から回収期限を計算。
-                    [fieldDeadline_COLLECT]: {
-                        "value": getDeadline(key_pair[fieldClosingDay_APPLY], komuten_info[String(key_pair[fieldConstructionShopId_APPLY])])
-                    },
-                    [fieldStatus_COLLECT]: {
-                        "value": statusDefault_COLLECT
-                    },
-                    [fieldScheduledCollectableAmount_COLLECT]: {
-                        "value": totalAmount
-                    },
-                    // サブテーブル部分
-                    [tableCloudSignApplies_COLLECT]: {
-                        "value": target_records.map((record) => {
-                            const sub_table_record = {
-                                "value": {
-                                    [tableFieldApplyRecordNoCS]: {
-                                        "value": record[fieldRecordId_APPLY]["value"]
-                                    },
-                                    [tableFieldApplicantOfficialNameCS]: {
-                                        "value": record[fieldApplicant_APPLY]["value"]
-                                    },
-                                    [tableFieldInvoiceAmountCS] : {
-                                        "value": record[fieldInvoiceAmount_APPLY]["value"]
-                                    },
-                                    [tableFieldMemberFeeCS] : {
-                                        "value": record[fieldMemberFee_APPLY]["value"]
-                                    },
-                                    [tableFieldReceivableCS] : {
-                                        "value": record[fieldTotalReceivables_APPLY]["value"]
-                                    },
-                                    [tableFieldPaymentTimingCS] : {
-                                        "value": record[fieldPaymentTiming_APPLY]["value"]
-                                    },
-                                    [tableFieldPaymentDateCS]: {
-                                        "value": record[fieldPaymentDate_APPLY]["value"]
-                                    }
+            // サブテーブルに申し込みレコードの情報一覧を転記
+            // レコード内のサブテーブルを操作する方法のリファレンス：https://developer.cybozu.io/hc/ja/articles/200752984-%E3%83%AC%E3%82%B3%E3%83%BC%E3%83%89%E6%9B%B4%E6%96%B0%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%E6%93%8D%E4%BD%9C%E3%81%AE%E3%83%86%E3%82%AF%E3%83%8B%E3%83%83%E3%82%AF
+            const new_collect_record = {
+                [fieldConstructionShopId_COLLECT]: {
+                    "value": key_pair[fieldConstructionShopId_APPLY]
+                },
+                [fieldClosingDate_COLLECT]: {
+                    "value": key_pair[fieldClosingDay_APPLY]
+                },
+                // 工務店マスタの入力内容から回収期限を計算。
+                [fieldDeadline_COLLECT]: {
+                    "value": getDeadline(key_pair[fieldClosingDay_APPLY], komuten_info[String(key_pair[fieldConstructionShopId_APPLY])])
+                },
+                [fieldStatus_COLLECT]: {
+                    "value": statusDefault_COLLECT
+                },
+                [fieldScheduledCollectableAmount_COLLECT]: {
+                    "value": totalAmount
+                },
+                // サブテーブル部分
+                [tableCloudSignApplies_COLLECT]: {
+                    "value": aggregate_applies.map((record) => {
+                        const sub_table_record = {
+                            "value": {
+                                [tableFieldApplyRecordNoCS]: {
+                                    "value": record[fieldRecordId_APPLY]["value"]
+                                },
+                                [tableFieldApplicantOfficialNameCS]: {
+                                    "value": record[fieldApplicant_APPLY]["value"]
+                                },
+                                [tableFieldInvoiceAmountCS] : {
+                                    "value": record[fieldInvoiceAmount_APPLY]["value"]
+                                },
+                                [tableFieldMemberFeeCS] : {
+                                    "value": record[fieldMemberFee_APPLY]["value"]
+                                },
+                                [tableFieldReceivableCS] : {
+                                    "value": record[fieldTotalReceivables_APPLY]["value"]
+                                },
+                                [tableFieldPaymentTimingCS] : {
+                                    "value": record[fieldPaymentTiming_APPLY]["value"]
+                                },
+                                [tableFieldPaymentDateCS]: {
+                                    "value": record[fieldPaymentDate_APPLY]["value"]
                                 }
-                            };
-
-                            // WFIはファイルキー不要
-                            if (!KE_BAN_CONSTRUCTORS.includes(record[fieldConstructionShopId_APPLY]["value"])) {
-                                sub_table_record["value"][tableFieldAttachmentFileKeyCS] = {
-                                    "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
-                                };
                             }
+                        };
 
-                            return sub_table_record;
-                        })
-                    }
-                };
+                        // WFIはファイルキー不要
+                        if (!KE_BAN_CONSTRUCTORS.includes(record[fieldConstructionShopId_APPLY]["value"])) {
+                            sub_table_record["value"][tableFieldAttachmentFileKeyCS] = {
+                                "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
+                            };
+                        }
+
+                        return sub_table_record;
+                    })
+                }
+            };
+
+            const result = {
+                original_applies: aggregate_applies,
+                new_collect_record: new_collect_record,
+                new_record_id: null
+            };
+
+            return result;
+        });
+
+        const gig_applies = target_applies.filter((a) => isGigConstructorID(a[fieldConstructionShopId_APPLY]["value"]));
+        if (gig_applies.length === 0) {
+            return standard_insert_object;
+        }
+
+        const unique_gig_closing_dates = Array.from(new Set(gig_applies.map((a) => a[fieldClosingDay_APPLY]["value"])));
+        const gig_insert_object = unique_gig_closing_dates.map((c) => {
+            const aggregate_applies_gig = gig_applies.filter((a) => a[fieldClosingDay_APPLY]["value"] === c);
+
+            const totalAmount = aggregate_applies_gig.reduce((total, record_obj) => {
+                return total + Number(record_obj[fieldTotalReceivables_APPLY]["value"]);
+            }, 0);
+
+            const new_collect_record = {
+                [fieldConstructionShopId_COLLECT]: {
+                    "value": GIG_ID
+                },
+                [fieldClosingDate_COLLECT]: {
+                    "value": c
+                },
+                // 工務店マスタの入力内容から回収期限を計算。
+                [fieldDeadline_COLLECT]: {
+                    "value": getDeadline(c, komuten_info[GIG_ID])
+                },
+                [fieldStatus_COLLECT]: {
+                    "value": statusDefault_COLLECT
+                },
+                [fieldScheduledCollectableAmount_COLLECT]: {
+                    "value": totalAmount
+                },
+                // サブテーブル部分
+                [tableCloudSignApplies_COLLECT]: {
+                    "value": aggregate_applies_gig.map((record) => {
+                        return {
+                            "value": {
+                                [tableFieldApplyRecordNoCS]: {
+                                    "value": record[fieldRecordId_APPLY]["value"]
+                                },
+                                [tableFieldApplicantOfficialNameCS]: {
+                                    "value": record[fieldApplicant_APPLY]["value"]
+                                },
+                                [tableFieldInvoiceAmountCS] : {
+                                    "value": record[fieldInvoiceAmount_APPLY]["value"]
+                                },
+                                [tableFieldMemberFeeCS] : {
+                                    "value": record[fieldMemberFee_APPLY]["value"]
+                                },
+                                [tableFieldReceivableCS] : {
+                                    "value": record[fieldTotalReceivables_APPLY]["value"]
+                                },
+                                [tableFieldPaymentTimingCS] : {
+                                    "value": record[fieldPaymentTiming_APPLY]["value"]
+                                },
+                                [tableFieldPaymentDateCS]: {
+                                    "value": record[fieldPaymentDate_APPLY]["value"]
+                                },
+                                [tableFieldAttachmentFileKeyCS]: {
+                                    "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
+                                }
+                            }
+                        };
+                    })
+                }
+            };
+
+            return {
+                original_applies: aggregate_applies_gig,
+                new_collect_record: new_collect_record,
+                new_record_id: null
+            };
+        });
+
+        return standard_insert_object.concat(gig_insert_object);
+    }
+
+    async function insertCollectRecords(insert_object) {
+        const result = await Promise.all(insert_object.map(async (o) => {
+            const request_body = {
+                "app": APP_ID_COLLECT,
+                "record": o.new_collect_record
+            };
+
+            const inserted = await client.record.addRecord(request_body);
+            o.new_record_id = inserted.id;
+            return o;
+        }));
+
+        return result;
+    }
+
+    const assignCollectIds = async (aggregate_object) => {
+        const body = {
+            "app": APP_ID_APPLY,
+            "records": aggregate_object.flatMap((o) => {
+                // oのoriginal_applies全てに同じ回収レコードIDを付与する。
+                /* イメージ(flatMapじゃなくてmapの場合)
+                    [
+                        [
+                            {id: 101, collectID: 11},
+                            {id: 102, collectID: 11},
+                            {id: 103, collectID: 11},
+                        ],
+                        [
+                            {id: 104, collectID: 12},
+                            {id: 105, collectID: 12},
+                            {id: 106, collectID: 12},
+                        ],
+                    ]
+                    →flatMapにした場合
+                    [
+                        {id: 101, collectID: 11},
+                        {id: 102, collectID: 11},
+                        {id: 103, collectID: 11},
+                        {id: 104, collectID: 12},
+                        {id: 105, collectID: 12},
+                        {id: 106, collectID: 12},
+                    ]
+                */
+                return o.original_applies.map((a) => {
+                    return {
+                        "id": a[fieldRecordId_APPLY]["value"],
+                        "record": {
+                            [fieldCollectId_APPLY]: {
+                                "value": o.new_record_id
+                            }
+                        }
+                    };
+                });
             })
         };
 
-        // INSERT実行
-        const resp = await client.record.addAllRecords(request_body);
-        // 新規作成されたレコードID一覧を返す
-        return resp.records.map((r) => r.id);
-    }
+        return client.record.updateAllRecords(body);
+    };
 
     // YYYY-MM-DDの日付書式と'翌月15日'などの文字列から、締め日をYYYY-MM-DDにして返す
     function getDeadline(closingDay, original_payment_date_str) {
@@ -388,41 +532,5 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         }
 
         return [deadline.getFullYear(), deadline.getMonth()+1, deadline.getDate()].join("-");
-    }
-
-    async function assignCollectIdsToApplies(applies, inserted_ids) {
-        // 申込みレコードに回収レコードのレコード番号を振る
-        // 先ほど回収アプリに挿入したレコードのidを使って、そのまま回収アプリからGET
-        const in_query = `("${  inserted_ids.join('","')  }")`;
-        const body_new_collects = {
-            "app": APP_ID_COLLECT,
-            "fields": [fieldRecordId_COLLECT, fieldConstructionShopId_COLLECT, fieldClosingDate_COLLECT],
-            "condition": `${fieldRecordId_COLLECT} in ${in_query}`
-        };
-        const inserted_collects = await client.record.getAllRecords(body_new_collects);
-
-        // 申込みレコードがどの回収レコードに紐づいているかわかるように、回収IDフィールドに回収レコードのレコード番号をセットする
-        const body_add_collect_id = {
-            "app": APP_ID_APPLY,
-            "records": applies.map((apply) => {
-                // どの回収レコードにまとめられているかを特定
-                const collect_dist_record = inserted_collects.find((collect) => {
-                    // 工務店IDの一致
-                    return apply[fieldConstructionShopId_APPLY]["value"] === collect[fieldConstructionShopId_COLLECT]["value"]
-                    // 締日の一致
-                    && apply[fieldClosingDay_APPLY]["value"] === collect[fieldClosingDate_COLLECT]["value"];
-                });
-
-                return {
-                    "id": apply[fieldRecordId_APPLY]["value"],
-                    "record": {
-                        [fieldCollectId_APPLY]: {
-                            "value": collect_dist_record[fieldRecordId_COLLECT]["value"]
-                        }
-                    }
-                };
-            })
-        };
-        return client.record.updateAllRecords(body_add_collect_id);
     }
 })();
