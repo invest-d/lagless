@@ -298,7 +298,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
             // サブテーブルに申し込みレコードの情報一覧を転記
             // レコード内のサブテーブルを操作する方法のリファレンス：https://developer.cybozu.io/hc/ja/articles/200752984-%E3%83%AC%E3%82%B3%E3%83%BC%E3%83%89%E6%9B%B4%E6%96%B0%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%E6%93%8D%E4%BD%9C%E3%81%AE%E3%83%86%E3%82%AF%E3%83%8B%E3%83%83%E3%82%AF
-            return {
+            const new_collect_record = {
                 [fieldConstructionShopId_COLLECT]: {
                     "value": key_pair[fieldConstructionShopId_APPLY]
                 },
@@ -355,6 +355,8 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
                     })
                 }
             };
+
+            return new_collect_record;
         });
 
         return insert_object;
