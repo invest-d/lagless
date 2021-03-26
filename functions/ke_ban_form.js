@@ -87,7 +87,8 @@ exports.ke_ban_form = functions.https.onRequest(async (req, res) => {
         accountNumber_Form: "口座番号",
         accountName_Form: "口座名義",
         agree: "利用規約に同意する",
-        targetTerm: "前払いを希望する稼働期間"
+        targetTerm: "前払いを希望する稼働期間",
+        workedDaysWFI: "稼働日数"
     };
 
     // kintone保存用
