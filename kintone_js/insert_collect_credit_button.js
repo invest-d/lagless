@@ -34,6 +34,8 @@
 */
 import { KE_BAN_CONSTRUCTORS } from "./96/common";
 
+import { GIG_ID, isGigConstructorID } from "./util/gig_utils";
+
 (function () {
     "use strict";
 
@@ -268,6 +270,9 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
             key_pairs.map((p) => [`${p[fieldConstructionShopId_APPLY]}${DELIMITER}${p[fieldClosingDay_APPLY]}`, p])
         ).values());
 
+        // GIGは別集計にするため、一度リストから除く。
+        const standard_pairs = unique_key_pairs.filter((p) => !isGigConstructorID(p[fieldConstructionShopId_APPLY]));
+
         // 工務店マスタから回収日の情報を取得。申込レコードに含まれる工務店の情報のみ取得する
         const body_komuten_payment_date = {
             "app": APP_ID_KOMUTEN,
@@ -284,7 +289,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         });
 
         // 申込レコード一覧の中から重複なしの工務店IDと締日のペアをキーに、INSERT用のレコードを作成。
-        const insert_object = unique_key_pairs.map((key_pair) => {
+        const standard_insert_object = standard_pairs.map((key_pair) => {
             // 工務店IDと締日が同じ申込みレコードを抽出
             const aggregate_applies = target_applies.filter((obj) => {
                 return (obj[fieldConstructionShopId_APPLY]["value"] === key_pair[fieldConstructionShopId_APPLY]
@@ -365,7 +370,79 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
             return result;
         });
 
-        return insert_object;
+        const gig_applies = target_applies.filter((a) => isGigConstructorID(a[fieldConstructionShopId_APPLY]["value"]));
+        if (gig_applies.length === 0) {
+            return standard_insert_object;
+        }
+
+        const unique_gig_closing_dates = Array.from(new Set(gig_applies.map((a) => a[fieldClosingDay_APPLY]["value"])));
+        const gig_insert_object = unique_gig_closing_dates.map((c) => {
+            const aggregate_applies_gig = gig_applies.filter((a) => a[fieldClosingDay_APPLY]["value"] === c);
+
+            const totalAmount = aggregate_applies_gig.reduce((total, record_obj) => {
+                return total + Number(record_obj[fieldTotalReceivables_APPLY]["value"]);
+            }, 0);
+
+            const new_collect_record = {
+                [fieldConstructionShopId_COLLECT]: {
+                    "value": GIG_ID
+                },
+                [fieldClosingDate_COLLECT]: {
+                    "value": c
+                },
+                // 工務店マスタの入力内容から回収期限を計算。
+                [fieldDeadline_COLLECT]: {
+                    "value": getDeadline(c, komuten_info[GIG_ID])
+                },
+                [fieldStatus_COLLECT]: {
+                    "value": statusDefault_COLLECT
+                },
+                [fieldScheduledCollectableAmount_COLLECT]: {
+                    "value": totalAmount
+                },
+                // サブテーブル部分
+                [tableCloudSignApplies_COLLECT]: {
+                    "value": aggregate_applies_gig.map((record) => {
+                        return {
+                            "value": {
+                                [tableFieldApplyRecordNoCS]: {
+                                    "value": record[fieldRecordId_APPLY]["value"]
+                                },
+                                [tableFieldApplicantOfficialNameCS]: {
+                                    "value": record[fieldApplicant_APPLY]["value"]
+                                },
+                                [tableFieldInvoiceAmountCS] : {
+                                    "value": record[fieldInvoiceAmount_APPLY]["value"]
+                                },
+                                [tableFieldMemberFeeCS] : {
+                                    "value": record[fieldMemberFee_APPLY]["value"]
+                                },
+                                [tableFieldReceivableCS] : {
+                                    "value": record[fieldTotalReceivables_APPLY]["value"]
+                                },
+                                [tableFieldPaymentTimingCS] : {
+                                    "value": record[fieldPaymentTiming_APPLY]["value"]
+                                },
+                                [tableFieldPaymentDateCS]: {
+                                    "value": record[fieldPaymentDate_APPLY]["value"]
+                                },
+                                [tableFieldAttachmentFileKeyCS]: {
+                                    "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
+                                }
+                            }
+                        };
+                    })
+                }
+            };
+
+            return {
+                original_applies: aggregate_applies_gig,
+                new_collect_record: new_collect_record,
+                new_record_id: null
+            };
+        });
+
+        return standard_insert_object.concat(gig_insert_object);
     }
 
     async function insertCollectRecords(insert_object) {
