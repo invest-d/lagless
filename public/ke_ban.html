@@ -316,6 +316,25 @@
       <!-- /稼働期間の選択 -->
 
 
+      <!-- 稼働日数の選択 -->
+      <div class="form-group" id="workedDaysWFIGroup">
+        <label for="workedDaysWFI">稼働日数</label>
+        <span class="badge badge-danger">必須</span>
+        <select type="text" class="form-control no-blank"
+          name="workedDaysWFI" id="workedDaysWFI" required>
+          <option value="1">1日</option>
+          <option value="2">2日</option>
+          <option value="3">3日</option>
+          <option value="4">4日</option>
+          <option value="5">5日</option>
+        </select>
+        <span class="fas fa-check valid-status-icon valid-input"></span>
+        <span class="fas fa-times valid-status-icon invalid-input"></span>
+        <div class="invalid-feedback">選択してください。</div>
+      </div>
+      <!-- /稼働日数の選択 -->
+
+
       <div class="form-group pt-5" name="only_first">
         <h2>■ お客さま口座情報 ■</h2>
         <p>支払い口座情報をご記入ください。<br>
