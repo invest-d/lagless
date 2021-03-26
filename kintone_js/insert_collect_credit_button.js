@@ -286,13 +286,13 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         // 申込レコード一覧の中から重複なしの工務店IDと締日のペアをキーに、INSERT用のレコードを作成。
         const insert_object = unique_key_pairs.map((key_pair) => {
             // 工務店IDと締日が同じ申込みレコードを抽出
-            const target_records = target_applies.filter((obj) => {
+            const aggregate_applies = target_applies.filter((obj) => {
                 return (obj[fieldConstructionShopId_APPLY]["value"] === key_pair[fieldConstructionShopId_APPLY]
                 && obj[fieldClosingDay_APPLY]["value"] === key_pair[fieldClosingDay_APPLY]);
             });
 
             // 抽出した中から申込金額を合計（ここで合計する金額はクラウドサイン送信用。振込依頼書送信用の合計金額は振込依頼書の送信時に別途計算する）
-            const totalAmount = target_records.reduce((total, record_obj) => {
+            const totalAmount = aggregate_applies.reduce((total, record_obj) => {
                 return total + Number(record_obj[fieldTotalReceivables_APPLY]["value"]);
             }, 0);
 
@@ -317,7 +317,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
                 },
                 // サブテーブル部分
                 [tableCloudSignApplies_COLLECT]: {
-                    "value": target_records.map((record) => {
+                    "value": aggregate_applies.map((record) => {
                         const sub_table_record = {
                             "value": {
                                 [tableFieldApplyRecordNoCS]: {
