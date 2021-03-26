@@ -369,13 +369,15 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
     }
 
     async function insertCollectRecords(insert_object) {
-        const resp = await Promise.all(insert_object.map((o) => {
+        const resp = await Promise.all(insert_object.map(async (o) => {
             const request_body = {
                 "app": APP_ID_COLLECT,
                 "record": o.new_collect_record
             };
 
-            return client.record.addRecord(request_body);
+            const inserted = await client.record.addRecord(request_body);
+            o.new_record_id = inserted.id;
+            return inserted;
         }));
 
         return resp.map((r) => r.id);
