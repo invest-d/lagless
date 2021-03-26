@@ -20,6 +20,7 @@ import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
 
 import { get_contractor_name } from "../util_forms";
+import { isGigConstructorID } from "../util/gig_utils";
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
 
 // 本キャンペーンを打ち出してから最初に案内メールを送信する日
@@ -108,7 +109,7 @@ async function attachDetail(target_records) {
                 if (KE_BAN_CONSTRUCTORS.includes(constructor_id)) {
                     const display_record_data = getKebanDetailDisplayData(record);
                     return generateDetailTextKeban(display_record_data);
-                } else if (/^5\d{2,3}$/g.test(constructor_id)) {
+                } else if (isGigConstructorID(constructor_id)) {
                     // GIG(工務店ID 500番台 or 5000番台)は文面が異なる
                     return getGigPaymentDetail(record);
                 } else {
