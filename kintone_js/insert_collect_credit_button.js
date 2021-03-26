@@ -278,80 +278,82 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         });
 
         // 申込レコード一覧の中から重複なしの工務店IDと締日のペアをキーに、INSERT用のレコードを作成。
+        const insert_object = unique_key_pairs.map((key_pair) => {
+            // 工務店IDと締日が同じ申込みレコードを抽出
+            const target_records = insert_targets_array.filter((obj) => {
+                return (obj[fieldConstructionShopId_APPLY]["value"] === key_pair[fieldConstructionShopId_APPLY]
+                && obj[fieldClosingDay_APPLY]["value"] === key_pair[fieldClosingDay_APPLY]);
+            });
+
+            // 抽出した中から申込金額を合計（ここで合計する金額はクラウドサイン送信用。振込依頼書送信用の合計金額は振込依頼書の送信時に別途計算する）
+            const totalAmount = target_records.reduce((total, record_obj) => {
+                return total + Number(record_obj[fieldTotalReceivables_APPLY]["value"]);
+            }, 0);
+
+            // サブテーブルに申し込みレコードの情報一覧を転記
+            // レコード内のサブテーブルを操作する方法のリファレンス：https://developer.cybozu.io/hc/ja/articles/200752984-%E3%83%AC%E3%82%B3%E3%83%BC%E3%83%89%E6%9B%B4%E6%96%B0%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%E6%93%8D%E4%BD%9C%E3%81%AE%E3%83%86%E3%82%AF%E3%83%8B%E3%83%83%E3%82%AF
+            return {
+                [fieldConstructionShopId_COLLECT]: {
+                    "value": key_pair[fieldConstructionShopId_APPLY]
+                },
+                [fieldClosingDate_COLLECT]: {
+                    "value": key_pair[fieldClosingDay_APPLY]
+                },
+                // 工務店マスタの入力内容から回収期限を計算。
+                [fieldDeadline_COLLECT]: {
+                    "value": getDeadline(key_pair[fieldClosingDay_APPLY], komuten_info[String(key_pair[fieldConstructionShopId_APPLY])])
+                },
+                [fieldStatus_COLLECT]: {
+                    "value": statusDefault_COLLECT
+                },
+                [fieldScheduledCollectableAmount_COLLECT]: {
+                    "value": totalAmount
+                },
+                // サブテーブル部分
+                [tableCloudSignApplies_COLLECT]: {
+                    "value": target_records.map((record) => {
+                        const sub_table_record = {
+                            "value": {
+                                [tableFieldApplyRecordNoCS]: {
+                                    "value": record[fieldRecordId_APPLY]["value"]
+                                },
+                                [tableFieldApplicantOfficialNameCS]: {
+                                    "value": record[fieldApplicant_APPLY]["value"]
+                                },
+                                [tableFieldInvoiceAmountCS] : {
+                                    "value": record[fieldInvoiceAmount_APPLY]["value"]
+                                },
+                                [tableFieldMemberFeeCS] : {
+                                    "value": record[fieldMemberFee_APPLY]["value"]
+                                },
+                                [tableFieldReceivableCS] : {
+                                    "value": record[fieldTotalReceivables_APPLY]["value"]
+                                },
+                                [tableFieldPaymentTimingCS] : {
+                                    "value": record[fieldPaymentTiming_APPLY]["value"]
+                                },
+                                [tableFieldPaymentDateCS]: {
+                                    "value": record[fieldPaymentDate_APPLY]["value"]
+                                }
+                            }
+                        };
+
+                        // WFIはファイルキー不要
+                        if (!KE_BAN_CONSTRUCTORS.includes(record[fieldConstructionShopId_APPLY]["value"])) {
+                            sub_table_record["value"][tableFieldAttachmentFileKeyCS] = {
+                                "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
+                            };
+                        }
+
+                        return sub_table_record;
+                    })
+                }
+            };
+        });
+
         const request_body = {
             "app": APP_ID_COLLECT,
-            "records": unique_key_pairs.map((key_pair) => {
-                // 工務店IDと締日が同じ申込みレコードを抽出
-                const target_records = insert_targets_array.filter((obj) => {
-                    return (obj[fieldConstructionShopId_APPLY]["value"] === key_pair[fieldConstructionShopId_APPLY]
-                    && obj[fieldClosingDay_APPLY]["value"] === key_pair[fieldClosingDay_APPLY]);
-                });
-
-                // 抽出した中から申込金額を合計（ここで合計する金額はクラウドサイン送信用。振込依頼書送信用の合計金額は振込依頼書の送信時に別途計算する）
-                const totalAmount = target_records.reduce((total, record_obj) => {
-                    return total + Number(record_obj[fieldTotalReceivables_APPLY]["value"]);
-                }, 0);
-
-                // サブテーブルに申し込みレコードの情報一覧を転記
-                // レコード内のサブテーブルを操作する方法のリファレンス：https://developer.cybozu.io/hc/ja/articles/200752984-%E3%83%AC%E3%82%B3%E3%83%BC%E3%83%89%E6%9B%B4%E6%96%B0%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%E6%93%8D%E4%BD%9C%E3%81%AE%E3%83%86%E3%82%AF%E3%83%8B%E3%83%83%E3%82%AF
-                return {
-                    [fieldConstructionShopId_COLLECT]: {
-                        "value": key_pair[fieldConstructionShopId_APPLY]
-                    },
-                    [fieldClosingDate_COLLECT]: {
-                        "value": key_pair[fieldClosingDay_APPLY]
-                    },
-                    // 工務店マスタの入力内容から回収期限を計算。
-                    [fieldDeadline_COLLECT]: {
-                        "value": getDeadline(key_pair[fieldClosingDay_APPLY], komuten_info[String(key_pair[fieldConstructionShopId_APPLY])])
-                    },
-                    [fieldStatus_COLLECT]: {
-                        "value": statusDefault_COLLECT
-                    },
-                    [fieldScheduledCollectableAmount_COLLECT]: {
-                        "value": totalAmount
-                    },
-                    // サブテーブル部分
-                    [tableCloudSignApplies_COLLECT]: {
-                        "value": target_records.map((record) => {
-                            const sub_table_record = {
-                                "value": {
-                                    [tableFieldApplyRecordNoCS]: {
-                                        "value": record[fieldRecordId_APPLY]["value"]
-                                    },
-                                    [tableFieldApplicantOfficialNameCS]: {
-                                        "value": record[fieldApplicant_APPLY]["value"]
-                                    },
-                                    [tableFieldInvoiceAmountCS] : {
-                                        "value": record[fieldInvoiceAmount_APPLY]["value"]
-                                    },
-                                    [tableFieldMemberFeeCS] : {
-                                        "value": record[fieldMemberFee_APPLY]["value"]
-                                    },
-                                    [tableFieldReceivableCS] : {
-                                        "value": record[fieldTotalReceivables_APPLY]["value"]
-                                    },
-                                    [tableFieldPaymentTimingCS] : {
-                                        "value": record[fieldPaymentTiming_APPLY]["value"]
-                                    },
-                                    [tableFieldPaymentDateCS]: {
-                                        "value": record[fieldPaymentDate_APPLY]["value"]
-                                    }
-                                }
-                            };
-
-                            // WFIはファイルキー不要
-                            if (!KE_BAN_CONSTRUCTORS.includes(record[fieldConstructionShopId_APPLY]["value"])) {
-                                sub_table_record["value"][tableFieldAttachmentFileKeyCS] = {
-                                    "value": record[fieldInvoice_APPLY]["value"][0]["fileKey"]
-                                };
-                            }
-
-                            return sub_table_record;
-                        })
-                    }
-                };
-            })
+            "records": insert_object
         };
 
         // INSERT実行
