@@ -154,7 +154,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
                 return;
             }
 
-            const insert_object = await getInsertObject(target_applies);
+            const insert_object = await aggregateApplies(target_applies);
 
             // 取得したレコードを元に、回収アプリにレコードを追加する。
             const inserted_ids = await insertCollectRecords(insert_object)
@@ -248,7 +248,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
         return client.record.getAllRecords(request_body);
     }
 
-    async function getInsertObject(target_applies) {
+    async function aggregateApplies(target_applies) {
         // 回収アプリにレコード挿入できる形にデータを加工する。
         // 渡されてくるのは {constructionShopId: {…}, 支払先正式名称: {…}, totalReceivables: {…}, closingDay: {…}, paymentDate: {…}} のオブジェクトの配列
         // 各keyに対応するフィールド値へのアクセスは、array[0].constructionShopId.valueのようにする。
@@ -356,7 +356,13 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
                 }
             };
 
-            return new_collect_record;
+            const result = {
+                original_applies: aggregate_applies,
+                new_collect_record: new_collect_record,
+                new_record_id: null
+            };
+
+            return result;
         });
 
         return insert_object;
@@ -365,7 +371,7 @@ import { KE_BAN_CONSTRUCTORS } from "./96/common";
     async function insertCollectRecords(insert_object) {
         const request_body = {
             "app": APP_ID_COLLECT,
-            "records": insert_object
+            "records": insert_object.map((o) => o.new_collect_record)
         };
 
         // INSERT実行
