@@ -109,6 +109,7 @@ const calcMemberFee = (constructor_id, application_amount) => {
         "107",
         "211",
         "212",
+        "217",
         "219",
         "218",
         "214",
