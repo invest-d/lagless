@@ -275,6 +275,10 @@ import { GIG_ID, isGigConstructorID } from "./util/gig_utils";
 
         // 工務店マスタから回収日の情報を取得。申込レコードに含まれる工務店の情報のみ取得する
         const constructors = key_pairs.map((pair) => pair[fieldConstructionShopId_APPLY]);
+        // GIGが含まれる場合、工務店IDに関わらずGIG_IDのレコードの情報を参照すべき
+        if (constructors.some((c) => isGigConstructorID(c))) {
+            constructors.push(GIG_ID);
+        }
         const in_query = Array.from(new Set(constructors)).map((c) => `"${c}"`).join(",");
         const body_komuten_payment_date = {
             "app": APP_ID_KOMUTEN,
