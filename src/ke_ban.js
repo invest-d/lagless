@@ -260,7 +260,8 @@ $(() => {
             data: form_data,
             cache: false,
             processData: false,
-            contentType: false
+            contentType: false,
+            async: false
         })
             .done((data) => {
                 // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
