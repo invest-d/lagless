@@ -40,12 +40,12 @@ const statusGetCredit_KOMUTEN       = schema_96.fields.properties.nextCheckStatu
 
 const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
-function needShowButton() {
+export function needShowButton() {
     // 現状は常にボタンを表示する。増殖バグだけ防止
     return document.getElementById("copyCredit") === null;
 }
 
-function createCopyCreditButton() {
+export function createCopyCreditButton() {
     const copyCredit = document.createElement("button");
     copyCredit.id = "copyCredit";
     copyCredit.innerText = "与信枠を更新";
@@ -226,15 +226,3 @@ async function generateUpdateKomutenReqBody(latest_exam_records) {
     console.log(body_update_credits);
     return body_update_credits;
 }
-
-(function (){
-    "use strict";
-
-    // eslint-disable-next-line no-unused-vars
-    kintone.events.on("app.record.index.show", (event) => {
-        if (needShowButton()) {
-            const button = createCopyCreditButton();
-            kintone.app.getHeaderMenuSpaceElement().appendChild(button);
-        }
-    });
-})();
