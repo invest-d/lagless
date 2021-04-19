@@ -19,7 +19,7 @@ dayjs.locale("ja");
 import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
 
-import { get_contractor_name } from "../util_forms";
+import { get_contractor_name } from "../util/util_forms";
 import { isGigConstructorID } from "../util/gig_utils";
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
 

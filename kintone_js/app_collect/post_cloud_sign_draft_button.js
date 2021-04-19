@@ -10,7 +10,7 @@
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
-import { get_contractor_name } from "../util_forms";
+import { get_contractor_name } from "../util/util_forms";
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
 
 (function() {
