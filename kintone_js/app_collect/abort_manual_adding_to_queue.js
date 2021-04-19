@@ -7,14 +7,13 @@
     1. レコード一覧画面において、インライン編集時にエラーを表示。
     2. レコード詳細画面において、手動での編集時にエラーを表示。
 */
+export const STATUS_FIELD = "collectStatus";
+const STATUS_DICT = {
+    "ReadyToSend": "振込依頼書送信可"
+};
 
 (function () {
     "use strict";
-
-    const STATUS_FIELD = "collectStatus";
-    const STATUS_DICT = {
-        "ReadyToSend": "振込依頼書送信可"
-    };
 
     kintone.events.on(`app.record.edit.change.${STATUS_FIELD}`, (event) => {
         const status = event.record[STATUS_FIELD]["value"];
