@@ -18,7 +18,6 @@ module.exports = (env, argv) => {
             entry: {
                 output_csv_RealtorOriginal: "./app_apply/button_output_csv_RealtorOriginalPay.js",
                 output_csv_WfiEarly: "./app_apply/button_output_csv_WfiEarlyPay.js",
-                generate_invoice_button: "./app_collect/generate_invoice_button.js",
                 unsend_invoice_button: "./app_collect/unsend_invoice_button.js",
                 color_exceeding_payment: "./color_exceeding_payment.js",
                 post_cloud_sign_draft_button: "./app_collect/post_cloud_sign_draft_button.js",
@@ -60,7 +59,6 @@ module.exports = (env, argv) => {
             entry: {
                 output_csv_RealtorOriginal: "./app_apply/button_output_csv_RealtorOriginalPay.js",
                 output_csv_WfiEarly: "./app_apply/button_output_csv_WfiEarlyPay.js",
-                generate_invoice_button: "./app_collect/generate_invoice_button.js",
                 unsend_invoice_button: "./app_collect/unsend_invoice_button.js",
                 color_exceeding_payment: "./color_exceeding_payment.js",
                 post_cloud_sign_draft_button: "./app_collect/post_cloud_sign_draft_button.js",

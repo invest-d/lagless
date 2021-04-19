@@ -126,12 +126,12 @@ const orange = "#ff9a33";
 const white = "#ffffff";
 const black = "#000000";
 
-function needShowButton() {
+export function needShowButton() {
     // 一旦は常にボタンを表示する。増殖バグだけ防止
     return document.getElementById("generateInvoice") === null;
 }
 
-function createGenerateInvoiceButton() {
+export function createGenerateInvoiceButton() {
     const generateInvoice = document.createElement("button");
     generateInvoice.id = "generateInvoice";
     generateInvoice.innerText = "振込依頼書を作成";
@@ -1118,16 +1118,3 @@ async function uploadInvoices(invoices) {
     await kintone.Promise.all(processes);
     return count;
 }
-
-(function() {
-    "use strict";
-
-    // eslint-disable-next-line no-unused-vars
-    kintone.events.on("app.record.index.show", (event) => {
-        // ボタンを表示するか判定
-        if (needShowButton()) {
-            const button = createGenerateInvoiceButton();
-            kintone.app.getHeaderMenuSpaceElement().appendChild(button);
-        }
-    });
-})();
