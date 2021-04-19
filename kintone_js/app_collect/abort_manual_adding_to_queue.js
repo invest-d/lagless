@@ -12,12 +12,14 @@ const STATUS_DICT = {
     "ReadyToSend": "振込依頼書送信可"
 };
 
+export const shouldNotChangeStatus = (status) => status === STATUS_DICT.ReadyToSend;
+
 (function () {
     "use strict";
 
     kintone.events.on(`app.record.edit.change.${STATUS_FIELD}`, (event) => {
         const status = event.record[STATUS_FIELD]["value"];
-        if (status === STATUS_DICT.ReadyToSend) {
+        if (shouldNotChangeStatus(status)) {
             // errorをセットして、このフィールドの編集処理をキャンセルする
             event.record[STATUS_FIELD].error = "振込依頼書を送信する場合、レコード詳細画面のボタンから処理してください。";
             return event;
@@ -26,7 +28,7 @@ const STATUS_DICT = {
 
     kintone.events.on(`app.record.index.edit.change.${STATUS_FIELD}`, (event) => {
         const status = event.record[STATUS_FIELD]["value"];
-        if (status === STATUS_DICT.ReadyToSend) {
+        if (shouldNotChangeStatus(status)) {
             event.record[STATUS_FIELD].error = "振込依頼書を送信する場合、レコード詳細画面のボタンから処理してください。";
             return event;
         }
