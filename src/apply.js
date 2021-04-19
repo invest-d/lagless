@@ -116,6 +116,18 @@ $(async () => {
     $("#terms").attr("onclick", `window.open('${url}', '_blank')`);
 });
 
+// ナサホームの場合に限り、申込フォームに追加の文言を表示する
+$(() => {
+    const nasa_home_id = "210";
+    const komuten_id = params.get("c");
+    if (komuten_id !== nasa_home_id) {
+        return;
+    }
+
+    const objects = $(".multiple_invoice_caution");
+    objects.removeClass("d-none");
+});
+
 function getPaymentTiming() {
     const timing = params.get("t");
     if (timing === "late") {
