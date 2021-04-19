@@ -657,6 +657,16 @@ export const schema_collect = {
                 "type": "ROW",
                 "fields": [
                     {
+                        "type": "LABEL",
+                        "label": "<div><span style=\"font-size:14px\">【軽バン.com】中野様に債権譲渡承諾書を回付したい場合&#xff1a;</span></div><div><span style=\"font-size:14px\">1. クラウドサインにログインし、佐藤様へ送信した契約書を取り消す。</span></div><div><span style=\"font-size:14px\">2. 送信先を変更する回収レコードの状態を「クラウドサイン作成待ち」に戻す。</span></div><div><span style=\"font-size:14px\">3. 「債権譲渡クラウドサイン下書きを作成する」ボタンをクリックし、契約書の下書きをもう一度作成する</span></div><div><span style=\"font-size:14px\">4. クラウドサインにログインし、下書き状態の契約書の送信先を編集し、佐藤様を削除して中野様を追加する。</span></div><div><span style=\"font-size:14px\">5. 契約書を送信する。</span></div><div><br /></div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
                         "type": "SINGLE_LINE_TEXT",
                         "code": "constructionShopId",
                         "size": {}

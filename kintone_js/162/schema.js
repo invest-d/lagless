@@ -657,6 +657,16 @@ export const schema_collect = {
                 "type": "ROW",
                 "fields": [
                     {
+                        "type": "LABEL",
+                        "label": "<div><span style=\"font-size:14px\">【軽バン.com】中野様に債権譲渡承諾書を回付したい場合&#xff1a;</span></div><div><span style=\"font-size:14px\">1. クラウドサインにログインし、佐藤様へ送信した契約書を取り消す。</span></div><div><span style=\"font-size:14px\">2. 送信先を変更する回収レコードの状態を「クラウドサイン作成待ち」に戻す。</span></div><div><span style=\"font-size:14px\">3. 「債権譲渡クラウドサイン下書きを作成する」ボタンをクリックし、契約書の下書きをもう一度作成する</span></div><div><span style=\"font-size:14px\">4. クラウドサインにログインし、下書き状態の契約書の送信先を編集し、佐藤様を削除して中野様を追加する。</span></div><div><span style=\"font-size:14px\">5. 契約書を送信する。</span></div><div><br /></div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
                         "type": "SINGLE_LINE_TEXT",
                         "code": "constructionShopId",
                         "size": {}
@@ -894,7 +904,7 @@ export const schema_collect = {
                     "deadline"
                 ],
                 "filterCond": "collectStatus in (\"クラウドサイン作成待ち\")",
-                "index": "2",
+                "index": "3",
                 "name": "クラウドサイン作成待ち",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -915,7 +925,7 @@ export const schema_collect = {
                     "cloudSignUrl"
                 ],
                 "filterCond": "collectStatus in (\"クラウドサイン回付中\")",
-                "index": "4",
+                "index": "5",
                 "name": "クラウドサイン回付中",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -931,7 +941,7 @@ export const schema_collect = {
                     "scheduledCollectableAmount"
                 ],
                 "filterCond": "collectStatus in (\"クラウドサイン承認済み\")",
-                "index": "5",
+                "index": "6",
                 "name": "クラウドサイン承認済み",
                 "sort": "collectStatus asc, constructionShopId asc, deadline asc, レコード番号 asc",
                 "type": "LIST"
@@ -951,7 +961,7 @@ export const schema_collect = {
                     "deadline"
                 ],
                 "filterCond": "collectStatus in (\"クラウドサイン発射待ち\")",
-                "index": "3",
+                "index": "4",
                 "name": "クラウドサイン発射待ち",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1010,6 +1020,33 @@ export const schema_collect = {
                 "sort": "deadline desc",
                 "type": "LIST"
             },
+            "回収確認用（ラグレス２GK）": {
+                "fields": [
+                    "レコード番号",
+                    "作成日時",
+                    "account",
+                    "productName",
+                    "closingDate",
+                    "constructionShopName",
+                    "collectStatus",
+                    "confirmStatusInvoice",
+                    "deadline",
+                    "handleForHolidays",
+                    "original",
+                    "totalBilledAmount",
+                    "scheduledCollectableAmount",
+                    "cloudSignUrl",
+                    "cloudSignSendDate",
+                    "invoicePdf",
+                    "cloudSignPdf",
+                    "invoiceTargets"
+                ],
+                "filterCond": "collectStatus not in (\"回収済み\", \"クラウドサイン却下・再作成待ち\")",
+                "index": "2",
+                "name": "回収確認用（ラグレス２GK）",
+                "sort": "deadline desc",
+                "type": "LIST"
+            },
             "振込依頼書作成": {
                 "fields": [
                     "レコード番号",
@@ -1017,6 +1054,8 @@ export const schema_collect = {
                     "collectStatus",
                     "invoicePdf",
                     "confirmStatusInvoice",
+                    "closingDate",
+                    "deadline",
                     "constructionShopId",
                     "constructionShopName",
                     "ceoTitle",
@@ -1025,12 +1064,10 @@ export const schema_collect = {
                     "productName",
                     "totalBilledAmount",
                     "account",
-                    "deadline",
-                    "closingDate",
                     "original"
                 ],
                 "filterCond": "collectStatus in (\"クラウドサイン承認済み\")",
-                "index": "7",
+                "index": "8",
                 "name": "振込依頼書作成",
                 "sort": "deadline asc, constructionShopId desc",
                 "type": "LIST"
@@ -1054,7 +1091,7 @@ export const schema_collect = {
                     "original"
                 ],
                 "filterCond": "collectStatus in (\"振込依頼書送信可\", \"振込依頼書送信済み\") and parentCollectRecord in (\"true\")",
-                "index": "8",
+                "index": "9",
                 "name": "振込依頼書送信状況",
                 "sort": "deadline asc, constructionShopId desc",
                 "type": "LIST"
@@ -1067,7 +1104,7 @@ export const schema_collect = {
                     "scheduledCollectableAmount"
                 ],
                 "filterCond": "collectStatus in (\"クラウドサイン承認済み\")",
-                "index": "6",
+                "index": "7",
                 "name": "支払い実行",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -1091,7 +1128,7 @@ export const schema_collect = {
                     "customerCode"
                 ],
                 "filterCond": "collectStatus in (\"支払実行済み\")",
-                "index": "9",
+                "index": "10",
                 "name": "未回収一覧",
                 "sort": "deadline asc",
                 "type": "LIST"

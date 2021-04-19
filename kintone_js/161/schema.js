@@ -1293,12 +1293,12 @@ export const schema_apply = {
                     },
                     {
                         "type": "SINGLE_LINE_TEXT",
-                        "code": "bankCode_Form",
+                        "code": "branchName_Form",
                         "size": {}
                     },
                     {
                         "type": "SINGLE_LINE_TEXT",
-                        "code": "branchName_Form",
+                        "code": "bankCode_Form",
                         "size": {}
                     },
                     {
@@ -1842,8 +1842,8 @@ export const schema_apply = {
                     "monthsWorkedKeban",
                     "applicationAmount"
                 ],
-                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"\", \"未処理\", \"ID確認済\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
-                "index": "9",
+                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"\", \"未処理\", \"ID確認済\", \"工務店確認済\", \"支払予定明細FAX送信待ち\", \"支払予定明細確認中\", \"支払予定明細送信前確認完了\", \"支払予定明細送付済\", \"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\", \"保留中\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
+                "index": "10",
                 "name": "WFIドライバー一覧作成用",
                 "sort": "paymentDate desc",
                 "type": "LIST"
@@ -1853,6 +1853,39 @@ export const schema_apply = {
                     "レコード番号",
                     "作成日時",
                     "状態",
+                    "closingDay",
+                    "ルックアップ",
+                    "company",
+                    "transferAmount",
+                    "kebanID",
+                    "representative",
+                    "kebanStartDate",
+                    "applicationAmount",
+                    "bankName_Form",
+                    "branchName_Form",
+                    "deposit_Form",
+                    "accountNumber_Form",
+                    "accountName_Form",
+                    "driverLicenseFront",
+                    "driverLicenseBack",
+                    "bankName",
+                    "branchName",
+                    "deposit",
+                    "accountNumber",
+                    "accountName"
+                ],
+                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"\", \"未処理\", \"ID確認済\", \"工務店確認済\", \"支払予定明細FAX送信待ち\", \"支払予定明細確認中\", \"支払予定明細送信前確認完了\", \"支払予定明細送付済\", \"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\", \"保留中\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
+                "index": "12",
+                "name": "WFI一覧（実行完了・取下げ以外）",
+                "sort": "paymentDate desc",
+                "type": "LIST"
+            },
+            "WFI一覧（実行完了以外）": {
+                "fields": [
+                    "レコード番号",
+                    "作成日時",
+                    "状態",
+                    "closingDay",
                     "ルックアップ",
                     "company",
                     "kebanID",
@@ -1862,10 +1895,74 @@ export const schema_apply = {
                     "monthsWorkedKeban",
                     "applicationAmount"
                 ],
-                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"\", \"未処理\", \"ID確認済\", \"工務店確認済\", \"支払予定明細FAX送信待ち\", \"支払予定明細確認中\", \"支払予定明細送信前確認完了\", \"支払予定明細送付済\", \"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\", \"保留中\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
-                "index": "10",
-                "name": "WFI一覧（実行完了・取下げ以外）",
+                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"\", \"未処理\", \"ID確認済\", \"工務店確認済\", \"支払予定明細FAX送信待ち\", \"支払予定明細確認中\", \"支払予定明細送信前確認完了\", \"支払予定明細送付済\", \"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\", \"保留中\", \"取下げ\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
+                "index": "11",
+                "name": "WFI一覧（実行完了以外）",
+                "sort": "closingDay desc",
+                "type": "LIST"
+            },
+            "WFI以外の一覧（取下げ除外）": {
+                "fields": [
+                    "レコード番号",
+                    "状態",
+                    "collectId",
+                    "paymentTiming",
+                    "closingDay",
+                    "登記の取得",
+                    "paymentDate",
+                    "paymentAccount",
+                    "productName",
+                    "ルックアップ",
+                    "company",
+                    "billingCompany",
+                    "applicationAmount",
+                    "membership_fee",
+                    "totalReceivables",
+                    "commissionAmount",
+                    "transferAmount",
+                    "commissionAmount_late",
+                    "transferAmount_late",
+                    "transferFeeTaxIncl",
+                    "paymentDetail",
+                    "mail",
+                    "detailSendDateTime"
+                ],
+                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 not in (\"取下げ\") and productName not like \"軽バン.com\"",
+                "index": "1",
+                "name": "WFI以外の一覧（取下げ除外）",
                 "sort": "paymentDate desc",
+                "type": "LIST"
+            },
+            "一覧（取下げ・実行完了除外）": {
+                "fields": [
+                    "レコード番号",
+                    "状態",
+                    "collectId",
+                    "paymentTiming",
+                    "closingDay",
+                    "登記の取得",
+                    "paymentDate",
+                    "paymentAccount",
+                    "productName",
+                    "ルックアップ",
+                    "company",
+                    "billingCompany",
+                    "applicationAmount",
+                    "membership_fee",
+                    "totalReceivables",
+                    "commissionAmount",
+                    "transferAmount",
+                    "commissionAmount_late",
+                    "transferAmount_late",
+                    "transferFeeTaxIncl",
+                    "paymentDetail",
+                    "mail",
+                    "detailSendDateTime"
+                ],
+                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 not in (\"実行完了\", \"取下げ\")",
+                "index": "2",
+                "name": "一覧（取下げ・実行完了除外）",
+                "sort": "レコード番号 desc",
                 "type": "LIST"
             },
             "一覧（取下げ除外）": {
@@ -1897,38 +1994,7 @@ export const schema_apply = {
                 "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 not in (\"取下げ\")",
                 "index": "0",
                 "name": "一覧（取下げ除外）",
-                "sort": "paymentDate desc",
-                "type": "LIST"
-            },
-            "一覧（未処理）": {
-                "fields": [
-                    "レコード番号",
-                    "状態",
-                    "paymentTiming",
-                    "closingDay",
-                    "登記の取得",
-                    "paymentDate",
-                    "paymentAccount",
-                    "productName",
-                    "ルックアップ",
-                    "company",
-                    "billingCompany",
-                    "applicationAmount",
-                    "membership_fee",
-                    "totalReceivables",
-                    "commissionAmount",
-                    "transferAmount",
-                    "commissionAmount_late",
-                    "transferAmount_late",
-                    "transferFeeTaxIncl",
-                    "paymentDetail",
-                    "mail",
-                    "detailSendDateTime"
-                ],
-                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"\", \"未処理\")",
-                "index": "1",
-                "name": "一覧（未処理）",
-                "sort": "paymentDate desc",
+                "sort": "レコード番号 desc",
                 "type": "LIST"
             },
             "回収レコード作成": {
@@ -1946,7 +2012,7 @@ export const schema_apply = {
                     "paymentDate"
                 ],
                 "filterCond": "状態 in (\"ID確認済\")",
-                "index": "3",
+                "index": "4",
                 "name": "回収レコード作成",
                 "sort": "状態 asc, constructionShopId asc, closingDay asc, collectId asc, ルックアップ asc",
                 "type": "LIST"
@@ -1978,7 +2044,7 @@ export const schema_apply = {
                     "detailSendDateTime"
                 ],
                 "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 not in (\"取下げ\") and paymentDate = THIS_MONTH()",
-                "index": "2",
+                "index": "3",
                 "name": "当月分一覧（取下げ除外）",
                 "sort": "paymentDate desc",
                 "type": "LIST"
@@ -2009,7 +2075,7 @@ export const schema_apply = {
                     "accountName"
                 ],
                 "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
-                "index": "7",
+                "index": "8",
                 "name": "振込データ出力（WFI早払い）",
                 "sort": "paymentDate asc, paymentAccount asc",
                 "type": "LIST"
@@ -2035,9 +2101,9 @@ export const schema_apply = {
                     "accountName"
                 ],
                 "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\") and constructionShopId = \"100\"",
-                "index": "6",
+                "index": "7",
                 "name": "振込データ出力（リライト通常払い）",
-                "sort": "paymentDate asc, paymentAccount asc",
+                "sort": "paymentDate asc, paymentAccount asc, ルックアップ asc",
                 "type": "LIST"
             },
             "支払予定明細文面作成": {
@@ -2067,7 +2133,7 @@ export const schema_apply = {
                     "transferAmount_late"
                 ],
                 "filterCond": "状態 in (\"工務店確認済\", \"支払予定明細FAX送信待ち\", \"支払予定明細確認中\")",
-                "index": "4",
+                "index": "5",
                 "name": "支払予定明細文面作成",
                 "sort": "状態 asc, レコード番号 desc",
                 "type": "LIST"
@@ -2099,7 +2165,7 @@ export const schema_apply = {
                     "transferAmount_late"
                 ],
                 "filterCond": "状態 in (\"支払予定明細送信前確認完了\", \"支払予定明細送付済\")",
-                "index": "5",
+                "index": "6",
                 "name": "支払予定明細送信状況",
                 "sort": "状態 asc, レコード番号 desc",
                 "type": "LIST"
@@ -2120,7 +2186,7 @@ export const schema_apply = {
                     "transferFeeTaxIncl"
                 ],
                 "filterCond": "company not like \"テスト\" and company not like \"test\" and ルックアップ != \"\" and 状態 in (\"実行完了\") and paymentTiming not in (\"通常払い\") and closingDay >= FROM_TODAY(-1, YEARS)",
-                "index": "8",
+                "index": "9",
                 "name": "申込回数カウント対象（概算）",
                 "sort": "constructionShopId asc, ルックアップ asc, paymentTiming asc, closingDay desc",
                 "type": "LIST"
