@@ -40,12 +40,15 @@ const APP_ID = ((app_id) => {
     }
 })(kintone.app.getId());
 
-const APP_ID_COLLECT = APP_ID.COLLECT;
-const fieldStatus_COLLECT = "collectStatus";
-const fieldRecordId_COLLECT = "レコード番号";
-const fieldConstructorId_COLLECT = "constructionShopId";
-const fieldClosingDate_COLLECT = "closingDate";
-const statusRejected_COLLECT = "クラウドサイン却下・再作成待ち";
+import { schema_collect } from "../162/schema";
+import { schema_apply } from "../161/schema";
+
+const APP_ID_COLLECT                = APP_ID.COLLECT;
+const fieldStatus_COLLECT           = schema_collect.fields.properties.collectStatus.code;
+const fieldRecordId_COLLECT         = schema_collect.fields.properties.レコード番号.code;
+const fieldConstructorId_COLLECT    = schema_collect.fields.properties.constructionShopId.code;
+const fieldClosingDate_COLLECT      = schema_collect.fields.properties.closingDate.code;
+const statusRejected_COLLECT        = schema_collect.fields.properties.collectStatus.options["クラウドサイン却下・再作成待ち"].label;
 
 export function getParentAndChildCollectRecords(record) {
     console.log("親子レコードを全て取得する。");
@@ -117,19 +120,20 @@ export function updateStatus(records, status) {
 (function() {
     "use strict";
 
-    const fieldParentCollectRecord_COLLECT = "parentCollectRecord";
-    const fieldInvoicePdf_COLLECT = "invoicePdf";
-    const statusNotReadyToSend_COLLECT = "クラウドサイン承認済み";
-    const statusReadyToSend_COLLECT = "振込依頼書送信可";
-    const tableInvoiceTargets_COLLECT = "invoiceTargets";
-    const tableFieldRecordId_COLLECT = "applyRecordNoIV";
-    const fieldConfirmStatus_COLLECT ="confirmStatusInvoice";
-    const statusConfirmedInvoice_COLLECT = "確認OK";
+    const fieldParentCollectRecord_COLLECT  = schema_collect.fields.properties.parentCollectRecord.code;
+    const fieldInvoicePdf_COLLECT           = schema_collect.fields.properties.invoicePdf.code;
+    const statusNotReadyToSend_COLLECT      = schema_collect.fields.properties.collectStatus.options.クラウドサイン承認済み.label;
+    const statusReadyToSend_COLLECT         = schema_collect.fields.properties.collectStatus.options.振込依頼書送信可.label;
+    const tableInvoiceTargets_COLLECT       = schema_collect.fields.properties.invoiceTargets.code;
+    const tableFieldRecordId_COLLECT        = schema_collect.fields.properties.invoiceTargets.fields.applyRecordNoIV.code;
+    const fieldConfirmStatus_COLLECT        = schema_collect.fields.properties.confirmStatusInvoice.code;
+    const statusConfirmedInvoice_COLLECT    = schema_collect.fields.properties.confirmStatusInvoice.options.確認OK.label;
+    const isParent_COLLECT                  = schema_collect.fields.properties.parentCollectRecord.options.true.label;
 
-    const APP_ID_APPLY = APP_ID.APPLY;
-    const fieldRecordId_APPLY = "$id";
-    const fieldStatus_APPLY = "状態";
-    const statusPaid_APPLY = "実行完了";
+    const APP_ID_APPLY                      = APP_ID.APPLY;
+    const fieldRecordId_APPLY               = schema_apply.fields.properties.レコード番号.code;
+    const fieldStatus_APPLY                 = schema_apply.fields.properties.状態.code;
+    const statusPaid_APPLY                  = schema_apply.fields.properties.状態.options.実行完了.label;
 
     kintone.events.on("app.record.detail.show", (event) => {
         if (needShowButton(event.record)) {
@@ -142,7 +146,7 @@ export function updateStatus(records, status) {
         const is_not_displayed = document.getElementById("addToQueue") === null;
 
         // 親レコードのうち、振込依頼書作成済みで、かつ送信前のレコードの場合のみ表示
-        const is_parent_not_send = ((record[fieldParentCollectRecord_COLLECT]["value"]).includes("true"))
+        const is_parent_not_send = ((record[fieldParentCollectRecord_COLLECT]["value"]).includes(isParent_COLLECT))
             && (record[fieldInvoicePdf_COLLECT]["value"].length > 0)
             && (record[fieldStatus_COLLECT]["value"] === statusNotReadyToSend_COLLECT);
         return is_not_displayed && is_parent_not_send;
