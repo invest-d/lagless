@@ -14,23 +14,32 @@ const STATUS_DICT = {
 
 export const shouldNotChangeStatus = (status) => status === STATUS_DICT.ReadyToSend;
 
+export const setErrorMessageOnDetailEdit = (event) => {
+    // errorをセットして、このフィールドの編集処理をキャンセルする
+    event.record[STATUS_FIELD].error = "振込依頼書を送信する場合、レコード詳細画面のボタンから処理してください。";
+    return event;
+};
+
+export const setErrorMessageOnInlineEdit = (event) => {
+    // errorをセットして、このフィールドの編集処理をキャンセルする
+    event.record[STATUS_FIELD].error = "振込依頼書を送信する場合、レコード詳細画面のボタンから処理してください。";
+    return event;
+};
+
 (function () {
     "use strict";
 
     kintone.events.on(`app.record.edit.change.${STATUS_FIELD}`, (event) => {
         const status = event.record[STATUS_FIELD]["value"];
         if (shouldNotChangeStatus(status)) {
-            // errorをセットして、このフィールドの編集処理をキャンセルする
-            event.record[STATUS_FIELD].error = "振込依頼書を送信する場合、レコード詳細画面のボタンから処理してください。";
-            return event;
+            return setErrorMessageOnDetailEdit(event);
         }
     });
 
     kintone.events.on(`app.record.index.edit.change.${STATUS_FIELD}`, (event) => {
         const status = event.record[STATUS_FIELD]["value"];
         if (shouldNotChangeStatus(status)) {
-            event.record[STATUS_FIELD].error = "振込依頼書を送信する場合、レコード詳細画面のボタンから処理してください。";
-            return event;
+            return setErrorMessageOnInlineEdit(event);
         }
     });
 })();
