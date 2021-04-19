@@ -9,9 +9,9 @@
 */
 
 // PDF生成ライブラリ
-import { createPdf } from "./pdfMake_util";
-import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "./util_forms";
-import { KE_BAN_CONSTRUCTORS } from "./96/common";
+import { createPdf } from "../pdfMake_util";
+import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "../util_forms";
+import { KE_BAN_CONSTRUCTORS } from "../96/common";
 
 const dayjs = require("dayjs");
 dayjs.locale("ja");

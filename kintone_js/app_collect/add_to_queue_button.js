@@ -16,7 +16,7 @@
 */
 
 const dayjs = require("dayjs");
-import { KE_BAN_CONSTRUCTORS } from "./96/common";
+import { KE_BAN_CONSTRUCTORS } from "../96/common";
 
 const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
