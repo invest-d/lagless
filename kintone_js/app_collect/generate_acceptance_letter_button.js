@@ -75,12 +75,12 @@ const fieldCeoName_CORPORATE                = schema_28.fields.properties.代表
 const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
 const button_id = "generate_acceptance_letter";
-function needShowButton() {
+export function needShowButton() {
     // 一旦は常にボタンを表示する。増殖バグだけ防止
     return document.getElementById(button_id) === null;
 }
 
-function createButton() {
+export function createButton() {
     const button = document.createElement("button");
     button.id = button_id;
     button.innerText = "各レコードに債権譲渡承諾書を作成する";
@@ -640,16 +640,3 @@ async function attachPdf(letter) {
 
     client.record.updateRecord(attach_pdf_body);
 }
-
-(function() {
-    "use strict";
-
-    // eslint-disable-next-line no-unused-vars
-    kintone.events.on("app.record.index.show", (event) => {
-        // ボタンを表示するか判定
-        if (needShowButton()) {
-            const button = createButton();
-            kintone.app.getHeaderMenuSpaceElement().appendChild(button);
-        }
-    });
-})();

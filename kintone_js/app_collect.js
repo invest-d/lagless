@@ -6,6 +6,7 @@
 import * as abort from "./app_collect/logics_abort_manual_adding_to_queue";
 import * as queue from "./app_collect/logics_add_to_queue_button";
 import * as copy from "./app_collect/logics_copy_credit_button";
+import * as accept from "./app_collect/generate_acceptance_letter_button";
 
 (function () {
     "use strict";
@@ -33,6 +34,11 @@ import * as copy from "./app_collect/logics_copy_credit_button";
 
     // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
+        if (accept.needShowButton()) {
+            const button = accept.createButton();
+            kintone.app.getHeaderMenuSpaceElement().appendChild(button);
+        }
+
         if (copy.needShowButton()) {
             const button = copy.createCopyCreditButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
