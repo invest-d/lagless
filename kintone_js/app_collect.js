@@ -8,7 +8,7 @@ import {
     shouldNotChangeStatus,
     setErrorMessageOnDetailEdit,
     setErrorMessageOnInlineEdit,
-} from "./app_collect/abort_manual_adding_to_queue";
+} from "./app_collect/logics_abort_manual_adding_to_queue";
 
 (function () {
     "use strict";
