@@ -21,23 +21,25 @@
         審査完了日が最も新しいレコードを採用する。
 */
 
+import { schema_79 } from "../79/schema";
+import { schema_96 } from "../96/schema";
+
 (function (){
     "use strict";
 
-    const APP_ID_EXAM = 79;
-    // フィールドコード
-    const customerCode_EXAM = "取引企業管理No_審査対象企業";
-    const customerName_EXAM = "法人名・屋号";
-    const creditAmountManual_EXAM = "付与与信枠_手動入力_標準と高額";
-    const creditAmountAuto_EXAM = "付与与信枠_自動算出";
-    const examinedDay_EXAM = "審査完了日";
+    const APP_ID_EXAM                   = schema_79.id.appId;
+    const customerCode_EXAM             = schema_79.fields.properties.取引企業管理No_審査対象企業.code;
+    const customerName_EXAM             = schema_79.fields.properties["法人名・屋号"].code;
+    const creditAmountManual_EXAM       = schema_79.fields.properties.付与与信枠_手動入力_標準と高額.code;
+    const creditAmountAuto_EXAM         = schema_79.fields.properties.付与与信枠_自動算出.code;
+    const examinedDay_EXAM              = schema_79.fields.properties.審査完了日.code;
 
-    const APP_ID_KOMUTEN = 96;
-    const recordNo_KOMUTEN = "レコード番号";
-    const customerCode_KOMUTEN = "customerCode";
-    const creditFacility_KOMUTEN = "creditFacility";
-    const fieldNextCheckStatus_KOMUTEN = "nextCheckStatus";
-    const statusGetCredit_KOMUTEN = "与信枠を審査・取得する";
+    const APP_ID_KOMUTEN                = schema_96.id.appId;
+    const recordNo_KOMUTEN              = schema_96.fields.properties.レコード番号.code;
+    const customerCode_KOMUTEN          = schema_96.fields.properties.customerCode.code;
+    const creditFacility_KOMUTEN        = schema_96.fields.properties.creditFacility.code;
+    const fieldNextCheckStatus_KOMUTEN  = schema_96.fields.properties.nextCheckStatus.code;
+    const statusGetCredit_KOMUTEN       = schema_96.fields.properties.nextCheckStatus.options["与信枠を審査・取得する"].label;
 
     const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
