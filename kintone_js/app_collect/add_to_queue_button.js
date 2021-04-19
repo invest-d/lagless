@@ -132,7 +132,7 @@ const fieldRecordId_APPLY               = schema_apply.fields.properties.レコ�
 const fieldStatus_APPLY                 = schema_apply.fields.properties.状態.code;
 const statusPaid_APPLY                  = schema_apply.fields.properties.状態.options.実行完了.label;
 
-function needShowButton(record) {
+export function needShowButton(record) {
     const is_not_displayed = document.getElementById("addToQueue") === null;
 
     // 親レコードのうち、振込依頼書作成済みで、かつ送信前のレコードの場合のみ表示
@@ -142,7 +142,7 @@ function needShowButton(record) {
     return is_not_displayed && is_parent_not_send;
 }
 
-function createAddToQueueButton(record) {
+export function createAddToQueueButton(record) {
     const button = document.createElement("button");
     button.id = "addToQueue";
     button.innerText = "振込依頼書を送信待ち状態にする";
@@ -223,14 +223,3 @@ function getApplies(apply_ids) {
 
     return kintoneRecord.getAllRecordsByQuery(get_body);
 }
-
-(function() {
-    "use strict";
-
-    kintone.events.on("app.record.detail.show", (event) => {
-        if (needShowButton(event.record)) {
-            const button = createAddToQueueButton(event.record);
-            kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
-        }
-    });
-})();
