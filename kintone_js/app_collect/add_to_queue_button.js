@@ -117,23 +117,115 @@ export function updateStatus(records, status) {
     return kintoneRecord.updateRecords(put_body);
 }
 
+const fieldParentCollectRecord_COLLECT  = schema_collect.fields.properties.parentCollectRecord.code;
+const fieldInvoicePdf_COLLECT           = schema_collect.fields.properties.invoicePdf.code;
+const statusNotReadyToSend_COLLECT      = schema_collect.fields.properties.collectStatus.options.クラウドサイン承認済み.label;
+const statusReadyToSend_COLLECT         = schema_collect.fields.properties.collectStatus.options.振込依頼書送信可.label;
+const tableInvoiceTargets_COLLECT       = schema_collect.fields.properties.invoiceTargets.code;
+const tableFieldRecordId_COLLECT        = schema_collect.fields.properties.invoiceTargets.fields.applyRecordNoIV.code;
+const fieldConfirmStatus_COLLECT        = schema_collect.fields.properties.confirmStatusInvoice.code;
+const statusConfirmedInvoice_COLLECT    = schema_collect.fields.properties.confirmStatusInvoice.options.確認OK.label;
+const isParent_COLLECT                  = schema_collect.fields.properties.parentCollectRecord.options.true.label;
+
+const APP_ID_APPLY                      = APP_ID.APPLY;
+const fieldRecordId_APPLY               = schema_apply.fields.properties.レコード番号.code;
+const fieldStatus_APPLY                 = schema_apply.fields.properties.状態.code;
+const statusPaid_APPLY                  = schema_apply.fields.properties.状態.options.実行完了.label;
+
+function needShowButton(record) {
+    const is_not_displayed = document.getElementById("addToQueue") === null;
+
+    // 親レコードのうち、振込依頼書作成済みで、かつ送信前のレコードの場合のみ表示
+    const is_parent_not_send = ((record[fieldParentCollectRecord_COLLECT]["value"]).includes(isParent_COLLECT))
+        && (record[fieldInvoicePdf_COLLECT]["value"].length > 0)
+        && (record[fieldStatus_COLLECT]["value"] === statusNotReadyToSend_COLLECT);
+    return is_not_displayed && is_parent_not_send;
+}
+
+function createAddToQueueButton(record) {
+    const button = document.createElement("button");
+    button.id = "addToQueue";
+    button.innerText = "振込依頼書を送信待ち状態にする";
+    button.addEventListener("click", clickAddToQueue.bind(null, record));
+    return button;
+}
+
+async function clickAddToQueue(record) {
+    const clicked_ok = confirm("このレコードの振込依頼書を自動送信してもよろしいですか？\n（最長10分後に自動で送信されます）");
+    if (!clicked_ok) {
+        alert("処理は中断されました。");
+        return;
+    }
+
+    try {
+        if (!(record[fieldConfirmStatus_COLLECT]["value"]).includes(statusConfirmedInvoice_COLLECT)) {
+            alert("振込依頼書の目視確認が済んでいません。\n振込依頼書確認OKのチェックボックスをオンにして保存してから\nもう一度ボタンをクリックしてください。");
+            return;
+        }
+
+        const apply_ids = (record[tableInvoiceTargets_COLLECT]["value"]).map((row) => row["value"][tableFieldRecordId_COLLECT]["value"]);
+        const applies_resp = await getApplies(apply_ids)
+            .catch((err) => {
+                throw new Error(`振込依頼書明細の申込レコードの支払状況を確認している最中にエラーが発生しました。\n\nエラーログ：${err}`);
+            });
+
+        // それぞれのレコード番号の状態を全て確認する。
+        // 振込依頼書対象になっているのに申込アプリに存在しないレコードがあればエラーとする。
+        const expected_id_set = new Set(apply_ids);
+        const retlieved_id_set = new Set(applies_resp.records.map((r) => r[fieldRecordId_APPLY]["value"]));
+        // script by https://qiita.com/toshihikoyanase/items/7b07ca6a94eb72164257
+        Set.prototype.difference = function(setB) {
+            const difference = new Set(this);
+            for (const elem of setB) {
+                difference.delete(elem);
+            }
+            return difference;
+        };
+        const diff = expected_id_set.difference(retlieved_id_set);
+        if (diff.size > 0) {
+            throw new Error(`申込アプリの中に、下記のレコード番号が見つかりませんでした。\n${Array.from(diff).join(",")}`);
+        }
+
+        const is_all_paid = applies_resp.records.every((r) => r[fieldStatus_APPLY]["value"] === statusPaid_APPLY);
+
+        if (!is_all_paid) {
+            alert(`支払実行が完了していない申込レコードがあります。\n\n申込アプリを開いて、下記のレコード番号の状態フィールドが${statusPaid_APPLY}になっているか確認してください。\n${apply_ids.join(",")}`);
+            return;
+        }
+
+        const collects_resp = await getParentAndChildCollectRecords(record)
+            .catch((err) => {
+                throw new Error(`この親レコードに関連する子レコードの取得中にエラーが発生しました。\n\nエラーログ：${err}`);
+            });
+
+        await updateStatus(collects_resp.records, statusReadyToSend_COLLECT)
+            .catch((err) => {
+                throw new Error(`親子レコードの状態フィールドの更新中にエラーが発生しました。\n\nエラーログ：${err}`);
+            });
+
+        alert(`親子レコードの状態を${statusReadyToSend_COLLECT}に更新しました。\nこの後は自動でメールが送信されます。\n\n10分経っても送信されない場合はシステム管理者にご連絡ください。`);
+        alert("レコード一覧画面に戻ります。");
+        window.location.href = `/k/${APP_ID_COLLECT}/`;
+    } catch(err) {
+        alert(err);
+    }
+}
+
+function getApplies(apply_ids) {
+    const get_body = {
+        "app": APP_ID_APPLY,
+        "fields": [
+            fieldRecordId_APPLY,
+            fieldStatus_APPLY
+        ],
+        "query": `${fieldRecordId_APPLY} in ("${apply_ids.join('","')}")`
+    };
+
+    return kintoneRecord.getAllRecordsByQuery(get_body);
+}
+
 (function() {
     "use strict";
-
-    const fieldParentCollectRecord_COLLECT  = schema_collect.fields.properties.parentCollectRecord.code;
-    const fieldInvoicePdf_COLLECT           = schema_collect.fields.properties.invoicePdf.code;
-    const statusNotReadyToSend_COLLECT      = schema_collect.fields.properties.collectStatus.options.クラウドサイン承認済み.label;
-    const statusReadyToSend_COLLECT         = schema_collect.fields.properties.collectStatus.options.振込依頼書送信可.label;
-    const tableInvoiceTargets_COLLECT       = schema_collect.fields.properties.invoiceTargets.code;
-    const tableFieldRecordId_COLLECT        = schema_collect.fields.properties.invoiceTargets.fields.applyRecordNoIV.code;
-    const fieldConfirmStatus_COLLECT        = schema_collect.fields.properties.confirmStatusInvoice.code;
-    const statusConfirmedInvoice_COLLECT    = schema_collect.fields.properties.confirmStatusInvoice.options.確認OK.label;
-    const isParent_COLLECT                  = schema_collect.fields.properties.parentCollectRecord.options.true.label;
-
-    const APP_ID_APPLY                      = APP_ID.APPLY;
-    const fieldRecordId_APPLY               = schema_apply.fields.properties.レコード番号.code;
-    const fieldStatus_APPLY                 = schema_apply.fields.properties.状態.code;
-    const statusPaid_APPLY                  = schema_apply.fields.properties.状態.options.実行完了.label;
 
     kintone.events.on("app.record.detail.show", (event) => {
         if (needShowButton(event.record)) {
@@ -141,96 +233,4 @@ export function updateStatus(records, status) {
             kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
         }
     });
-
-    function needShowButton(record) {
-        const is_not_displayed = document.getElementById("addToQueue") === null;
-
-        // 親レコードのうち、振込依頼書作成済みで、かつ送信前のレコードの場合のみ表示
-        const is_parent_not_send = ((record[fieldParentCollectRecord_COLLECT]["value"]).includes(isParent_COLLECT))
-            && (record[fieldInvoicePdf_COLLECT]["value"].length > 0)
-            && (record[fieldStatus_COLLECT]["value"] === statusNotReadyToSend_COLLECT);
-        return is_not_displayed && is_parent_not_send;
-    }
-
-    function createAddToQueueButton(record) {
-        const button = document.createElement("button");
-        button.id = "addToQueue";
-        button.innerText = "振込依頼書を送信待ち状態にする";
-        button.addEventListener("click", clickAddToQueue.bind(null, record));
-        return button;
-    }
-
-    async function clickAddToQueue(record) {
-        const clicked_ok = confirm("このレコードの振込依頼書を自動送信してもよろしいですか？\n（最長10分後に自動で送信されます）");
-        if (!clicked_ok) {
-            alert("処理は中断されました。");
-            return;
-        }
-
-        try {
-            if (!(record[fieldConfirmStatus_COLLECT]["value"]).includes(statusConfirmedInvoice_COLLECT)) {
-                alert("振込依頼書の目視確認が済んでいません。\n振込依頼書確認OKのチェックボックスをオンにして保存してから\nもう一度ボタンをクリックしてください。");
-                return;
-            }
-
-            const apply_ids = (record[tableInvoiceTargets_COLLECT]["value"]).map((row) => row["value"][tableFieldRecordId_COLLECT]["value"]);
-            const applies_resp = await getApplies(apply_ids)
-                .catch((err) => {
-                    throw new Error(`振込依頼書明細の申込レコードの支払状況を確認している最中にエラーが発生しました。\n\nエラーログ：${err}`);
-                });
-
-            // それぞれのレコード番号の状態を全て確認する。
-            // 振込依頼書対象になっているのに申込アプリに存在しないレコードがあればエラーとする。
-            const expected_id_set = new Set(apply_ids);
-            const retlieved_id_set = new Set(applies_resp.records.map((r) => r[fieldRecordId_APPLY]["value"]));
-            // script by https://qiita.com/toshihikoyanase/items/7b07ca6a94eb72164257
-            Set.prototype.difference = function(setB) {
-                const difference = new Set(this);
-                for (const elem of setB) {
-                    difference.delete(elem);
-                }
-                return difference;
-            };
-            const diff = expected_id_set.difference(retlieved_id_set);
-            if (diff.size > 0) {
-                throw new Error(`申込アプリの中に、下記のレコード番号が見つかりませんでした。\n${Array.from(diff).join(",")}`);
-            }
-
-            const is_all_paid = applies_resp.records.every((r) => r[fieldStatus_APPLY]["value"] === statusPaid_APPLY);
-
-            if (!is_all_paid) {
-                alert(`支払実行が完了していない申込レコードがあります。\n\n申込アプリを開いて、下記のレコード番号の状態フィールドが${statusPaid_APPLY}になっているか確認してください。\n${apply_ids.join(",")}`);
-                return;
-            }
-
-            const collects_resp = await getParentAndChildCollectRecords(record)
-                .catch((err) => {
-                    throw new Error(`この親レコードに関連する子レコードの取得中にエラーが発生しました。\n\nエラーログ：${err}`);
-                });
-
-            await updateStatus(collects_resp.records, statusReadyToSend_COLLECT)
-                .catch((err) => {
-                    throw new Error(`親子レコードの状態フィールドの更新中にエラーが発生しました。\n\nエラーログ：${err}`);
-                });
-
-            alert(`親子レコードの状態を${statusReadyToSend_COLLECT}に更新しました。\nこの後は自動でメールが送信されます。\n\n10分経っても送信されない場合はシステム管理者にご連絡ください。`);
-            alert("レコード一覧画面に戻ります。");
-            window.location.href = `/k/${APP_ID_COLLECT}/`;
-        } catch(err) {
-            alert(err);
-        }
-    }
-
-    function getApplies(apply_ids) {
-        const get_body = {
-            "app": APP_ID_APPLY,
-            "fields": [
-                fieldRecordId_APPLY,
-                fieldStatus_APPLY
-            ],
-            "query": `${fieldRecordId_APPLY} in ("${apply_ids.join('","')}")`
-        };
-
-        return kintoneRecord.getAllRecordsByQuery(get_body);
-    }
 })();
