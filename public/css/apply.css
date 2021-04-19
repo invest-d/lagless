@@ -131,3 +131,7 @@ img.renove-v2-logo {
 span.wrap-block {
     display: inline-block;
 }
+
+.multiple_invoice_caution {
+    color: #ff0000;
+}
