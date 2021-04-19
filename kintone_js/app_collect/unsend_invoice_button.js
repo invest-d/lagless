@@ -9,7 +9,7 @@
     また、単純に「まだ送信してないけど送信を取り消したい」という時にも使えるようにする
 */
 
-import {getParentAndChildCollectRecords, updateStatus} from "./add_to_queue_button";
+import {getParentAndChildCollectRecords, updateStatus} from "./logics_add_to_queue_button";
 
 (function() {
     "use strict";

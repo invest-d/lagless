@@ -4,7 +4,7 @@
 */
 
 import * as abort from "./app_collect/logics_abort_manual_adding_to_queue";
-import * as queue from "./app_collect/add_to_queue_button";
+import * as queue from "./app_collect/logics_add_to_queue_button";
 
 (function () {
     "use strict";
