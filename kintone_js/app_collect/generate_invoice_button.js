@@ -38,6 +38,8 @@ const dateFns = require("date-fns");
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
+import { schema_collect } from "../162/schema";
+
 (function() {
     "use strict";
 
@@ -87,41 +89,41 @@ dayjs.locale("ja");
         return ACCOUNTS[contractor].smbc;
     };
 
-    const APP_ID_CONSTRUCTOR = 96;
+    const APP_ID_CONSTRUCTOR                        = 96;
 
-    const APP_ID_COLLECT = APP_ID.COLLECT;
-    const fieldRecordId_COLLECT = "レコード番号";
-    const fieldDeadline_COLLECT = "deadline";
-    const fieldProductName_COLLECT = "productName";
-    const fieldConstructionShopId_COLLECT = "constructionShopId";
-    const fieldConstructionShopName_COLLECT = "constructionShopName";
-    const fieldCeoTitle_COLLECT = "ceoTitle";
-    const fieldCeo_COLLECT = "ceo";
-    const fieldMailToInvest_COLLECT ="mailToInvest";
-    const fieldClosingDate_COLLECT = "closingDate";
-    const fieldCollectableAmount_COLLECT = "scheduledCollectableAmount";
-    const fieldAccount_COLLECT = "account";
-    const fieldDaysLater_COLLECT = "daysLater";
-    const fieldStatus_COLLECT = "collectStatus";
-    const statusApproved_COLLECT = "クラウドサイン承認済み";
-    const fieldParentCollectRecord_COLLECT = "parentCollectRecord";
-    const statusParent_COLLECT = "true";
-    const fieldTotalBilledAmount_COLLECT = "totalBilledAmount";
-    const tableCloudSignApplies_COLLECT = "cloudSignApplies";
-    const tableFieldApplyRecordNoCS_COLLECT = "applyRecordNoCS";
-    const tableFieldPaymentTimingCS_COLLECT = "paymentTimingCS";
-    const tableFieldApplicantOfficialNameCS_COLLECT = "applicantOfficialNameCS";
-    const tableFieldReceivableCS_COLLECT = "receivableCS";
-    const tableFieldPaymentDateCS_COLLECT = "paymentDateCS";
-    const tableInvoiceTargets_COLLECT = "invoiceTargets";
-    const tableFieldApplyRecordNoIV_COLLECT = "applyRecordNoIV";
-    const tableFieldPaymentTimingIV_COLLECT = "paymentTimingIV";
-    const tableFieldApplicantOfficialNameIV_COLLECT = "applicantOfficialNameIV";
-    const tableFieldReceivableIV_COLLECT = "receivableIV";
-    const tableFieldPaymentDateIV_COLLECT = "paymentDateIV";
-    const fieldInvoicePdf_COLLECT = "invoicePdf";
-    const fieldHandleForHolidays_COLLECT = "handleForHolidays";
-    const fieldConfirmStatusInvoice_COLLECT = "confirmStatusInvoice";
+    const APP_ID_COLLECT                            = APP_ID.COLLECT;
+    const fieldRecordId_COLLECT                     = schema_collect.fields.properties.レコード番号.code;
+    const fieldDeadline_COLLECT                     = schema_collect.fields.properties.deadline.code;
+    const fieldProductName_COLLECT                  = schema_collect.fields.properties.productName.code;
+    const fieldConstructionShopId_COLLECT           = schema_collect.fields.properties.constructionShopId.code;
+    const fieldConstructionShopName_COLLECT         = schema_collect.fields.properties.constructionShopName.code;
+    const fieldCeoTitle_COLLECT                     = schema_collect.fields.properties.ceoTitle.code;
+    const fieldCeo_COLLECT                          = schema_collect.fields.properties.ceo.code;
+    const fieldMailToInvest_COLLECT                 = schema_collect.fields.properties.mailToInvest.code;
+    const fieldClosingDate_COLLECT                  = schema_collect.fields.properties.closingDate.code;
+    const fieldCollectableAmount_COLLECT            = schema_collect.fields.properties.scheduledCollectableAmount.code;
+    const fieldAccount_COLLECT                      = schema_collect.fields.properties.account.code;
+    const fieldDaysLater_COLLECT                    = schema_collect.fields.properties.daysLater.code;
+    const fieldStatus_COLLECT                       = schema_collect.fields.properties.collectStatus.code;
+    const statusApproved_COLLECT                    = schema_collect.fields.properties.collectStatus.options.クラウドサイン承認済み.label;
+    const fieldParentCollectRecord_COLLECT          = schema_collect.fields.properties.parentCollectRecord.code;
+    const statusParent_COLLECT                      = schema_collect.fields.properties.parentCollectRecord.options.true.label;
+    const fieldTotalBilledAmount_COLLECT            = schema_collect.fields.properties.totalBilledAmount.code;
+    const tableCloudSignApplies_COLLECT             = schema_collect.fields.properties.cloudSignApplies.code;
+    const tableFieldApplyRecordNoCS_COLLECT         = schema_collect.fields.properties.cloudSignApplies.fields.applyRecordNoCS.code;
+    const tableFieldPaymentTimingCS_COLLECT         = schema_collect.fields.properties.cloudSignApplies.fields.paymentTimingCS.code;
+    const tableFieldApplicantOfficialNameCS_COLLECT = schema_collect.fields.properties.cloudSignApplies.fields.applicantOfficialNameCS.code;
+    const tableFieldReceivableCS_COLLECT            = schema_collect.fields.properties.cloudSignApplies.fields.receivableCS.code;
+    const tableFieldPaymentDateCS_COLLECT           = schema_collect.fields.properties.cloudSignApplies.fields.paymentDateCS.code;
+    const tableInvoiceTargets_COLLECT               = schema_collect.fields.properties.invoiceTargets.code;
+    const tableFieldApplyRecordNoIV_COLLECT         = schema_collect.fields.properties.invoiceTargets.fields.applyRecordNoIV.code;
+    const tableFieldPaymentTimingIV_COLLECT         = schema_collect.fields.properties.invoiceTargets.fields.paymentTimingIV.code;
+    const tableFieldApplicantOfficialNameIV_COLLECT = schema_collect.fields.properties.invoiceTargets.fields.applicantOfficialNameIV.code;
+    const tableFieldReceivableIV_COLLECT            = schema_collect.fields.properties.invoiceTargets.fields.receivableIV.code;
+    const tableFieldPaymentDateIV_COLLECT           = schema_collect.fields.properties.invoiceTargets.fields.paymentDateIV.code;
+    const fieldInvoicePdf_COLLECT                   = schema_collect.fields.properties.invoicePdf.code;
+    const fieldHandleForHolidays_COLLECT            = schema_collect.fields.properties.handleForHolidays.code;
+    const fieldConfirmStatusInvoice_COLLECT         = schema_collect.fields.properties.confirmStatusInvoice.code;
 
     const orange = "#ff9a33";
     const white = "#ffffff";
@@ -537,7 +539,7 @@ dayjs.locale("ja");
 
         // 振込依頼書に記載する日付。Y年M月D日
         // 支払明細の申込レコードの中で、最も遅い支払日を採用する
-        const detail_payment_dates =  parent_record["invoiceTargets"]["value"].map((record) => dayjs(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]));
+        const detail_payment_dates =  parent_record[tableInvoiceTargets_COLLECT]["value"].map((record) => dayjs(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]));
         const latest_date = dayjs(Math.max(...detail_payment_dates));
         const send_date = {
             text: latest_date.format("YYYY年M月D日"),
@@ -747,7 +749,7 @@ dayjs.locale("ja");
             } else {
                 return getLaglessDetailTable(details, total);
             }
-        })(parent_record[fieldConstructionShopId_COLLECT]["value"], parent_record["invoiceTargets"]["value"], total);
+        })(parent_record[fieldConstructionShopId_COLLECT]["value"], parent_record[tableInvoiceTargets_COLLECT]["value"], total);
         doc.content.push(detail_table);
 
         doc.content.push(bar);
