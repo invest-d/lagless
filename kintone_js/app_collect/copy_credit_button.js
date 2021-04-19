@@ -41,6 +41,7 @@
 
     const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         if (needShowButton()) {
             const button = createCopyCreditButton();

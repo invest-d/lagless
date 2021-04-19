@@ -33,6 +33,7 @@
     const statusCollected_COLLECT = "回収済み";
     const statusRejected_COLLECT = "クラウドサイン却下・再作成待ち";
 
+    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         if (needShowButton()) {
             const button = createGetCollectableAmountButton();
