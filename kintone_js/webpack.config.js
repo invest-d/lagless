@@ -29,6 +29,7 @@ module.exports = (env, argv) => {
                 create_payment_detail: "./app_apply/button_create_payment_detail.js",
                 insert_collect_credit_button: "./insert_collect_credit_button.js",
                 calc_member_fee: "./app_apply/button_calc_member_fee.js",
+                app_collect: "./app_collect.js",
             },
 
             // ファイルの出力設定
@@ -72,6 +73,7 @@ module.exports = (env, argv) => {
                 create_payment_detail: "./app_apply/button_create_payment_detail.js",
                 insert_collect_credit_button: "./insert_collect_credit_button.js",
                 calc_member_fee: "./app_apply/button_calc_member_fee.js",
+                app_collect: "./app_collect.js",
             },
 
             // ファイルの出力設定

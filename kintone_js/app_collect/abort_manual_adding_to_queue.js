@@ -25,21 +25,3 @@ export const setErrorMessageOnInlineEdit = (event) => {
     event.record[STATUS_FIELD].error = "振込依頼書を送信する場合、レコード詳細画面のボタンから処理してください。";
     return event;
 };
-
-(function () {
-    "use strict";
-
-    kintone.events.on(`app.record.edit.change.${STATUS_FIELD}`, (event) => {
-        const status = event.record[STATUS_FIELD]["value"];
-        if (shouldNotChangeStatus(status)) {
-            return setErrorMessageOnDetailEdit(event);
-        }
-    });
-
-    kintone.events.on(`app.record.index.edit.change.${STATUS_FIELD}`, (event) => {
-        const status = event.record[STATUS_FIELD]["value"];
-        if (shouldNotChangeStatus(status)) {
-            return setErrorMessageOnInlineEdit(event);
-        }
-    });
-})();
