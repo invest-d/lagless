@@ -6,7 +6,7 @@
 import * as abort from "./app_collect/logics_abort_manual_adding_to_queue";
 import * as queue from "./app_collect/logics_add_to_queue_button";
 import * as copy from "./app_collect/logics_copy_credit_button";
-import * as accept from "./app_collect/generate_acceptance_letter_button";
+import * as accept from "./app_collect/logics_generate_acceptance_letter_button";
 
 (function () {
     "use strict";
