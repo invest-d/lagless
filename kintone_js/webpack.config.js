@@ -18,7 +18,6 @@ module.exports = (env, argv) => {
             entry: {
                 output_csv_RealtorOriginal: "./app_apply/button_output_csv_RealtorOriginalPay.js",
                 output_csv_WfiEarly: "./app_apply/button_output_csv_WfiEarlyPay.js",
-                unsend_invoice_button: "./app_collect/unsend_invoice_button.js",
                 color_exceeding_payment: "./color_exceeding_payment.js",
                 96: "./96.js",
                 174: "./174.js",
@@ -58,7 +57,6 @@ module.exports = (env, argv) => {
             entry: {
                 output_csv_RealtorOriginal: "./app_apply/button_output_csv_RealtorOriginalPay.js",
                 output_csv_WfiEarly: "./app_apply/button_output_csv_WfiEarlyPay.js",
-                unsend_invoice_button: "./app_collect/unsend_invoice_button.js",
                 color_exceeding_payment: "./color_exceeding_payment.js",
                 96: "./96.js",
                 174: "./174.js",

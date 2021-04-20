@@ -5,6 +5,7 @@
 
 import * as abort from "./app_collect/logics_abort_manual_adding_to_queue";
 import * as queue from "./app_collect/logics_add_to_queue_button";
+import * as unqueue from "./app_collect/unsend_invoice_button";
 import * as copy from "./app_collect/logics_copy_credit_button";
 import * as accept from "./app_collect/logics_generate_acceptance_letter_button";
 import * as invoice from "./app_collect/logics_generate_invoice_button";
@@ -37,6 +38,11 @@ import * as reject from "./app_collect/logics_reject_collect_record_button";
 
         if (reject.needShowButton()) {
             const button = reject.createRejectCollectRecordButton(event.record);
+            kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
+        }
+
+        if (unqueue.needShowButton(event.record)) {
+            const button = unqueue.createUnsendInvoiceButton(event.record);
             kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
         }
     });

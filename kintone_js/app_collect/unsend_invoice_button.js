@@ -22,7 +22,7 @@ const unsendTarget = [
 const fieldParentCollectRecord_COLLECT  = schema_collect.fields.properties.parentCollectRecord.code;
 const isParent_COLLECT                  = schema_collect.fields.properties.parentCollectRecord.options.true.label;
 
-function needShowButton(record) {
+export function needShowButton(record) {
     const is_not_displayed = document.getElementById("unsendInvoice") === null;
 
     // 振込依頼書送信済みの（もしくはもうすぐ送信される）親レコードの場合のみ表示
@@ -30,7 +30,7 @@ function needShowButton(record) {
     return is_not_displayed && is_parent;
 }
 
-function createUnsendInvoiceButton(record) {
+export function createUnsendInvoiceButton(record) {
     const unsendInvoice = document.createElement("button");
     unsendInvoice.id = "unsendInvoice";
     unsendInvoice.innerText = "このレコードを振込依頼書送信前の状態に戻す";
@@ -59,14 +59,3 @@ async function clickUnsendInvoice (record) {
     alert("レコード一覧画面に戻ります。");
     window.location.href = `/k/${APP_ID_COLLECT}/`;
 }
-
-(function() {
-    "use strict";
-
-    kintone.events.on("app.record.detail.show", (event) => {
-        if (needShowButton(event.record)) {
-            const button = createUnsendInvoiceButton(event.record);
-            kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
-        }
-    });
-})();
