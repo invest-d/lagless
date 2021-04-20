@@ -9,16 +9,21 @@
     また、単純に「まだ送信してないけど送信を取り消したい」という時にも使えるようにする
 */
 
-import {getParentAndChildCollectRecords, updateStatus} from "./logics_add_to_queue_button";
+import { getParentAndChildCollectRecords, updateStatus } from "./logics_add_to_queue_button";
+import { schema_collect } from "../162/schema";
 
 (function() {
     "use strict";
 
-    const APP_ID_COLLECT = kintone.app.getId();
-    const fieldStatus_COLLECT = "collectStatus";
-    const statusUnsend_COLLECT = "クラウドサイン承認済み";
-    const unsendTarget = ["振込依頼書送信可", "振込依頼書送信済み"];
-    const fieldParentCollectRecord_COLLECT = "parentCollectRecord";
+    const APP_ID_COLLECT                    = kintone.app.getId();
+    const fieldStatus_COLLECT               = schema_collect.fields.properties.collectStatus.code;
+    const statusUnsend_COLLECT              = schema_collect.fields.properties.collectStatus.options.クラウドサイン承認済み.label;
+    const unsendTarget = [
+        schema_collect.fields.properties.collectStatus.options.振込依頼書送信可.label,
+        schema_collect.fields.properties.collectStatus.options.振込依頼書送信済み.label
+    ];
+    const fieldParentCollectRecord_COLLECT  = schema_collect.fields.properties.parentCollectRecord.code;
+    const isParent_COLLECT                  = schema_collect.fields.properties.parentCollectRecord.options.true.label;
 
     kintone.events.on("app.record.detail.show", (event) => {
         if (needShowButton(event.record)) {
@@ -31,7 +36,7 @@ import {getParentAndChildCollectRecords, updateStatus} from "./logics_add_to_que
         const is_not_displayed = document.getElementById("unsendInvoice") === null;
 
         // 振込依頼書送信済みの（もしくはもうすぐ送信される）親レコードの場合のみ表示
-        const is_parent = (unsendTarget.includes(record[fieldStatus_COLLECT]["value"])) && ((record[fieldParentCollectRecord_COLLECT]["value"]).includes("true"));
+        const is_parent = (unsendTarget.includes(record[fieldStatus_COLLECT]["value"])) && ((record[fieldParentCollectRecord_COLLECT]["value"]).includes(isParent_COLLECT));
         return is_not_displayed && is_parent;
     }
 
