@@ -50,40 +50,44 @@ function getWeekdayDiff(date_from, date_to) {
     return diff_weekdays;
 }
 
+const colorDeadlineCells = (event) => {
+    const target_cells = kintone.app.getFieldElements(fieldDeadline);
+    const records = event.records;
+
+    records.forEach((record, i) => {
+        // 回収対象外のレコードは何もしない
+        if (record[fieldStatus]["value"] === statusCollected
+        || record[fieldStatus]["value"] === statusRejected) {
+            return;
+        }
+
+        const deadline = createDateFromYMD(record[fieldDeadline]["value"]);
+
+        // 回収対象なのに回収期限日を過ぎている場合
+        if (deadline < today) {
+            target_cells[i].style.backgroundColor = bg_passed_deadline;
+            return;
+        }
+
+        // 回収期限日が（土日を除いて）今日もしくは明日に迫っている場合
+        if (getWeekdayDiff(today, deadline) <= 1) {
+            target_cells[i].style.backgroundColor = bg_within_one_day;
+            return;
+        }
+
+        // 回収期限日が今日から1週間以内に迫っている場合。単純に7日後で計算
+        const one_week_after = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
+        if (deadline >= today && deadline <= one_week_after) {
+            target_cells[i].style.backgroundColor = bg_within_one_week;
+            return;
+        }
+    });
+};
+
 (function() {
     "use strict";
 
     kintone.events.on("app.record.index.show", (event) => {
-        const target_cells = kintone.app.getFieldElements(fieldDeadline);
-        const records = event.records;
-
-        records.forEach((record, i) => {
-            // 回収対象外のレコードは何もしない
-            if (record[fieldStatus]["value"] === statusCollected
-            || record[fieldStatus]["value"] === statusRejected) {
-                return;
-            }
-
-            const deadline = createDateFromYMD(record[fieldDeadline]["value"]);
-
-            // 回収対象なのに回収期限日を過ぎている場合
-            if (deadline < today) {
-                target_cells[i].style.backgroundColor = bg_passed_deadline;
-                return;
-            }
-
-            // 回収期限日が（土日を除いて）今日もしくは明日に迫っている場合
-            if (getWeekdayDiff(today, deadline) <= 1) {
-                target_cells[i].style.backgroundColor = bg_within_one_day;
-                return;
-            }
-
-            // 回収期限日が今日から1週間以内に迫っている場合。単純に7日後で計算
-            const one_week_after = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
-            if (deadline >= today && deadline <= one_week_after) {
-                target_cells[i].style.backgroundColor = bg_within_one_week;
-                return;
-            }
-        });
+        colorDeadlineCells(event);
     });
 })();
