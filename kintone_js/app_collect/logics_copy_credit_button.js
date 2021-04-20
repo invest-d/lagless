@@ -38,7 +38,7 @@ const creditFacility_KOMUTEN        = schema_96.fields.properties.creditFacility
 const fieldNextCheckStatus_KOMUTEN  = schema_96.fields.properties.nextCheckStatus.code;
 const statusGetCredit_KOMUTEN       = schema_96.fields.properties.nextCheckStatus.options["与信枠を審査・取得する"].label;
 
-const kintoneRecord = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
+const client = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
 
 export function needShowButton() {
     // 現状は常にボタンを表示する。増殖バグだけ防止
@@ -106,7 +106,7 @@ async function getLatestExamRecords() {
         "seek": true
     };
 
-    const all_exam = await kintoneRecord.getAllRecordsByQuery(body_exams);
+    const all_exam = await client.getAllRecordsByQuery(body_exams);
 
     // 重複なしの取引企業Noを取得
     const unique_customer_codes = all_exam.records
@@ -153,7 +153,7 @@ async function updateKomutenCredits(latest_exam_records) {
     }
 
     console.log("審査アプリから取得した付与与信枠を工務店アプリのレコードに転記する");
-    const resp_update = await kintoneRecord.updateAllRecords(body_update_credits);
+    const resp_update = await client.updateAllRecords(body_update_credits);
     return resp_update.results[0].records.length;
 }
 
@@ -166,7 +166,7 @@ async function generateUpdateKomutenReqBody(latest_exam_records) {
         "query": `${fieldNextCheckStatus_KOMUTEN} in ("${statusGetCredit_KOMUTEN}")`,
         "seek": true
     };
-    const komuten_info = await kintoneRecord.getAllRecordsByQuery(body_exams);
+    const komuten_info = await client.getAllRecordsByQuery(body_exams);
 
     console.log("工務店レコードそれぞれについて、審査アプリから取得した与信枠をPUTするオブジェクトを作る");
     const put_records = komuten_info.records
