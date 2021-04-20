@@ -8,7 +8,7 @@ import * as queue from "./app_collect/logics_add_to_queue_button";
 import * as copy from "./app_collect/logics_copy_credit_button";
 import * as accept from "./app_collect/logics_generate_acceptance_letter_button";
 import * as invoice from "./app_collect/logics_generate_invoice_button";
-import * as sum from "./app_collect/get_collectable_amount_button";
+import * as sum from "./app_collect/logics_get_collectable_amount_button";
 
 (function () {
     "use strict";
