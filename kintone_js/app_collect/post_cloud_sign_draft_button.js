@@ -65,12 +65,12 @@ const fieldCustomerName_CUSTOMER    = schema_28.fields.properties["法人名・�
 const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
 const button_id = "post_cloud_sign_draft";
-function needShowButton() {
+export function needShowButton() {
     // 一旦は常にボタンを表示する。増殖バグだけ防止
     return document.getElementById(button_id) === null;
 }
 
-function createButton() {
+export function createButton() {
     const button = document.createElement("button");
     button.id = button_id;
     button.innerText = "債権譲渡クラウドサイン下書きを作成する";
@@ -553,16 +553,3 @@ const update_suceeded_records = async (update_records) => {
     const result = await client.record.updateRecords(body);
     return result.records;
 };
-
-(function() {
-    "use strict";
-
-    // eslint-disable-next-line no-unused-vars
-    kintone.events.on("app.record.index.show", (event) => {
-        // ボタンを表示するか判定
-        if (needShowButton()) {
-            const button = createButton();
-            kintone.app.getHeaderMenuSpaceElement().appendChild(button);
-        }
-    });
-})();
