@@ -126,14 +126,15 @@ const orange = "#ff9a33";
 const white = "#ffffff";
 const black = "#000000";
 
+const button_id = "generateInvoice";
 export function needShowButton() {
     // 一旦は常にボタンを表示する。増殖バグだけ防止
-    return document.getElementById("generateInvoice") === null;
+    return document.getElementById(button_id) === null;
 }
 
 export function createGenerateInvoiceButton() {
     const generateInvoice = document.createElement("button");
-    generateInvoice.id = "generateInvoice";
+    generateInvoice.id = button_id;
     generateInvoice.innerText = "振込依頼書を作成";
     generateInvoice.addEventListener("click", clickGenerateInvoice);
     return generateInvoice;
