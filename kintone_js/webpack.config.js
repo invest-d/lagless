@@ -18,17 +18,13 @@ module.exports = (env, argv) => {
             entry: {
                 output_csv_RealtorOriginal: "./app_apply/button_output_csv_RealtorOriginalPay.js",
                 output_csv_WfiEarly: "./app_apply/button_output_csv_WfiEarlyPay.js",
-                generate_invoice_button: "./generate_invoice_button.js",
-                add_to_queue_button: "./add_to_queue_button.js",
-                unsend_invoice_button: "./unsend_invoice_button.js",
                 color_exceeding_payment: "./color_exceeding_payment.js",
-                generate_acceptance_letter_button: "./generate_acceptance_letter_button.js",
-                post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
                 96: "./96.js",
                 174: "./174.js",
                 create_payment_detail: "./app_apply/button_create_payment_detail.js",
                 insert_collect_credit_button: "./insert_collect_credit_button.js",
                 calc_member_fee: "./app_apply/button_calc_member_fee.js",
+                app_collect: "./app_collect.js",
             },
 
             // ファイルの出力設定
@@ -61,17 +57,13 @@ module.exports = (env, argv) => {
             entry: {
                 output_csv_RealtorOriginal: "./app_apply/button_output_csv_RealtorOriginalPay.js",
                 output_csv_WfiEarly: "./app_apply/button_output_csv_WfiEarlyPay.js",
-                generate_invoice_button: "./generate_invoice_button.js",
-                add_to_queue_button: "./add_to_queue_button.js",
-                unsend_invoice_button: "./unsend_invoice_button.js",
                 color_exceeding_payment: "./color_exceeding_payment.js",
-                generate_acceptance_letter_button: "./generate_acceptance_letter_button.js",
-                post_cloud_sign_draft_button: "./post_cloud_sign_draft_button.js",
                 96: "./96.js",
                 174: "./174.js",
                 create_payment_detail: "./app_apply/button_create_payment_detail.js",
                 insert_collect_credit_button: "./insert_collect_credit_button.js",
                 calc_member_fee: "./app_apply/button_calc_member_fee.js",
+                app_collect: "./app_collect.js",
             },
 
             // ファイルの出力設定
