@@ -2,6 +2,8 @@
     回収アプリで回収期限日が間近のレコードの回収期限フィールドに色を付ける。
 */
 
+import { schema_collect } from "../162/schema";
+
 (function() {
     "use strict";
     // 1週間以内に回収期限が来る：黄色
@@ -11,10 +13,10 @@
     // 回収期限日を過ぎている：赤
     const bg_passed_deadline = "#ea5549";
 
-    const fieldDeadline = "deadline";
-    const fieldStatus = "collectStatus";
-    const statusCollected = "回収済み";
-    const statusRejected = "クラウドサイン却下・再作成待ち";
+    const fieldDeadline     = schema_collect.fields.properties.deadline.code;
+    const fieldStatus       = schema_collect.fields.properties.collectStatus.code;
+    const statusCollected   = schema_collect.fields.properties.collectStatus.options.回収済み.label;
+    const statusRejected    = schema_collect.fields.properties.collectStatus.options["クラウドサイン却下・再作成待ち"].label;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0); //深夜0時で揃えて比較する
