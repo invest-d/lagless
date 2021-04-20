@@ -10,28 +10,32 @@
     取引企業Noごとに回収予定金額を合計し、工務店マスタの未回収金額にセットする。
 */
 
+import { schema_apply } from "../161/schema";
+import { schema_96 } from "../96/schema";
+import { schema_collect } from "../162/schema";
+
 (function () {
     "use strict";
 
-    const statusPaymentTimingUndefined_APPLY = "未設定";
-    const statusPaymentTimingEarly_APPLY = "早払い";
-    const statusPaymentTimingLate_APPLY = "遅払い";
+    const statusPaymentTimingUndefined_APPLY    = schema_apply.fields.properties.paymentTiming.options.未設定.label;
+    const statusPaymentTimingEarly_APPLY        = schema_apply.fields.properties.paymentTiming.options.早払い.label;
+    const statusPaymentTimingLate_APPLY         = schema_apply.fields.properties.paymentTiming.options.遅払い.label;
 
-    const APP_ID_KOMUTEN = 96;
-    const fieldConstructionShopId_KOMUTEN = "id";
-    const fieldCustomerCode_KOMUTEN = "customerCode";
-    const fieldCollectableAmount_KOMUTEN = "uncollectedAmount";
-    const fieldCollectableAmount_late_KOMUTEN = "uncollectedAmount_late";
+    const APP_ID_KOMUTEN                        = schema_96.id.appId;
+    const fieldConstructionShopId_KOMUTEN       = schema_96.fields.properties.id.code;
+    const fieldCustomerCode_KOMUTEN             = schema_96.fields.properties.customerCode.code;
+    const fieldCollectableAmount_KOMUTEN        = schema_96.fields.properties.uncollectedAmount.code;
+    const fieldCollectableAmount_late_KOMUTEN   = schema_96.fields.properties.uncollectedAmount_late.code;
 
-    const APP_ID_COLLECT = kintone.app.getId();
-    const fieldConstructionShopId_COLLECT = "constructionShopId";
-    const fieldCustomerCode_COLLECT = "customerCode";
-    const fieldTableCloudSign_COLLECT = "cloudSignApplies";
-    const tableFieldReceivableCS_COLLECT = "receivableCS";
-    const tableFieldPaymentTimingCS_COLLECT = "paymentTimingCS";
-    const fieldStatus_COLLECT = "collectStatus";
-    const statusCollected_COLLECT = "回収済み";
-    const statusRejected_COLLECT = "クラウドサイン却下・再作成待ち";
+    const APP_ID_COLLECT                        = kintone.app.getId();
+    const fieldConstructionShopId_COLLECT       = schema_collect.fields.properties.constructionShopId.code;
+    const fieldCustomerCode_COLLECT             = schema_collect.fields.properties.customerCode.code;
+    const fieldTableCloudSign_COLLECT           = schema_collect.fields.properties.cloudSignApplies.code;
+    const tableFieldReceivableCS_COLLECT        = schema_collect.fields.properties.cloudSignApplies.fields.receivableCS.code;
+    const tableFieldPaymentTimingCS_COLLECT     = schema_collect.fields.properties.cloudSignApplies.fields.paymentTimingCS.code;
+    const fieldStatus_COLLECT                   = schema_collect.fields.properties.collectStatus.code;
+    const statusCollected_COLLECT               = schema_collect.fields.properties.collectStatus.options.回収済み.label;
+    const statusRejected_COLLECT                = schema_collect.fields.properties.collectStatus.options["クラウドサイン却下・再作成待ち"].label;
 
     // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
