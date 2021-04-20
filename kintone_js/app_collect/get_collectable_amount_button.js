@@ -34,12 +34,12 @@ const fieldStatus_COLLECT                   = schema_collect.fields.properties.c
 const statusCollected_COLLECT               = schema_collect.fields.properties.collectStatus.options.回収済み.label;
 const statusRejected_COLLECT                = schema_collect.fields.properties.collectStatus.options["クラウドサイン却下・再作成待ち"].label;
 
-function needShowButton() {
+export function needShowButton() {
     // 一旦は常にボタンを表示する。増殖バグだけ防止
     return document.getElementById("getCollectable") === null;
 }
 
-function createGetCollectableAmountButton() {
+export function createGetCollectableAmountButton() {
     const getCollectable = document.createElement("button");
     getCollectable.id = "getCollectable";
     getCollectable.innerText = "各工務店の未回収金額を更新";
@@ -261,15 +261,3 @@ async function updateKomutenCollectableZero(updated_record_ids) {
 
     return kintone.api(kintone.api.url("/k/v1/records", true), "PUT", body_put_zero);
 }
-
-(function () {
-    "use strict";
-
-    // eslint-disable-next-line no-unused-vars
-    kintone.events.on("app.record.index.show", (event) => {
-        if (needShowButton()) {
-            const button = createGetCollectableAmountButton();
-            kintone.app.getHeaderMenuSpaceElement().appendChild(button);
-        }
-    });
-})();

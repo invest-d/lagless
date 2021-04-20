@@ -8,6 +8,7 @@ import * as queue from "./app_collect/logics_add_to_queue_button";
 import * as copy from "./app_collect/logics_copy_credit_button";
 import * as accept from "./app_collect/logics_generate_acceptance_letter_button";
 import * as invoice from "./app_collect/logics_generate_invoice_button";
+import * as sum from "./app_collect/get_collectable_amount_button";
 
 (function () {
     "use strict";
@@ -42,6 +43,11 @@ import * as invoice from "./app_collect/logics_generate_invoice_button";
 
         if (invoice.needShowButton()) {
             const button = invoice.createGenerateInvoiceButton();
+            kintone.app.getHeaderMenuSpaceElement().appendChild(button);
+        }
+
+        if (sum.needShowButton()) {
+            const button = sum.createGetCollectableAmountButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
 
