@@ -10,6 +10,7 @@ import * as accept from "./app_collect/logics_generate_acceptance_letter_button"
 import * as invoice from "./app_collect/logics_generate_invoice_button";
 import * as sum from "./app_collect/logics_get_collectable_amount_button";
 import * as cs_draft from "./app_collect/logics_post_cloud_sign_draft_button";
+import * as reject from "./app_collect/reject_collect_record_button";
 
 (function () {
     "use strict";
@@ -31,6 +32,11 @@ import * as cs_draft from "./app_collect/logics_post_cloud_sign_draft_button";
     kintone.events.on("app.record.detail.show", (event) => {
         if (queue.needShowButton(event.record)) {
             const button = queue.createAddToQueueButton(event.record);
+            kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
+        }
+
+        if (reject.needShowButton()) {
+            const button = reject.createRejectCollectRecordButton(event.record);
             kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
         }
     });

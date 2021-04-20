@@ -36,14 +36,14 @@ const APP_ID_APPLY          = APP_ID.APPLY;
 const fieldRecordNo_APPLY   = schema_apply.fields.properties.レコード番号.code;
 const fieldCollectId_APPLY  = schema_apply.fields.properties.collectId.code;
 
-function needShowButton() {
+export function needShowButton() {
     // 増殖バグ防止
     const not_displayed = document.getElementById("rejectCollect") === null;
 
     return not_displayed;
 }
 
-function createRejectCollectRecordButton(showing_record) {
+export function createRejectCollectRecordButton(showing_record) {
     const getRejectCollect = document.createElement("button");
     getRejectCollect.id = "rejectCollect";
     getRejectCollect.innerText = "クラウドサイン再送信用に申込レコードとの結びつきを解除する";
@@ -119,14 +119,3 @@ function deleteCollectIdField(detail_ids) {
 
     return kintone.api(kintone.api.url("/k/v1/records", true), "PUT", request_body);
 }
-
-(function () {
-    "use strict";
-
-    kintone.events.on("app.record.detail.show", (event) => {
-        if (needShowButton()) {
-            const button = createRejectCollectRecordButton(event.record);
-            kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
-        }
-    });
-})();
