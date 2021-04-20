@@ -109,7 +109,7 @@ async function getLatestExamRecords() {
         "orderBy": `${recordNo_EXAM} asc`
     };
 
-    const all_exam = await client.Record.getAllRecords(body_exams);
+    const all_exam = await client.record.getAllRecords(body_exams);
 
     // 重複なしの取引企業Noを取得
     const unique_customer_codes = all_exam.records
@@ -156,7 +156,7 @@ async function updateKomutenCredits(latest_exam_records) {
     }
 
     console.log("審査アプリから取得した付与与信枠を工務店アプリのレコードに転記する");
-    const resp_update = await client.Record.updateAllRecords(body_update_credits);
+    const resp_update = await client.record.updateAllRecords(body_update_credits);
     return resp_update.results[0].records.length;
 }
 
@@ -169,7 +169,7 @@ async function generateUpdateKomutenReqBody(latest_exam_records) {
         "condition": `${fieldNextCheckStatus_KOMUTEN} in ("${statusGetCredit_KOMUTEN}")`,
         "orderBy": `${recordNo_KOMUTEN} asc`
     };
-    const komuten_info = await client.Record.getAllRecords(body_exams);
+    const komuten_info = await client.record.getAllRecords(body_exams);
 
     console.log("工務店レコードそれぞれについて、審査アプリから取得した与信枠をPUTするオブジェクトを作る");
     const put_records = komuten_info.records
