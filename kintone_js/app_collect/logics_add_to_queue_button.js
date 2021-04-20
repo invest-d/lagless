@@ -96,7 +96,7 @@ export function getParentAndChildCollectRecords(record) {
 
     console.log(get_body);
 
-    return client.Record.getRecords(get_body);
+    return client.record.getRecords(get_body);
 }
 
 export function updateStatus(records, status) {
@@ -116,7 +116,7 @@ export function updateStatus(records, status) {
         })
     };
 
-    return client.Record.updateRecords(put_body);
+    return client.record.updateRecords(put_body);
 }
 
 const fieldParentCollectRecord_COLLECT  = schema_collect.fields.properties.parentCollectRecord.code;
@@ -223,5 +223,5 @@ function getApplies(apply_ids) {
         "condition": `${fieldRecordId_APPLY} in ("${apply_ids.join('","')}")`
     };
 
-    return client.Record.getAllRecords(get_body);
+    return client.record.getAllRecords(get_body);
 }
