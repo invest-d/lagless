@@ -18,7 +18,9 @@
 const dayjs = require("dayjs");
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
 
-const client = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
+import * as kintoneAPI from "../util/kintoneAPI";
+
+const client = kintoneAPI.CLIENT;
 
 const APP_ID = ((app_id) => {
     switch(app_id) {
@@ -94,7 +96,7 @@ export function getParentAndChildCollectRecords(record) {
 
     console.log(get_body);
 
-    return client.getRecords(get_body);
+    return client.Record.getRecords(get_body);
 }
 
 export function updateStatus(records, status) {
@@ -114,7 +116,7 @@ export function updateStatus(records, status) {
         })
     };
 
-    return client.updateRecords(put_body);
+    return client.Record.updateRecords(put_body);
 }
 
 const fieldParentCollectRecord_COLLECT  = schema_collect.fields.properties.parentCollectRecord.code;
@@ -218,8 +220,8 @@ function getApplies(apply_ids) {
             fieldRecordId_APPLY,
             fieldStatus_APPLY
         ],
-        "query": `${fieldRecordId_APPLY} in ("${apply_ids.join('","')}")`
+        "condition": `${fieldRecordId_APPLY} in ("${apply_ids.join('","')}")`
     };
 
-    return client.getAllRecordsByQuery(get_body);
+    return client.Record.getAllRecords(get_body);
 }
