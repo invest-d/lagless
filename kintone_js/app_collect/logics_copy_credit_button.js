@@ -25,6 +25,7 @@ import { schema_79 } from "../79/schema";
 import { schema_96 } from "../96/schema";
 
 const APP_ID_EXAM                   = schema_79.id.appId;
+const recordNo_EXAM                 = schema_79.fields.properties.レコード番号.code;
 const customerCode_EXAM             = schema_79.fields.properties.取引企業管理No_審査対象企業.code;
 const customerName_EXAM             = schema_79.fields.properties["法人名・屋号"].code;
 const creditAmountManual_EXAM       = schema_79.fields.properties.付与与信枠_手動入力_標準と高額.code;
@@ -38,7 +39,9 @@ const creditFacility_KOMUTEN        = schema_96.fields.properties.creditFacility
 const fieldNextCheckStatus_KOMUTEN  = schema_96.fields.properties.nextCheckStatus.code;
 const statusGetCredit_KOMUTEN       = schema_96.fields.properties.nextCheckStatus.options["与信枠を審査・取得する"].label;
 
-const client = new kintoneJSSDK.Record({connection: new kintoneJSSDK.Connection()});
+import * as kintoneAPI from "../util/kintoneAPI";
+
+const client = kintoneAPI.CLIENT;
 
 export function needShowButton() {
     // 現状は常にボタンを表示する。増殖バグだけ防止
@@ -102,11 +105,11 @@ async function getLatestExamRecords() {
             creditAmountAuto_EXAM,
             examinedDay_EXAM
         ],
-        "query": `${examinedDay_EXAM} != "" and (${creditAmountManual_EXAM} >= 0 or ${creditAmountAuto_EXAM} >= 0)`, // ヤバい取引企業は与信枠ゼロにして対応することもあるので、ゼロ円のレコードも取得
-        "seek": true
+        "condition": `${examinedDay_EXAM} != "" and (${creditAmountManual_EXAM} >= 0 or ${creditAmountAuto_EXAM} >= 0)`, // ヤバい取引企業は与信枠ゼロにして対応することもあるので、ゼロ円のレコードも取得
+        "orderBy": `${recordNo_EXAM} asc`
     };
 
-    const all_exam = await client.getAllRecordsByQuery(body_exams);
+    const all_exam = await client.Record.getAllRecords(body_exams);
 
     // 重複なしの取引企業Noを取得
     const unique_customer_codes = all_exam.records
@@ -153,7 +156,7 @@ async function updateKomutenCredits(latest_exam_records) {
     }
 
     console.log("審査アプリから取得した付与与信枠を工務店アプリのレコードに転記する");
-    const resp_update = await client.updateAllRecords(body_update_credits);
+    const resp_update = await client.Record.updateAllRecords(body_update_credits);
     return resp_update.results[0].records.length;
 }
 
@@ -163,10 +166,10 @@ async function generateUpdateKomutenReqBody(latest_exam_records) {
     const body_exams = {
         "app": APP_ID_KOMUTEN,
         "fields": [recordNo_KOMUTEN, customerCode_KOMUTEN],
-        "query": `${fieldNextCheckStatus_KOMUTEN} in ("${statusGetCredit_KOMUTEN}")`,
-        "seek": true
+        "condition": `${fieldNextCheckStatus_KOMUTEN} in ("${statusGetCredit_KOMUTEN}")`,
+        "orderBy": `${recordNo_KOMUTEN} asc`
     };
-    const komuten_info = await client.getAllRecordsByQuery(body_exams);
+    const komuten_info = await client.Record.getAllRecords(body_exams);
 
     console.log("工務店レコードそれぞれについて、審査アプリから取得した与信枠をPUTするオブジェクトを作る");
     const put_records = komuten_info.records
