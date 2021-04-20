@@ -42,7 +42,7 @@ import * as reject from "./app_collect/logics_reject_collect_record_button";
         }
 
         if (unqueue.needShowButton(event.record)) {
-            const button = unqueue.createUnsendInvoiceButton(event.record);
+            const button = unqueue.createButton(event.record);
             kintone.app.record.getHeaderMenuSpaceElement().appendChild(button);
         }
     });

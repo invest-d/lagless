@@ -30,7 +30,7 @@ export function needShowButton(record) {
     return is_not_displayed && is_parent;
 }
 
-export function createUnsendInvoiceButton(record) {
+export function createButton(record) {
     const unsendInvoice = document.createElement("button");
     unsendInvoice.id = "unsendInvoice";
     unsendInvoice.innerText = "このレコードを振込依頼書送信前の状態に戻す";
