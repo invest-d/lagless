@@ -4,6 +4,9 @@
     具体的には、表示中の回収レコードのレコード番号を、申込レコードの回収IDフィールドにセットしている申込について、回収IDフィールドをブランクで上書きする。
 */
 
+import { schema_collect } from "../162/schema";
+import { schema_apply } from "../161/schema";
+
 (function () {
     "use strict";
 
@@ -27,14 +30,14 @@
         }
     })(kintone.app.getId());
 
-    const APP_ID_COLLECT = APP_ID.COLLECT;
-    const fieldRecordNo_COLLECT = "レコード番号";
-    const fieldStatus_COLLECT = "collectStatus";
-    const statusRejected_COLLECT = "クラウドサイン却下・再作成待ち";
+    const APP_ID_COLLECT            = APP_ID.COLLECT;
+    const fieldRecordNo_COLLECT     = schema_collect.fields.properties.レコード番号.code;
+    const fieldStatus_COLLECT       = schema_collect.fields.properties.collectStatus.code;
+    const statusRejected_COLLECT    = schema_collect.fields.properties.collectStatus.options["クラウドサイン却下・再作成待ち"].label;
 
-    const APP_ID_APPLY = APP_ID.APPLY;
-    const fieldRecordNo_APPLY = "レコード番号";
-    const fieldCollectId_APPLY = "collectId";
+    const APP_ID_APPLY          = APP_ID.APPLY;
+    const fieldRecordNo_APPLY   = schema_apply.fields.properties.レコード番号.code;
+    const fieldCollectId_APPLY  = schema_apply.fields.properties.collectId.code;
 
     kintone.events.on("app.record.detail.show", (event) => {
         if (needShowButton()) {
@@ -45,7 +48,7 @@
 
     function needShowButton() {
         // 増殖バグ防止
-        const not_displayed = document.getElementById("getCollectable") === null;
+        const not_displayed = document.getElementById("rejectCollect") === null;
 
         return not_displayed;
     }
