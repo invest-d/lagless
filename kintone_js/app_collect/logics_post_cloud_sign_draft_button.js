@@ -62,7 +62,9 @@ const APP_ID_CUSTOMER               = schema_28.id.appId;
 const fieldCustomerId_CUSTOMER      = schema_28.fields.properties.レコード番号.code;
 const fieldCustomerName_CUSTOMER    = schema_28.fields.properties["法人名・屋号"].code;
 
-const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
+import * as kintoneAPI from "../util/kintoneAPI";
+
+const client = kintoneAPI.CLIENT;
 
 const button_id = "post_cloud_sign_draft";
 export function needShowButton() {

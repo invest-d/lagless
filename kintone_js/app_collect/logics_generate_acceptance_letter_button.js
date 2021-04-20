@@ -72,7 +72,9 @@ const fieldAddress_CORPORATE                = schema_28.fields.properties.住所
 const fieldCeoTitle_CORPORATE               = schema_28.fields.properties.代表者名_役職.code;
 const fieldCeoName_CORPORATE                = schema_28.fields.properties.代表者名.code;
 
-const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
+import * as kintoneAPI from "../util/kintoneAPI";
+
+const client = kintoneAPI.CLIENT;
 
 const button_id = "generate_acceptance_letter";
 export function needShowButton() {
