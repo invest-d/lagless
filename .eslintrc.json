@@ -8,7 +8,6 @@
     "extends": "eslint:recommended",
     "globals": {
         "kintone": false,
-        "kintoneJSSDK": false,
         "KintoneRestAPIClient": false,
         "ENV": false
     },
