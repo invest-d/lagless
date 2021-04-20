@@ -13,51 +13,56 @@ dayjs.locale("ja");
 import { get_contractor_name } from "../util/util_forms";
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
 
+import { schema_61 } from "../61/schema";
+import { schema_collect } from "../162/schema";
+import { schema_96 } from "../96/schema";
+import { schema_28 } from "../28/schema";
+
 (function() {
     "use strict";
-    const CLOUDSIGN_API_SERVER = "https://api.cloudsign.jp";
-    const GET_TOKEN_API = "https://us-central1-lagless.cloudfunctions.net/fetch_cloudSign_token";
+    const CLOUDSIGN_API_SERVER  = "https://api.cloudsign.jp";
+    const GET_TOKEN_API         = "https://us-central1-lagless.cloudfunctions.net/fetch_cloudSign_token";
 
-    const APP_ID_LOGIN = "61";
-    const cloud_sign_record_id = "54";
-    const fieldClientId_LOGIN = "パスワード";
+    const APP_ID_LOGIN          = schema_61.id.appId;
+    const cloud_sign_record_id  = "54";
+    const fieldClientId_LOGIN   = schema_61.fields.properties.パスワード.code;
 
-    const APP_ID_COLLECT = kintone.app.getId();
-    const fieldRecordId_COLLECT = "レコード番号";
-    const fieldCollectStatus_COLLECT = "collectStatus";
-    const statusReady_COLLECT = "クラウドサイン作成待ち";
-    const statusCreated_COLLECT = "クラウドサイン発射待ち";
-    const fieldConstructorId_COLLECT = "constructionShopId";
-    const fieldConstructorName_COLLECT = "constructionShopName";
-    const fieldClosingDate_COLLECT = "closingDate";
-    const fieldCloudSignAmount_COLLECT = "scheduledCollectableAmount";
-    const fieldAcceptanceLetter_COLLECT = "cloudSignPdf";
-    const tableCloudSignApplies_COLLECT = "cloudSignApplies";
-    const tableFieldAttachmentFileKey_COLLECT = "attachmentFileKeyCS";
-    const tableFieldApplicantOfficialNameCS_COLLECT = "applicantOfficialNameCS";
-    const fieldCloudSignUrl_COLLECT = "cloudSignUrl";
-    const fieldAccount_COLLECT = "account";
-    const fieldDaysLater_COLLECT = "daysLater";
+    const APP_ID_COLLECT                            = kintone.app.getId();
+    const fieldRecordId_COLLECT                     = schema_collect.fields.properties.レコード番号.code;
+    const fieldCollectStatus_COLLECT                = schema_collect.fields.properties.collectStatus.code;
+    const statusReady_COLLECT                       = schema_collect.fields.properties.collectStatus.options.クラウドサイン作成待ち.label;
+    const statusCreated_COLLECT                     = schema_collect.fields.properties.collectStatus.options.クラウドサイン発射待ち.label;
+    const fieldConstructorId_COLLECT                = schema_collect.fields.properties.constructionShopId.code;
+    const fieldConstructorName_COLLECT              = schema_collect.fields.properties.constructionShopName.code;
+    const fieldClosingDate_COLLECT                  = schema_collect.fields.properties.closingDate.code;
+    const fieldCloudSignAmount_COLLECT              = schema_collect.fields.properties.scheduledCollectableAmount.code;
+    const fieldAcceptanceLetter_COLLECT             = schema_collect.fields.properties.cloudSignPdf.code;
+    const tableCloudSignApplies_COLLECT             = schema_collect.fields.properties.cloudSignApplies.code;
+    const tableFieldAttachmentFileKey_COLLECT       = schema_collect.fields.properties.cloudSignApplies.fields.attachmentFileKeyCS.code;
+    const tableFieldApplicantOfficialNameCS_COLLECT = schema_collect.fields.properties.cloudSignApplies.fields.applicantOfficialNameCS.code;
+    const fieldCloudSignUrl_COLLECT                 = schema_collect.fields.properties.cloudSignUrl.code;
+    const fieldAccount_COLLECT                      = schema_collect.fields.properties.account.code;
+    const fieldDaysLater_COLLECT                    = schema_collect.fields.properties.daysLater.code;
 
-    const APP_ID_CONSTRUCTOR = "96";
-    const fieldConstructorId_CONSTRUCTOR = "id";
-    const fieldCustomerId_CONSTRUCTOR = "customerCode";
-    const tableParticipants_CONSTRUCTOR = "participants";
-    const tableFieldParticipantOrder_CONSTRUCTOR = "participantOrder";
-    const tableFieldParticipantEmail_CONSTRUCTOR = "participantEmail";
-    const tableFieldParticipantCompany_CONSTRUCTOR = "participantCompany";
-    const tableFieldParticipantTitle_CONSTRUCTOR = "participantTitle";
-    const tableFieldParticipantName_CONSTRUCTOR = "participantName";
-    const tableFieldParticipantBorder_CONSTRUCTOR = "participantBorder";
-    const tableReportees_CONSTRUCTOR = "reportees";
-    const tableFieldReporteeEmail_CONSTRUCTOR = "reporteeEmail";
-    const tableFieldReporteeCompany_CONSTRUCTOR = "reporteeCompany";
-    const tableFieldReporteeTitle_CONSTRUCTOR = "reporteeTitle";
-    const tableFieldReporteeName_CONSTRUCTOR = "reporteeName";
+    const APP_ID_CONSTRUCTOR                        = schema_96.id.appId;
+    const fieldConstructorId_CONSTRUCTOR            = schema_96.fields.properties.id.code;
+    const fieldCustomerId_CONSTRUCTOR               = schema_96.fields.properties.customerCode.code;
+    const tableParticipants_CONSTRUCTOR             = schema_96.fields.properties.participants.code;
+    const tableFieldParticipantOrder_CONSTRUCTOR    = schema_96.fields.properties.participants.fields.participantOrder.code;
+    const tableFieldParticipantEmail_CONSTRUCTOR    = schema_96.fields.properties.participants.fields.participantEmail.code;
+    const tableFieldParticipantCompany_CONSTRUCTOR  = schema_96.fields.properties.participants.fields.participantCompany.code;
+    const tableFieldParticipantTitle_CONSTRUCTOR    = schema_96.fields.properties.participants.fields.participantTitle.code;
+    const tableFieldParticipantName_CONSTRUCTOR     = schema_96.fields.properties.participants.fields.participantName.code;
+    const tableFieldParticipantBorder_CONSTRUCTOR   = schema_96.fields.properties.participants.fields.participantBorder.code;
+    const tableReportees_CONSTRUCTOR                = schema_96.fields.properties.reportees.code;
+    const tableFieldReporteeEmail_CONSTRUCTOR       = schema_96.fields.properties.reportees.fields.reporteeEmail.code;
+    const tableFieldReporteeCompany_CONSTRUCTOR     = schema_96.fields.properties.reportees.fields.reporteeCompany.code;
+    const tableFieldReporteeTitle_CONSTRUCTOR       = schema_96.fields.properties.reportees.fields.reporteeTitle.code;
+    const tableFieldReporteeName_CONSTRUCTOR        = schema_96.fields.properties.reportees.fields.reporteeName.code;
 
-    const APP_ID_CUSTOMER = "28";
-    const fieldCustomerId_CUSTOMER = "レコード番号";
-    const fieldCustomerName_CUSTOMER = "法人名・屋号";
+    const APP_ID_CUSTOMER               = schema_28.id.appId;
+    const fieldCustomerId_CUSTOMER      = schema_28.fields.properties.レコード番号.code;
+    const fieldCustomerName_CUSTOMER    = schema_28.fields.properties["法人名・屋号"].code;
 
     const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
