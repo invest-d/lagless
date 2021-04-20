@@ -126,6 +126,8 @@ const orange = "#ff9a33";
 const white = "#ffffff";
 const black = "#000000";
 
+import * as kintoneAPI from "../util/kintoneAPI";
+
 const button_id = "generateInvoice";
 export function needShowButton() {
     // 一旦は常にボタンを表示する。増殖バグだけ防止
@@ -171,7 +173,7 @@ async function clickGenerateInvoice() {
             "app": APP_ID_COLLECT,
             "records": parents
         };
-        await kintone.api(kintone.api.url("/k/v1/records", true), "PUT", update_body)
+        await kintoneAPI.CLIENT.record.updateRecords(update_body)
             .catch((err) => {
                 console.error(err);
                 throw new Error("回収レコードの親を更新中にエラーが発生しました。");
@@ -226,7 +228,7 @@ function getTargetRecords() {
         "query": `${fieldStatus_COLLECT} in ("${statusApproved_COLLECT}")`
     };
 
-    return kintone.api(kintone.api.url("/k/v1/records", true), "GET", request_body);
+    return kintoneAPI.CLIENT.record.getRecords(request_body);
 }
 
 // 振込依頼書が同一となる回収レコードのグループに対する各種処理----------------------------------------
@@ -394,17 +396,18 @@ async function generateInvoices() {
         ],
         "query": `${fieldStatus_COLLECT} in ("${statusApproved_COLLECT}") and ${fieldParentCollectRecord_COLLECT} in ("${statusParent_COLLECT}")`
     };
-    const target_parents = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_parents);
+    const target_parents = await kintoneAPI.CLIENT.record.getRecords(get_parents);
 
     const get_constructors = {
         "app": APP_ID_CONSTRUCTOR
     };
-    const constructors = await kintone.api(kintone.api.url("/k/v1/records", true), "GET", get_constructors);
+    // getRecordsは500レコードが上限なので、確実に全件取得するようにgetAllRecordsを使用する
+    const constructors = await kintoneAPI.CLIENT.record.getAllRecords(get_constructors);
 
     const attachment_pdfs = [];
     for(const parent_record of target_parents.records) {
         // 回収レコードに遅払い日数フィールドを紐づける
-        const constructor = constructors.records.find((r) => r["id"]["value"] === parent_record[fieldConstructionShopId_COLLECT]["value"]);
+        const constructor = constructors.find((r) => r["id"]["value"] === parent_record[fieldConstructionShopId_COLLECT]["value"]);
         if (!constructor) {
             // ダイアログを表示するが、他のPDFは引き続き作成を試みる
             alert(`工務店レコードが見つかりませんでした。回収レコードID: ${parent_record["$id"]["value"]}`);
@@ -1058,29 +1061,24 @@ async function uploadInvoices(invoices) {
     let count = 0;
     const processes = [];
     for (const invoice_obj of invoices) {
-        const pdf_data = new FormData();
-        pdf_data.append("__REQUEST_TOKEN__", kintone.getRequestToken());
-
         // getBlob(func)は非同期処理だけどPromiseを返さない（というかコールバック関数を省略できない）ので自前でPromiseを使う
         const process = new kintone.Promise((resolve, reject) => {
             invoice_obj.doc_generator.getBlob(async (blob) => {
                 console.log(`PDFアップロード：ファイル名 ${invoice_obj.file_name}`);
-                pdf_data.append("file", blob, invoice_obj.file_name);
 
                 const param = {
-                    method: "POST",
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest"
-                    },
-                    body: pdf_data
+                    file: {
+                        name: invoice_obj.file_name,
+                        data: blob
+                    }
                 };
-                const upload = await fetch(kintone.api.url("/k/v1/file", true), param)
+                const upload = await kintoneAPI.CLIENT.file.uploadFile(param)
                     .catch((err) => {
                         reject(err);
                     });
 
-                const upload_resp = await upload.json();
-                if (!upload_resp.fileKey) {
+                const file_key = upload.fileKey;
+                if (!file_key) {
                     reject("fileKeyを取得できませんでした");
                 }
 
@@ -1092,7 +1090,7 @@ async function uploadInvoices(invoices) {
                         [fieldInvoicePdf_COLLECT]: {
                             "value": [
                                 {
-                                    "fileKey": upload_resp.fileKey
+                                    "fileKey": file_key
                                 }
                             ]
                         },
@@ -1103,7 +1101,7 @@ async function uploadInvoices(invoices) {
                         // 状態フィールドは振込依頼書の目視確認がOKで送信が確定した段階になってから、子レコードと一緒に変更する
                     }
                 };
-                await kintone.api(kintone.api.url("/k/v1/record", true), "PUT", attach_pdf_body)
+                await kintoneAPI.CLIENT.record.updateRecord(attach_pdf_body)
                     .catch((err) => {
                         reject(err);
                     });
