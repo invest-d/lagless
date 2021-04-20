@@ -12,6 +12,7 @@ import * as invoice from "./app_collect/logics_generate_invoice_button";
 import * as sum from "./app_collect/logics_get_collectable_amount_button";
 import * as cs_draft from "./app_collect/logics_post_cloud_sign_draft_button";
 import * as reject from "./app_collect/logics_reject_collect_record_button";
+import * as color from "./app_collect/warn_collect_deadline";
 
 (function () {
     "use strict";
@@ -47,7 +48,6 @@ import * as reject from "./app_collect/logics_reject_collect_record_button";
         }
     });
 
-    // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.index.show", (event) => {
         if (accept.needShowButton()) {
             const button = accept.createButton();
@@ -73,5 +73,7 @@ import * as reject from "./app_collect/logics_reject_collect_record_button";
             const button = copy.createCopyCreditButton();
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
+
+        color.colorDeadlineCells(event);
     });
 })();

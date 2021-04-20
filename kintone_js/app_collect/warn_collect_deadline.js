@@ -50,7 +50,7 @@ function getWeekdayDiff(date_from, date_to) {
     return diff_weekdays;
 }
 
-const colorDeadlineCells = (event) => {
+export const colorDeadlineCells = (event) => {
     const target_cells = kintone.app.getFieldElements(fieldDeadline);
     const records = event.records;
 
@@ -83,11 +83,3 @@ const colorDeadlineCells = (event) => {
         }
     });
 };
-
-(function() {
-    "use strict";
-
-    kintone.events.on("app.record.index.show", (event) => {
-        colorDeadlineCells(event);
-    });
-})();
