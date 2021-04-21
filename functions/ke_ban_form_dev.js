@@ -210,7 +210,11 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                         busboy.end();
                         throw new Error(JSON.stringify({status: 500, mesasge: "不明なエラーが発生しました。"}));
                     });
-                upload_results.forEach((result) => form_data[result["fieldname"]] = result["value"]);
+                upload_results.forEach((result) => {
+                    if (result) {
+                        form_data[result["fieldname"]] = result["value"];
+                    }
+                });
 
                 // 社内向けの申込受付通知
                 internal_message.from = env.from_address;
