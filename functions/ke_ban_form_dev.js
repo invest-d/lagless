@@ -16,6 +16,8 @@ dayjs.extend(customParseFormat);
 
 const holiday_jp = require("@holiday-jp/holiday_jp");
 
+const convert = require("heic-convert");
+
 // kintone工務店マスタに登録している工務店データ一覧。締日ごとに異なるレコードを保存している。
 const KE_BAN_RECORDS_BY_CLOSING = {
     "05": { ID: "400", NAME: "株式会社ワールドフォースインターナショナル" },
@@ -57,7 +59,11 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
     const validMimeTypes = {
         "application/pdf": "pdf",
         "image/jpeg": "jpg",
-        "image/png": "png"
+        "image/png": "png",
+        "image/heif": "heif",
+        "image/heif-sequence": "heif",
+        "image/heic": "heic",
+        "image/heic-sequence": "heic",
     };
 
     // メール送信用
@@ -100,61 +106,84 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
     try {
         busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
             const is_valid_mimetype = Object.keys(validMimeTypes).includes(mimetype.toLocaleLowerCase());
+            const isHeic = (mimetype) => mimetype.includes("heic") || mimetype.includes("heif");
+            const alt_heic_format = "JPEG";
 
             const buffer = [];
             file.on("data", (chunk) => {
                 buffer.push(Buffer.from(chunk));
             });
 
-            file.on("end", () => {
-                const attachment = Buffer.concat(buffer);
-                const has_zero_filesize = (attachment.length === 0);
+            file.on("end", async () => {
+                // endイベント内の処理を全てPromiseに包んでprocessesに投げておく
+                // →processesが全て解決してから自動応答メールなどの処理に進む
+                const process = (async () => {
+                    const attachment = await (async () => {
+                        const buf = Buffer.concat(buffer);
 
-                if (has_zero_filesize && !is_valid_mimetype) {
-                    // 2回目以降のフォームからの送信を想定。入力しなくて良い添付ファイルの項目があるため、サーバー側でもその項目を無視して次のfileの読み取りに進む
-                    file.resume();
-                } else if (has_zero_filesize && is_valid_mimetype) {
-                    // 何かしら有効なファイルを添付しようとしたが、何らかの理由でファイルサイズがゼロの場合を想定。エラー
-                    is_valid_apply = false;
-                    file.resume();
-                    busboy.end();
-                    throw new Error(JSON.stringify({
-                        status: 400,
-                        message: "添付ファイルを読み取れませんでした。ファイルが破損していないか確認し、もう一度お試しください。"
-                    }));
-                } else if (!has_zero_filesize && !is_valid_mimetype) {
-                    // ファイルを添付しようとしたが、業務上受け付けできる形式（pdf/jpg/png）ではなかった場合を想定。エラー
-                    is_valid_apply = false;
-                    console.error(`unexpected mimetype: ${mimetype}.`);
-                    file.resume();
-                    busboy.end();
-                    throw new Error(JSON.stringify({
-                        status: 400,
-                        message: `添付ファイルは ${Object.keys(validMimeTypes)} のいずれかの形式で送信してください。`
-                    }));
-                } else if (!has_zero_filesize && is_valid_mimetype) {
-                    // 受け付け可能なファイルを想定。①自動返信メールへファイルを添付し、②kintoneへのファイルアップロード状況をpromiseとして生成する
-                    const ext = validMimeTypes[mimetype.toLocaleLowerCase()];
-                    const file_name = `${fieldname}.${ext}`;
+                        if (isHeic(mimetype)) {
+                            console.log("received heic attachment. converting...");
+                            return await convert({ buffer: buf, format: alt_heic_format, quality: 0.5 });
+                        } else {
+                            return buf;
+                        }
+                    })();
+                    console.log("retrieving buffer is done.");
 
-                    const file_encoded = attachment.toString("base64");
-                    const file = {
-                        filename: file_name,
-                        content: file_encoded,
-                        type: mimetype.toLocaleLowerCase(),
-                        disposition: "attachment"
-                    };
-                    internal_message.attachments.push(file);
-                    auto_reply_message.attachments.push(file);
+                    const has_zero_filesize = (attachment.length === 0);
 
-                    file_upload_processes.push(uploadToKintone(env.api_token_files, attachment, file_name)
-                        .then((resp) => {
-                            return {
-                                "fieldname": fieldname,
-                                "value": [{"fileKey": resp.data.fileKey}]
-                            };
+                    if (has_zero_filesize && !is_valid_mimetype) {
+                        // 2回目以降のフォームからの送信を想定。入力しなくて良い添付ファイルの項目があるため、サーバー側でもその項目を無視して次のfileの読み取りに進む
+                        file.resume();
+                        return;
+                    } else if (has_zero_filesize && is_valid_mimetype) {
+                        // 何かしら有効なファイルを添付しようとしたが、何らかの理由でファイルサイズがゼロの場合を想定。エラー
+                        is_valid_apply = false;
+                        file.resume();
+                        busboy.end();
+                        throw new Error(JSON.stringify({
+                            status: 400,
+                            message: "添付ファイルを読み取れませんでした。ファイルが破損していないか確認し、もう一度お試しください。"
                         }));
-                }
+                    } else if (!has_zero_filesize && !is_valid_mimetype) {
+                        // ファイルを添付しようとしたが、業務上受け付けできる形式（pdf/jpg/png）ではなかった場合を想定。エラー
+                        is_valid_apply = false;
+                        console.error(`unexpected mimetype: ${mimetype}.`);
+                        file.resume();
+                        busboy.end();
+                        throw new Error(JSON.stringify({
+                            status: 400,
+                            message: `添付ファイルは ${Object.keys(validMimeTypes)} のいずれかの形式で送信してください。`
+                        }));
+                    } else if (!has_zero_filesize && is_valid_mimetype) {
+                        // 受け付け可能なファイルを想定。①自動返信メールへファイルを添付し、②kintoneへのファイルアップロード状況をpromiseとして生成する
+                        const ext = ((mimetype) => {
+                            if (isHeic(mimetype)) {
+                                return alt_heic_format;
+                            } else {
+                                return validMimeTypes[mimetype.toLocaleLowerCase()];
+                            }
+                        })(mimetype);
+                        const file_name = `${fieldname}.${ext}`;
+
+                        const file_encoded = attachment.toString("base64");
+                        const file = {
+                            filename: file_name,
+                            content: file_encoded,
+                            type: mimetype.toLocaleLowerCase(),
+                            disposition: "attachment"
+                        };
+                        internal_message.attachments.push(file);
+                        auto_reply_message.attachments.push(file);
+
+                        const resp = await uploadToKintone(env.api_token_files, attachment, file_name);
+                        return {
+                            "fieldname": fieldname,
+                            "value": [{"fileKey": resp.data.fileKey}]
+                        };
+                    }
+                })();
+                file_upload_processes.push(process);
             });
         });
 
