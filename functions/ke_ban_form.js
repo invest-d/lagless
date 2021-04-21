@@ -16,6 +16,8 @@ dayjs.extend(customParseFormat);
 
 const holiday_jp = require("@holiday-jp/holiday_jp");
 
+const convert = require("heic-convert");
+
 // kintone工務店マスタに登録している工務店データ一覧。締日ごとに異なるレコードを保存している。
 const KE_BAN_RECORDS_BY_CLOSING = {
     "05": { ID: "400", NAME: "株式会社ワールドフォースインターナショナル" },
