@@ -1,4 +1,10 @@
 /*
+    Version 4
+    GIGの振込依頼書を作成する機能を追加。
+    回収アプリの「振込依頼書作成対象のレコード一覧」を登録する時、
+    GIGにバックする手数料率と金額の計算をしてセットするようになった。
+    また、生成する振込依頼書のレイアウトをGIG専用のものに対応した。
+
     Version 3
     軽バン.com案件の場合の専用レイアウトを追加
 
@@ -39,6 +45,11 @@ const dayjs = require("dayjs");
 dayjs.locale("ja");
 
 import { schema_collect } from "../162/schema";
+import { schema_96 } from "../96/schema";
+import { isGigConstructorID } from "../util/gig_utils";
+import { schema_apply } from "../161/schema";
+
+import { asyncMap, asyncFlatMap } from "../util/async-flat-map";
 
 const APP_ID_DEV = {
     APPLY: 159,
@@ -86,7 +97,15 @@ const getAccount = (contractor, constructor_id) => {
     return ACCOUNTS[contractor].smbc;
 };
 
-const APP_ID_CONSTRUCTOR                        = 96;
+const APP_ID_CONSTRUCTOR                        = schema_96.id.appId;
+const fieldDaysLater_CONSTRUCTOR                = schema_96.fields.properties.daysLater.code;
+const fieldConstructorId_CONSTRUCTOR            = schema_96.fields.properties.id.code;
+const fieldTmpcommissionRate_CONSTRUCTOR        = schema_96.fields.properties.tmpcommissionRate.code;
+const fieldConstructorName_CONSTRUCTOR          = schema_96.fields.properties.工務店正式名称.code;
+
+const APP_ID_APPLY                              = APP_ID.APPLY;
+const fieldRecordId_APPLY                       = schema_apply.fields.properties.レコード番号.code;
+const fieldConstructorId_APPLY                  = schema_apply.fields.properties.constructionShopId.code;
 
 const APP_ID_COLLECT                            = APP_ID.COLLECT;
 const fieldRecordId_COLLECT                     = schema_collect.fields.properties.レコード番号.code;
@@ -118,6 +137,10 @@ const tableFieldPaymentTimingIV_COLLECT         = schema_collect.fields.properti
 const tableFieldApplicantOfficialNameIV_COLLECT = schema_collect.fields.properties.invoiceTargets.fields.applicantOfficialNameIV.code;
 const tableFieldReceivableIV_COLLECT            = schema_collect.fields.properties.invoiceTargets.fields.receivableIV.code;
 const tableFieldPaymentDateIV_COLLECT           = schema_collect.fields.properties.invoiceTargets.fields.paymentDateIV.code;
+const tableFieldBackRateIV_COLLECT              = schema_collect.fields.properties.invoiceTargets.fields.backRateIV.code;
+const tableFieldBackAmountIV_COLLECT            = schema_collect.fields.properties.invoiceTargets.fields.backAmountIV.code;
+const tableFieldBackedReceivableIV_COLLECT      = schema_collect.fields.properties.invoiceTargets.fields.backedReceivableIV.code;
+const tableFieldActuallyOrdererIV_COLLECT       = schema_collect.fields.properties.invoiceTargets.fields.actuallyOrdererIV.code;
 const fieldInvoicePdf_COLLECT                   = schema_collect.fields.properties.invoicePdf.code;
 const fieldHandleForHolidays_COLLECT            = schema_collect.fields.properties.handleForHolidays.code;
 const fieldConfirmStatusInvoice_COLLECT         = schema_collect.fields.properties.confirmStatusInvoice.code;
@@ -125,6 +148,9 @@ const fieldConfirmStatusInvoice_COLLECT         = schema_collect.fields.properti
 const orange = "#ff9a33";
 const white = "#ffffff";
 const black = "#000000";
+
+const green = "#008080";
+const light_green = "#009999";
 
 import * as kintoneAPI from "../util/kintoneAPI";
 
@@ -166,7 +192,7 @@ async function clickGenerateInvoice() {
         }
 
         // updateのための、明細や金額を集約したあとの親レコード配列を取得
-        const parents = getAggregatedParentRecords(target.records);
+        const parents = await getAggregatedParentRecords(target.records);
 
         // Update
         const update_body = {
@@ -244,11 +270,12 @@ const returnEarlyRecord = (a, b) => {
 // 振込依頼書に記載する合計額
 const sumInvoiceBills = (total, record) => total + Number(record[fieldCollectableAmount_COLLECT]["value"]);
 
-const convertToKintoneSubTableObject = (record) => {
+const convertToKintoneSubTableObject = async (record) => {
     // グループの情報を親に集約。クラウドサイン用の情報とは別に保持するため、親の振込依頼書用サブテーブルに親自身のクラウドサイン用サブテーブルのレコードも加える。
     // 振込依頼書に記載する申込レコード一覧（グループ化した回収レコードそれぞれの、クラウドサイン用サブテーブルに入っている申込レコードのunion）
     // サブテーブルのUpdateをするにあたって、サブテーブルのレコードそれぞれのオブジェクトの構造を整える
-    return record[tableCloudSignApplies_COLLECT]["value"].map((sub_rec) => {
+    const for_cloudsign_sub_records = record[tableCloudSignApplies_COLLECT]["value"];
+    const for_invoice_sub_records = for_cloudsign_sub_records.map((sub_rec) => {
         return {
             "value": {
                 [tableFieldApplyRecordNoIV_COLLECT]: {
@@ -269,6 +296,62 @@ const convertToKintoneSubTableObject = (record) => {
             }
         };
     });
+
+    // GIGの場合、Workship上で発注した企業から算出されるGIGへのバック手数料率を求めて追加する
+    if (isGigConstructorID(record[fieldConstructionShopId_COLLECT]["value"])) {
+        const apply_ids = for_invoice_sub_records.map((r) => r["value"][tableFieldApplyRecordNoIV_COLLECT]["value"]);
+        const in_query_a = apply_ids.map((i) => `"${i}"`).join(",");
+        const apply_body = {
+            app: APP_ID_APPLY,
+            fields: [
+                fieldRecordId_APPLY,
+                fieldConstructorId_APPLY
+            ],
+            query: `${fieldRecordId_APPLY} in (${in_query_a})`
+        };
+        const apply = await kintoneAPI.CLIENT.record.getRecords(apply_body);
+
+        const constructor_ids = Array.from(new Set(apply.records.map((a) => a[fieldConstructorId_APPLY]["value"])));
+        const in_query_c = constructor_ids.map((i) => `"${i}"`).join(",");
+        const constructor_body = {
+            app: APP_ID_CONSTRUCTOR,
+            fields: [
+                fieldConstructorId_CONSTRUCTOR,
+                fieldConstructorName_CONSTRUCTOR,
+                fieldTmpcommissionRate_CONSTRUCTOR
+            ],
+            query: `${fieldConstructorId_CONSTRUCTOR} in (${in_query_c})`
+        };
+        const constructor = await kintoneAPI.CLIENT.record.getRecords(constructor_body);
+
+        // 申込レコード番号で工務店マスタの情報を参照できるobjectを作成する
+        const id_map = {};
+        apply.records.forEach((a) => {
+            const c = constructor.records.find((r) => r[fieldConstructorId_CONSTRUCTOR]["value"] === a[fieldConstructorId_APPLY]["value"]);
+            id_map[a[fieldRecordId_APPLY]["value"]] = {
+                orderer: c[fieldConstructorName_CONSTRUCTOR]["value"],
+                rate: c[fieldTmpcommissionRate_CONSTRUCTOR]["value"],
+            };
+        });
+
+        // https://docs.google.com/presentation/d/11CYj7z-HJJGBnwL9o67HHfxk9cHYYXzektjPk6WUc3I/edit#slide=id.p1
+        // 上記スライドに従って導出する
+        const rate_table = {
+            0.075: 0.025,
+            0.06:  0.02,
+            0.045: 0.015,
+            0.016: 0,
+        };
+
+        for_invoice_sub_records.forEach((r) => {
+            const constructor_master_rate = id_map[r["value"][tableFieldApplyRecordNoIV_COLLECT]["value"]].rate;
+            const constructor_master_name = id_map[r["value"][tableFieldApplyRecordNoIV_COLLECT]["value"]].orderer;
+            const rate = rate_table[constructor_master_rate];
+            r["value"][tableFieldBackRateIV_COLLECT] = { value: rate };
+            r["value"][tableFieldActuallyOrdererIV_COLLECT] = { value: constructor_master_name };
+        });
+    }
+    return for_invoice_sub_records;
 };
 
 const getUpdateRecordObject = (record_id, total_billed, invoice_targets) => {
@@ -289,7 +372,7 @@ const getUpdateRecordObject = (record_id, total_billed, invoice_targets) => {
 };
 // 振込依頼書が同一となる回収レコードのグループに対する各種処理 ここまで-----------------------------------
 
-function getAggregatedParentRecords(records) {
+async function getAggregatedParentRecords(records) {
     console.log("振込依頼書作成対象のレコードを締日と工務店IDごとにまとめ、明細の情報を親に集約する");
     // まず工務店IDと締日だけ全て抜き出す
     const key_pairs = records.map((record) => {
@@ -309,7 +392,7 @@ function getAggregatedParentRecords(records) {
     const target_pairs = unique_key_pairs.filter((p) => !KE_BAN_CONSTRUCTORS.includes(p[fieldConstructionShopId_COLLECT]));
 
     // 親レコード更新用のオブジェクトを作成
-    const update_targets_standard = target_pairs.map((pair) => {
+    const update_targets_standard = await asyncMap(target_pairs, async (pair) => {
         // 振込依頼書をまとめるべき回収レコードを配列としてグループ化
         const invoice_group = records.filter((record) => {
             return record[fieldConstructionShopId_COLLECT]["value"] === pair[fieldConstructionShopId_COLLECT]
@@ -317,8 +400,22 @@ function getAggregatedParentRecords(records) {
         });
 
         const parent_record = invoice_group.reduce(returnEarlyRecord);
-        const total_billed = invoice_group.reduce(sumInvoiceBills, 0);
-        const invoice_targets = invoice_group.flatMap(convertToKintoneSubTableObject);
+        const invoice_targets = await asyncFlatMap(invoice_group, convertToKintoneSubTableObject);
+        const total_billed = ((constructor_id) => {
+            if (isGigConstructorID(constructor_id)) {
+                // GIGの場合、早払いの申込ごとに特定のバック金額を引いた後の金額を合計したものを振込依頼書の請求金額とする。
+                return invoice_targets.reduce((sum, sub_rec) => {
+                    const applied_amount = Number(sub_rec["value"][tableFieldReceivableIV_COLLECT]["value"]);
+                    const back_rate = Number(sub_rec["value"][tableFieldBackRateIV_COLLECT]["value"]);
+                    const back_amount = Math.floor(applied_amount * back_rate);
+                    const remain = applied_amount - back_amount;
+                    return sum + remain;
+                }, 0);
+            } else {
+                // GIG以外の場合、単純にクラウドサインで送信した金額を合計して振込依頼書の請求金額とすれば良い。
+                return invoice_group.reduce(sumInvoiceBills, 0);
+            }
+        })(parent_record[fieldConstructionShopId_COLLECT]["value"]);
 
         // apiに渡すためにオブジェクトの構造を整える
         return getUpdateRecordObject(parent_record[fieldRecordId_COLLECT]["value"], total_billed, invoice_targets);
@@ -356,14 +453,14 @@ function getAggregatedParentRecords(records) {
             .map((r) => dayjs(r[fieldClosingDate_COLLECT]["value"]).format("YYYY-MM")))
         );
 
-        const update_targets_keban = closing_months.map((closing) => {
+        const update_targets_keban = await asyncMap(closing_months, async (closing) => {
             const invoice_group = ke_ban_records.filter((r) => {
                 return dayjs(r[fieldClosingDate_COLLECT]["value"]).format("YYYY-MM") === closing;
             });
 
             const parent_record = invoice_group.reduce(returnEarlyRecord);
             const total_billed = invoice_group.reduce(sumInvoiceBills, 0);
-            const invoice_targets = invoice_group.flatMap(convertToKintoneSubTableObject);
+            const invoice_targets = await asyncFlatMap(invoice_group, convertToKintoneSubTableObject);
 
             return getUpdateRecordObject(parent_record[fieldRecordId_COLLECT]["value"], total_billed, invoice_targets);
         });
@@ -414,7 +511,7 @@ async function generateInvoices() {
             continue;
         }
 
-        parent_record["daysLater"] = { "value": constructor["daysLater"]["value"] };
+        parent_record[fieldDaysLater_COLLECT] = { "value": constructor[fieldDaysLater_CONSTRUCTOR]["value"] };
 
         const invoice_doc = generateInvoiceDocument(parent_record);
         const file_name = ((constructor_id, constructor_name, closing_date) => {
@@ -443,6 +540,12 @@ async function generateInvoices() {
 
 function generateInvoiceDocument(parent_record) {
     // pdfmakeのライブラリ用のオブジェクトを生成する。
+
+    // GIGはレイアウトが大きく異なる。別処理にする
+    if (isGigConstructorID(parent_record[fieldConstructionShopId_COLLECT]["value"])) {
+        return getGigDoc(parent_record);
+    }
+
     const product_name = parent_record[fieldProductName_COLLECT]["value"];
     const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
     let contact_company;
@@ -749,6 +852,440 @@ function generateInvoiceDocument(parent_record) {
     return doc;
 }
 
+const getGigDoc = (parent_record) => {
+    // GIG案件用の振込依頼書に使用するレイアウトを生成する
+    const product_name = parent_record[fieldProductName_COLLECT]["value"];
+    const company = parent_record[fieldConstructionShopName_COLLECT]["value"];
+    let contact_company;
+    try {
+        contact_company = get_contractor_name(
+            parent_record[fieldAccount_COLLECT]["value"],
+            parent_record[fieldDaysLater_COLLECT]["value"],
+            parent_record[fieldConstructionShopId_COLLECT]["value"]
+        );
+    } catch (e) {
+        if (e instanceof TypeError) {
+            throw new Error("連絡先として表示する会社名を確定できませんでした。\n"
+                + "【支払元口座】および【遅払い日数】を工務店マスタに正しく入力してください。\n\n"
+                + `工務店ID：${parent_record[fieldConstructionShopId_COLLECT]["value"]}\n`
+                + `工務店名：${parent_record[fieldConstructionShopName_COLLECT]["value"]}`);
+        } else {
+            throw new Error(`不明なエラーです。追加の情報：${e}`);
+        }
+    }
+
+    const system_name = product_name;
+    const office_name = product_name;
+    const subject = `${formatYMD(parent_record[fieldClosingDate_COLLECT]["value"])}締め分`;
+
+    const doc = {
+        info: {
+            title: `${company}様宛${system_name}利用分振込依頼書`,
+            author: `${office_name} ${contact_company}`,
+            subject: subject,
+            creator: `${office_name} ${contact_company}`,
+            producer: `${office_name} ${contact_company}`,
+        },
+        content: [],
+        pageSize: "A4",
+        pageMargins: [55, 30, 55, 30],
+        defaultStyle: {
+            font: "Koruri",
+            fontSize: 8,
+            lineHeight: 1.2,
+        }
+    };
+
+    // 文書の上下にある横長のバー
+    const bar = {
+        table: {
+            widths: ["100%"],
+            heights: [5],
+            headerRows: 0,
+            body: [
+                [ { text: "", fillColor: green, borderColor: [green, green, green, green] } ]
+            ]
+        }
+    };
+    doc.content.push(bar);
+
+    // 文書のタイトル
+    const title = {
+        text: `${system_name} 請求書`,
+        fontSize: 14,
+        bold: true,
+        alignment: "center",
+        margin: [0, 15, 0, 0]
+    };
+    doc.content.push(title);
+
+    // 振込依頼書に記載する日付。YYYY/MM/DD
+    // 支払明細の申込レコードの中で、最も遅い支払日を採用する
+    const detail_payment_dates =  parent_record[tableInvoiceTargets_COLLECT]["value"].map((record) => dayjs(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]));
+    const latest_date = dayjs(Math.max(...detail_payment_dates));
+    const send_date = {
+        text: latest_date.format("YYYY/MM/DD"),
+        alignment: "right",
+        fontSize: 10
+    };
+    doc.content.push(send_date);
+
+    // 肩書が空白の場合、単純に繋ぐと名前の前に空白が出来てしまうので、trimStartで対策。全角半角スペース混在にも対応できる
+    const ceo = `${parent_record[fieldCeoTitle_COLLECT]["value"]} ${parent_record[fieldCeo_COLLECT]["value"]}`.trimStart();
+    const addressee = {
+        text: `${company}\n${ceo} 様`,
+        lineHeight: 1.5,
+        margin: [0, 5, 0, 0],
+        fontSize: 12
+    };
+    doc.content.push(addressee);
+
+    const letter_body = {
+        rowSpan: 2,
+        border: [false],
+        text: [
+            "平素は格別のご高配を賜り厚く御礼申し上げます。\n",
+            "\n",
+            `さて、下記のとおり${product_name}を実行いたしましたのでご案内いたします。\n`,
+            "つきましては、下記の通りお支払いいただきますようお願い申し上げます。\n",
+            "\n",
+            "ご不明な点などがございましたら、右記連絡先までお問い合わせください。\n",
+            "今後とも、どうぞ宜しくお願いいたします。\n",
+        ],
+        margin: [0, 5, 25, 0]
+    };
+
+    // 改行で空白のスペースを作り出す
+    const logo_space = {
+        text: "\n\n\n\n",
+        width: 50,
+        border: [false],
+        alignment: "center"
+    };
+
+    const mail = "lagless@invest-d.com";
+    const tel = "050-3188-8481";
+    const invoice_from = {
+        text: [
+            `【${office_name}】\n`,
+            {
+                text: `運営会社：${contact_company}\n（インベストデザイン株式会社）`,
+                bold: true
+            },
+            `Mail：${mail}\n`,
+            `TEL：${tel}\n`
+        ],
+        fontSize: 7,
+        border: [false]
+    };
+
+    // 文章と連絡先を横並びに
+    const bodies = {
+        table: {
+            headerRows: 0,
+            // autoの列はセルを塗りつぶして擬似的に縦のラインを作るためのもの
+            widths: ["75%", "auto", "25%"],
+            body: [
+                [letter_body, {text: "", border: [false]},                    logo_space   ],
+                [{},          {text: "", border: [false], fillColor: green},  invoice_from ]
+            ]
+        }
+    };
+    doc.content.push(bodies);
+
+    // 支払先・支払額情報
+    const billing_title_template = {
+        text: "",
+        bold: true,
+        alignment: "center",
+        color: white,
+        fillColor: green,
+        borderColor: [green, green, green, green],
+        rowSpan: 1
+    };
+    const billing_value_template = {
+        text: "",
+        fontSize: 10,
+        alignment: "center",
+        borderColor: [green, green, green, green],
+        border: false,
+        rowSpan: 1
+    };
+
+    // テンプレートのオブジェクトをディープコピーして必要な部分だけ設定
+    const closing_date_title = (() => {
+        const closing_date_title = JSON.parse(JSON.stringify(billing_title_template));
+        closing_date_title.borderColor = [green, green, green, white];
+        closing_date_title.text = "対象となる締め日";
+        return closing_date_title;
+    })();
+
+    const closing_date = (() => {
+        const closing_date = JSON.parse(JSON.stringify(billing_value_template));
+        closing_date.text = formatYMD(parent_record[fieldClosingDate_COLLECT]["value"]);
+        return closing_date;
+    })();
+
+    const deadline_title = JSON.parse(JSON.stringify(billing_title_template));
+    deadline_title.text = "お支払期限";
+    deadline_title.borderColor = [green, white, green, white];
+
+    const deadline = JSON.parse(JSON.stringify(billing_value_template));
+    const ymd_arr = parent_record[fieldDeadline_COLLECT]["value"].split("-").map((num) => Number(num));
+    const base_deadline_date = new Date(ymd_arr[0], ymd_arr[1]-1, ymd_arr[2]);
+    const actual_deadline_date = getNearestWeekday(base_deadline_date, parent_record[fieldHandleForHolidays_COLLECT]["value"]);
+    deadline.text = `${actual_deadline_date.getFullYear()}年${actual_deadline_date.getMonth()+1}月${actual_deadline_date.getDate()}日`;
+
+    const billed_amount_title = JSON.parse(JSON.stringify(billing_title_template));
+    billed_amount_title.text = "ご請求金額\n（消費税込み）";
+    billed_amount_title.borderColor = [green, white, green, green];
+
+    const billed_amount = JSON.parse(JSON.stringify(billing_value_template));
+    const total = addComma(parent_record[fieldTotalBilledAmount_COLLECT]["value"]);
+    billed_amount.text = `${total}円`;
+    billed_amount.bold = true;
+    // セルの縦幅の中で中央に寄せたいが、alignmentは横幅しかサポートしていないため、marginで手動調整をかける
+    billed_amount.margin = [0, 6.5, 0, 0];
+
+    const account_title = JSON.parse(JSON.stringify(billing_title_template));
+    account_title.text = "振込先口座";
+    account_title.rowSpan = 3;
+    account_title.margin = [0, 30, 0, 0];
+
+    const account_value = JSON.parse(JSON.stringify(billing_value_template));
+    account_value.text = getAccount(contact_company, parent_record[fieldConstructionShopId_COLLECT]["value"]);
+    account_value.rowSpan = 3;
+    account_value.fontSize = 8;
+    account_value.margin = ((text) => {
+        let top_margin = 14;
+        if ((text.match(/\n/g) || []).length === 3) {
+            // 4行に亘る場合はマージンを調整
+            top_margin = 10;
+        }
+        return [0, top_margin, 0, 0];
+    })(account_value.text);
+
+    const bill_table = {
+        table: {
+            widths: ["20%", "30%", "20%", "30%"],
+            headerRows: 0,
+            body: [
+                [closing_date_title , closing_date,   account_title, account_value],
+                [deadline_title,      deadline,       {},            {}           ],
+                [billed_amount_title, billed_amount,  {},            {}           ]
+            ]
+        },
+        margin: [0, 25, 0, 0]
+    };
+    doc.content.push(bill_table);
+
+    const note = {
+        text: [
+            "※お振込手数料はお客様にてご負担をお願いいたします。\n",
+            "※お支払期限の12時までに着金するようにお振込みをお願いいたします。"
+        ],
+        bold: true
+    };
+    doc.content.push(note);
+
+    const detail_table_title = {
+        text: "前払い実行明細",
+        bold: true,
+        margin: [0, 20, 0, 0]
+    };
+    doc.content.push(detail_table_title);
+
+    const detail_table = ((details, total, total_rate) => {
+        // GIG用の明細テーブルを生成する
+        const detail_table = {
+            table: {
+                widths: ["4%", "17%", "21%", "11%", "12%", "11%", "12%", "12%"],
+                headerRows: 1,
+                body: []
+            },
+            margin: [0, 5, 0, 15]
+        };
+
+        const header_text_style = {
+            text: "",
+            fontSize: 7,
+            bold: true,
+            lineHeight: 1,
+            alignment: "center",
+            color: white,
+            borderColor: [green, green, green, green]
+        };
+
+        const formatDate = (v) => dayjs(v).format("YYYY/M/D");
+        // details.forEach((d) => d["value"]["gigrate"]["value"] = formatPercent(total_rate));
+        const columns = [
+            {
+                title: "No",
+                margin: [0, 8, 0, 0],
+                header_style: {
+                    fillColor: green,
+                },
+                detail_style: {
+                    alignment: "right",
+                    borderColor: [green, green, green, green]
+                }
+            },
+            {
+                title: "支払先",
+                margin: [0, 8, 0, 0],
+                header_style: {
+                    fillColor: green,
+                },
+                detail_style: {
+                    value: {
+                        code: tableFieldApplicantOfficialNameIV_COLLECT,
+                        format: null
+                    },
+                    alignment: "left",
+                    borderColor: [green, green, green, green]
+                }
+            },
+            {
+                title: "発注元\n(掲載企業)",
+                margin: [0, 3, 0, 0],
+                header_style: {
+                    fillColor: green,
+                },
+                detail_style: {
+                    value: {
+                        code: tableFieldActuallyOrdererIV_COLLECT,
+                        format: null
+                    },
+                    alignment: "left",
+                    fontSize: 6,
+                    borderColor: [green, green, green, green]
+                }
+            },
+            {
+                title: "前払い日",
+                margin: [0, 8, 0, 0],
+                header_style: {
+                    fillColor: green,
+                },
+                detail_style: {
+                    value: {
+                        code: tableFieldPaymentDateIV_COLLECT,
+                        format: formatDate
+                    },
+                    alignment: "left",
+                    borderColor: [green, green, green, green]
+                }
+            },
+            {
+                title: "前払い申込金額\n（税込：円）\n①",
+                header_style: {
+                    fillColor: light_green,
+                },
+                detail_style: {
+                    value: {
+                        code: tableFieldReceivableIV_COLLECT,
+                        format: addComma
+                    },
+                    alignment: "right",
+                    borderColor: [green, green, green, green]
+                }
+            },
+            {
+                title: "手数料率\n(貴社シェア分)",
+                header_style: {
+                    fillColor: light_green,
+                },
+                detail_style: {
+                    value: {
+                        code: tableFieldBackRateIV_COLLECT,
+                        format: (rate) => `${(Number(rate) * 100).toFixed(2)}%`
+                    },
+                    alignment: "right",
+                    borderColor: [green, green, green, green]
+                }
+            },
+            {
+                title: "手数料額\n(貴社シェア分)\n②",
+                header_style: {
+                    fillColor: light_green,
+                },
+                detail_style: {
+                    value: {
+                        code: tableFieldBackAmountIV_COLLECT,
+                        format: addComma
+                    },
+                    alignment: "right",
+                    borderColor: [green, green, green, green]
+                }
+            },
+            {
+                title: "請求金額\n(税込：円)\n① - ②",
+                header_style: {
+                    fillColor: green,
+                },
+                detail_style: {
+                    value: {
+                        code: tableFieldBackedReceivableIV_COLLECT,
+                        format: addComma
+                    },
+                    alignment: "right",
+                    borderColor: [green, green, green, green]
+                }
+            },
+        ];
+
+        const header_row = columns.map((c) => {
+            // オブジェクトを複製して使用する
+            const pdfDoc_table_cell = JSON.parse(JSON.stringify(header_text_style));
+            pdfDoc_table_cell.text = c.title;
+            if (c.margin) pdfDoc_table_cell.margin = c.margin;
+            pdfDoc_table_cell.fillColor = c.header_style.fillColor;
+            return pdfDoc_table_cell;
+        });
+        detail_table.table.body.push(header_row);
+
+        const detail_style_template = {
+            text: "",
+            alignment: "",
+            lineHeight: 1,
+            borderColor: [green, green, green, green]
+        };
+        detail_table.table.body.push(...getDetailRowsDocObject(details, columns, detail_style_template));
+
+        const sum_title = JSON.parse(JSON.stringify(header_text_style));
+        sum_title.text = "合計金額";
+        sum_title.fillColor = green;
+        sum_title.borderColor = [green, green, green, green];
+
+        const sum_amount = {
+            text: total,
+            alignment: "right",
+            borderColor: [green, green, green, green],
+            bold: true
+        };
+
+        const blank_cell = {text: "", border: [false]};
+        const sum_row = [
+            blank_cell,
+            blank_cell,
+            blank_cell,
+            blank_cell,
+            blank_cell,
+            blank_cell,
+            sum_title,
+            sum_amount
+        ];
+        detail_table.table.body.push(sum_row);
+
+        return detail_table;
+    })(parent_record[tableInvoiceTargets_COLLECT]["value"], total, parent_record["rate"]);
+    doc.content.push(detail_table);
+
+    doc.content.push(bar);
+
+    return doc;
+};
+
 const getWfiDetailTable = (collect_record_details, total) => {
     // 振込依頼書PDFに表示する支払明細テーブルのpdfDocオブジェクトを生成する
     // FIXME: ラグレスの場合とほとんど処理が共通なので、共通にしても良さそうな部分をもっと共通化する
@@ -822,7 +1359,13 @@ const getWfiDetailTable = (collect_record_details, total) => {
     });
     detail_table.table.body.push(header_row);
 
-    detail_table.table.body.push(...getDetailRowsDocObject(collect_record_details, columns));
+    const detail_style_template = {
+        text: "",
+        alignment: "",
+        lineHeight: 1,
+        borderColor: [orange, black, orange, black]
+    };
+    detail_table.table.body.push(...getDetailRowsDocObject(collect_record_details, columns, detail_style_template));
 
     const sum_title = JSON.parse(JSON.stringify(header_text_style));
     sum_title.text = "合計金額";
@@ -930,7 +1473,13 @@ const getLaglessDetailTable = (collect_record_details, total) => {
     });
     detail_table.table.body.push(header_row);
 
-    detail_table.table.body.push(...getDetailRowsDocObject(collect_record_details, columns));
+    const detail_style_template = {
+        text: "",
+        alignment: "",
+        lineHeight: 1,
+        borderColor: [orange, black, orange, black]
+    };
+    detail_table.table.body.push(...getDetailRowsDocObject(collect_record_details, columns, detail_style_template));
 
     const sum_title = JSON.parse(JSON.stringify(header_text_style));
     sum_title.text = "合計金額";
@@ -956,13 +1505,7 @@ const getLaglessDetailTable = (collect_record_details, total) => {
     return detail_table;
 };
 
-function getDetailRowsDocObject(detail_records, columns) {
-    const detail_style_template = {
-        text: "",
-        alignment: "",
-        lineHeight: 1,
-        borderColor: [orange, black, orange, black]
-    };
+function getDetailRowsDocObject(detail_records, columns, detail_style_template) {
     const paid_rows = detail_records
         .sort((a, b) => {
             // 支払日が古い順にソートしてから処理
@@ -993,6 +1536,10 @@ function getDetailRowsDocObject(detail_records, columns) {
 
                 if (style.borderColor) {
                     cell.borderColor = style.borderColor;
+                }
+
+                if (style.fontSize) {
+                    cell.fontSize = style.fontSize;
                 }
 
                 return cell;
