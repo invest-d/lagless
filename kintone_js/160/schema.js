@@ -413,6 +413,19 @@ export const schema_collect = {
             "invoiceTargets": {
                 "code": "invoiceTargets",
                 "fields": {
+                    "actuallyOrdererIV": {
+                        "code": "actuallyOrdererIV",
+                        "defaultValue": "",
+                        "expression": "",
+                        "hideExpression": false,
+                        "label": "(GIG用)発注企業名",
+                        "maxLength": "",
+                        "minLength": "",
+                        "noLabel": false,
+                        "required": false,
+                        "type": "SINGLE_LINE_TEXT",
+                        "unique": false
+                    },
                     "applicantOfficialNameIV": {
                         "code": "applicantOfficialNameIV",
                         "defaultValue": "",
@@ -440,6 +453,47 @@ export const schema_collect = {
                         "unique": false,
                         "unit": "",
                         "unitPosition": "BEFORE"
+                    },
+                    "backAmountIV": {
+                        "code": "backAmountIV",
+                        "displayScale": "0",
+                        "expression": "ROUNDDOWN(receivableIV* backRateIV, 0)",
+                        "format": "NUMBER_DIGIT",
+                        "hideExpression": true,
+                        "label": "(GIG用)バック手数料額",
+                        "noLabel": false,
+                        "required": false,
+                        "type": "CALC",
+                        "unit": "円",
+                        "unitPosition": "AFTER"
+                    },
+                    "backRateIV": {
+                        "code": "backRateIV",
+                        "defaultValue": "0",
+                        "digit": false,
+                        "displayScale": "4",
+                        "label": "(GIG用)バック手数料率",
+                        "maxValue": "",
+                        "minValue": "0",
+                        "noLabel": false,
+                        "required": false,
+                        "type": "NUMBER",
+                        "unique": false,
+                        "unit": "",
+                        "unitPosition": "AFTER"
+                    },
+                    "backedReceivableIV": {
+                        "code": "backedReceivableIV",
+                        "displayScale": "0",
+                        "expression": "receivableIV - backAmountIV",
+                        "format": "NUMBER_DIGIT",
+                        "hideExpression": true,
+                        "label": "(GIG用)バック額差引後",
+                        "noLabel": false,
+                        "required": false,
+                        "type": "CALC",
+                        "unit": "円",
+                        "unitPosition": "AFTER"
                     },
                     "paymentDateIV": {
                         "code": "paymentDateIV",
@@ -861,6 +915,26 @@ export const schema_collect = {
                     {
                         "type": "DATE",
                         "code": "paymentDateIV",
+                        "size": {}
+                    },
+                    {
+                        "type": "SINGLE_LINE_TEXT",
+                        "code": "actuallyOrdererIV",
+                        "size": {}
+                    },
+                    {
+                        "type": "NUMBER",
+                        "code": "backRateIV",
+                        "size": {}
+                    },
+                    {
+                        "type": "CALC",
+                        "code": "backAmountIV",
+                        "size": {}
+                    },
+                    {
+                        "type": "CALC",
+                        "code": "backedReceivableIV",
                         "size": {}
                     }
                 ]
