@@ -112,13 +112,13 @@ async function getLatestExamRecords() {
     const all_exam = await client.record.getAllRecords(body_exams);
 
     // 重複なしの取引企業Noを取得
-    const unique_customer_codes = all_exam.records
+    const unique_customer_codes = all_exam
         .map((record) => record[customerCode_EXAM]["value"])
         .filter((code, i, self) => self.indexOf(code) === i);
 
     const latest_exams = unique_customer_codes.map((customer_code) => {
         // 取引企業Noごとにfilterして処理する
-        const target_exams = all_exam.records.filter((record) => record[customerCode_EXAM]["value"] === customer_code);
+        const target_exams = all_exam.filter((record) => record[customerCode_EXAM]["value"] === customer_code);
 
         // 日付だけの配列を作って、配列の中の最新の日付を取得する。Math.max.applyの返り値は数値（UNIX時間）なので改めてnew Dateする
         const examined_dates = target_exams.map((record) => getComparableDate(record[examinedDay_EXAM]["value"]));
@@ -157,7 +157,7 @@ async function updateKomutenCredits(latest_exam_records) {
 
     console.log("審査アプリから取得した付与与信枠を工務店アプリのレコードに転記する");
     const resp_update = await client.record.updateAllRecords(body_update_credits);
-    return resp_update.results[0].records.length;
+    return resp_update.records.length;
 }
 
 async function generateUpdateKomutenReqBody(latest_exam_records) {
@@ -172,7 +172,7 @@ async function generateUpdateKomutenReqBody(latest_exam_records) {
     const komuten_info = await client.record.getAllRecords(body_exams);
 
     console.log("工務店レコードそれぞれについて、審査アプリから取得した与信枠をPUTするオブジェクトを作る");
-    const put_records = komuten_info.records
+    const put_records = komuten_info
         .map((komuten) => {
             // 審査レコードの中から、工務店レコードの取引企業Noフィールドと同じ取引企業Noのレコードを探してセット。
             // 工務店レコード1件に対して審査レコードは1件のみなのでfind（n件あるのは逆の場合）
