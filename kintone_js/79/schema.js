@@ -42,7 +42,7 @@ export const schema_79 = {
                         "label": "ﾈｶﾞﾃｨﾌﾞﾜｰﾄﾞ該当なし（新規ﾈｶﾞﾃｨﾌﾞﾜｰﾄﾞ該当なし）"
                     }
                 },
-                "required": true,
+                "required": false,
                 "type": "CHECK_BOX"
             },
             "HPのURL1": {
@@ -1634,35 +1634,39 @@ export const schema_79 = {
                 "noLabel": false,
                 "options": {
                     "その他": {
-                        "index": "5",
+                        "index": "6",
                         "label": "その他"
                     },
                     "事前審査：問題ある可能性あり": {
-                        "index": "1",
+                        "index": "2",
                         "label": "事前審査：問題ある可能性あり"
                     },
                     "事前審査：問題無しと思料": {
-                        "index": "0",
+                        "index": "1",
                         "label": "事前審査：問題無しと思料"
                     },
                     "保留": {
-                        "index": "4",
+                        "index": "5",
                         "label": "保留"
                     },
                     "問題なし（システムによる自動審査）": {
-                        "index": "6",
+                        "index": "7",
                         "label": "問題なし（システムによる自動審査）"
                     },
+                    "審査待ち": {
+                        "index": "0",
+                        "label": "審査待ち"
+                    },
                     "少額審査：与信枠付与致したい": {
-                        "index": "2",
+                        "index": "3",
                         "label": "少額審査：与信枠付与致したい"
                     },
                     "少額審査：事前審査に問題ある可能性あり": {
-                        "index": "3",
+                        "index": "4",
                         "label": "少額審査：事前審査に問題ある可能性あり"
                     },
                     "要確認（システムによる自動審査）": {
-                        "index": "7",
+                        "index": "8",
                         "label": "要確認（システムによる自動審査）"
                     }
                 },
@@ -1827,7 +1831,7 @@ export const schema_79 = {
                         "label": "ﾈｶﾞﾃｨﾌﾞﾜｰﾄﾞ該当なし（新規ﾈｶﾞﾃｨﾌﾞﾜｰﾄﾞ該当なし）"
                     }
                 },
-                "required": true,
+                "required": false,
                 "type": "CHECK_BOX"
             },
             "更新日時": {
@@ -2703,7 +2707,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "与信付与条件",
                         "size": {
-                            "innerHeight": "89"
+                            "innerHeight": "90"
                         }
                     }
                 ]
@@ -2795,7 +2799,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "コメント_審査管理者",
                         "size": {
-                            "innerHeight": "89"
+                            "innerHeight": "90"
                         }
                     }
                 ]
@@ -2822,7 +2826,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "コメント_確認者2",
                         "size": {
-                            "innerHeight": "89"
+                            "innerHeight": "90"
                         }
                     }
                 ]
@@ -2849,7 +2853,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "コメント_確認者1",
                         "size": {
-                            "innerHeight": "89"
+                            "innerHeight": "90"
                         }
                     }
                 ]
@@ -2876,7 +2880,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "コメント_審査リーダー",
                         "size": {
-                            "innerHeight": "89"
+                            "innerHeight": "90"
                         }
                     }
                 ]
@@ -2903,7 +2907,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "コメント_審査担当者",
                         "size": {
-                            "innerHeight": "89"
+                            "innerHeight": "90"
                         }
                     }
                 ]
@@ -3200,7 +3204,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "目的",
                         "size": {
-                            "innerHeight": "131"
+                            "innerHeight": "134"
                         }
                     }
                 ]
