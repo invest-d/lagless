@@ -200,7 +200,7 @@ const confirmBeforeExec = () => {
     return window.confirm(before_process);
 };
 
-const getSearchInfo = (record) => {
+export const getSearchInfo = (record) => {
     const info = {
         name: record[applicantName_APPLY]["value"],
         representative: record[applicantRepresentative_APPLY]["representative"],
@@ -211,7 +211,7 @@ const getSearchInfo = (record) => {
     return info;
 };
 
-const getCompanyRecord = (info) => {
+export const getCompanyRecord = (info) => {
     const queries = [];
     if (info.name) queries.push(`${companyName_COMPANY} = "${info.name}"`);
     if (info.representative) queries.push(`${representative_COMPANY} = "${info.representative}"`);
@@ -227,14 +227,14 @@ const getCompanyRecord = (info) => {
     return CLIENT.record.getRecords(body);
 };
 
-const selectCompanyRecordNumber = (get_result) => {
+export const selectCompanyRecordNumber = (get_result) => {
     // get_resultが存在する場合。nullもしくは数値のレコード番号を返す
     const returnAsNumber = (input) => Number(replaceFullWidthNumbers(input));
 
     if (get_result.records.length === 1) {
         const num = get_result.records[0][recordNo_COMPANY]["value"];
         const message = `レコードが見つかりました。レコード番号: ${num}`
-            + "\nこのレコードを使って反社チェックを進めますか？";
+            + "\nこのレコードを使って進めますか？";
         if (confirm(message)) {
             return Number(num);
         } else {
@@ -245,7 +245,7 @@ const selectCompanyRecordNumber = (get_result) => {
     } else {
         const nums = get_result.records.map((r) => r[recordNo_COMPANY]["value"]).join(", ");
         const message = `複数のレコードが見つかりました。レコード番号: ${nums}`
-            + "\nどのレコード番号で反社チェックを進めますか？";
+            + "\nどのレコード番号で進めますか？";
         const input = prompt(message);
         if (input) return returnAsNumber(input);
         return null;
