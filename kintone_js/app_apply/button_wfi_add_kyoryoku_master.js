@@ -225,11 +225,16 @@ const getMasterRecord = (info) => {
 const createKyoryokuRecord = async (apply, company_id) => {
     const new_kyoryoku_id = await (async () => {
         const in_query = KE_BAN_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
+        const is_keban_kyoryoku = `${komutenId_KYORYOKU} in (${in_query})`;
+        const is_not_test = `${kyoryokuGeneralName_KYORYOKU} not like "テスト"\
+            and ${kyoryokuGeneralName_KYORYOKU} not like "test"\
+            and ${komutenName_KYORYOKU} not like "テスト"\
+            and ${komutenName_KYORYOKU} not like "test"`;
         // 連番で新たな協力会社IDを取得する。
         const all_keban = {
             app: schema_88.id.appId,
             fields: [kyoryokuId_KYORYOKU],
-            condition: `${komutenId_KYORYOKU} in (${in_query})`,
+            condition: `(${is_keban_kyoryoku}) and (${is_not_test})`,
             orderBy: `${kyoryokuId_KYORYOKU} desc`
         };
         const result = await CLIENT.record.getAllRecords(all_keban);
