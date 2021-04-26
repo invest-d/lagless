@@ -210,7 +210,9 @@ const getMasterRecord = (info) => {
     }
 
     const in_query = KE_BAN_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
-    const query = `(${queries.join(" or ")}) and (${komutenId_KYORYOKU} in (${in_query}))`;
+    const is_keban_kyoryoku = `${komutenId_KYORYOKU} in (${in_query})`;
+
+    const query = `(${queries.join(" or ")}) and (${is_keban_kyoryoku})`;
 
     const body = {
         app: schema_88.id.appId,
