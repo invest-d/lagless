@@ -133,9 +133,12 @@ const clickButton = async (apply_record) => {
             alert("処理を中断しました");
         } else {
             console.error(e);
+            const additional_info = e.message
+                ? e.message
+                : JSON.stringify(e)
             alert("途中で処理に失敗しました。システム管理者に連絡してください。"
                 + "\n追加の情報: "
-                + `\n${JSON.stringify(e)}`);
+                + `\n${additional_info}`);
         }
     } finally {
         alert("処理を終了します。");
