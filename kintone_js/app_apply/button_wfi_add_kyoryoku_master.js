@@ -266,8 +266,8 @@ const createKyoryokuRecord = async (apply, company_id) => {
         record: new_record
     };
     const result = await CLIENT.record.addRecord(body);
-    alert(`レコード(${result.id})を新規作成しました。`);
-    return result.id;
+    alert(`協力会社マスタに新規レコード(レコード番号: ${result.id})を新規作成しました。`);
+    return new_kyoryoku_id;
 };
 
 const updateKyoryokuMaster = async (kyoryoku_id, apply_record) => {
