@@ -26,6 +26,7 @@ module.exports = (env, argv) => {
                 calc_member_fee: "./app_apply/button_calc_member_fee.js",
                 button_wfi_antisocial_check: "./app_apply/button_wfi_antisocial_check.js",
                 button_wfi_add_kyoryoku_master: "./app_apply/button_wfi_add_kyoryoku_master.js",
+                button_make_all_payment_detail_checked: "./app_apply/button_make_all_payment_detail_checked.js",
                 app_collect: "./app_collect.js",
             },
 
@@ -67,6 +68,7 @@ module.exports = (env, argv) => {
                 calc_member_fee: "./app_apply/button_calc_member_fee.js",
                 button_wfi_antisocial_check: "./app_apply/button_wfi_antisocial_check.js",
                 button_wfi_add_kyoryoku_master: "./app_apply/button_wfi_add_kyoryoku_master.js",
+                button_make_all_payment_detail_checked: "./app_apply/button_make_all_payment_detail_checked.js",
                 app_collect: "./app_collect.js",
             },
 
