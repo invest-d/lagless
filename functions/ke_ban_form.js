@@ -299,6 +299,15 @@ function uploadToKintone(token, attachment, filename) {
     return axios.post("https://investdesign.cybozu.com/k/v1/file.json", form, { headers });
 }
 
+const extractClosing = (term_string) => {
+    const pat = new RegExp("から(\\d{4}年\\d{1,2}月\\d{1,2}日)まで");
+    const extracted = pat.exec(term_string);
+    if (!extracted) {
+        return null;
+    }
+    return extracted[1];
+};
+
 const post_apply_record = async (form_data, env) => {
     const get_kyoryoku_id = async (driver_id, name, email) => {
         // eslint-disable-next-line no-irregular-whitespace
@@ -386,14 +395,13 @@ const post_apply_record = async (form_data, env) => {
         }
     };
 
-    const pat = new RegExp("から(\\d{4}年\\d{1,2}月\\d{1,2}日)まで");
     const getPaymentDate = (term_string) => {
-        const closing_string = pat.exec(term_string);
+        const closing_string = extractClosing(term_string);
         if (!closing_string) {
             console.log(`フォームの入力内容から締め日の特定に失敗。入力内容: ${term_string}`);
             return null;
         }
-        const closing_date = dayjs(closing_string[1], "YYYY年M月D日");
+        const closing_date = dayjs(closing_string, "YYYY年M月D日");
         console.log(`申込の締め日: ${closing_date.format("YYYY年MM月DD日(ddd)")}`);
 
         // FIXME: 次の営業日を求める関数がフロントエンドにもある。共通化したい
@@ -458,10 +466,10 @@ const post_apply_record = async (form_data, env) => {
         for (const key of Object.keys(form_data)) {
             // targetTermは"まで"の日付を読み取って使用する
             if (key === "targetTerm") {
-                const closing_date = pat.exec(form_data[key]);
+                const closing_date = extractClosing(form_data[key]);
                 if (closing_date) {
                     // YYYY-MM-DDの文字列として格納
-                    record["closingDay"] = {"value": closing_date[1].replace("年", "-").replace("月", "-").replace("日", "")};
+                    record["closingDay"] = {"value": closing_date.replace("年", "-").replace("月", "-").replace("日", "")};
                 } else {
                     throw new Error(`締日の読み取りに失敗しました: ${form_data[key]}`);
                 }
