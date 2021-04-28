@@ -234,6 +234,11 @@ $(() => {
             return;
         }
 
+        // 多重送信防止
+        showSending("送信中...");
+        $("#send").text("送信中...")
+            .prop("disabled", true);
+
         const form_data = new FormData($("#form_id")[0]);
 
         if (isSafari()) {
@@ -245,11 +250,6 @@ $(() => {
                 }
             });
         }
-
-        // 多重送信防止
-        showSending("送信中...");
-        $("#send").text("送信中...")
-            .prop("disabled", true);
 
         // データ送信。kintone用のデータ変換はfirebase側
         $.ajax({
