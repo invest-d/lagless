@@ -307,6 +307,7 @@ const extractClosing = (term_string) => {
     }
     return extracted[1];
 };
+exports.extractClosing = extractClosing;
 
 const post_apply_record = async (form_data, env) => {
     const get_kyoryoku_id = async (driver_id, name, email) => {
@@ -539,6 +540,7 @@ function setCORS(env, res){
     // リクエスト元が開発版のフォームなら開発版のドメインを、本番のフォームなら本番のドメインを設定。
     res.set("Access-Control-Allow-Origin",`https://${env.host}`);
 }
+exports.setCORS = setCORS;
 
 class Environ {
     constructor(referer) {
@@ -575,6 +577,7 @@ class Environ {
         }
     }
 }
+exports.Environ = Environ;
 
 function extractHostDomain(url) {
     // スラッシュで区切ってドメイン部分とポート番号を抜き出す

@@ -203,9 +203,51 @@ $(() => {
     });
 });
 
+const isDuplicateApply = async (applicant_id, worked_term) => {
+    // 重複送信かどうかの確認を行う
+    return new Promise((resolve, reject) => {
+        const params_dpl = {
+            type: "POST",
+            enctype: "multipart/form-data",
+            url: ENV.ke_ban_endpoint.check,
+            dataType: "json",
+            data: JSON.stringify({
+                applicant_id: applicant_id,
+                worked_term: worked_term
+            }),
+            cache: false,
+            processData: false,
+            contentType: false,
+            process_type: "check-duplicate"
+        };
+        $.ajax(params_dpl)
+            .then(
+                (result) => {
+                    console.log(result);
+                    resolve(result.exists);
+                },
+                (result) => {
+                    console.log(result);
+                    reject(result.message);
+                }
+            );
+    });
+};
+
+const isApplyable = async (applicant_id, worked_term) => {
+    const is_duplicate = await isDuplicateApply(applicant_id, worked_term);
+    if (is_duplicate) {
+        const message = `お客さまは、${worked_term}分の前払いに対してすでに申込みをされています。`
+            + "メールアドレスや電話番号に変更がある場合のみ、このまま申し込みを続けてください。";
+        return confirm(message);
+    }
+
+    return true;
+};
+
 // 送信ボタンをクリックしたときの挙動
 $(() => {
-    $("#send").click(function (event) {
+    $("#send").click(async function (event) {
         // formのデフォルトのsubmit挙動を止めて、独自にsubmit挙動を実装
         event.preventDefault();
 
@@ -239,6 +281,23 @@ $(() => {
         $("#send").text("送信中...")
             .prop("disabled", true);
 
+        const applyable = await isApplyable($("#kebanID").val(), $("#targetTerm").val())
+            .catch((e) => {
+                console.error(e);
+                const messages = ["申し込み中にシステムエラーが発生しました。"];
+                messages.push("ご迷惑をおかけして申し訳ございません。");
+                messages.push("時間を空けて再度お申し込み頂くか、下記連絡先へご連絡ください。");
+                messages.push(`${$("#contact").text()}`);
+                alert(messages.join("\n"));
+            });
+        if (!applyable) {
+            hideSending();
+            $("#send").text("送信")
+                .prop("disabled", false);
+            alert("申し込みを中止しました。");
+            return;
+        }
+
         const form_data = new FormData($("#form_id")[0]);
 
         if (isSafari()) {
@@ -255,12 +314,13 @@ $(() => {
         $.ajax({
             type: "POST",
             enctype: "multipart/form-data",
-            url: ENV.ke_ban_endpoint,
+            url: ENV.ke_ban_endpoint.post,
             dataType: "json",
             data: form_data,
             cache: false,
             processData: false,
-            contentType: false
+            contentType: false,
+            process_type: "post"
         })
             .done((data) => {
                 // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する

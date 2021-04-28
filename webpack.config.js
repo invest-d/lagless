@@ -76,7 +76,10 @@ module.exports = (env, argv) => {
                 new webpack.DefinePlugin({
                     ENV: JSON.stringify({
                         apply_endpoint: "https://us-central1-lagless.cloudfunctions.net/send_apply_dev",
-                        ke_ban_endpoint: "https://us-central1-lagless.cloudfunctions.net/ke_ban_form_dev",
+                        ke_ban_endpoint: {
+                            check: "https://us-central1-lagless.cloudfunctions.net/ke_ban_check_dev",
+                            post: "https://us-central1-lagless.cloudfunctions.net/ke_ban_form_dev",
+                        },
                         filename_suffix: "dev",
                     }),
                 }),
@@ -153,7 +156,10 @@ module.exports = (env, argv) => {
                 new webpack.DefinePlugin({
                     ENV: JSON.stringify({
                         apply_endpoint: "https://us-central1-lagless.cloudfunctions.net/send_apply",
-                        ke_ban_endpoint: "https://us-central1-lagless.cloudfunctions.net/ke_ban_form",
+                        ke_ban_endpoint: {
+                            check: "https://us-central1-lagless.cloudfunctions.net/ke_ban_check",
+                            post: "https://us-central1-lagless.cloudfunctions.net/ke_ban_form",
+                        },
                         filename_suffix: "prod",
                     }),
                 }),
