@@ -272,7 +272,11 @@ $(() => {
                 hideSending();
                 $("#send").text("送信")
                     .prop("disabled", false);
-                alert(`登録に失敗しました。\n${data.responseJSON.message}`);
+                const messages = ["申し込み中にシステムエラーが発生しました。"];
+                messages.push("ご迷惑をおかけして申し訳ございません。");
+                messages.push("時間を空けて再度お申し込み頂くか、下記連絡先へご連絡ください。");
+                messages.push(`${$("#contact").text()}`);
+                alert(messages.join("\n"));
             });
     });
 });
