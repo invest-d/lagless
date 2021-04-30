@@ -218,7 +218,6 @@ const isDuplicateApply = async (applicant_id, worked_term) => {
             cache: false,
             processData: false,
             contentType: false,
-            process_type: "check-duplicate"
         };
         $.ajax(params_dpl)
             .then(
@@ -320,7 +319,6 @@ $(() => {
             cache: false,
             processData: false,
             contentType: false,
-            process_type: "post"
         })
             .done((data) => {
                 // 成功時のレスポンスでは完了画面のURLが飛んでくるので、そこに移動する
