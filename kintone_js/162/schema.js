@@ -847,6 +847,21 @@ export const schema_collect = {
                 "type": "ROW",
                 "fields": [
                     {
+                        "type": "SPACER",
+                        "elementId": "sumOfCloudSignSpace",
+                        "size": {}
+                    },
+                    {
+                        "type": "LABEL",
+                        "label": "<div>←WFI案件の場合、ここにクラウドサイン対象の合計件数と、&#xff08;債権金額 - (小数点以下切り捨て早払い手数料 &#43; 小数点以下切り捨て振込手数料)&#xff09;の合計振込金額を表示します。<br /></div>",
+                        "size": {}
+                    }
+                ]
+            },
+            {
+                "type": "ROW",
+                "fields": [
+                    {
                         "type": "SINGLE_LINE_TEXT",
                         "code": "cloudSignUrl",
                         "size": {}
