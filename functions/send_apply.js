@@ -254,6 +254,7 @@ async function post_apply_record(form_text_data, env) {
     const kintone_post_response = await postRecord(env.app_id, API_TOKEN, payload)
         .catch((err) => {
             console.error(`kintoneレコード登録エラー：${err}`);
+            console.error("kintoneへの送信内容", JSON.stringify(payload));
             throw new Error({
                 status: 500,
                 message: "サーバーエラーが発生しました"
