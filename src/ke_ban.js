@@ -238,7 +238,7 @@ const isApplyable = async (applicant_id, worked_term) => {
     const is_duplicate = await isDuplicateApply(applicant_id, worked_term);
     if (is_duplicate) {
         const message = `お客さまは、${worked_term}分の前払いに対してすでに申込みをされています。`
-            + "メールアドレスや電話番号に変更がある場合のみ、このまま申し込みを続けてください。";
+            + "メールアドレスや電話番号等に変更がある場合のみ、このまま申し込みを続けてください。";
         return confirm(message);
     }
 
