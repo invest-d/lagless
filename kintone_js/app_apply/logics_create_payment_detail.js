@@ -1,5 +1,10 @@
 /* eslint-disable no-irregular-whitespace */
 /*
+    Version 2
+    工務店に早払い上限回数が設定されている場合、
+    明細本文内に上限回数と現在の早払い申込回数を付記するようにした。
+    WFIおよびGIGは上限回数未設定のため、分岐処理なし
+
     Version 1.1
     支払予定明細の宛名部分の文面を変更。
     協力会社名(A)、代表者役職名(B)、代表者氏名(C)について、下記のように宛名を表記する。
@@ -110,7 +115,7 @@ export const getConstructors = () => {
     return CLIENT.record.getRecords({ app: APP_ID_CONSTRUCTOR });
 };
 
-async function attachDetail(target_records) {
+async function attachDetail(target_records, constructors) {
     // エラーが発生した時、どのレコードで発生したかの情報をthrowするためのlet
     let error_num = 0;
     try {
@@ -126,7 +131,7 @@ async function attachDetail(target_records) {
                     // GIG(工務店ID 500番台 or 5000番台)は文面が異なる
                     return getGigPaymentDetail(record);
                 } else {
-                    return await getLaglessPaymentDetail(record);
+                    return await getLaglessPaymentDetail(record, constructors);
                 }
             })(record);
 
@@ -172,7 +177,7 @@ export const generateDetails = (target_records, constructors) => {
     }
 
     // 支払明細を各レコードにセット
-    return attachDetail(target_records, constructors);
+    return attachDetail(target_records, constructors.records);
 };
 
 const getFormattedYYYYMMDD = (kintone_date_value) => {
@@ -259,7 +264,7 @@ function generateGigDetailText(apply_info) {
     return text.join("\r\n");
 }
 
-const getLaglessPaymentDetail = async (record) => {
+const getLaglessPaymentDetail = async (record, constructors) => {
     // ラグレスのファクタリング支払予定明細の本文を取得する
     const kyoryoku_company_name         = record[fieldCustomerCompanyName_APPLY]["value"];
     const kyoryoku_ceo_name             = record[fieldAddresseeName_APPLY]["value"];
@@ -371,9 +376,18 @@ const getLaglessPaymentDetail = async (record) => {
         transfer_amount_of_money_comma: addComma(service_fees.transfer_amount),
         contractor_name:                contractor_name,
         sender_mail:                    sender_mail,
+        kyoryoku_id:                    record[fieldCustomerId_APPLY]["value"]
     };
 
-    return generateLaglessDetailText(apply_info, should_discount_for_first);
+    const kyoryoku_master = await CLIENT.record.getRecords({
+        app: appId_KYORYOKU,
+        fields: [appliedCountField_KYORYOKU],
+        query: `${kyoryokuIdField_KYORYOKU} = ${Number(record[fieldCustomerId_APPLY]["value"])}`
+    });
+    const applied_count = Number(kyoryoku_master.records[0][appliedCountField_KYORYOKU]["value"]);
+
+    const constructor = constructors.find((c) => c["id"]["value"] === record[fieldConstructorID_APPLY]["value"]);
+    return generateLaglessDetailText(apply_info, should_discount_for_first, constructor, applied_count);
 };
 
 const deleteSpaces = (s) => {return s.replace(/ /g, "").replace(/　/g, "");};
@@ -399,8 +413,7 @@ const getAddresseeName = (company, title, name) => {
     return `${display_company}${display_title}${display_name}`;
 };
 
-// 支払予定明細本文を生成する。各変数の加工はせず、受け取ったものをそのまま入れ込む
-function generateLaglessDetailText(apply_info, should_discount_for_first) {
+async function generateLaglessDetailText(apply_info, should_discount_for_first, constructor, applied_count) {
     const fee_sign = apply_info.timing === statusLatePayment_APPLY
         ? "+"
         : "-";
@@ -412,7 +425,7 @@ function generateLaglessDetailText(apply_info, should_discount_for_first) {
     }
 
     // 行ごとに配列で格納し、最後に改行コードでjoinする
-    const text = [
+    const former_part = [
         `${apply_info.addressee_name}様`,
         "",
         `この度は、${apply_info.product_name}のお申込みありがとうございます。`,
@@ -443,7 +456,81 @@ function generateLaglessDetailText(apply_info, should_discount_for_first) {
         // eslint-disable-next-line no-irregular-whitespace
         `当社から貴社へのお振込み予定金額　${apply_info.transfer_amount_of_money_comma}円`,
         "",
-        "",
+    ];
+
+    const getFactoringLimitText = async (apply_info, constructor, applied_count) => {
+        const limit = constructor[earlyPayLimitField_CONSTRUCTOR]["value"]
+            ? Number(constructor[earlyPayLimitField_CONSTRUCTOR]["value"])
+            : 0;
+        if (limit === 0 || apply_info.timing === "遅払い")  return "";
+
+        const limit_text = `■年間利用上限回数　${limit}回`;
+        const reset_month = constructor[resetLimitField_CONSTRUCTOR]["value"]
+            ? Number(constructor[resetLimitField_CONSTRUCTOR]["value"])
+            : 0;
+
+        // カウント対象となっている期間と、次回申込可能になる月（カウントが1以上減少する月）を求める
+        const {
+            term_start,
+            term_end,
+            next_applicable
+        } = await (async (reset_month, kyoryoku_id, limit) => {
+            const result = {
+                term_start: null,
+                term_end: null,
+                next_applicable: null
+            };
+
+            if (reset_month > 0) {
+                const today = dayjs();
+                let next_applicable = today;
+                while (next_applicable.month()+1 !== reset_month) {
+                    next_applicable = next_applicable.add(1, "month");
+                }
+
+                result.term_start       = next_applicable.subtract(1, "year");
+                result.term_end         = next_applicable.subtract(1, "month");
+                result.next_applicable  = next_applicable;
+            } else {
+                // 直近1年間のカウントの場合
+                // 次回申込可能な月は、締め日が新しい方から(年間回数制限)番目のレコードの締め日の1年後の締め日の月とする。
+                // カウント期間内の最古の申込を計算に使ってしまうと、回数制限を超えているけど特例で申込を受け付けたというパターンに対応できない
+                const body = {
+                    app: appId_APPLY,
+                    query: `${fieldCustomerId_APPLY} = ${kyoryoku_id}\
+                        and ${fieldPaymentTiming_APPLY} in ("${statusUndefinedPayment_APPLY}","${statusEarlyPayment_APPLY}")\
+                        and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}")\
+                        and ${fieldClosingDate_APPLY} >= "${dayjs().subtract(1, "year").format("YYYY-MM-DD")}"\
+                        and ${fieldClosingDate_APPLY} <= "${dayjs().format("YYYY-MM-DD")}"`
+                };
+                const early_paid_applies = await CLIENT.record.getRecords(body);
+                const applied_closings = early_paid_applies
+                    .records
+                    .map((a) => dayjs(a[fieldClosingDate_APPLY]["value"]))
+                    .sort((closing_a, closing_b) => closing_b.unix() - closing_a.unix()); //締日降順
+                if (applied_closings.length >= limit) {
+                    // 申込回数が上限回数に達していない場合はnext_applicableを文面に表示しないので、セットする必要もない
+                    result.next_applicable = applied_closings[limit-1].add(1, "year");
+                }
+                result.term_start = dayjs().subtract(1, "year");
+                result.term_end = dayjs();
+            }
+
+            return result;
+        })(reset_month, apply_info.kyoryoku_id, limit);
+        const count_text = `■お客様の早払い利用回数　${applied_count}回（${term_start.format("YYYY年MM月")}〜${term_end.format("YYYY年MM月")}までの申込回数）`;
+
+        const result_text = [limit_text, count_text];
+        if (applied_count >= limit) { // 上限回数を超えて申込を受け付けるパターンもある
+            result_text.push(`■次回申込可能時期　${next_applicable.format("YYYY年MM月")}締め以降の請求書発行時`);
+        }
+
+        return result_text.join("\r\n");
+    };
+    const limit_text = await getFactoringLimitText(apply_info, constructor, applied_count);
+    former_part.push(limit_text);
+
+    const text = former_part.concat([
         "",
         "ご不明な点などがございましたら、",
         "下記連絡先までお問い合わせください。",
@@ -456,7 +543,7 @@ function generateLaglessDetailText(apply_info, should_discount_for_first) {
         "TEL：050-3188-6800",
         "──────────────────────────────■",
         ""
-    ];
+    ]);
 
     return text.join("\r\n");
 }
