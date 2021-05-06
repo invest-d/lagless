@@ -1,5 +1,10 @@
 /* eslint-disable no-irregular-whitespace */
 /*
+    Version 2
+    工務店に早払い上限回数が設定されている場合、
+    明細本文内に上限回数と現在の早払い申込回数を付記するようにした。
+    WFIおよびGIGは上限回数未設定のため、分岐処理なし
+
     Version 1.1
     支払予定明細の宛名部分の文面を変更。
     協力会社名(A)、代表者役職名(B)、代表者氏名(C)について、下記のように宛名を表記する。
@@ -22,6 +27,7 @@ dayjs.extend(isBetween);
 import { get_contractor_name } from "../util/util_forms";
 import { isGigConstructorID } from "../util/gig_utils";
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
+import { CLIENT } from "../util/kintoneAPI";
 
 // 本キャンペーンを打ち出してから最初に案内メールを送信する日
 const HALF_COMMISION_START_DATE = dayjs("2020-12-17");
@@ -30,50 +36,62 @@ const HALF_COMMISION_END_DATE = dayjs("9999-12-31");
 
 const fieldRecordId_COMMON = "$id";
 
-const fieldDetail_APPLY                     = "paymentDetail";
-export const fieldStatus_APPLY              = "状態";
-export const statusReady_APPLY              = "工務店確認済";
-export const statusConfirming_APPLY         = "支払予定明細確認中";
-export const statusConfirmed_APPLY          = "支払予定明細送信前確認完了";
-const statusPaid_APPLY                      = "実行完了";
-const fieldCustomerId_APPLY                 = "ルックアップ";
-const fieldCustomerCompanyName_APPLY        = "支払先正式名称";
-const fieldAddresseeName_APPLY              = "担当者名";
-const fieldAddresseeTitle_APPLY             = "役職名";
-const fieldProductName_APPLY                = "productName";
+import { schema_apply } from "../161/schema";
+const appId_APPLY                           = kintone.app.getId();
+const fieldDetail_APPLY                     = schema_apply.fields.properties.paymentDetail.code;
+export const fieldStatus_APPLY              = schema_apply.fields.properties.状態.code;
+export const statusReady_APPLY              = schema_apply.fields.properties.状態.options.工務店確認済.label;
+export const statusConfirming_APPLY         = schema_apply.fields.properties.状態.options.支払予定明細確認中.label;
+export const statusConfirmed_APPLY          = schema_apply.fields.properties.状態.options.支払予定明細送信前確認完了.label;
+const statusPaid_APPLY                      = schema_apply.fields.properties.状態.options.実行完了.label;
+const fieldCustomerId_APPLY                 = schema_apply.fields.properties.ルックアップ.code;
+const fieldCustomerCompanyName_APPLY        = schema_apply.fields.properties.支払先正式名称.code;
+const fieldAddresseeName_APPLY              = schema_apply.fields.properties.担当者名.code;
+const fieldAddresseeTitle_APPLY             = schema_apply.fields.properties.役職名.code;
+const fieldProductName_APPLY                = schema_apply.fields.properties.productName.code;
 const statusProductName_Lagless_APPLY       = "ラグレス";
 const statusProductName_Dandori_APPLY       = "ダンドリペイメント";
 const statusProductName_Renove_APPLY        = "リノベ不動産Payment";
-const fieldClosingDate_APPLY                = "closingDay";
-const fieldPaymentDate_APPLY                = "paymentDate";
-const fieldDaysLater_APPLY                  = "daysLater";
-const fieldBillingCompanyName_APPLY         = "billingCompanyOfficialName";
-const fieldApplicantAmount_APPLY            = "applicationAmount";
-const fieldMembershipFee_APPLY              = "membership_fee";
-const fieldTransferFee_APPLY                = "transferFeeTaxIncl";
-const fieldPaymentTiming_APPLY              = "paymentTiming";
-const statusLatePayment_APPLY               = "遅払い";
-const statusOriginalPayment_APPLY           = "通常払い";
-const fieldCommissionRate_Late_APPLY        = "commissionRate_late";
-const fieldCommissionAmount_Late_APPLY      = "commissionAmount_late";
-const fieldTransferAmount_Late_APPLY        = "transferAmount_late";
-const fieldCommissionRate_Early_APPLY       = "commissionRate";
-const fieldCommissionAmount_Early_APPLY     = "commissionAmount";
-const fieldTransferAmount_Early_APPLY       = "transferAmount";
-const fieldCommissionRateEarlyFirst_APPLY   = "commissionRateEarlyFirst";
-const fieldCommissionAmountEarlyFirst_APPLY = "commissionAmountEarlyFirst";
-const fieldTransferAmountEarlyFirst_APPLY   = "transferAmountEarlyFirst";
-const fieldPaymentAccount_APPLY             = "paymentAccount";
-const fieldConstructorID_APPLY              = "constructionShopId";
-const fieldFactorableAmountPerDayWFI_APPLY  = "factorableAmountPerDayWFI";
-const fieldWorkedDaysWFI_APPLY              = "workedDaysWFI";
-const fieldFactorableTotalAmountWFI_APPLY   = "factorableTotalAmountWFI";
+const fieldClosingDate_APPLY                = schema_apply.fields.properties.closingDay.code;
+const fieldPaymentDate_APPLY                = schema_apply.fields.properties.paymentDate.code;
+const fieldBillingCompanyName_APPLY         = schema_apply.fields.properties.billingCompanyOfficialName.code;
+const fieldApplicantAmount_APPLY            = schema_apply.fields.properties.applicationAmount.code;
+const fieldMembershipFee_APPLY              = schema_apply.fields.properties.membership_fee.code;
+const fieldTransferFee_APPLY                = schema_apply.fields.properties.transferFeeTaxIncl.code;
+const fieldPaymentTiming_APPLY              = schema_apply.fields.properties.paymentTiming.code;
+const statusUndefinedPayment_APPLY          = schema_apply.fields.properties.paymentTiming.options.未設定.label;
+const statusEarlyPayment_APPLY              = schema_apply.fields.properties.paymentTiming.options.早払い.label;
+const statusLatePayment_APPLY               = schema_apply.fields.properties.paymentTiming.options.遅払い.label;
+const statusOriginalPayment_APPLY           = schema_apply.fields.properties.paymentTiming.options.通常払い.label;
+const fieldCommissionRate_Late_APPLY        = schema_apply.fields.properties.commissionRate_late.code;
+const fieldCommissionAmount_Late_APPLY      = schema_apply.fields.properties.commissionAmount_late.code;
+const fieldTransferAmount_Late_APPLY        = schema_apply.fields.properties.transferAmount_late.code;
+const fieldCommissionRate_Early_APPLY       = schema_apply.fields.properties.commissionRate.code;
+const fieldCommissionAmount_Early_APPLY     = schema_apply.fields.properties.commissionAmount.code;
+const fieldTransferAmount_Early_APPLY       = schema_apply.fields.properties.transferAmount.code;
+const fieldCommissionRateEarlyFirst_APPLY   = schema_apply.fields.properties.commissionRateEarlyFirst.code;
+const fieldCommissionAmountEarlyFirst_APPLY = schema_apply.fields.properties.commissionAmountEarlyFirst.code;
+const fieldTransferAmountEarlyFirst_APPLY   = schema_apply.fields.properties.transferAmountEarlyFirst.code;
+const fieldPaymentAccount_APPLY             = schema_apply.fields.properties.paymentAccount.code;
+const fieldConstructorID_APPLY              = schema_apply.fields.properties.constructionShopId.code;
+const fieldFactorableAmountPerDayWFI_APPLY  = schema_apply.fields.properties.factorableAmountPerDayWFI.code;
+const fieldWorkedDaysWFI_APPLY              = schema_apply.fields.properties.workedDaysWFI.code;
+const fieldFactorableTotalAmountWFI_APPLY   = schema_apply.fields.properties.factorableTotalAmountWFI.code;
 
 const contractor_mail_lagless               = "lagless@invest-d.com";
 const contractor_mail_dandori               = "d-p@invest-d.com";
 const contractor_mail_renove                = "lagless@invest-d.com"; // ラグレスと同じ
 
-const APP_ID_CONSTRUCTOR                    = "96";
+import { schema_96 } from "../96/schema";
+const APP_ID_CONSTRUCTOR                    = schema_96.id.appId;
+const earlyPayLimitField_CONSTRUCTOR        = schema_96.fields.properties.applicationLimit.code;
+const resetLimitField_CONSTRUCTOR           = schema_96.fields.properties.monthResetCount.code;
+const fieldDaysLater_APPLY                  = schema_96.fields.properties.daysLater.code; //申込レコードには存在しないが、特定の場合に限り申込レコードに必要なフィールドとして擬似的に定義する
+
+import { schema_88 } from "../88/schema";
+const appId_KYORYOKU                        = schema_88.id.appId;
+const kyoryokuIdField_KYORYOKU              = schema_88.fields.properties.支払企業No_.code;
+const appliedCountField_KYORYOKU            = schema_88.fields.properties.numberOfApplication.code;
 
 export const confirmBeforeExec = () => {
     const before_process = `${statusReady_APPLY}の各レコードについて、支払予定明細書を作成しますか？\n\n`
@@ -84,20 +102,20 @@ export const confirmBeforeExec = () => {
 
 export const getGenerateTarget = () => {
     const body_generate_target = {
-        app: kintone.app.getId(),
+        app: appId_APPLY,
         query: `${fieldStatus_APPLY} in ("${statusReady_APPLY}")
             and ${fieldPaymentTiming_APPLY} not in ("${statusOriginalPayment_APPLY}")`
         // 通常払いは債権譲渡行為を伴わない単なる業務代行。従って支払予定明細を送信する必要がない。
     };
 
-    return kintone.api("/k/v1/records", "GET", body_generate_target);
+    return CLIENT.record.getRecords(body_generate_target);
 };
 
 export const getConstructors = () => {
-    return kintone.api("/k/v1/records", "GET", { app: APP_ID_CONSTRUCTOR });
+    return CLIENT.record.getRecords({ app: APP_ID_CONSTRUCTOR });
 };
 
-async function attachDetail(target_records) {
+async function attachDetail(target_records, constructors) {
     // エラーが発生した時、どのレコードで発生したかの情報をthrowするためのlet
     let error_num = 0;
     try {
@@ -113,7 +131,7 @@ async function attachDetail(target_records) {
                     // GIG(工務店ID 500番台 or 5000番台)は文面が異なる
                     return getGigPaymentDetail(record);
                 } else {
-                    return await getLaglessPaymentDetail(record);
+                    return await getLaglessPaymentDetail(record, constructors);
                 }
             })(record);
 
@@ -159,7 +177,7 @@ export const generateDetails = (target_records, constructors) => {
     }
 
     // 支払明細を各レコードにセット
-    return attachDetail(target_records, constructors);
+    return attachDetail(target_records, constructors.records);
 };
 
 const getFormattedYYYYMMDD = (kintone_date_value) => {
@@ -246,7 +264,7 @@ function generateGigDetailText(apply_info) {
     return text.join("\r\n");
 }
 
-const getLaglessPaymentDetail = async (record) => {
+const getLaglessPaymentDetail = async (record, constructors) => {
     // ラグレスのファクタリング支払予定明細の本文を取得する
     const kyoryoku_company_name         = record[fieldCustomerCompanyName_APPLY]["value"];
     const kyoryoku_ceo_name             = record[fieldAddresseeName_APPLY]["value"];
@@ -278,7 +296,7 @@ const getLaglessPaymentDetail = async (record) => {
                             and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}")
                             and ${fieldPaymentTiming_APPLY} not in ("${statusOriginalPayment_APPLY}")`
             };
-            const past_apply = await kintone.api("/k/v1/records", "GET", body);
+            const past_apply = await CLIENT.record.getRecords(body);
             return past_apply.records.length === 0;
         } else {
             return false;
@@ -358,9 +376,18 @@ const getLaglessPaymentDetail = async (record) => {
         transfer_amount_of_money_comma: addComma(service_fees.transfer_amount),
         contractor_name:                contractor_name,
         sender_mail:                    sender_mail,
+        kyoryoku_id:                    record[fieldCustomerId_APPLY]["value"]
     };
 
-    return generateLaglessDetailText(apply_info, should_discount_for_first);
+    const kyoryoku_master = await CLIENT.record.getRecords({
+        app: appId_KYORYOKU,
+        fields: [appliedCountField_KYORYOKU],
+        query: `${kyoryokuIdField_KYORYOKU} = ${Number(record[fieldCustomerId_APPLY]["value"])}`
+    });
+    const applied_count = Number(kyoryoku_master.records[0][appliedCountField_KYORYOKU]["value"]);
+
+    const constructor = constructors.find((c) => c["id"]["value"] === record[fieldConstructorID_APPLY]["value"]);
+    return generateLaglessDetailText(apply_info, should_discount_for_first, constructor, applied_count);
 };
 
 const deleteSpaces = (s) => {return s.replace(/ /g, "").replace(/　/g, "");};
@@ -386,8 +413,7 @@ const getAddresseeName = (company, title, name) => {
     return `${display_company}${display_title}${display_name}`;
 };
 
-// 支払予定明細本文を生成する。各変数の加工はせず、受け取ったものをそのまま入れ込む
-function generateLaglessDetailText(apply_info, should_discount_for_first) {
+async function generateLaglessDetailText(apply_info, should_discount_for_first, constructor, applied_count) {
     const fee_sign = apply_info.timing === statusLatePayment_APPLY
         ? "+"
         : "-";
@@ -399,7 +425,7 @@ function generateLaglessDetailText(apply_info, should_discount_for_first) {
     }
 
     // 行ごとに配列で格納し、最後に改行コードでjoinする
-    const text = [
+    const former_part = [
         `${apply_info.addressee_name}様`,
         "",
         `この度は、${apply_info.product_name}のお申込みありがとうございます。`,
@@ -430,7 +456,81 @@ function generateLaglessDetailText(apply_info, should_discount_for_first) {
         // eslint-disable-next-line no-irregular-whitespace
         `当社から貴社へのお振込み予定金額　${apply_info.transfer_amount_of_money_comma}円`,
         "",
-        "",
+    ];
+
+    const getFactoringLimitText = async (apply_info, constructor, applied_count) => {
+        const limit = constructor[earlyPayLimitField_CONSTRUCTOR]["value"]
+            ? Number(constructor[earlyPayLimitField_CONSTRUCTOR]["value"])
+            : 0;
+        if (limit === 0 || apply_info.timing === statusLatePayment_APPLY)  return "";
+
+        const limit_text = `■年間利用上限回数　${limit}回`;
+        const reset_month = constructor[resetLimitField_CONSTRUCTOR]["value"]
+            ? Number(constructor[resetLimitField_CONSTRUCTOR]["value"])
+            : 0;
+
+        // カウント対象となっている期間と、次回申込可能になる月（カウントが1以上減少する月）を求める
+        const {
+            term_start,
+            term_end,
+            next_applicable
+        } = await (async (reset_month, kyoryoku_id, limit) => {
+            const result = {
+                term_start: null,
+                term_end: null,
+                next_applicable: null
+            };
+
+            if (reset_month > 0) {
+                const today = dayjs();
+                let next_applicable = today;
+                while (next_applicable.month()+1 !== reset_month) {
+                    next_applicable = next_applicable.add(1, "month");
+                }
+
+                result.term_start       = next_applicable.subtract(1, "year");
+                result.term_end         = next_applicable.subtract(1, "month");
+                result.next_applicable  = next_applicable;
+            } else {
+                // 直近1年間のカウントの場合
+                // 次回申込可能な月は、締め日が新しい方から(年間回数制限)番目のレコードの締め日の1年後の締め日の月とする。
+                // カウント期間内の最古の申込を計算に使ってしまうと、回数制限を超えているけど特例で申込を受け付けたというパターンに対応できない
+                const body = {
+                    app: appId_APPLY,
+                    query: `${fieldCustomerId_APPLY} = ${kyoryoku_id}\
+                        and ${fieldPaymentTiming_APPLY} in ("${statusUndefinedPayment_APPLY}","${statusEarlyPayment_APPLY}")\
+                        and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}")\
+                        and ${fieldClosingDate_APPLY} >= "${dayjs().subtract(1, "year").format("YYYY-MM-DD")}"\
+                        and ${fieldClosingDate_APPLY} <= "${dayjs().format("YYYY-MM-DD")}"`
+                };
+                const early_paid_applies = await CLIENT.record.getRecords(body);
+                const applied_closings = early_paid_applies
+                    .records
+                    .map((a) => dayjs(a[fieldClosingDate_APPLY]["value"]))
+                    .sort((closing_a, closing_b) => closing_b.unix() - closing_a.unix()); //締日降順
+                if (applied_closings.length >= limit) {
+                    // 申込回数が上限回数に達していない場合はnext_applicableを文面に表示しないので、セットする必要もない
+                    result.next_applicable = applied_closings[limit-1].add(1, "year");
+                }
+                result.term_start = dayjs().subtract(1, "year");
+                result.term_end = dayjs();
+            }
+
+            return result;
+        })(reset_month, apply_info.kyoryoku_id, limit);
+        const count_text = `■お客様の早払い利用回数　${applied_count}回（${term_start.format("YYYY年MM月")}〜${term_end.format("YYYY年MM月")}までの申込回数）`;
+
+        const result_text = [limit_text, count_text];
+        if (applied_count >= limit) { // 上限回数を超えて申込を受け付けるパターンもある
+            result_text.push(`■次回申込可能時期　${next_applicable.format("YYYY年MM月")}締め以降の請求書発行時`);
+        }
+
+        return result_text.join("\r\n");
+    };
+    const limit_text = await getFactoringLimitText(apply_info, constructor, applied_count);
+    former_part.push(limit_text);
+
+    const text = former_part.concat([
         "",
         "ご不明な点などがございましたら、",
         "下記連絡先までお問い合わせください。",
@@ -443,7 +543,7 @@ function generateLaglessDetailText(apply_info, should_discount_for_first) {
         "TEL：050-3188-6800",
         "──────────────────────────────■",
         ""
-    ];
+    ]);
 
     return text.join("\r\n");
 }
@@ -532,5 +632,5 @@ export const updateRecords = (records_with_detail) => {
         records: records_with_detail
     };
 
-    return kintone.api("/k/v1/records", "PUT", put_params);
+    return CLIENT.record.updateRecords(put_params);
 };
