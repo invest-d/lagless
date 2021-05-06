@@ -22,6 +22,7 @@ dayjs.extend(isBetween);
 import { get_contractor_name } from "../util/util_forms";
 import { isGigConstructorID } from "../util/gig_utils";
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
+import { CLIENT } from "../util/kintoneAPI";
 
 // 本キャンペーンを打ち出してから最初に案内メールを送信する日
 const HALF_COMMISION_START_DATE = dayjs("2020-12-17");
@@ -102,11 +103,11 @@ export const getGenerateTarget = () => {
         // 通常払いは債権譲渡行為を伴わない単なる業務代行。従って支払予定明細を送信する必要がない。
     };
 
-    return kintone.api("/k/v1/records", "GET", body_generate_target);
+    return CLIENT.record.getRecords(body_generate_target);
 };
 
 export const getConstructors = () => {
-    return kintone.api("/k/v1/records", "GET", { app: APP_ID_CONSTRUCTOR });
+    return CLIENT.record.getRecords({ app: APP_ID_CONSTRUCTOR });
 };
 
 async function attachDetail(target_records) {
@@ -290,7 +291,7 @@ const getLaglessPaymentDetail = async (record) => {
                             and ${fieldStatus_APPLY} in ("${statusPaid_APPLY}")
                             and ${fieldPaymentTiming_APPLY} not in ("${statusOriginalPayment_APPLY}")`
             };
-            const past_apply = await kintone.api("/k/v1/records", "GET", body);
+            const past_apply = await CLIENT.record.getRecords(body);
             return past_apply.records.length === 0;
         } else {
             return false;
@@ -544,5 +545,5 @@ export const updateRecords = (records_with_detail) => {
         records: records_with_detail
     };
 
-    return kintone.api("/k/v1/records", "PUT", put_params);
+    return CLIENT.record.updateRecords(put_params);
 };
