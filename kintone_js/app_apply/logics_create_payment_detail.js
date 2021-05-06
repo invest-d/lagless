@@ -30,50 +30,62 @@ const HALF_COMMISION_END_DATE = dayjs("9999-12-31");
 
 const fieldRecordId_COMMON = "$id";
 
-const fieldDetail_APPLY                     = "paymentDetail";
-export const fieldStatus_APPLY              = "状態";
-export const statusReady_APPLY              = "工務店確認済";
-export const statusConfirming_APPLY         = "支払予定明細確認中";
-export const statusConfirmed_APPLY          = "支払予定明細送信前確認完了";
-const statusPaid_APPLY                      = "実行完了";
-const fieldCustomerId_APPLY                 = "ルックアップ";
-const fieldCustomerCompanyName_APPLY        = "支払先正式名称";
-const fieldAddresseeName_APPLY              = "担当者名";
-const fieldAddresseeTitle_APPLY             = "役職名";
-const fieldProductName_APPLY                = "productName";
+import { schema_apply } from "../161/schema";
+const appId_APPLY                           = kintone.app.getId();
+const fieldDetail_APPLY                     = schema_apply.fields.properties.paymentDetail.code;
+export const fieldStatus_APPLY              = schema_apply.fields.properties.状態.code;
+export const statusReady_APPLY              = schema_apply.fields.properties.状態.options.工務店確認済.label;
+export const statusConfirming_APPLY         = schema_apply.fields.properties.状態.options.支払予定明細確認中.label;
+export const statusConfirmed_APPLY          = schema_apply.fields.properties.状態.options.支払予定明細送信前確認完了.label;
+const statusPaid_APPLY                      = schema_apply.fields.properties.状態.options.実行完了.label;
+const fieldCustomerId_APPLY                 = schema_apply.fields.properties.ルックアップ.code;
+const fieldCustomerCompanyName_APPLY        = schema_apply.fields.properties.支払先正式名称.code;
+const fieldAddresseeName_APPLY              = schema_apply.fields.properties.担当者名.code;
+const fieldAddresseeTitle_APPLY             = schema_apply.fields.properties.役職名.code;
+const fieldProductName_APPLY                = schema_apply.fields.properties.productName.code;
 const statusProductName_Lagless_APPLY       = "ラグレス";
 const statusProductName_Dandori_APPLY       = "ダンドリペイメント";
 const statusProductName_Renove_APPLY        = "リノベ不動産Payment";
-const fieldClosingDate_APPLY                = "closingDay";
-const fieldPaymentDate_APPLY                = "paymentDate";
-const fieldDaysLater_APPLY                  = "daysLater";
-const fieldBillingCompanyName_APPLY         = "billingCompanyOfficialName";
-const fieldApplicantAmount_APPLY            = "applicationAmount";
-const fieldMembershipFee_APPLY              = "membership_fee";
-const fieldTransferFee_APPLY                = "transferFeeTaxIncl";
-const fieldPaymentTiming_APPLY              = "paymentTiming";
-const statusLatePayment_APPLY               = "遅払い";
-const statusOriginalPayment_APPLY           = "通常払い";
-const fieldCommissionRate_Late_APPLY        = "commissionRate_late";
-const fieldCommissionAmount_Late_APPLY      = "commissionAmount_late";
-const fieldTransferAmount_Late_APPLY        = "transferAmount_late";
-const fieldCommissionRate_Early_APPLY       = "commissionRate";
-const fieldCommissionAmount_Early_APPLY     = "commissionAmount";
-const fieldTransferAmount_Early_APPLY       = "transferAmount";
-const fieldCommissionRateEarlyFirst_APPLY   = "commissionRateEarlyFirst";
-const fieldCommissionAmountEarlyFirst_APPLY = "commissionAmountEarlyFirst";
-const fieldTransferAmountEarlyFirst_APPLY   = "transferAmountEarlyFirst";
-const fieldPaymentAccount_APPLY             = "paymentAccount";
-const fieldConstructorID_APPLY              = "constructionShopId";
-const fieldFactorableAmountPerDayWFI_APPLY  = "factorableAmountPerDayWFI";
-const fieldWorkedDaysWFI_APPLY              = "workedDaysWFI";
-const fieldFactorableTotalAmountWFI_APPLY   = "factorableTotalAmountWFI";
+const fieldClosingDate_APPLY                = schema_apply.fields.properties.closingDay.code;
+const fieldPaymentDate_APPLY                = schema_apply.fields.properties.paymentDate.code;
+const fieldBillingCompanyName_APPLY         = schema_apply.fields.properties.billingCompanyOfficialName.code;
+const fieldApplicantAmount_APPLY            = schema_apply.fields.properties.applicationAmount.code;
+const fieldMembershipFee_APPLY              = schema_apply.fields.properties.membership_fee.code;
+const fieldTransferFee_APPLY                = schema_apply.fields.properties.transferFeeTaxIncl.code;
+const fieldPaymentTiming_APPLY              = schema_apply.fields.properties.paymentTiming.code;
+const statusUndefinedPayment_APPLY          = schema_apply.fields.properties.paymentTiming.options.未設定.label;
+const statusEarlyPayment_APPLY              = schema_apply.fields.properties.paymentTiming.options.早払い.label;
+const statusLatePayment_APPLY               = schema_apply.fields.properties.paymentTiming.options.遅払い.label;
+const statusOriginalPayment_APPLY           = schema_apply.fields.properties.paymentTiming.options.通常払い.label;
+const fieldCommissionRate_Late_APPLY        = schema_apply.fields.properties.commissionRate_late.code;
+const fieldCommissionAmount_Late_APPLY      = schema_apply.fields.properties.commissionAmount_late.code;
+const fieldTransferAmount_Late_APPLY        = schema_apply.fields.properties.transferAmount_late.code;
+const fieldCommissionRate_Early_APPLY       = schema_apply.fields.properties.commissionRate.code;
+const fieldCommissionAmount_Early_APPLY     = schema_apply.fields.properties.commissionAmount.code;
+const fieldTransferAmount_Early_APPLY       = schema_apply.fields.properties.transferAmount.code;
+const fieldCommissionRateEarlyFirst_APPLY   = schema_apply.fields.properties.commissionRateEarlyFirst.code;
+const fieldCommissionAmountEarlyFirst_APPLY = schema_apply.fields.properties.commissionAmountEarlyFirst.code;
+const fieldTransferAmountEarlyFirst_APPLY   = schema_apply.fields.properties.transferAmountEarlyFirst.code;
+const fieldPaymentAccount_APPLY             = schema_apply.fields.properties.paymentAccount.code;
+const fieldConstructorID_APPLY              = schema_apply.fields.properties.constructionShopId.code;
+const fieldFactorableAmountPerDayWFI_APPLY  = schema_apply.fields.properties.factorableAmountPerDayWFI.code;
+const fieldWorkedDaysWFI_APPLY              = schema_apply.fields.properties.workedDaysWFI.code;
+const fieldFactorableTotalAmountWFI_APPLY   = schema_apply.fields.properties.factorableTotalAmountWFI.code;
 
 const contractor_mail_lagless               = "lagless@invest-d.com";
 const contractor_mail_dandori               = "d-p@invest-d.com";
 const contractor_mail_renove                = "lagless@invest-d.com"; // ラグレスと同じ
 
-const APP_ID_CONSTRUCTOR                    = "96";
+import { schema_96 } from "../96/schema";
+const APP_ID_CONSTRUCTOR                    = schema_96.id.appId;
+const earlyPayLimitField_CONSTRUCTOR        = schema_96.fields.properties.applicationLimit.code;
+const resetLimitField_CONSTRUCTOR           = schema_96.fields.properties.monthResetCount.code;
+const fieldDaysLater_APPLY                  = schema_96.fields.properties.daysLater.code; //申込レコードには存在しないが、特定の場合に限り申込レコードに必要なフィールドとして擬似的に定義する
+
+import { schema_88 } from "../88/schema";
+const appId_KYORYOKU                        = schema_88.id.appId;
+const kyoryokuIdField_KYORYOKU              = schema_88.fields.properties.支払企業No_.code;
+const appliedCountField_KYORYOKU            = schema_88.fields.properties.numberOfApplication.code;
 
 export const confirmBeforeExec = () => {
     const before_process = `${statusReady_APPLY}の各レコードについて、支払予定明細書を作成しますか？\n\n`
@@ -84,7 +96,7 @@ export const confirmBeforeExec = () => {
 
 export const getGenerateTarget = () => {
     const body_generate_target = {
-        app: kintone.app.getId(),
+        app: appId_APPLY,
         query: `${fieldStatus_APPLY} in ("${statusReady_APPLY}")
             and ${fieldPaymentTiming_APPLY} not in ("${statusOriginalPayment_APPLY}")`
         // 通常払いは債権譲渡行為を伴わない単なる業務代行。従って支払予定明細を送信する必要がない。
