@@ -462,7 +462,7 @@ async function generateLaglessDetailText(apply_info, should_discount_for_first, 
         const limit = constructor[earlyPayLimitField_CONSTRUCTOR]["value"]
             ? Number(constructor[earlyPayLimitField_CONSTRUCTOR]["value"])
             : 0;
-        if (limit === 0 || apply_info.timing === "遅払い")  return "";
+        if (limit === 0 || apply_info.timing === statusLatePayment_APPLY)  return "";
 
         const limit_text = `■年間利用上限回数　${limit}回`;
         const reset_month = constructor[resetLimitField_CONSTRUCTOR]["value"]
