@@ -282,16 +282,25 @@ const getExaminator = () => {
         + "\n審査担当者のIDを入力してください"
         + `\n選択可能なID: ${selectableUserIds_EXAM.map((i) => i.replace("@invest-d.com", "")).join(", ")}`;
     let user = prompt(message);
+    // promptでキャンセルするとnull、入力なしでOKすると空文字列を返す
+    if (user === null) {
+        return null;
+    }
+
     let userid = `${user}@invest-d.com`;
-    while (!selectableUserIds_EXAM.includes(userid) || userid !== null) {
+    while (!selectableUserIds_EXAM.includes(userid)) {
         message = `選択可能なIDではありません: ${user} もう一度入力してください。`
             + `\n選択可能なID: ${selectableUserIds_EXAM.map((i) => i.replace("@invest-d.com", "")).join(", ")}`;
         user = prompt(message);
+        if (user === null) {
+            return null;
+        }
         userid = `${user}@invest-d.com`;
     }
     return userid;
 };
 
+// TODO: 運転免許証のファイルをboxに保存する処理もやりたいけど、box APIの仕様が難しくて頓挫してる
 // const saveDriverLicense = async (apply_record) => {
 //     const identify = await (async () => {
 //         const body = {
