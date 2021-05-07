@@ -292,6 +292,9 @@ const getExaminator = () => {
         message = `選択可能なIDではありません: ${user} もう一度入力してください。`
             + `\n選択可能なID: ${selectableUserIds_EXAM.map((i) => i.replace("@invest-d.com", "")).join(", ")}`;
         user = prompt(message);
+        if (user === null) {
+            return null;
+        }
         userid = `${user}@invest-d.com`;
     }
     return userid;
