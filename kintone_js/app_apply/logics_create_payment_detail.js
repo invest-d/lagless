@@ -518,10 +518,11 @@ async function generateLaglessDetailText(apply_info, should_discount_for_first, 
 
             return result;
         })(reset_month, apply_info.kyoryoku_id, limit);
-        const count_text = `■お客様の早払い利用回数　${applied_count}回（${term_start.format("YYYY年MM月")}〜${term_end.format("YYYY年MM月")}までの申込回数）`;
+        // この支払予定が無事に実行されたと仮定した場合の回数を表示したいので+1する
+        const count_text = `■お客様の早払い利用回数　${applied_count+1}回（${term_start.format("YYYY年MM月")}〜${term_end.format("YYYY年MM月")}までの申込回数）`;
 
         const result_text = [limit_text, count_text];
-        if (applied_count >= limit) { // 上限回数を超えて申込を受け付けるパターンもある
+        if (applied_count+1 >= limit) { // 上限回数を超えて申込を受け付けるパターンもある
             result_text.push(`■次回申込可能時期　${next_applicable.format("YYYY年MM月")}締め以降の請求書発行時`);
         }
 
