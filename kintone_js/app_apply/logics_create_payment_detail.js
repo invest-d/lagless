@@ -31,13 +31,15 @@ import { CLIENT } from "../util/kintoneAPI";
 
 // 本キャンペーンを打ち出してから最初に案内メールを送信する日
 const HALF_COMMISION_START_DATE = dayjs("2020-12-17");
-// 現状は終了日未定
-const HALF_COMMISION_END_DATE = dayjs("9999-12-31");
+// 終了日は2021年5月の締め日に対する早期支払日。
+// 支払パターンアプリによるとコーディング時点では同年6月30日が最も遅い早期支払日となっている。
+const HALF_COMMISION_END_DATE = dayjs("2021-06-30");
 
 const fieldRecordId_COMMON = "$id";
 
 import { schema_apply } from "../161/schema";
 const appId_APPLY                           = kintone.app.getId();
+const devApp_APPLY                          = 159;
 const fieldDetail_APPLY                     = schema_apply.fields.properties.paymentDetail.code;
 export const fieldStatus_APPLY              = schema_apply.fields.properties.状態.code;
 export const statusReady_APPLY              = schema_apply.fields.properties.状態.options.工務店確認済.label;
@@ -287,7 +289,20 @@ const getLaglessPaymentDetail = async (record, constructors) => {
             return false;
         }
 
-        if (dayjs().isBetween(HALF_COMMISION_START_DATE, HALF_COMMISION_END_DATE, null, "[]")) {
+        const today = ((app_id) => {
+            if (app_id === devApp_APPLY) {
+                const today_string = prompt("今日の日付を入力してください(YYYY-MM-DD)。\n未入力の場合は今日の日付を使用します。");
+                if (today_string) {
+                    return dayjs(today_string);
+                } else {
+                    return dayjs();
+                }
+            } else{
+                return dayjs();
+            }
+        })(appId_APPLY);
+
+        if (today.isBetween(HALF_COMMISION_START_DATE, HALF_COMMISION_END_DATE, null, "[]")) {
             // キャンペーン期間中の場合、申込アプリの実行済みレコードを検索。0件 or 1件以上
             // ファクタリングを実行したレコードだけを対象にするので、通常払いは除外する
             const body = {
