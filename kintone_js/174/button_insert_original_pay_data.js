@@ -58,10 +58,9 @@ async function clickButton() {
                 throw new Error("申込アプリへのレコード挿入中にエラーが発生しました。");
             });
 
-        await Promise.all([
-            logic.updateToDone(original_pay_groups),
-            logic.updateToIgnored(should_not_original_pay_groups)
-        ]);
+        const update_process = logic.updateToDone(original_pay_groups);
+        const ignore_process = logic.updateToIgnored(should_not_original_pay_groups)
+        await Promise.all([update_process, ignore_process]);
 
         alert(`${inserted_ids.length}件 の請求書を申込アプリに登録しました。\n申込アプリの各レコードを確認し、協力会社ID（と口座情報）が入っていない場合は手動で入力してください。`);
         alert("ページを更新します。");
