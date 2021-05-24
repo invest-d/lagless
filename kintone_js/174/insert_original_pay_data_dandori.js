@@ -7,6 +7,7 @@
 "use strict";
 
 const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
+import { asyncFlatMap } from "../util/async-flat-map";
 
 // CSVファイルで保存するにあたってShift-Jisに変換する
 const Encoding = require("encoding-japanese");
@@ -532,9 +533,9 @@ export const updateToIgnored = (invoice_groups) => {
     return updateStatus(invoice_groups, statusIgnored_DANDORI);
 };
 
-const updateStatus = (invoice_groups, status) => {
+const updateStatus = async (invoice_groups, status) => {
     // 請求書単位でまとめられているレコードを展開
-    const records = invoice_groups.flatMap((g) => g.details);
+    const records = await asyncFlatMap(invoice_groups, (g) => g.details);
 
     const request_body = {
         "app": APP_ID_DANDORI,
