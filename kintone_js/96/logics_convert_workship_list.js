@@ -1,3 +1,5 @@
+//@ts-check
+
 /*
     Workshipの企業一覧が掲載されているhtmlファイルを解析し、各企業の属性を持ったオブジェクトを返す
 */
@@ -49,13 +51,16 @@ import {
 
 export const target_mime = "text/html";
 
-export const getOrderersList = async (html_string) => {
+export const getOrderersList = async (/** @type {string} */ html_string) => {
     const orderers = new WorkshipOrderers(html_string);
     const audited = orderers.getList().filter((o) => o.audited);
     return await splitList(audited);
 };
 
 class WorkshipOrderers {
+    /**
+     * @param {string} html_string
+     */
     constructor(html_string) {
         const parser = new DOMParser();
         this.doc = parser.parseFromString(html_string, target_mime);
@@ -68,10 +73,14 @@ class WorkshipOrderers {
 }
 
 class WorkshipOrderer {
+    /**
+     * @param {Element} row_element
+     */
     constructor(row_element) {
         const columns = row_element.getElementsByTagName("td");
         // 列の並び順は固定とする
         this.audited = columns[0].innerText.includes("監査済");
+        /** @type {string} */
         this.name = columns[1].innerText.replaceAll(/\n/g, "");
         this.address = columns[2].innerText.replaceAll(/ |\n/g, "");
 
@@ -124,7 +133,7 @@ class WorkshipOrderer {
     }
 }
 
-const getConstructor = async (name) => {
+const getConstructor = async (/** @type {string} */ name) => {
     const request_body = {
         "app": APP_ID_CONSTRUCTOR,
         "query": `${fieldcodeConstructorName_CONSTRUCTOR} = "${name}"
@@ -161,7 +170,7 @@ const getLatestGigConstructorId = async () => {
     }
 };
 
-const getCustomerCode = async (name) => {
+const getCustomerCode = async (/** @type {string} */ name) => {
     // 取引企業管理アプリの中から、法人名が完全一致するものを取得する
     const request_body = {
         "app": APP_ID_CUSTOMER,
@@ -178,8 +187,9 @@ const getCustomerCode = async (name) => {
     }
 };
 
-const splitList = async (list) => {
+const splitList = async (/** @type {WorkshipOrderer[]} */ list) => {
     // 既存データのリストと、新規データのリストに分割する
+    /** @type {WorkshipOrderer[]} */
     const exists = [];
     const new_orderers = [];
     for (const orderer of list) {
@@ -196,7 +206,7 @@ const splitList = async (list) => {
     };
 };
 
-export const downloadUpdateCsv = async (list) => {
+export const downloadUpdateCsv = async (/** @type {WorkshipOrderer[]} */ list) => {
     const header_row = [
         commonRecordIdDisplay,
         fielddspCreditFacility_CONSTRUCTOR,
@@ -214,7 +224,7 @@ export const downloadUpdateCsv = async (list) => {
     downloadFile(sjis_text, file_name);
 };
 
-const getUpdateRow = async (orderer) => {
+const getUpdateRow = async (/** @type {WorkshipOrderer} */ orderer) => {
     // 仕様 https://takadaid.backlog.com/view/LAGLESS-205
     const fields = [];
 
@@ -226,7 +236,7 @@ const getUpdateRow = async (orderer) => {
     return fields.join(",");
 };
 
-export const downloadInsertCsv = async (list) => {
+export const downloadInsertCsv = async (/** @type {WorkshipOrderer[]} */ list) => {
     const header_row = [
         fielddspConstructorId_CONSTRUCTOR,
         fielddspConstructorName_CONSTRUCTOR,
@@ -256,7 +266,7 @@ export const downloadInsertCsv = async (list) => {
     // 599まで埋まっている場合は5001からリスタート
     const latest_id = await getLatestGigConstructorId();
 
-    const csv_rows = list.map(async (orderer, i) => {
+    const csv_rows = list.map(async (/** @type {WorkshipOrderer} */ orderer, /** @type {number} */ i) => {
         const customer_code = await getCustomerCode(orderer.name);
         return getInsertRow(orderer, latest_id + (i+1), customer_code);
     });
@@ -269,7 +279,7 @@ export const downloadInsertCsv = async (list) => {
     downloadFile(sjis_text, file_name);
 };
 
-const getInsertRow = (orderer, id, customer_code) => {
+const getInsertRow = (/** @type {WorkshipOrderer} */ orderer, /** @type {number} */ id, /** @type {string} */ customer_code) => {
     // 仕様 https://takadaid.backlog.com/view/LAGLESS-205
     const fields = [];
 
