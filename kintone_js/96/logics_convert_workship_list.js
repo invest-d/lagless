@@ -7,6 +7,7 @@
 "use strict";
 
 const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
+import { Decimal } from "decimal.js";
 
 const commonRecordIdDisplay = "レコード番号";
 const commonRecordId        = "$id";
@@ -231,7 +232,8 @@ const getUpdateRow = async (/** @type {WorkshipOrderer} */ orderer) => {
     fields.push((await orderer.record())[commonRecordId]["value"]);
     fields.push(orderer.credit_facility);
     fields.push(`${orderer.commission_rate}%`);
-    fields.push(orderer.commission_rate * 0.01);
+    const rate = (new Decimal(orderer.commission_rate)).times(0.01).toNumber();
+    fields.push(rate);
 
     return fields.join(",");
 };
@@ -294,7 +296,14 @@ const getInsertRow = (/** @type {WorkshipOrderer} */ orderer, /** @type {number}
     fields.push("工務店");
     const rate_txt = orderer.commission_rate ? `${orderer.commission_rate}%` : "";
     fields.push(rate_txt);
-    const rate_decimal = orderer.commission_rate ? orderer.commission_rate * 0.01 : 0;
+    const rate_decimal = ((orderer_commission_rate) => {
+        if (orderer_commission_rate) {
+            const rate = (new Decimal(orderer_commission_rate)).times(0.01).toNumber();
+            return rate;
+        } else {
+            return 0;
+        }
+    })(orderer.commission_rate);
     fields.push(rate_decimal);
     fields.push("275円（税込）");
     fields.push(250);

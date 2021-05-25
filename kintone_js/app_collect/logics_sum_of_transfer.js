@@ -8,6 +8,7 @@
 const consumption_tax_rate = 0.1;
 
 import { CLIENT } from "../util/kintoneAPI";
+import { Decimal } from "decimal.js";
 
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
 import { schema_96 } from "../96/schema";
@@ -63,8 +64,11 @@ const getConstructorFees = async (constructor_id) => {
 const sumTransferAmounts = (records, fees) => {
     const len = records.length;
     const sum = records.reduce((sum, record) => {
-        const receivable = Number(record["value"][receivableCs_COLLECT]["value"]);
-        const transfer = receivable - Math.floor(receivable * fees.factoring) - (fees.transfer + Math.floor(fees.transfer * consumption_tax_rate));
+        const receivable = new Decimal(Number(record["value"][receivableCs_COLLECT]["value"]));
+
+        const factoring_fee = receivable.times(fees.factoring).floor();
+        const transfer_fee = (new Decimal(fees.transfer)).times(consumption_tax_rate).floor().add(fees.transfer);
+        const transfer = receivable.sub(factoring_fee).sub(transfer_fee).toNumber();
         return sum + transfer;
     }, 0);
 

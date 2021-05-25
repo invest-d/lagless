@@ -33,6 +33,8 @@
 // PDF生成ライブラリ
 import { createPdf } from "../util/pdfMake_util";
 
+import { Decimal } from "decimal.js";
+
 import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "../util/util_forms";
 
 import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "../96/common";
@@ -407,7 +409,7 @@ async function getAggregatedParentRecords(records) {
                 return invoice_targets.reduce((sum, sub_rec) => {
                     const applied_amount = Number(sub_rec["value"][tableFieldReceivableIV_COLLECT]["value"]);
                     const back_rate = Number(sub_rec["value"][tableFieldBackRateIV_COLLECT]["value"]);
-                    const back_amount = Math.floor(applied_amount * back_rate);
+                    const back_amount = (new Decimal(applied_amount)).times(back_rate).floor().toNumber();
                     const remain = applied_amount - back_amount;
                     return sum + remain;
                 }, 0);
@@ -1198,7 +1200,7 @@ const getGigDoc = (parent_record) => {
                 detail_style: {
                     value: {
                         code: tableFieldBackRateIV_COLLECT,
-                        format: (rate) => `${(Number(rate) * 100).toFixed(2)}%`
+                        format: (rate) => `${(new Decimal(Number(rate))).times(100).toFixed(2)}%`
                     },
                     alignment: "right",
                     borderColor: [green, green, green, green]

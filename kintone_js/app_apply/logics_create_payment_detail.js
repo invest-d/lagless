@@ -24,6 +24,8 @@ dayjs.locale("ja");
 import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
 
+import { Decimal } from "decimal.js";
+
 import { get_contractor_name } from "../util/util_forms";
 import { isGigConstructorID } from "../util/gig_utils";
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
@@ -208,7 +210,7 @@ const getGigPaymentDetail = (record) => {
         closing_YYYYnenMMgatsuDDhi:     closing_YYYYnenMMgatsuDDhi,
         payment_YYYYnenMMgatsuDDhi:     payment_YYYYnenMMgatsuDDhi,
         billing_amount_comma:           addComma(billing_amount),
-        commission_percentage:          Number(service_fees.fee_rate) * 100,
+        commission_percentage:          (new Decimal(Number(service_fees.fee_rate))).times(100).toNumber(),
         commission_amount_comma:        addComma(service_fees.fee_amount),
         transfer_fee_tax_incl_comma:    addComma(transfer_fee_tax_incl),
         transfer_amount_of_money_comma: addComma(service_fees.transfer_amount),
@@ -385,7 +387,7 @@ const getLaglessPaymentDetail = async (record, constructors) => {
         construction_shop_name:         construction_shop_name,
         billing_amount_comma:           addComma(billing_amount),
         membership_fee_comma:           addComma(membership_fee),
-        commission_percentage:          Number(service_fees.fee_rate) * 100,
+        commission_percentage:          (new Decimal(Number(service_fees.fee_rate))).times(100).toNumber(),
         commission_amount_comma:        addComma(service_fees.fee_amount),
         transfer_fee_tax_incl_comma:    addComma(transfer_fee_tax_incl),
         transfer_amount_of_money_comma: addComma(service_fees.transfer_amount),
@@ -584,7 +586,7 @@ const getKebanDetailDisplayData = (record) => {
         factorableAmountPerDayWFI_comma:    addComma(record[fieldFactorableAmountPerDayWFI_APPLY]["value"]),
         workedDaysWFI:                      record[fieldWorkedDaysWFI_APPLY]["value"],
         factorableTotalAmountWFI_comma:     addComma(record[fieldFactorableTotalAmountWFI_APPLY]["value"]),
-        commissionRate_percent:             Number(record[fieldCommissionRate_Early_APPLY]["value"]) * 100,
+        commissionRate_percent:             (new Decimal(Number(record[fieldCommissionRate_Early_APPLY]["value"]))).times(100).toNumber(),
         commissionAmount_comma:             addComma(record[fieldCommissionAmount_Early_APPLY]["value"]),
         transferFeeTaxIncl_comma:           addComma(record[fieldTransferFee_APPLY]["value"]),
         transferAmount_comma:               addComma(record[fieldTransferAmount_Early_APPLY]["value"]),
