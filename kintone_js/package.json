@@ -21,6 +21,7 @@
     "@holiday-jp/holiday_jp": "^2.3.0",
     "date-fns": "^2.13.0",
     "dayjs": "^1.8.28",
+    "decimal.js": "^10.2.1",
     "encoding-japanese": "^1.0.30",
     "extensible-custom-error": "0.0.7",
     "pdfmake": "^0.1.65"

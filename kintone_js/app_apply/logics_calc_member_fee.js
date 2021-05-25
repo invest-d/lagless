@@ -6,6 +6,7 @@
 
 "use strict";
 
+import { Decimal } from "decimal.js";
 import { isGigConstructorID } from "../util/gig_utils";
 
 const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
@@ -124,7 +125,7 @@ const calcMemberFee = (constructor_id, application_amount) => {
     }
 
     if (constructor_id === "207") {
-        return application_amount * 0.001;
+        return (new Decimal(application_amount)).times(0.001).toNumber();
     }
 
     if (constructor_id === "210") {
@@ -145,7 +146,7 @@ const calcMemberFee = (constructor_id, application_amount) => {
     }
 
     if (constructor_id === "213") {
-        return application_amount * 0.01;
+        return (new Decimal(application_amount)).times(0.01).toNumber();
     }
 
     throw new UnknownRuleConstructorError(constructor_id);
