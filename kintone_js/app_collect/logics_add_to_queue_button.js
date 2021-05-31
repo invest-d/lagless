@@ -174,7 +174,7 @@ async function clickAddToQueue(record) {
         // それぞれのレコード番号の状態を全て確認する。
         // 振込依頼書対象になっているのに申込アプリに存在しないレコードがあればエラーとする。
         const expected_id_set = new Set(apply_ids);
-        const retlieved_id_set = new Set(applies_resp.records.map((r) => r[fieldRecordId_APPLY]["value"]));
+        const retlieved_id_set = new Set(applies_resp.map((r) => r[fieldRecordId_APPLY]["value"]));
         // script by https://qiita.com/toshihikoyanase/items/7b07ca6a94eb72164257
         Set.prototype.difference = function(setB) {
             const difference = new Set(this);
@@ -188,7 +188,7 @@ async function clickAddToQueue(record) {
             throw new Error(`申込アプリの中に、下記のレコード番号が見つかりませんでした。\n${Array.from(diff).join(",")}`);
         }
 
-        const is_all_paid = applies_resp.records.every((r) => r[fieldStatus_APPLY]["value"] === statusPaid_APPLY);
+        const is_all_paid = applies_resp.every((r) => r[fieldStatus_APPLY]["value"] === statusPaid_APPLY);
 
         if (!is_all_paid) {
             alert(`支払実行が完了していない申込レコードがあります。\n\n申込アプリを開いて、下記のレコード番号の状態フィールドが${statusPaid_APPLY}になっているか確認してください。\n${apply_ids.join(",")}`);
