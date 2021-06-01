@@ -13,4 +13,5 @@ $(async () => {
 
     app.show(data, params);
     $("#content").show();
+    $("#float_act").show();
 });
