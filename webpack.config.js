@@ -11,7 +11,7 @@ module.exports = (env, argv) => {
             mode: "development",
             devtool: "source-map",
             entry: {
-                app: "./src/app.js",
+                form: "./src/form.js",
                 apply: "./src/apply.js",
                 ke_ban: "./src/ke_ban.js",
                 ke_ban_entry: "./src/ke_ban_entry.js",
@@ -91,7 +91,7 @@ module.exports = (env, argv) => {
             mode: "production",
             devtool: "none",
             entry: {
-                app: "./src/app.js",
+                form: "./src/form.js",
                 apply: "./src/apply.js",
                 ke_ban: "./src/ke_ban.js",
                 ke_ban_entry: "./src/ke_ban_entry.js",

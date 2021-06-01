@@ -72,6 +72,7 @@ public/apply.js
 public/ke_ban.js
 public/ke_ban_entry.js
 public/menu.js
+public/form.js
 public/css/bootstrap.min.css
 public/css/all.min.css
 public/css/flatpickr.min.css

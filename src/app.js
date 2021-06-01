@@ -3,17 +3,14 @@ import $ from "jquery";
 import { defineIncludesPolyfill } from "./defineIncludesPolyfill";
 defineIncludesPolyfill();
 
-$(() => {
-    const query = location.search;
-    const param = { };
-    const pairs = query.replace(/^\?/, "").split(/&/);
-    for(let i=0 ; i<pairs.length ; i++) {
-        const kv = pairs[i].split(/=/, 2);
-        param[kv[0]] = kv[1];
-    }
-
+/**
+* @summary 工務店IDをkeyにしてデータベースから取得する。ローカルファイルとして開いている場合、サンプル用データを返す。
+* @param {string} constructor_id - 工務店ID
+* @return {object} データベースのデータ内容を返す。もし存在しない場合、【空オブジェクト】を返す。
+*/
+export const getConstructorData = async (constructor_id) => {
     if(location.protocol == "file:") {
-        show( {
+        const sample = {
             "cost": "9.99%",
             "yield": "1.11%",
             "mail": "hogehoge@invest-d.com",
@@ -68,22 +65,17 @@ $(() => {
                     "early": "2021-02-01"
                 }
             ]
-        }, param);
-        setTimeout(() => {
-            $("#content").show();
-        }, 500);
-        return;
+        };
+        return sample;
     }
 
-    get_kintone_data().then((resp) => {
-        if(resp[param.c]) {
-            show(resp[param.c], param);
-            $("#content").show();
-        } else {
-            $("#error").text("不正なパラメータです.").show();
-        }
-    });
-});
+    const resp = await get_kintone_data();
+    if(resp[constructor_id]) {
+        return resp[constructor_id];
+    } else {
+        return {};
+    }
+};
 
 export const get_kintone_data = () => {
     const target = "https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/data.json?alt=media";
@@ -96,7 +88,7 @@ const format_date = function(str) {
     return `${t.getFullYear()}年${t.getMonth()+1}月${t.getDate()}日 (${wod[t.getDay()]})`;
 };
 
-const show = function(client, param) {
+export const show = function(client, params) {
     $(".service").text(client.service);
     const mode = { "ラグレス": "lagless", "ダンドリペイメント": "dandori", "リノベ不動産Payment": "renove" }[client.service];
 
@@ -111,11 +103,11 @@ const show = function(client, param) {
         $(".limit-precaution").text(`早払い年間利用回数制限${client.limit}。`);
     }
     $(`.cond-${mode}`).show();
-    $(".form_1").attr("href", `./apply.html?user=new&c=${param.c}&a=${param.a}&product=${mode}`); // param.aはURLに表示するだけなのでundefinedでも問題ない
-    $(".form_2").attr("href", `./apply.html?user=existing&c=${param.c}&a=${param.a}&product=${mode}`);
+    $(".form_1").attr("href", `./apply.html?user=new&c=${params.get("c")}&a=${params.get("a")}&product=${mode}`); // param.aはURLに表示するだけなのでundefinedでも問題ない
+    $(".form_2").attr("href", `./apply.html?user=existing&c=${params.get("c")}&a=${params.get("a")}&product=${mode}`);
     // 遅払い用
-    $(".form_3").attr("href", `./apply.html?user=new&c=${param.c}&a=${param.a}&product=${mode}&t=late`);
-    $(".form_4").attr("href", `./apply.html?user=existing&c=${param.c}&a=${param.a}&product=${mode}&t=late`);
+    $(".form_3").attr("href", `./apply.html?user=new&c=${params.get("c")}&a=${params.get("a")}&product=${mode}&t=late`);
+    $(".form_4").attr("href", `./apply.html?user=existing&c=${params.get("c")}&a=${params.get("a")}&product=${mode}&t=late`);
     if(client.link) {
         $(".link").attr("href", client.link).text(client.link);
         $(".link").parents("div").show();
@@ -161,7 +153,7 @@ const show = function(client, param) {
         });
     }
 
-    if(param.f) {
+    if(params.get("f")) {
         $(".first").show();
     }
 };
