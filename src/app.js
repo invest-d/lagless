@@ -3,15 +3,10 @@ import $ from "jquery";
 import { defineIncludesPolyfill } from "./defineIncludesPolyfill";
 defineIncludesPolyfill();
 
-$(() => {
-    const query = location.search;
-    const param = { };
-    const pairs = query.replace(/^\?/, "").split(/&/);
-    for(let i=0 ; i<pairs.length ; i++) {
-        const kv = pairs[i].split(/=/, 2);
-        param[kv[0]] = kv[1];
-    }
+import "url-search-params-polyfill";
+const params = new URLSearchParams(window.location.search);
 
+$(() => {
     if(location.protocol == "file:") {
         show( {
             "cost": "9.99%",
@@ -68,7 +63,7 @@ $(() => {
                     "early": "2021-02-01"
                 }
             ]
-        }, param);
+        }, params);
         setTimeout(() => {
             $("#content").show();
         }, 500);
@@ -76,8 +71,8 @@ $(() => {
     }
 
     get_kintone_data().then((resp) => {
-        if(resp[param.c]) {
-            show(resp[param.c], param);
+        if(resp[params.get("c")]) {
+            show(resp[params.get("c")], params);
             $("#content").show();
         } else {
             $("#error").text("不正なパラメータです.").show();
@@ -96,7 +91,7 @@ const format_date = function(str) {
     return `${t.getFullYear()}年${t.getMonth()+1}月${t.getDate()}日 (${wod[t.getDay()]})`;
 };
 
-const show = function(client, param) {
+const show = function(client, params) {
     $(".service").text(client.service);
     const mode = { "ラグレス": "lagless", "ダンドリペイメント": "dandori", "リノベ不動産Payment": "renove" }[client.service];
 
@@ -111,11 +106,11 @@ const show = function(client, param) {
         $(".limit-precaution").text(`早払い年間利用回数制限${client.limit}。`);
     }
     $(`.cond-${mode}`).show();
-    $(".form_1").attr("href", `./apply.html?user=new&c=${param.c}&a=${param.a}&product=${mode}`); // param.aはURLに表示するだけなのでundefinedでも問題ない
-    $(".form_2").attr("href", `./apply.html?user=existing&c=${param.c}&a=${param.a}&product=${mode}`);
+    $(".form_1").attr("href", `./apply.html?user=new&c=${params.get("c")}&a=${params.get("a")}&product=${mode}`); // param.aはURLに表示するだけなのでundefinedでも問題ない
+    $(".form_2").attr("href", `./apply.html?user=existing&c=${params.get("c")}&a=${params.get("a")}&product=${mode}`);
     // 遅払い用
-    $(".form_3").attr("href", `./apply.html?user=new&c=${param.c}&a=${param.a}&product=${mode}&t=late`);
-    $(".form_4").attr("href", `./apply.html?user=existing&c=${param.c}&a=${param.a}&product=${mode}&t=late`);
+    $(".form_3").attr("href", `./apply.html?user=new&c=${params.get("c")}&a=${params.get("a")}&product=${mode}&t=late`);
+    $(".form_4").attr("href", `./apply.html?user=existing&c=${params.get("c")}&a=${params.get("a")}&product=${mode}&t=late`);
     if(client.link) {
         $(".link").attr("href", client.link).text(client.link);
         $(".link").parents("div").show();
@@ -161,7 +156,7 @@ const show = function(client, param) {
         });
     }
 
-    if(param.f) {
+    if(params.get("f")) {
         $(".first").show();
     }
 };
