@@ -3,12 +3,14 @@ import $ from "jquery";
 import { defineIncludesPolyfill } from "./defineIncludesPolyfill";
 defineIncludesPolyfill();
 
-import "url-search-params-polyfill";
-const params = new URLSearchParams(window.location.search);
-
-$(() => {
+/**
+* @summary 工務店IDをkeyにしてデータベースから取得する。ローカルファイルとして開いている場合、サンプル用データを返す。
+* @param {string} constructor_id - 工務店ID
+* @return {object} データベースのデータ内容を返す。もし存在しない場合、【空オブジェクト】を返す。
+*/
+export const getConstructorData = async (constructor_id) => {
     if(location.protocol == "file:") {
-        show( {
+        const sample = {
             "cost": "9.99%",
             "yield": "1.11%",
             "mail": "hogehoge@invest-d.com",
@@ -63,22 +65,17 @@ $(() => {
                     "early": "2021-02-01"
                 }
             ]
-        }, params);
-        setTimeout(() => {
-            $("#content").show();
-        }, 500);
-        return;
+        };
+        return sample;
     }
 
-    get_kintone_data().then((resp) => {
-        if(resp[params.get("c")]) {
-            show(resp[params.get("c")], params);
-            $("#content").show();
-        } else {
-            $("#error").text("不正なパラメータです.").show();
-        }
-    });
-});
+    const resp = await get_kintone_data();
+    if(resp[constructor_id]) {
+        return resp[constructor_id];
+    } else {
+        return {};
+    }
+};
 
 export const get_kintone_data = () => {
     const target = "https://firebasestorage.googleapis.com/v0/b/lagless.appspot.com/o/data.json?alt=media";
@@ -91,7 +88,7 @@ const format_date = function(str) {
     return `${t.getFullYear()}年${t.getMonth()+1}月${t.getDate()}日 (${wod[t.getDay()]})`;
 };
 
-const show = function(client, params) {
+export const show = function(client, params) {
     $(".service").text(client.service);
     const mode = { "ラグレス": "lagless", "ダンドリペイメント": "dandori", "リノベ不動産Payment": "renove" }[client.service];
 
