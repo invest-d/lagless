@@ -23,7 +23,21 @@ defineArrayFromPolyfill();
 
 import { getBase64Strings } from "exif-rotate-js/lib";
 
-import { get_kintone_data, get_schedule } from "./app";
+import {
+    getConstructorData,
+    get_kintone_data,
+    get_schedule
+} from "./app";
+
+// パラメータが不正の場合は操作させない
+$(async () => {
+    const data = await getConstructorData(params.get("c"));
+    if (Object.keys(data).length === 0) {
+        $("#error").text("不正なパラメータです.").show();
+        return;
+    }
+    $("#content").removeClass("d-none");
+});
 
 // URLパラメータを引き継いでkintoneに送信できるようにする
 $(() => {
