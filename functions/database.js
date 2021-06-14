@@ -1,6 +1,8 @@
 const fetch = require("node-fetch");
 const querystring = require("querystring");
 
+const KINTONE_GET_LIMIT = 500;
+
 const conv = (records) => records.map((r) => {
     const record = {};
     Object.keys(r).forEach((k) => {
@@ -35,7 +37,7 @@ const fetch_pattern = function(env) {
     return fetch(`https://investdesign.cybozu.com/k/v1/records.json?${querystring.stringify({
         app: parseInt(env["KINTONE_PATTERN_APP_ID"]),
         fields: pattern_fields,
-        query: "deadline >= TODAY() and deadline <= FROM_TODAY(12, MONTHS) order by deadline asc limit 500",
+        query: `deadline >= TODAY() and deadline <= FROM_TODAY(12, MONTHS) order by deadline asc limit ${KINTONE_GET_LIMIT}`,
     })}`, {
         headers: { "X-Cybozu-API-Token": env["KINTONE_PATTERN_TOKEN"] },
     })
@@ -71,6 +73,7 @@ const fetch_service = function(env) {
     return fetch(`https://investdesign.cybozu.com/k/v1/records.json?${querystring.stringify({
         app: env["KINTONE_BUILDER_APP_ID"],
         fields: fields,
+        query: `limit ${KINTONE_GET_LIMIT}`
     })}`, {
         headers: { "X-Cybozu-API-Token": env["KINTONE_BUILDER_TOKEN"] },
     })
