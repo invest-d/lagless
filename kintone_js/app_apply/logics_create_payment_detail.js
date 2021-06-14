@@ -282,7 +282,7 @@ const getLaglessPaymentDetail = async (record, constructors) => {
     const transfer_fee_tax_incl         = record[fieldTransferFee_APPLY]["value"];
     const timing                        = record[fieldPaymentTiming_APPLY]["value"];
 
-    const should_discount_for_first = await (async (kyoryoku_id) => {
+    const should_discount_for_first = await (async (kyoryoku_id, closing_date) => {
         // 210001: ペテロ組については申込レコードに記録がないが、実行した履歴が残っている（boxファイルで履歴を確認）
         const special_paid_kyoryoku_ids = [
             "210001"
@@ -291,20 +291,20 @@ const getLaglessPaymentDetail = async (record, constructors) => {
             return false;
         }
 
-        const today = ((app_id) => {
+        const closing_date_dayjs = ((app_id) => {
             if (app_id === devApp_APPLY) {
-                const today_string = prompt("今日の日付を入力してください(YYYY-MM-DD)。\n未入力の場合は今日の日付を使用します。");
+                const today_string = prompt("締日の日付を入力してください(YYYY-MM-DD)。\n未入力の場合はレコードの日付を使用します。");
                 if (today_string) {
                     return dayjs(today_string);
                 } else {
-                    return dayjs();
+                    return dayjs(closing_date);
                 }
             } else{
-                return dayjs();
+                return dayjs(closing_date);
             }
         })(appId_APPLY);
 
-        if (today.isBetween(HALF_COMMISION_START_DATE, HALF_COMMISION_END_DATE, null, "[]")) {
+        if (closing_date_dayjs.isBetween(HALF_COMMISION_START_DATE, HALF_COMMISION_END_DATE, null, "[]")) {
             // キャンペーン期間中の場合、申込アプリの実行済みレコードを検索。0件 or 1件以上
             // ファクタリングを実行したレコードだけを対象にするので、通常払いは除外する
             const body = {
@@ -318,7 +318,7 @@ const getLaglessPaymentDetail = async (record, constructors) => {
         } else {
             return false;
         }
-    })(record[fieldCustomerId_APPLY]["value"]);
+    })(record[fieldCustomerId_APPLY]["value"], record[fieldClosingDate_APPLY]["value"]);
 
     const service_fees = ((timing, should_discount_for_first) => {
         let commission_rate;
