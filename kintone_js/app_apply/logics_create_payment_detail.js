@@ -35,7 +35,7 @@ import { CLIENT } from "../util/kintoneAPI";
 const HALF_COMMISION_START_DATE = dayjs("2020-12-17");
 // 終了日は2021年5月の締め日に対する早期支払日。
 // 支払パターンアプリによるとコーディング時点では同年6月30日が最も遅い早期支払日となっている。
-const HALF_COMMISION_END_DATE = dayjs("2021-06-30");
+const HALF_COMMISION_END_DATE = dayjs("2021-06-29");
 
 const fieldRecordId_COMMON = "$id";
 
