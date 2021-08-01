@@ -5,7 +5,7 @@ module.exports = (env, argv) => {
     if (IS_DEVELOPMENT) {
         return {
             mode: "development",
-            devtool:"source-map",
+            devtool: "source-map",
             module: {
                 rules: [
                     {
@@ -13,6 +13,10 @@ module.exports = (env, argv) => {
                         use: ["url-loader"]
                     }
                 ]
+            },
+            node: {
+                Buffer: false,
+                process: false,
             },
 
             entry: {
@@ -56,6 +60,10 @@ module.exports = (env, argv) => {
                         use: ["url-loader"]
                     }
                 ]
+            },
+            node: {
+                Buffer: false,
+                process: false,
             },
 
             entry: {
