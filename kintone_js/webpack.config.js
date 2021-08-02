@@ -10,13 +10,9 @@ module.exports = (env, argv) => {
                 rules: [
                     {
                         test: /\.png$/i,
-                        use: ["url-loader"]
+                        type: "asset/inline"
                     }
                 ]
-            },
-            node: {
-                Buffer: false,
-                process: false,
             },
 
             entry: {
@@ -35,13 +31,6 @@ module.exports = (env, argv) => {
                 app_collect: "./app_collect.js",
             },
 
-            // ファイルの出力設定
-            output: {
-                //  出力ファイルのディレクトリ名
-                path: `${__dirname}/dist`,
-                // 出力ファイル名
-                filename: "[name].js"
-            },
             plugins: [
                 new webpack.DefinePlugin({
                     ENV: JSON.stringify({
@@ -57,13 +46,9 @@ module.exports = (env, argv) => {
                 rules: [
                     {
                         test: /\.png$/i,
-                        use: ["url-loader"]
+                        type: "asset/inline"
                     }
                 ]
-            },
-            node: {
-                Buffer: false,
-                process: false,
             },
 
             entry: {
@@ -82,13 +67,6 @@ module.exports = (env, argv) => {
                 app_collect: "./app_collect.js",
             },
 
-            // ファイルの出力設定
-            output: {
-                //  出力ファイルのディレクトリ名
-                path: `${__dirname}/dist`,
-                // 出力ファイル名
-                filename: "[name].js"
-            },
             plugins: [
                 new webpack.DefinePlugin({
                     ENV: JSON.stringify({
