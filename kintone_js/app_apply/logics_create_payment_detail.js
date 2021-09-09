@@ -115,8 +115,9 @@ export const getGenerateTarget = () => {
     return CLIENT.record.getRecords(body_generate_target);
 };
 
-export const getConstructors = () => {
-    return CLIENT.record.getRecords({ app: APP_ID_CONSTRUCTOR });
+export const getConstructors = async () => {
+    const resp = await CLIENT.record.getAllRecords({ app: APP_ID_CONSTRUCTOR });
+    return resp ? { records: resp } : null;
 };
 
 async function attachDetail(target_records, constructors) {
@@ -174,7 +175,7 @@ export const generateDetails = (target_records, constructors) => {
             + "この申込レコードの処理をスキップし、残りのレコードについて処理を続けます。\n\n"
             + `申込レコード番号: ${apply[fieldRecordId_COMMON]["value"]}, 協力会社名: ${apply[fieldCustomerCompanyName_APPLY]["value"]}, 工務店ID: ${apply[fieldConstructorID_APPLY]["value"]}`;
             alert(no_constructor);
-            return;
+            break;
         }
 
         apply[fieldDaysLater_APPLY] = { "value": constructor[fieldDaysLater_APPLY]["value"] };
