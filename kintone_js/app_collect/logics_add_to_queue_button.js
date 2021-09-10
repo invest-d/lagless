@@ -133,6 +133,8 @@ const APP_ID_APPLY                      = APP_ID.APPLY;
 const fieldRecordId_APPLY               = schema_apply.fields.properties.レコード番号.code;
 const fieldStatus_APPLY                 = schema_apply.fields.properties.状態.code;
 const statusPaid_APPLY                  = schema_apply.fields.properties.状態.options.実行完了.label;
+const fieldPaymentTiming_APPLY          = schema_apply.fields.properties.paymentTiming.code;
+const statusLater_APPLY                 = schema_apply.fields.properties.paymentTiming.options.遅払い.label;
 
 export function needShowButton(record) {
     const is_not_displayed = document.getElementById("addToQueue") === null;
@@ -188,9 +190,12 @@ async function clickAddToQueue(record) {
             throw new Error(`申込アプリの中に、下記のレコード番号が見つかりませんでした。\n${Array.from(diff).join(",")}`);
         }
 
-        const is_all_paid = applies_resp.every((r) => r[fieldStatus_APPLY]["value"] === statusPaid_APPLY);
+        // 支払実行されていないレコードがあったとしても、それが全て遅払いであれば振込依頼書送信OK
+        const is_all_early_payments_paid = applies_resp
+            .filter((r) => r[fieldPaymentTiming_APPLY]["value"] !== statusLater_APPLY)
+            .every((r) => r[fieldStatus_APPLY]["value"] === statusPaid_APPLY);
 
-        if (!is_all_paid) {
+        if (!is_all_early_payments_paid) {
             alert(`支払実行が完了していない申込レコードがあります。\n\n申込アプリを開いて、下記のレコード番号の状態フィールドが${statusPaid_APPLY}になっているか確認してください。\n${apply_ids.join(",")}`);
             return;
         }
@@ -218,7 +223,8 @@ function getApplies(apply_ids) {
         "app": APP_ID_APPLY,
         "fields": [
             fieldRecordId_APPLY,
-            fieldStatus_APPLY
+            fieldStatus_APPLY,
+            fieldPaymentTiming_APPLY,
         ],
         "condition": `${fieldRecordId_APPLY} in ("${apply_ids.join('","')}")`
     };
