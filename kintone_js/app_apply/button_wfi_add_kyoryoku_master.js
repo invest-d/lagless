@@ -7,8 +7,21 @@
 
 import { CLIENT } from "../util/kintoneAPI";
 
-import { schema_apply } from "../161/schema";
-const applyFields = schema_apply.fields.properties;
+const ExtensibleCustomError = require("extensible-custom-error");
+class ManualAbortProcessError extends ExtensibleCustomError { }
+
+import { schema_apply as applyAppSchemaDev } from "../159/schema";
+import { schema_apply as applyAppSchemaProd } from "../161/schema";
+const schema = ((displayingAppId) => {
+    if (!displayingAppId || ![159, 161].includes(displayingAppId)) {
+        const message = "不明なアプリです。申込アプリで使用してください。";
+        throw new ManualAbortProcessError(message);
+    }
+
+    if (displayingAppId === 159) return applyAppSchemaDev;
+    if (displayingAppId === 161) return applyAppSchemaProd;
+})(kintone.app.getId());
+const applyFields = schema.fields.properties;
 const recordNo_APPLY                = applyFields.レコード番号.code;
 const builderName_APPLY             = applyFields.billingCompany.code;
 const applicantName_APPLY           = applyFields.company.code;
@@ -74,9 +87,6 @@ import {
     selectCompanyRecordNumber,
     getSearchInfo,
 } from "./button_wfi_antisocial_check";
-
-const ExtensibleCustomError = require("extensible-custom-error");
-class ManualAbortProcessError extends ExtensibleCustomError { }
 
 (function () {
     // eslint-disable-next-line no-unused-vars
