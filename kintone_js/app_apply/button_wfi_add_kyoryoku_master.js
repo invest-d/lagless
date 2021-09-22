@@ -76,9 +76,9 @@ import {
 } from "./button_wfi_antisocial_check";
 
 const ExtensibleCustomError = require("extensible-custom-error");
-class ManualAbortProcessError extends ExtensibleCustomError {}
+class ManualAbortProcessError extends ExtensibleCustomError { }
 
-(function() {
+(function () {
     // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.detail.show", (event) => {
         if (needShowButton(event.record[builderName_APPLY].value)) {
@@ -137,7 +137,7 @@ const clickButton = async (apply_record) => {
             console.error(e);
             const additional_info = e.message
                 ? e.message
-                : JSON.stringify(e)
+                : JSON.stringify(e);
             alert("途中で処理に失敗しました。システム管理者に連絡してください。"
                 + "\n追加の情報: "
                 + `\n${additional_info}`);
