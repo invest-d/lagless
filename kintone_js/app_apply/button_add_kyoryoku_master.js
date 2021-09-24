@@ -194,7 +194,7 @@ const getKyoryokuId = async (apply_record) => {
         return num;
     } else if (kyoryoku_record && kyoryoku_record.records.length > 1) {
         const nums = kyoryoku_record.records.map((r) => r[kyoryokuId_KYORYOKU]["value"]).join(", ");
-        alert("協力会社マスタに、ドライバーが重複して登録されているようです。"
+        alert("協力会社マスタに、このレコードの申込者が重複して登録されているようです。"
             + "\n今後も利用するレコードを一つだけ残してから再度操作してください。"
             + "\n※既に他のアプリで協力会社IDが使用されている場合はレコードの削除に注意してください。"
             + `\n重複している協力会社ID: ${nums}`);
@@ -238,8 +238,8 @@ export const getCustomerMasterConditions = ({ customerName, customerPhone, custo
 };
 
 const getMasterRecord = ({ conds }) => {
-    // 申込アプリのWFIドライバーが(軽バンの工務店IDを持つ)協力会社マスタの中に存在するか検索する。
-    // 検索フィールド：ドライバーID, 支払先, 支払先正式名称, 担当者名, メールアドレス, 電話番号(携帯/固定)
+    // 申込アプリのレコードの申込者が既に協力会社マスタの中に存在するか検索する。
+    // 検索フィールド：支払先, 支払先正式名称, 担当者名, メールアドレス, 電話番号(携帯/固定)
 
     const in_query = KE_BAN_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
     const is_keban_kyoryoku = `${komutenId_KYORYOKU} in (${in_query})`;
