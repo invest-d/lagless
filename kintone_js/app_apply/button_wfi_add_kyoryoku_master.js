@@ -173,7 +173,11 @@ const getKyoryokuId = async (apply_record) => {
     }
 
     alert(`${schema_88.id.name}アプリにレコードが既に存在するか確認します。`);
-    const kyoryoku_record = await getMasterRecord(getKyoryokuSearchInfo(apply_record));
+    const kyoryoku_record = await getMasterRecord({
+        name: apply_record[applicantName_APPLY]["value"],
+        phone: apply_record[applicantPhone_APPLY]["value"],
+        email: apply_record[applicantEmail_APPLY]["value"],
+    });
     console.log(`${schema_88.id.name}アプリの取得を完了。`);
 
     if (kyoryoku_record && kyoryoku_record.records.length === 1) {
@@ -198,15 +202,6 @@ const getKyoryokuId = async (apply_record) => {
 
         return await createKyoryokuRecord(apply_record, company_id);
     }
-};
-
-const getKyoryokuSearchInfo = (record) => {
-    const info = {
-        name: record[applicantName_APPLY]["value"],
-        phone: record[applicantPhone_APPLY]["value"],
-        email: record[applicantEmail_APPLY]["value"],
-    };
-    return info;
 };
 
 const getMasterRecord = (info) => {
