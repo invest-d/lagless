@@ -174,9 +174,9 @@ const getKyoryokuId = async (apply_record) => {
 
     alert(`${schema_88.id.name}アプリにレコードが既に存在するか確認します。`);
     const kyoryoku_record = await getMasterRecord({
-        name: apply_record[applicantName_APPLY]["value"],
-        phone: apply_record[applicantPhone_APPLY]["value"],
-        email: apply_record[applicantEmail_APPLY]["value"],
+        customerName: apply_record[applicantName_APPLY]["value"],
+        customerPhone: apply_record[applicantPhone_APPLY]["value"],
+        customerEmail: apply_record[applicantEmail_APPLY]["value"],
     });
     console.log(`${schema_88.id.name}アプリの取得を完了。`);
 
@@ -204,22 +204,22 @@ const getKyoryokuId = async (apply_record) => {
     }
 };
 
-const getMasterRecord = (info) => {
+const getMasterRecord = ({ customerName, customerPhone, customerEmail }) => {
     // 申込アプリのWFIドライバーが(軽バンの工務店IDを持つ)協力会社マスタの中に存在するか検索する。
     // 検索フィールド：ドライバーID, 支払先, 支払先正式名称, 担当者名, メールアドレス, 電話番号(携帯/固定)
     const queries = [];
-    if (info.name) {
-        queries.push(`${kyoryokuName_KYORYOKU} = "${info.name}"`);
-        queries.push(`${kyoryokuGeneralName_KYORYOKU} = "${info.name}"`);
+    if (customerName) {
+        queries.push(`${kyoryokuName_KYORYOKU} = "${customerName}"`);
+        queries.push(`${kyoryokuGeneralName_KYORYOKU} = "${customerName}"`);
     }
 
-    if (info.phone) {
-        queries.push(`${phoneNumber_KYORYOKU} = "${info.phone}"`);
-        queries.push(`${phoneNumber2_KYORYOKU} = "${info.phone}"`);
+    if (customerPhone) {
+        queries.push(`${phoneNumber_KYORYOKU} = "${customerPhone}"`);
+        queries.push(`${phoneNumber2_KYORYOKU} = "${customerPhone}"`);
     }
 
-    if (info.email) {
-        queries.push(`${email_KYORYOKU} = "${info.email}"`);
+    if (customerEmail) {
+        queries.push(`${email_KYORYOKU} = "${customerEmail}"`);
     }
 
     const in_query = KE_BAN_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
