@@ -5,14 +5,32 @@ module.exports = (env, argv) => {
     if (IS_DEVELOPMENT) {
         return {
             mode: "development",
-            devtool:"source-map",
+            devtool: "source-map",
             module: {
                 rules: [
                     {
                         test: /\.png$/i,
                         use: ["url-loader"]
-                    }
-                ]
+                    },
+                    {
+                        test: /\.(js|jsx)$/,
+                        exclude: /node_modules/,
+                        use: {
+                            loader: "babel-loader",
+                            options: {
+                                presets: [
+                                    ["@babel/preset-env", { targets: "defaults" }]
+                                ],
+                                plugins: [
+                                    [
+                                        "@babel/plugin-proposal-nullish-coalescing-operator",
+                                        { loose: false }
+                                    ],
+                                ],
+                            },
+                        },
+                    },
+                ],
             },
 
             entry: {
@@ -54,8 +72,26 @@ module.exports = (env, argv) => {
                     {
                         test: /\.png$/i,
                         use: ["url-loader"]
-                    }
-                ]
+                    },
+                    {
+                        test: /\.(js|jsx)$/,
+                        exclude: /node_modules/,
+                        use: {
+                            loader: "babel-loader",
+                            options: {
+                                presets: [
+                                    ["@babel/preset-env", { targets: "defaults" }]
+                                ],
+                                plugins: [
+                                    [
+                                        "@babel/plugin-proposal-nullish-coalescing-operator",
+                                        { loose: false }
+                                    ],
+                                ],
+                            },
+                        },
+                    },
+                ],
             },
 
             entry: {
