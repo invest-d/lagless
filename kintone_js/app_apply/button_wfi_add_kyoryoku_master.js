@@ -173,11 +173,12 @@ const getKyoryokuId = async (apply_record) => {
     }
 
     alert(`${schema_88.id.name}アプリにレコードが既に存在するか確認します。`);
-    const kyoryoku_record = await getMasterRecord({
+    const conds = getCustomerMasterConditions({
         customerName: apply_record[applicantName_APPLY]["value"],
         customerPhone: apply_record[applicantPhone_APPLY]["value"],
         customerEmail: apply_record[applicantEmail_APPLY]["value"],
     });
+    const kyoryoku_record = await getMasterRecord({ conds });
     console.log(`${schema_88.id.name}アプリの取得を完了。`);
 
     if (kyoryoku_record && kyoryoku_record.records.length === 1) {
@@ -229,15 +230,13 @@ export const getCustomerMasterConditions = ({ customerName, customerPhone, custo
     return queries;
 };
 
-const getMasterRecord = ({ customerName, customerPhone, customerEmail }) => {
+const getMasterRecord = ({ conds }) => {
     // 申込アプリのWFIドライバーが(軽バンの工務店IDを持つ)協力会社マスタの中に存在するか検索する。
     // 検索フィールド：ドライバーID, 支払先, 支払先正式名称, 担当者名, メールアドレス, 電話番号(携帯/固定)
 
     const in_query = KE_BAN_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
     const is_keban_kyoryoku = `${komutenId_KYORYOKU} in (${in_query})`;
-
-    const queries = getCustomerMasterConditions({ customerName, customerPhone, customerEmail });
-    const query = `(${queries.join(" or ")}) and (${is_keban_kyoryoku})`;
+    const query = `(${conds.join(" or ")}) and (${is_keban_kyoryoku})`;
 
     const body = {
         app: schema_88.id.appId,
