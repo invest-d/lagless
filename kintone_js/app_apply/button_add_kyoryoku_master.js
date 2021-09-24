@@ -70,6 +70,7 @@ const email_KYORYOKU_D                  = customerFields.メールアドレス.l
 const komutenName_KYORYOKU              = customerFields.工務店名.code;
 const productName_KYORYOKU              = customerFields.商品名.code;
 const productKeban_KYORYOKU             = customerFields.商品名.options["軽バン.com"].label;
+const productWorkship_KYORYOKU          = customerFields.商品名.options.Workship.index;
 const bankName_KYORYOKU                 = customerFields.銀行名.code;
 const bankName_KYORYOKU_D               = customerFields.銀行名.label;
 const bankCode_KYORYOKU                 = customerFields.金融機関コード.code;
@@ -87,7 +88,8 @@ const accountName_KYORYOKU_D            = customerFields.口座名義.label;
 
 import { schema_28 } from "../28/schema";
 
-import { KE_BAN_CONSTRUCTORS } from "../96/common";
+import { KE_BAN_CONSTRUCTORS, SHOWA_CONSTRUCTORS } from "../96/common";
+import { isGigConstructorID } from "../util/gig_utils";
 import {
     getCompanyRecord,
     selectCompanyRecordNumber,
@@ -255,20 +257,33 @@ const getMasterRecord = ({ conds }) => {
 
 const createKyoryokuRecord = async (apply, company_id) => {
     const new_kyoryoku_id = await (async () => {
-        const in_query = KE_BAN_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
-        const has_same_komuten = `${komutenId_KYORYOKU} in (${in_query})`;
+        const has_same_komuten = ((komutenId) => {
+            if (SHOWA_CONSTRUCTORS.includes(komutenId)) {
+                const in_query = SHOWA_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
+                return `${komutenId_KYORYOKU} in (${in_query})`;
+            } else if (KE_BAN_CONSTRUCTORS.includes(komutenId)) {
+                const in_query = KE_BAN_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
+                return `${komutenId_KYORYOKU} in (${in_query})`;
+            } else if (isGigConstructorID(komutenId)) {
+                // workshipの工務店IDは 5\d{3,4} だが、komutenId like "5\d+" のような指定はできない。
+                // 商品名であれば絞り込める
+                return `${productName_KYORYOKU} in ("${productWorkship_KYORYOKU}")`;
+            } else {
+                return `${komutenId_KYORYOKU} = "${apply[komutenId_APPLY]["value"]}"`;
+            }
+        })(apply[komutenId_APPLY]["value"]);
         const is_not_test = `${kyoryokuGeneralName_KYORYOKU} not like "テスト"\
             and ${kyoryokuGeneralName_KYORYOKU} not like "test"\
             and ${komutenName_KYORYOKU} not like "テスト"\
             and ${komutenName_KYORYOKU} not like "test"`;
         // 連番で新たな協力会社IDを取得する。
-        const all_keban = {
+        const allKyoryoku = {
             app: schema_88.id.appId,
             fields: [kyoryokuId_KYORYOKU],
             condition: `(${has_same_komuten}) and (${is_not_test})`,
             orderBy: `${kyoryokuId_KYORYOKU} desc`
         };
-        const result = await CLIENT.record.getAllRecords(all_keban);
+        const result = await CLIENT.record.getAllRecords(allKyoryoku);
         const latest_id = Number(result[0][kyoryokuId_KYORYOKU]["value"]);
         return latest_id + 1;
     })();
