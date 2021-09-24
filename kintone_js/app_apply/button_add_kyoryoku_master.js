@@ -35,6 +35,7 @@ const applicantPhone_APPLY          = applyFields.phone.code;
 const applicantPhone_APPLY_D        = applyFields.phone.label;
 const applicantEmail_APPLY          = applyFields.mail.code;
 const applicantEmail_APPLY_D        = applyFields.mail.label;
+const komutenId_APPLY               = applyFields.constructionShopId.code;
 const kyoryokuId_APPLY              = applyFields.ルックアップ.code;
 const bankName_APPLY                = applyFields.bankName_Form.code;
 const bankName_APPLY_D              = applyFields.bankName_Form.label;
@@ -131,6 +132,14 @@ const clickButton = async (apply_record) => {
     document.getElementById(button_id).innerText = "処理中...";
 
     try {
+        // 本スクリプトは協力会社マスタのレコードの新規作成を目的としている。
+        // 従って協力会社IDも新規に決定するが、そのためには工務店IDが必須となる。
+        // よって工務店IDが未入力のレコードは処理できない
+        if (!apply_record[komutenId_APPLY]["value"]) {
+            alert("工務店IDが空欄です。\n工務店IDを入力してからもう一度実行してください。");
+            throw new ManualAbortProcessError();
+        }
+
         const kyoryoku_id = await getKyoryokuId(apply_record)
             .catch((err) => { throw new Error(err); });
         if (!kyoryoku_id) { throw new ManualAbortProcessError(); }
