@@ -203,10 +203,15 @@ const getKyoryokuId = async (apply_record) => {
         return await createKyoryokuRecord(apply_record, company_id);
     }
 };
+/**
+* @summary 協力会社マスタ検索時に指定する検索条件の配列を取得する。
+* @param {string?} customerName - ファクタリングの申込者名。
+* @param {string?} customerPhone - ファクタリングの申込者の電話番号。
+* @param {string?} customerEmail - ファクタリングの申込者のメールアドレス。
+* @return {string[]} kintone REST APIの検索条件として使用可能な文字列の配列。
+*/
 
-const getMasterRecord = ({ customerName, customerPhone, customerEmail }) => {
-    // 申込アプリのWFIドライバーが(軽バンの工務店IDを持つ)協力会社マスタの中に存在するか検索する。
-    // 検索フィールド：ドライバーID, 支払先, 支払先正式名称, 担当者名, メールアドレス, 電話番号(携帯/固定)
+export const getCustomerMasterConditions = ({ customerName, customerPhone, customerEmail }) => {
     const queries = [];
     if (customerName) {
         queries.push(`${kyoryokuName_KYORYOKU} = "${customerName}"`);
@@ -221,10 +226,17 @@ const getMasterRecord = ({ customerName, customerPhone, customerEmail }) => {
     if (customerEmail) {
         queries.push(`${email_KYORYOKU} = "${customerEmail}"`);
     }
+    return queries;
+};
+
+const getMasterRecord = ({ customerName, customerPhone, customerEmail }) => {
+    // 申込アプリのWFIドライバーが(軽バンの工務店IDを持つ)協力会社マスタの中に存在するか検索する。
+    // 検索フィールド：ドライバーID, 支払先, 支払先正式名称, 担当者名, メールアドレス, 電話番号(携帯/固定)
 
     const in_query = KE_BAN_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
     const is_keban_kyoryoku = `${komutenId_KYORYOKU} in (${in_query})`;
 
+    const queries = getCustomerMasterConditions({ customerName, customerPhone, customerEmail });
     const query = `(${queries.join(" or ")}) and (${is_keban_kyoryoku})`;
 
     const body = {
