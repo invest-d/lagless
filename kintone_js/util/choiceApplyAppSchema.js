@@ -22,4 +22,4 @@ export const detectApp = (appId) => {
 
     if (appId === 159) return "dev";
     if (appId === 161) return "prod";
-}
+};
