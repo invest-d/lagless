@@ -29,7 +29,6 @@ const schema = (() => {
 if (!schema) throw new Error();
 const applyFields = schema.fields.properties;
 const recordNo_APPLY                = applyFields.レコード番号.code;
-const builderName_APPLY             = applyFields.billingCompany.code;
 const applicantName_APPLY           = applyFields.company.code;
 const applicantName_APPLY_D         = applyFields.company.label;
 const applicantPhone_APPLY          = applyFields.phone.code;
@@ -97,18 +96,17 @@ import {
 (function () {
     // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.detail.show", (event) => {
-        if (needShowButton(event.record[builderName_APPLY].value)) {
+        if (needShowButton()) {
             kintone.app.record.getHeaderMenuSpaceElement().appendChild(createButton(event.record));
         }
     });
 })();
 
-const button_id = "addWfiKyoryokuMaster";
-const button_title = "(WFI用)協力会社マスタの確認・追加";
-const needShowButton = (builder_name) => {
+const button_id = "addKyoryokuMaster";
+const button_title = "協力会社マスタの確認・追加";
+const needShowButton = () => {
     const exists_same_button = document.getElementById(button_id) !== null;
-    const is_Wfi_apply = builder_name.includes("ワールドフォース");
-    return !exists_same_button && is_Wfi_apply;
+    return !exists_same_button;
 };
 
 const createButton = (record) => {
