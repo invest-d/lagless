@@ -69,7 +69,6 @@ const email_KYORYOKU                    = customerFields.メールアドレス.c
 const email_KYORYOKU_D                  = customerFields.メールアドレス.label;
 const komutenName_KYORYOKU              = customerFields.工務店名.code;
 const productName_KYORYOKU              = customerFields.商品名.code;
-const productWorkship_KYORYOKU          = customerFields.商品名.options.Workship.index;
 const bankName_KYORYOKU                 = customerFields.銀行名.code;
 const bankName_KYORYOKU_D               = customerFields.銀行名.label;
 const bankCode_KYORYOKU                 = customerFields.金融機関コード.code;
@@ -102,7 +101,6 @@ const productName_KOMUTEN   = komutenFields.service.code;
 
 import {
     KE_BAN_CONSTRUCTORS,
-    SHOWA_CONSTRUCTORS,
     normalizedConstructorId,
     productNameMap,
 } from "../96/common";
@@ -112,6 +110,8 @@ import {
     selectCompanyRecordNumber,
     getSearchInfo,
 } from "./button_wfi_antisocial_check";
+
+import { getSameKomutenKyoryokuCond } from "./logics_add_kyoryoku_master";
 
 import { PhoneNumberUtil } from "google-libphonenumber";
 const phoneUtil = PhoneNumberUtil.getInstance();
@@ -278,21 +278,7 @@ const getMasterRecord = ({ conds }) => {
 const createKyoryokuRecord = async (apply, company_id) => {
     const komutenId = apply[komutenId_APPLY]["value"];
     const new_kyoryoku_id = await (async () => {
-        const has_same_komuten = ((komutenId) => {
-            if (SHOWA_CONSTRUCTORS.includes(komutenId)) {
-                const in_query = SHOWA_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
-                return `${komutenId_KYORYOKU} in (${in_query})`;
-            } else if (KE_BAN_CONSTRUCTORS.includes(komutenId)) {
-                const in_query = KE_BAN_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
-                return `${komutenId_KYORYOKU} in (${in_query})`;
-            } else if (isGigConstructorID(komutenId)) {
-                // workshipの工務店IDは 5\d{3,4} だが、komutenId like "5\d+" のような指定はできない。
-                // 商品名であれば絞り込める
-                return `${productName_KYORYOKU} in ("${productWorkship_KYORYOKU}")`;
-            } else {
-                return `${komutenId_KYORYOKU} = "${apply[komutenId_APPLY]["value"]}"`;
-            }
-        })(komutenId);
+        const has_same_komuten = getSameKomutenKyoryokuCond(komutenId);
         const is_not_test = `${kyoryokuGeneralName_KYORYOKU} not like "テスト"\
             and ${kyoryokuGeneralName_KYORYOKU} not like "test"\
             and ${komutenName_KYORYOKU} not like "テスト"\
