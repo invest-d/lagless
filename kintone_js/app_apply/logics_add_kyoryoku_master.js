@@ -1,5 +1,8 @@
 "use strict";
 
+import { PhoneNumberUtil } from "google-libphonenumber";
+const phoneUtil = PhoneNumberUtil.getInstance();
+
 import { isGigConstructorID } from "../util/gig_utils";
 import {
     KE_BAN_CONSTRUCTORS,
@@ -11,6 +14,11 @@ const customerFields = schema_88.fields.properties;
 const komutenId_KYORYOKU        = customerFields.工務店ID.code;
 const productName_KYORYOKU      = customerFields.商品名.code;
 const productWorkship_KYORYOKU  = customerFields.商品名.options.Workship.label;
+const method_default_KYORYOKU           = customerFields.送付方法.defaultValue;
+const method_email_KYORYOKU             = customerFields.送付方法.options.電子メール.label;
+const method_sms_KYORYOKU               = customerFields.送付方法.options.SMS.label;
+const method_both_KYORYOKU              = customerFields.送付方法.options.両方.label;
+const method_none_KYORYOKU              = customerFields.送付方法.options["(無し)"].label;
 
 export const getSameKomutenKyoryokuCond = (komutenId) => {
     if (SHOWA_CONSTRUCTORS.includes(komutenId)) {
@@ -27,3 +35,19 @@ export const getSameKomutenKyoryokuCond = (komutenId) => {
         return `${komutenId_KYORYOKU} = "${komutenId}"`;
     }
 };
+
+export const choiceNotifyMethod = ({ emailAddress, phoneNumber }) => {
+    const isCellPhoneNumber = ((phoneNumber) => {
+        if (!phoneNumber) return false;
+        const num = phoneUtil.parseAndKeepRawInput(phoneNumber, "JP");
+        return phoneUtil.isValidNumber(num)
+            && /^0[9876]0/.test(phoneNumber.match(/\d/g).join(""));
+    })(phoneNumber);
+
+    let method = method_default_KYORYOKU;
+    if (emailAddress) method = method_email_KYORYOKU;
+    if (isCellPhoneNumber) method = method_sms_KYORYOKU;
+    if (emailAddress && isCellPhoneNumber) method = method_both_KYORYOKU;
+    if (!emailAddress && !isCellPhoneNumber) method = method_none_KYORYOKU;
+    return method;
+}

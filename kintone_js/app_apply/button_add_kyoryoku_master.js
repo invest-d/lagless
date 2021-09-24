@@ -85,11 +85,6 @@ const accountName_KYORYOKU              = customerFields.口座名義.code;
 const accountName_KYORYOKU_D            = customerFields.口座名義.label;
 const notifyDate_KYORYOKU               = customerFields.申込メール送付日.code;
 const notifyMethod_KYORYOKU             = customerFields.送付方法.code;
-const method_default_KYORYOKU           = customerFields.送付方法.defaultValue;
-const method_email_KYORYOKU             = customerFields.送付方法.options.電子メール.label;
-const method_sms_KYORYOKU               = customerFields.送付方法.options.SMS.label;
-const method_both_KYORYOKU              = customerFields.送付方法.options.両方.label;
-const method_none_KYORYOKU              = customerFields.送付方法.options["(無し)"].label;
 
 import { schema_28 } from "../28/schema";
 
@@ -111,10 +106,10 @@ import {
     getSearchInfo,
 } from "./button_wfi_antisocial_check";
 
-import { getSameKomutenKyoryokuCond } from "./logics_add_kyoryoku_master";
-
-import { PhoneNumberUtil } from "google-libphonenumber";
-const phoneUtil = PhoneNumberUtil.getInstance();
+import {
+    getSameKomutenKyoryokuCond,
+    choiceNotifyMethod
+} from "./logics_add_kyoryoku_master";
 
 (function () {
     // eslint-disable-next-line no-unused-vars
@@ -327,20 +322,7 @@ const createKyoryokuRecord = async (apply, company_id) => {
     if (!KE_BAN_CONSTRUCTORS.includes(komutenId) && !isGigConstructorID(komutenId)) {
         // 案内メールの送付設定を行う
         new_record[notifyDate_KYORYOKU] = 20;
-        const method = (({ emailAddress, phoneNumber }) => {
-            const isCellPhoneNumber = ((phoneNumber) => {
-                if (!phoneNumber) return false;
-                const num = phoneUtil.parseAndKeepRawInput(phoneNumber, "JP");
-                return phoneUtil.isValidNumber(num);
-            })(phoneNumber);
-
-            let method = method_default_KYORYOKU;
-            if (emailAddress) method = method_email_KYORYOKU;
-            if (isCellPhoneNumber) method = method_sms_KYORYOKU;
-            if (emailAddress && isCellPhoneNumber) method = method_both_KYORYOKU;
-            if (!emailAddress && !isCellPhoneNumber) method = method_none_KYORYOKU;
-            return method;
-        })({
+        const method = choiceNotifyMethod({
             emailAddress: apply[applicantEmail_APPLY].value,
             phoneNumber: apply[applicantPhone_APPLY].value
         });
