@@ -10,17 +10,23 @@ import { CLIENT } from "../util/kintoneAPI";
 const ExtensibleCustomError = require("extensible-custom-error");
 class ManualAbortProcessError extends ExtensibleCustomError { }
 
-import { schema_apply as applyAppSchemaDev } from "../159/schema";
-import { schema_apply as applyAppSchemaProd } from "../161/schema";
-const schema = ((displayingAppId) => {
-    if (!displayingAppId || ![159, 161].includes(displayingAppId)) {
-        const message = "不明なアプリです。申込アプリで使用してください。";
-        throw new ManualAbortProcessError(message);
+import { getApplyAppSchema, UnknownAppError } from "../util/choiceApplyAppSchema";
+const schema = (() => {
+    try {
+        return getApplyAppSchema(kintone.app.getId());
+    } catch (e) {
+        if (e instanceof UnknownAppError) {
+            alert("不明なアプリです。申込アプリで実行してください。");
+        } else {
+            console.error(e);
+            const additional_info = e.message ?? JSON.stringify(e);
+            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
+                + "\n追加の情報: "
+                + `\n${additional_info}`);
+        }
     }
-
-    if (displayingAppId === 159) return applyAppSchemaDev;
-    if (displayingAppId === 161) return applyAppSchemaProd;
-})(kintone.app.getId());
+})();
+if (!schema) throw new Error();
 const applyFields = schema.fields.properties;
 const recordNo_APPLY                = applyFields.レコード番号.code;
 const builderName_APPLY             = applyFields.billingCompany.code;
