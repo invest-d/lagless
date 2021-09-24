@@ -25,6 +25,7 @@
     "decimal.js": "^10.2.1",
     "encoding-japanese": "^1.0.30",
     "extensible-custom-error": "0.0.7",
+    "google-libphonenumber": "^3.2.23",
     "pdfmake": "^0.1.65"
   }
 }

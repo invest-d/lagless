@@ -69,7 +69,6 @@ const email_KYORYOKU                    = customerFields.メールアドレス.c
 const email_KYORYOKU_D                  = customerFields.メールアドレス.label;
 const komutenName_KYORYOKU              = customerFields.工務店名.code;
 const productName_KYORYOKU              = customerFields.商品名.code;
-const productKeban_KYORYOKU             = customerFields.商品名.options["軽バン.com"].label;
 const productWorkship_KYORYOKU          = customerFields.商品名.options.Workship.index;
 const bankName_KYORYOKU                 = customerFields.銀行名.code;
 const bankName_KYORYOKU_D               = customerFields.銀行名.label;
@@ -85,16 +84,37 @@ const accountNumber_KYORYOKU            = customerFields.口座番号.code;
 const accountNumber_KYORYOKU_D          = customerFields.口座番号.label;
 const accountName_KYORYOKU              = customerFields.口座名義.code;
 const accountName_KYORYOKU_D            = customerFields.口座名義.label;
+const notifyDate_KYORYOKU               = customerFields.申込メール送付日.code;
+const notifyMethod_KYORYOKU             = customerFields.送付方法.code;
+const method_default_KYORYOKU           = customerFields.送付方法.defaultValue;
+const method_email_KYORYOKU             = customerFields.送付方法.options.電子メール.label;
+const method_sms_KYORYOKU               = customerFields.送付方法.options.SMS.label;
+const method_both_KYORYOKU              = customerFields.送付方法.options.両方.label;
+const method_none_KYORYOKU              = customerFields.送付方法.options["(無し)"].label;
 
 import { schema_28 } from "../28/schema";
 
-import { KE_BAN_CONSTRUCTORS, SHOWA_CONSTRUCTORS } from "../96/common";
+import { schema_96 } from "../96/schema";
+const komutenFields = schema_96.fields.properties;
+const komutenId_KOMUTEN     = komutenFields.id.code;
+const komutenName_KOMUTEN   = komutenFields.工務店正式名称.code;
+const productName_KOMUTEN   = komutenFields.service.code;
+
+import {
+    KE_BAN_CONSTRUCTORS,
+    SHOWA_CONSTRUCTORS,
+    normalizedConstructorId,
+    productNameMap,
+} from "../96/common";
 import { isGigConstructorID } from "../util/gig_utils";
 import {
     getCompanyRecord,
     selectCompanyRecordNumber,
     getSearchInfo,
 } from "./button_wfi_antisocial_check";
+
+import { PhoneNumberUtil } from "google-libphonenumber";
+const phoneUtil = PhoneNumberUtil.getInstance();
 
 (function () {
     // eslint-disable-next-line no-unused-vars
@@ -256,6 +276,7 @@ const getMasterRecord = ({ conds }) => {
 };
 
 const createKyoryokuRecord = async (apply, company_id) => {
+    const komutenId = apply[komutenId_APPLY]["value"];
     const new_kyoryoku_id = await (async () => {
         const has_same_komuten = ((komutenId) => {
             if (SHOWA_CONSTRUCTORS.includes(komutenId)) {
@@ -271,7 +292,7 @@ const createKyoryokuRecord = async (apply, company_id) => {
             } else {
                 return `${komutenId_KYORYOKU} = "${apply[komutenId_APPLY]["value"]}"`;
             }
-        })(apply[komutenId_APPLY]["value"]);
+        })(komutenId);
         const is_not_test = `${kyoryokuGeneralName_KYORYOKU} not like "テスト"\
             and ${kyoryokuGeneralName_KYORYOKU} not like "test"\
             and ${komutenName_KYORYOKU} not like "テスト"\
@@ -288,14 +309,24 @@ const createKyoryokuRecord = async (apply, company_id) => {
         return latest_id + 1;
     })();
 
+    const komuten = await CLIENT.record.getRecords({
+        app: schema_96.id.appId,
+        fields: [
+            komutenId_KOMUTEN,
+            komutenName_KOMUTEN,
+            productName_KOMUTEN,
+        ],
+        query: `${komutenId_KOMUTEN} = "${normalizedConstructorId(apply[komutenId_APPLY]["value"])}"`
+    });
+
     const new_record = {
         [kyoryokuId_KYORYOKU]: new_kyoryoku_id,
-        [komutenId_KYORYOKU]: "400",
+        [komutenId_KYORYOKU]: normalizedConstructorId(apply[komutenId_APPLY]["value"]),
         [companyId_KYORYOKU]: company_id,
         [kyoryokuName_KYORYOKU]: apply[applicantName_APPLY]["value"],
         [kyoryokuGeneralName_KYORYOKU]: apply[applicantName_APPLY]["value"],
-        [komutenName_KYORYOKU]: "株式会社ワールドフォースインターナショナル",
-        [productName_KYORYOKU]: productKeban_KYORYOKU,
+        [komutenName_KYORYOKU]: komuten.records[0][komutenName_KOMUTEN].value,
+        [productName_KYORYOKU]: productNameMap.fromKomuten[komuten.records[0][productName_KOMUTEN].value],
         [bankName_KYORYOKU]: apply[bankName_APPLY]["value"],
         [bankCode_KYORYOKU]: apply[bankCode_APPLY]["value"],
         [branchName_KYORYOKU]: apply[branchName_APPLY]["value"],
@@ -306,6 +337,30 @@ const createKyoryokuRecord = async (apply, company_id) => {
         [email_KYORYOKU]: apply[applicantEmail_APPLY]["value"],
         [phoneNumber_KYORYOKU]: apply[applicantPhone_APPLY]["value"],
     };
+
+    if (!KE_BAN_CONSTRUCTORS.includes(komutenId) && !isGigConstructorID(komutenId)) {
+        // 案内メールの送付設定を行う
+        new_record[notifyDate_KYORYOKU] = 20;
+        const method = (({ emailAddress, phoneNumber }) => {
+            const isCellPhoneNumber = ((phoneNumber) => {
+                if (!phoneNumber) return false;
+                const num = phoneUtil.parseAndKeepRawInput(phoneNumber, "JP");
+                return phoneUtil.isValidNumber(num);
+            })(phoneNumber);
+
+            let method = method_default_KYORYOKU;
+            if (emailAddress) method = method_email_KYORYOKU;
+            if (isCellPhoneNumber) method = method_sms_KYORYOKU;
+            if (emailAddress && isCellPhoneNumber) method = method_both_KYORYOKU;
+            if (!emailAddress && !isCellPhoneNumber) method = method_none_KYORYOKU;
+            return method;
+        })({
+            emailAddress: apply[applicantEmail_APPLY].value,
+            phoneNumber: apply[applicantPhone_APPLY].value
+        });
+        new_record[notifyMethod_KYORYOKU] = method;
+    }
+
     Object.keys(new_record).forEach((k) => new_record[k] = { value: new_record[k] });
     const body = {
         app: schema_88.id.appId,
