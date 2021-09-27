@@ -230,10 +230,11 @@ export const getCompanyRecord = (info) => {
 export const selectCompanyRecordNumber = (get_result) => {
     // get_resultが存在する場合。nullもしくは数値のレコード番号を返す
     const returnAsNumber = (input) => Number(replaceFullWidthNumbers(input));
+    const recordRepr = (record) => `レコード番号: ${record[recordNo_COMPANY]["value"]}, 会社名: ${record[companyName_COMPANY]["value"]}, 所在地: ${record[address_COMPANY]["value"]}`;
 
     if (get_result.records.length === 1) {
         const num = get_result.records[0][recordNo_COMPANY]["value"];
-        const message = `レコードが見つかりました。レコード番号: ${num}`
+        const message = `レコードが見つかりました。\n${recordRepr(get_result.records[0])}`
             + "\nこのレコードを使って進めますか？";
         if (confirm(message)) {
             return Number(num);
@@ -243,8 +244,7 @@ export const selectCompanyRecordNumber = (get_result) => {
             return null;
         }
     } else {
-        const nums = get_result.records.map((r) => r[recordNo_COMPANY]["value"]).join(", ");
-        const message = `複数のレコードが見つかりました。レコード番号: ${nums}`
+        const message = `複数のレコードが見つかりました。${get_result.records.map((r) => recordRepr(r)).join("\n")}`
             + "\nどのレコード番号で進めますか？";
         const input = prompt(message);
         if (input) return returnAsNumber(input);

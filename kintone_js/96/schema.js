@@ -40,7 +40,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": true,
+                "required": false,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -49,11 +49,11 @@ export const schema_96 = {
                 "defaultValue": "",
                 "expression": "",
                 "hideExpression": false,
-                "label": "代表者役職名",
+                "label": "役職名",
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": true,
+                "required": false,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -152,7 +152,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": true,
+                "required": false,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -225,7 +225,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": true,
+                "required": false,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -280,7 +280,7 @@ export const schema_96 = {
                 "maxLength": "64",
                 "minLength": "",
                 "noLabel": false,
-                "required": true,
+                "required": false,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": true
             },
@@ -306,7 +306,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": true,
+                "required": false,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -343,7 +343,7 @@ export const schema_96 = {
                 "minLength": "",
                 "noLabel": false,
                 "protocol": "MAIL",
-                "required": true,
+                "required": false,
                 "type": "LINK",
                 "unique": false
             },
@@ -600,7 +600,7 @@ export const schema_96 = {
                 "maxValue": "",
                 "minValue": "",
                 "noLabel": false,
-                "required": true,
+                "required": false,
                 "type": "NUMBER",
                 "unique": false,
                 "unit": "",
@@ -615,7 +615,7 @@ export const schema_96 = {
                 "maxValue": "",
                 "minValue": "",
                 "noLabel": false,
-                "required": true,
+                "required": false,
                 "type": "NUMBER",
                 "unique": false,
                 "unit": "円",
@@ -630,7 +630,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": true,
+                "required": false,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -708,6 +708,25 @@ export const schema_96 = {
                 },
                 "type": "REFERENCE_TABLE"
             },
+            "スタートメール要否": {
+                "align": "HORIZONTAL",
+                "code": "スタートメール要否",
+                "defaultValue": [],
+                "label": "スタートメール要否",
+                "noLabel": false,
+                "options": {
+                    "不要": {
+                        "index": "1",
+                        "label": "不要"
+                    },
+                    "要": {
+                        "index": "0",
+                        "label": "要"
+                    }
+                },
+                "required": false,
+                "type": "CHECK_BOX"
+            },
             "ステータス": {
                 "code": "ステータス",
                 "enabled": false,
@@ -784,7 +803,7 @@ export const schema_96 = {
                 "maxLength": "",
                 "minLength": "",
                 "noLabel": false,
-                "required": true,
+                "required": false,
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
@@ -843,7 +862,12 @@ export const schema_96 = {
                 "fields": [
                     {
                         "type": "LABEL",
-                        "label": "<div>工務店ID</div><div><div><span style=\"font-size:14px\">100番台&#xff1a;ダンドリペイメント</span></div><div><span style=\"font-size:14px\">200番台&#xff1a;ラグレス</span></div><div><span style=\"font-size:14px\">300番台&#xff1a;リノベ不動産Payment</span></div><div><span style=\"font-size:14px\">400番台&#xff1a;WFI</span></div><div><span style=\"font-size:14px\">500番台&#xff1a;GIG</span></div><div><span style=\"font-size:14px\">601番　&#xff1a;MED</span></div></div>",
+                        "label": "<div>工務店ID</div><div><div><span style=\"font-size:14px\">100番台&#xff1a;ダンドリペイメント</span></div><div><span style=\"font-size:14px\">200番台&#xff1a;ラグレス</span></div><div><span style=\"font-size:14px\">300番台&#xff1a;リノベ不動産Payment</span></div><div><span style=\"font-size:14px\">400番台&#xff1a;WFI</span></div><div><span style=\"font-size:14px\">500番台&#xff1a;GIG</span></div><div><span style=\"font-size:14px\">601番　&#xff1a;MED</span></div></div><div>603番　&#xff1a;MED西日本<br /></div>",
+                        "size": {}
+                    },
+                    {
+                        "type": "LABEL",
+                        "label": "<div>【マーケチームにて下記の項目を入力お願いします】<div>・工務店名</div><div>・支払元口座&#xff08;ラグレスGK案件→LAGLESS、インベスト→ID&#xff09;</div><div>・通常支払いの担当&#xff08;工務店 or ID&#xff09;</div><div>・早期支払手数料</div><div>・締日、通常の支払日、早期支払日</div><div>・休日の取扱</div><div>・スタートメール要否</div><div>・クラウドサイン回付者一覧</div><div>&#xff08;・クラウドサイン共有先一覧&#xff09;</div><div>・振込依頼書送付メール本文上の宛先&#xff08;役職&#xff0b;氏名&#xff09;</div><div>・振込依頼書送信先一覧<br /></div></div>",
                         "size": {}
                     }
                 ]
@@ -885,15 +909,15 @@ export const schema_96 = {
                         "type": "SINGLE_LINE_TEXT",
                         "code": "ceo",
                         "size": {}
-                    }
-                ]
-            },
-            {
-                "type": "ROW",
-                "fields": [
+                    },
                     {
                         "type": "DROP_DOWN",
                         "code": "支払元口座",
+                        "size": {}
+                    },
+                    {
+                        "type": "LABEL",
+                        "label": "<div>【支払元口座の補足】</div><div>ID　　　    →　ラグレス&#xff12;GK、インベスト案件</div><div>LAGLESS　→　ラグレスGK案件</div>",
                         "size": {}
                     }
                 ]
@@ -915,12 +939,7 @@ export const schema_96 = {
                         "type": "LINK",
                         "code": "説明ページ",
                         "size": {}
-                    }
-                ]
-            },
-            {
-                "type": "ROW",
-                "fields": [
+                    },
                     {
                         "type": "SINGLE_LINE_TEXT",
                         "code": "service",
@@ -1188,6 +1207,11 @@ export const schema_96 = {
                 "type": "ROW",
                 "fields": [
                     {
+                        "type": "CHECK_BOX",
+                        "code": "スタートメール要否",
+                        "size": {}
+                    },
+                    {
                         "type": "DATE",
                         "code": "startMailScheduled",
                         "size": {}
@@ -1440,13 +1464,13 @@ export const schema_96 = {
                     "transfer_fee",
                     "説明ページ"
                 ],
-                "filterCond": "id in (\"200\", \"206\", \"207\", \"106\", \"210\")",
+                "filterCond": "id in (\"200\", \"206\", \"207\", \"106\", \"210\", \"601\", \"603\")",
                 "index": "8",
                 "name": "★ラグレスGK案件",
                 "sort": "id asc",
                 "type": "LIST"
             },
-            "★新ラグレス契約先（2021.02.19時点）": {
+            "★新ラグレス契約先（2021.05.10時点）": {
                 "fields": [
                     "id",
                     "工務店正式名称",
@@ -1466,9 +1490,9 @@ export const schema_96 = {
                     "説明ページ",
                     "default_pay_date_list"
                 ],
-                "filterCond": "id in (\"107\", \"303\", \"209\", \"211\", \"201\", \"202\", \"203\", \"300\", \"215\", \"304\", \"204\", \"105\", \"212\", \"222\", \"217\", \"218\", \"214\", \"219\", \"220\", \"221\")",
+                "filterCond": "id in (\"107\", \"303\", \"209\", \"211\", \"201\", \"202\", \"203\", \"300\", \"215\", \"304\", \"204\", \"105\", \"212\", \"222\", \"217\", \"218\", \"214\", \"219\", \"220\", \"221\", \"223\")",
                 "index": "5",
-                "name": "★新ラグレス契約先（2021.02.19時点）",
+                "name": "★新ラグレス契約先（2021.05.10時点）",
                 "sort": "id asc",
                 "type": "LIST"
             },
@@ -1635,7 +1659,7 @@ export const schema_96 = {
                     "説明ページ",
                     "default_pay_date_list"
                 ],
-                "filterCond": "id in (\"201\", \"206\", \"303\", \"209\", \"210\", \"214\", \"216\", \"220\")",
+                "filterCond": "id in (\"201\", \"206\", \"303\", \"209\", \"210\", \"214\", \"216\", \"220\", \"108\")",
                 "index": "4",
                 "name": "末締め当月末支払い承諾先一覧",
                 "sort": "id asc",

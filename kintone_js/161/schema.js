@@ -994,6 +994,24 @@ export const schema_apply = {
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
+            "振込": {
+                "code": "振込",
+                "defaultValue": "",
+                "label": "振込予約",
+                "noLabel": false,
+                "options": {
+                    "承認済": {
+                        "index": "1",
+                        "label": "承認済"
+                    },
+                    "振込登録済": {
+                        "index": "0",
+                        "label": "振込登録済"
+                    }
+                },
+                "required": false,
+                "type": "DROP_DOWN"
+            },
             "支払先正式名称": {
                 "code": "支払先正式名称",
                 "defaultValue": "",
@@ -1099,6 +1117,20 @@ export const schema_apply = {
                 },
                 "required": false,
                 "type": "CHECK_BOX"
+            },
+            "確定日付": {
+                "code": "確定日付",
+                "defaultValue": "",
+                "label": "確定日付",
+                "noLabel": false,
+                "options": {
+                    "取得済": {
+                        "index": "0",
+                        "label": "取得済"
+                    }
+                },
+                "required": false,
+                "type": "DROP_DOWN"
             }
         }
     },
@@ -1112,28 +1144,8 @@ export const schema_apply = {
                 "type": "ROW",
                 "fields": [
                     {
-                        "type": "RECORD_NUMBER",
-                        "code": "レコード番号",
-                        "size": {}
-                    },
-                    {
-                        "type": "DROP_DOWN",
-                        "code": "状態",
-                        "size": {}
-                    },
-                    {
-                        "type": "NUMBER",
-                        "code": "審査レコード番号",
-                        "size": {}
-                    },
-                    {
-                        "type": "SPACER",
-                        "elementId": "spaceWarningLabel",
-                        "size": {}
-                    },
-                    {
-                        "type": "CREATED_TIME",
-                        "code": "作成日時",
+                        "type": "LABEL",
+                        "label": "<div><span style=\"font-weight:700\"><font color=\"#ff0000\">本アプリには新規の必須入力フィールドを追加してはならない。</font></span><div><font color=\"#000000\">e.g. 支払日フィールドは本来必須入力ではないが、いつの間にか必須入力になっていたことで申込フォームからの送信ができなくなっていることがあった</font></div></div>",
                         "size": {}
                     }
                 ]
@@ -1141,6 +1153,21 @@ export const schema_apply = {
             {
                 "type": "ROW",
                 "fields": [
+                    {
+                        "type": "RECORD_NUMBER",
+                        "code": "レコード番号",
+                        "size": {}
+                    },
+                    {
+                        "type": "CREATED_TIME",
+                        "code": "作成日時",
+                        "size": {}
+                    },
+                    {
+                        "type": "DROP_DOWN",
+                        "code": "状態",
+                        "size": {}
+                    },
                     {
                         "type": "RADIO_BUTTON",
                         "code": "paymentTiming",
@@ -1152,8 +1179,8 @@ export const schema_apply = {
                         "size": {}
                     },
                     {
-                        "type": "LABEL",
-                        "label": "<div><font color=\"#ff0000\">※債権合計金額が100万円以上の法人の場合、</font></div><div><font color=\"#ff0000\">　債権譲渡登記の取得が必要</font></div>",
+                        "type": "NUMBER",
+                        "code": "審査レコード番号",
                         "size": {}
                     }
                 ]
@@ -1187,8 +1214,8 @@ export const schema_apply = {
                         "size": {}
                     },
                     {
-                        "type": "SPACER",
-                        "elementId": "",
+                        "type": "DATE",
+                        "code": "closingDay",
                         "size": {}
                     },
                     {
@@ -1208,22 +1235,22 @@ export const schema_apply = {
                     },
                     {
                         "type": "DATE",
-                        "code": "closingDay",
-                        "size": {}
-                    },
-                    {
-                        "type": "DATE",
                         "code": "paymentDate",
                         "size": {}
                     },
                     {
-                        "type": "SPACER",
-                        "elementId": "",
+                        "type": "DROP_DOWN",
+                        "code": "確定日付",
+                        "size": {}
+                    },
+                    {
+                        "type": "DROP_DOWN",
+                        "code": "振込",
                         "size": {}
                     },
                     {
                         "type": "LABEL",
-                        "label": "<div>【入力事項】<br /></div><div>・登記取得の要否<br /></div><div>・会費等の差引額&#xff08;工務店マスタ→営業案件&#xff09;<br /></div><div>・支払日&#xff08;工務店マスタ&#xff09;<br /></div><div><div>・協力会社ID　※回数制限を確認</div><div>・協力会社マスタに取引企業管理No.を登録<br /></div><div><br /></div></div><div>※振込金額確認後「状態&#xff1a;ID確認済」に変更し、</div><div>「支払明細書一括作成」ボタンを押すと、自動でメール送信される。<br /></div>",
+                        "label": "<div>【入力事項】<br /></div><div>・登記取得の要否<br /></div><div>・会費等の差引額&#xff08;工務店マスタ→営業案件&#xff09;<br /></div><div>・支払日&#xff08;工務店マスタ&#xff09;<br /></div><div><div>・協力会社ID　※回数制限を確認</div><div>・協力会社マスタに取引企業管理No.を登録</div></div>",
                         "size": {}
                     }
                 ]
@@ -1238,7 +1265,7 @@ export const schema_apply = {
                     },
                     {
                         "type": "LABEL",
-                        "label": "<div>※FAX先の場合、FAX送付後「状態&#xff1a;支払予定明細送付済」<div>に変更する。</div></div>",
+                        "label": "<div>※振込金額確認後「状態&#xff1a;ID確認済」に変更し、</div><div>「支払明細書一括作成」ボタンを押すと、自動でメール送信される。</div><div>※FAX先の場合、FAX送付後「状態&#xff1a;支払予定明細送付済」<div>に変更する。</div></div>",
                         "size": {}
                     }
                 ]
@@ -1700,7 +1727,7 @@ export const schema_apply = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "paymentDetail",
                         "size": {
-                            "innerHeight": "336"
+                            "innerHeight": "339"
                         }
                     }
                 ]
@@ -1840,7 +1867,9 @@ export const schema_apply = {
                     "kebanStartDate",
                     "workedDaysWFI",
                     "monthsWorkedKeban",
-                    "applicationAmount"
+                    "applicationAmount",
+                    "driverLicenseFront",
+                    "driverLicenseBack"
                 ],
                 "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"\", \"未処理\", \"ID確認済\", \"工務店確認済\", \"支払予定明細FAX送信待ち\", \"支払予定明細確認中\", \"支払予定明細送信前確認完了\", \"支払予定明細送付済\", \"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\", \"保留中\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
                 "index": "10",
@@ -1848,39 +1877,7 @@ export const schema_apply = {
                 "sort": "paymentDate desc",
                 "type": "LIST"
             },
-            "WFI一覧（実行完了・取下げ以外）": {
-                "fields": [
-                    "レコード番号",
-                    "作成日時",
-                    "状態",
-                    "closingDay",
-                    "ルックアップ",
-                    "company",
-                    "transferAmount",
-                    "kebanID",
-                    "representative",
-                    "kebanStartDate",
-                    "applicationAmount",
-                    "bankName_Form",
-                    "branchName_Form",
-                    "deposit_Form",
-                    "accountNumber_Form",
-                    "accountName_Form",
-                    "driverLicenseFront",
-                    "driverLicenseBack",
-                    "bankName",
-                    "branchName",
-                    "deposit",
-                    "accountNumber",
-                    "accountName"
-                ],
-                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"\", \"未処理\", \"ID確認済\", \"工務店確認済\", \"支払予定明細FAX送信待ち\", \"支払予定明細確認中\", \"支払予定明細送信前確認完了\", \"支払予定明細送付済\", \"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\", \"保留中\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
-                "index": "12",
-                "name": "WFI一覧（実行完了・取下げ以外）",
-                "sort": "paymentDate desc",
-                "type": "LIST"
-            },
-            "WFI一覧（実行完了以外）": {
+            "WFI重複申込者確認用（未処理・取下げ）": {
                 "fields": [
                     "レコード番号",
                     "作成日時",
@@ -1895,13 +1892,13 @@ export const schema_apply = {
                     "monthsWorkedKeban",
                     "applicationAmount"
                 ],
-                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"\", \"未処理\", \"ID確認済\", \"工務店確認済\", \"支払予定明細FAX送信待ち\", \"支払予定明細確認中\", \"支払予定明細送信前確認完了\", \"支払予定明細送付済\", \"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\", \"保留中\", \"取下げ\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
+                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"\", \"未処理\", \"取下げ\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\") and closingDay >= FROM_TODAY(-5, DAYS) and closingDay < TODAY()",
                 "index": "11",
-                "name": "WFI一覧（実行完了以外）",
+                "name": "WFI重複申込者確認用（未処理・取下げ）",
                 "sort": "closingDay desc",
                 "type": "LIST"
             },
-            "WFI以外の一覧（取下げ除外）": {
+            "ラグレス実行済み（WFI、Workship以外）": {
                 "fields": [
                     "レコード番号",
                     "状態",
@@ -1909,6 +1906,8 @@ export const schema_apply = {
                     "paymentTiming",
                     "closingDay",
                     "登記の取得",
+                    "確定日付",
+                    "振込",
                     "paymentDate",
                     "paymentAccount",
                     "productName",
@@ -1927,13 +1926,13 @@ export const schema_apply = {
                     "mail",
                     "detailSendDateTime"
                 ],
-                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 not in (\"取下げ\") and productName not like \"軽バン.com\"",
-                "index": "1",
-                "name": "WFI以外の一覧（取下げ除外）",
-                "sort": "paymentDate desc",
+                "filterCond": "company not like \"テスト\" and company not like \"test\" and productName not like \"軽バン.com\" and paymentTiming not in (\"通常払い\") and 状態 in (\"実行完了\") and billingCompany not like \"株式会社GIG\"",
+                "index": "12",
+                "name": "ラグレス実行済み（WFI、Workship以外）",
+                "sort": "作成日時 desc",
                 "type": "LIST"
             },
-            "一覧（取下げ・実行完了除外）": {
+            "ラグレス関係（WFI・通常払いは除外）": {
                 "fields": [
                     "レコード番号",
                     "状態",
@@ -1941,6 +1940,8 @@ export const schema_apply = {
                     "paymentTiming",
                     "closingDay",
                     "登記の取得",
+                    "確定日付",
+                    "振込",
                     "paymentDate",
                     "paymentAccount",
                     "productName",
@@ -1959,10 +1960,10 @@ export const schema_apply = {
                     "mail",
                     "detailSendDateTime"
                 ],
-                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 not in (\"実行完了\", \"取下げ\")",
-                "index": "2",
-                "name": "一覧（取下げ・実行完了除外）",
-                "sort": "レコード番号 desc",
+                "filterCond": "company not like \"テスト\" and company not like \"test\" and productName not like \"軽バン.com\" and paymentTiming not in (\"通常払い\")",
+                "index": "1",
+                "name": "ラグレス関係（WFI・通常払いは除外）",
+                "sort": "作成日時 desc",
                 "type": "LIST"
             },
             "一覧（取下げ除外）": {
@@ -2017,7 +2018,7 @@ export const schema_apply = {
                 "sort": "状態 asc, constructionShopId asc, closingDay asc, collectId asc, ルックアップ asc",
                 "type": "LIST"
             },
-            "当月分一覧（取下げ除外）": {
+            "対応中（取下げ・実行完了除外）": {
                 "fields": [
                     "レコード番号",
                     "状態",
@@ -2026,6 +2027,40 @@ export const schema_apply = {
                     "closingDay",
                     "登記の取得",
                     "paymentDate",
+                    "paymentAccount",
+                    "productName",
+                    "ルックアップ",
+                    "company",
+                    "billingCompany",
+                    "applicationAmount",
+                    "membership_fee",
+                    "totalReceivables",
+                    "commissionAmount",
+                    "transferAmount",
+                    "commissionAmount_late",
+                    "transferAmount_late",
+                    "transferFeeTaxIncl",
+                    "paymentDetail",
+                    "mail",
+                    "detailSendDateTime"
+                ],
+                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 not in (\"実行完了\", \"取下げ\")",
+                "index": "2",
+                "name": "対応中（取下げ・実行完了除外）",
+                "sort": "レコード番号 desc",
+                "type": "LIST"
+            },
+            "当月分一覧（取下げ、WFI、通常支払いは除外）": {
+                "fields": [
+                    "レコード番号",
+                    "状態",
+                    "collectId",
+                    "paymentTiming",
+                    "paymentDate",
+                    "振込",
+                    "確定日付",
+                    "登記の取得",
+                    "closingDay",
                     "paymentAccount",
                     "productName",
                     "company",
@@ -2043,10 +2078,10 @@ export const schema_apply = {
                     "mail",
                     "detailSendDateTime"
                 ],
-                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 not in (\"取下げ\") and paymentDate = THIS_MONTH()",
+                "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 not in (\"取下げ\") and paymentDate >= LAST_MONTH(LAST) and billingCompanyOfficialName not like \"株式会社ワールドフォースインターナショナル\" and paymentTiming in (\"未設定\", \"早払い\", \"遅払い\")",
                 "index": "3",
-                "name": "当月分一覧（取下げ除外）",
-                "sort": "paymentDate desc",
+                "name": "当月分一覧（取下げ、WFI、通常支払いは除外）",
+                "sort": "状態 asc, paymentDate desc",
                 "type": "LIST"
             },
             "振込データ出力（WFI早払い）": {
@@ -2111,15 +2146,15 @@ export const schema_apply = {
                     "レコード番号",
                     "状態",
                     "paymentTiming",
+                    "支払先正式名称",
+                    "closingDay",
+                    "paymentDate",
                     "mail",
                     "detailSendDateTime",
                     "paymentDetail",
-                    "支払先正式名称",
                     "担当者名",
                     "役職名",
                     "productName",
-                    "closingDay",
-                    "paymentDate",
                     "paymentAccount",
                     "billingCompanyOfficialName",
                     "applicationAmount",
@@ -2147,8 +2182,8 @@ export const schema_apply = {
                     "detailSendDateTime",
                     "paymentDetail",
                     "支払先正式名称",
-                    "担当者名",
-                    "役職名",
+                    "振込",
+                    "確定日付",
                     "productName",
                     "closingDay",
                     "paymentDate",
