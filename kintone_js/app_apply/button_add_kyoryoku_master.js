@@ -257,15 +257,10 @@ export const getCustomerMasterConditions = ({ customerName, customerPhone, custo
 const getMasterRecord = ({ conds }) => {
     // 申込アプリのレコードの申込者が既に協力会社マスタの中に存在するか検索する。
     // 検索フィールド：支払先, 支払先正式名称, 担当者名, メールアドレス, 電話番号(携帯/固定)
-
-    const in_query = KE_BAN_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
-    const is_keban_kyoryoku = `${komutenId_KYORYOKU} in (${in_query})`;
-    const query = `(${conds.join(" or ")}) and (${is_keban_kyoryoku})`;
-
     const body = {
         app: schema_88.id.appId,
         fields: [kyoryokuId_KYORYOKU],
-        query: query
+        query: `${conds.join(" or ")}`,
     };
     return CLIENT.record.getRecords(body);
 };
