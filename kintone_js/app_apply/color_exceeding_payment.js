@@ -10,6 +10,9 @@ locale("ja");
 (function() {
     "use strict";
     kintone.events.on("app.record.index.show", (event) => {
+        // https://developer.cybozu.io/hc/ja/articles/201941964#step1
+        if (event.viewType !== "list") return;
+
         const exceeding_color = "#f5a9f2";
 
         const records = event.records;
