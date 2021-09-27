@@ -36,15 +36,13 @@ const cancelledStatusApply = applyFields.状態.options.取下げ.label;
         // https://developer.cybozu.io/hc/ja/articles/201941964#step1
         if (event.viewType !== "list") return;
 
-        const exceeding_color = "#f5a9f2";
-
-        const records = event.records;
-
         // https://developer.cybozu.io/hc/ja/articles/201942004#step3
         // viewに目的のフィールドを含んでいない場合、getFieldElementsはnullを返す
         const date_elements = kintone.app.getFieldElements(paymentDateApply);
         if (!date_elements) return;
 
+        const exceeding_color = "#f5a9f2";
+        const records = event.records;
         const today = dayjs();
 
         date_elements.forEach((element, index) => {
