@@ -2,10 +2,10 @@
     申込アプリにおいて、支払日を過ぎているレコードに色を付ける
 */
 
-const dayjs = require("dayjs");
-const isSameOrAfter = require("dayjs/plugin/isSameOrAfter");
-dayjs.extend(isSameOrAfter);
-dayjs.locale("ja");
+import dayjs, { extend, locale } from "dayjs";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+extend(isSameOrAfter);
+locale("ja");
 
 (function() {
     "use strict";
