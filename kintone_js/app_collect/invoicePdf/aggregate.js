@@ -34,7 +34,7 @@ const APP_ID_APPLY             = applyAppSchema.id.appId;
 const fieldRecordId_APPLY      = applyFields.レコード番号.code;
 const fieldConstructorId_APPLY = applyFields.constructionShopId.code;
 
-import { getCollectAppSchema } from "../../util/choiceCollectAppSchema";
+import { getCollectAppSchema, detectApp } from "../../util/choiceCollectAppSchema";
 const collectAppSchema = (() => {
     try {
         return getCollectAppSchema(kintone.app.getId());
@@ -134,7 +134,7 @@ export async function getAggregatedParentRecords(records) {
     let include_ke_ban_records = false;
     const today = (() => {
         // 開発版アプリの場合は今日として扱う日付を指定可能
-        if (APP_ID.COLLECT === APP_ID_DEV.COLLECT) {
+        if (detectApp(kintone.app.getId()) === "dev") {
             return dayjs(prompt("今日の日付：YYYY-MM-DD"));
         } else {
             return dayjs();
