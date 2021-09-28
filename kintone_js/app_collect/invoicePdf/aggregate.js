@@ -75,6 +75,7 @@ const tableFieldBackRateIV_COLLECT              = collectFields.invoiceTargets.f
 const tableFieldActuallyOrdererIV_COLLECT       = collectFields.invoiceTargets.fields.actuallyOrdererIV.code;
 
 import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "../../96/common";
+const isKeban = (constructorId) => KE_BAN_CONSTRUCTORS.includes(constructorId);
 import { isGigConstructorID } from "../../util/gig_utils";
 import { getUniqueCombinations } from "../../util/manipulations";
 
@@ -92,7 +93,7 @@ export async function getAggregatedParentRecords(records) {
     const unique_key_pairs = getUniqueCombinations(pairs, Object.keys(pairs[0]));
 
     // 軽バン.com案件は別集計する
-    const target_pairs = unique_key_pairs.filter((p) => !KE_BAN_CONSTRUCTORS.includes(p.id));
+    const target_pairs = unique_key_pairs.filter((p) => !isKeban(p.id));
 
     // 親レコード更新用のオブジェクトを作成
     const update_targets_standard = await asyncMap(target_pairs, async (pair) => {
@@ -134,7 +135,7 @@ export async function getAggregatedParentRecords(records) {
     const today = detectApp(kintone.app.getId()) === "dev"
         ? dayjs(prompt("今日の日付：YYYY-MM-DD"))
         : dayjs();
-    if (unique_key_pairs.some((p) => KE_BAN_CONSTRUCTORS.includes(p.id))
+    if (unique_key_pairs.some((p) => isKeban(p.id))
         && (today.date() > 26 || today.date() < 8)) {
         const message = `${KE_BAN_PRODUCT_NAME}の回収レコードについて振込依頼書を作成しますか？\n`
             + "\n"
@@ -143,9 +144,7 @@ export async function getAggregatedParentRecords(records) {
         include_ke_ban_records = confirm(message);
     }
     if (include_ke_ban_records) {
-        const ke_ban_records = records.filter((r) => {
-            return KE_BAN_CONSTRUCTORS.includes(r[fieldConstructionShopId_COLLECT]["value"]);
-        });
+        const ke_ban_records = records.filter((r) => isKeban(r[fieldConstructionShopId_COLLECT]["value"]));
 
         const closing_months = Array.from(new Set(ke_ban_records
             // 締め日フィールドの年月ごとにまとめる
