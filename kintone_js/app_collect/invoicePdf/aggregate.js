@@ -12,36 +12,29 @@ const fieldConstructorId_CONSTRUCTOR            = schema_96.fields.properties.id
 const fieldTmpcommissionRate_CONSTRUCTOR        = schema_96.fields.properties.tmpcommissionRate.code;
 const fieldConstructorName_CONSTRUCTOR          = schema_96.fields.properties.工務店正式名称.code;
 
-const APP_ID_DEV = {
-    APPLY: 159,
-    COLLECT: 160
-};
-
-const APP_ID_PROD = {
-    APPLY: 161,
-    COLLECT: 162
-};
-
-const APP_ID = ((app_id) => {
-    switch(app_id) {
-    // 開発版の回収アプリ
-    case 160:
-        return APP_ID_DEV;
-
-    // 本番の回収アプリ
-    case 162:
-        return APP_ID_PROD;
-    default:
-        console.warn(`Unknown app: ${  app_id}`);
+import { getApplyAppSchema, UnknownAppError } from "../../util/choiceApplyAppSchema";
+const applyAppSchema = (() => {
+    try {
+        return getApplyAppSchema(kintone.app.getId());
+    } catch (e) {
+        if (e instanceof UnknownAppError) {
+            alert("不明なアプリです。申込アプリで実行してください。");
+        } else {
+            console.error(e);
+            const additional_info = e.message ?? JSON.stringify(e);
+            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
+                + "\n追加の情報: "
+                + `\n${additional_info}`);
+        }
     }
-})(kintone.app.getId());
+})();
+if (!applyAppSchema) throw new Error();
+const applyFields = applyAppSchema.fields.properties;
+const APP_ID_APPLY             = applyAppSchema.id.appId;
+const fieldRecordId_APPLY      = applyFields.レコード番号.code;
+const fieldConstructorId_APPLY = applyFields.constructionShopId.code;
 
-import { schema_apply } from "../../161/schema";
-const APP_ID_APPLY                              = APP_ID.APPLY;
-const fieldRecordId_APPLY                       = schema_apply.fields.properties.レコード番号.code;
-const fieldConstructorId_APPLY                  = schema_apply.fields.properties.constructionShopId.code;
-
-import { getCollectAppSchema, UnknownAppError } from "../../util/choiceCollectAppSchema";
+import { getCollectAppSchema } from "../../util/choiceCollectAppSchema";
 const collectAppSchema = (() => {
     try {
         return getCollectAppSchema(kintone.app.getId());
