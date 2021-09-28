@@ -219,14 +219,13 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                 // 社内向けの申込受付通知
                 internal_message.from = env.from_address;
                 internal_message.to = env.to_address;
-                internal_message.cc = env.cc_address;
                 internal_message.subject = "軽バン .com登録ドライバー様より前払いのお申し込みがありました。";
                 if (internal_message.attachments.length == 0) {
                     delete internal_message.attachments;
                 }
 
                 sendgrid.setApiKey(process.env.wfi_sendgrid_api_key);
-                console.log(`sending internal notification... To: ${internal_message.to}, Cc: ${internal_message.cc}`);
+                console.log(`sending internal notification... To: ${internal_message.to}`);
                 await sendgrid.send(internal_message)
                     .catch((error) => {
                         console.error(`KE-BAN:社内通知メール送信エラー：${JSON.stringify(error)}`);
@@ -239,14 +238,13 @@ exports.ke_ban_form_dev = functions.https.onRequest(async (req, res) => {
                 form_data["date_now"] = `${jst_now.getFullYear()}年 ${jst_now.getMonth()+1}月 ${jst_now.getDate()}日`;
                 auto_reply_message.from = env.from_address;
                 auto_reply_message.to = form_data["mail"];
-                auto_reply_message.cc = env.cc_address;
                 auto_reply_message.subject = "【軽バン .com前払い事務局】お申込みいただきありがとうございます。";
                 const auto_reply_text = fs.readFileSync(env.mail_template, "utf8");
                 auto_reply_message.text = substituteTemplate(auto_reply_text, form_data);
                 if (auto_reply_message.attachments.length == 0) {
                     delete auto_reply_message.attachments;
                 }
-                console.log(`sending auto reply... To: ${auto_reply_message.to}, Cc: ${auto_reply_message.cc}`);
+                console.log(`sending auto reply... To: ${auto_reply_message.to}`);
                 await sendgrid.send(auto_reply_message)
                     .catch((error) => {
                         // このメールは最悪届かなくてもオペレーションを続行できるため、フロントにはエラーを返さない
@@ -541,7 +539,6 @@ class Environ {
             // 申込内容をメールで送信する
             this.from_address           = process.env.wfi_dev_from_address;
             this.to_address             = process.env.wfi_dev_to_address;
-            this.cc_address             = process.env.wfi_dev_cc_address;
 
             this.app_id                 = process.env.app_id_apply_dev;
             this.api_token_record       = process.env.api_token_apply_record_dev;
@@ -553,7 +550,6 @@ class Environ {
             // 本番環境
             this.from_address           = process.env.wfi_prod_from_address;
             this.to_address             = process.env.wfi_prod_to_address;
-            this.cc_address             = process.env.wfi_prod_cc_address;
 
             this.app_id                 = process.env.app_id_apply_prod;
             this.api_token_record       = process.env.api_token_apply_record_prod;
