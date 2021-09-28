@@ -73,11 +73,16 @@ const tableFieldReceivableIV_COLLECT            = collectFields.invoiceTargets.f
 const tableFieldPaymentDateIV_COLLECT           = collectFields.invoiceTargets.fields.paymentDateIV.code;
 const tableFieldBackRateIV_COLLECT              = collectFields.invoiceTargets.fields.backRateIV.code;
 const tableFieldActuallyOrdererIV_COLLECT       = collectFields.invoiceTargets.fields.actuallyOrdererIV.code;
+const fieldInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.code;
+const labelInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.label;
 
 import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "../../96/common";
 const isKeban = (constructorId) => KE_BAN_CONSTRUCTORS.includes(constructorId);
 import { isGigConstructorID } from "../../util/gig_utils";
 import { getUniqueCombinations } from "../../util/manipulations";
+
+const ExtensibleCustomError = require("extensible-custom-error");
+export class UndefinedPdfDateError extends ExtensibleCustomError { }
 
 export async function getAggregatedParentRecords(records) {
     console.log("振込依頼書作成対象のレコードを締日と工務店IDごとにまとめ、明細の情報を親に集約する");
@@ -96,7 +101,7 @@ export async function getAggregatedParentRecords(records) {
     const target_pairs = unique_key_pairs.filter((p) => !isKeban(p.id));
 
     // 親レコード更新用のオブジェクトを作成
-    const excludeKebanTargets = await asyncMap(target_pairs, async (pair) => {
+    const excludeKebanTargets = (await asyncMap(target_pairs, async (pair) => {
         // 振込依頼書をまとめるべき回収レコードを配列としてグループ化
         const invoice_group = records.filter((record) => {
             return record[fieldConstructionShopId_COLLECT]["value"] === pair.id
@@ -115,10 +120,17 @@ export async function getAggregatedParentRecords(records) {
                 return invoice_group.reduce(sumInvoiceBills, 0);
             }
         })(parent_record[fieldConstructionShopId_COLLECT]["value"]);
+        const pdfDate = getPdfDate(parent_record[fieldRecordId_COLLECT]["value"], invoice_group);
+        if (!pdfDate) return null; // 外側のfilterで弾く
 
         // apiに渡すためにオブジェクトの構造を整える
-        return getUpdateRecordObject(parent_record[fieldRecordId_COLLECT]["value"], total_billed, invoice_targets);
-    });
+        return getUpdateRecordObject(
+            parent_record[fieldRecordId_COLLECT]["value"],
+            total_billed,
+            invoice_targets,
+            pdfDate
+        );
+    })).filter((t) => Boolean(t));
 
     const kebanTargets = await (async (records, unique_key_pairs) => {
         if (!shouldIncludeKebanRecords(unique_key_pairs)) {
@@ -132,7 +144,7 @@ export async function getAggregatedParentRecords(records) {
             .map((r) => dayjs(r[fieldClosingDate_COLLECT]["value"]).format("YYYY-MM")))
         );
 
-        const update_targets_keban = await asyncMap(closing_months, async (closing) => {
+        const update_targets_keban = (await asyncMap(closing_months, async (closing) => {
             const invoice_group = ke_ban_records.filter((r) => {
                 return dayjs(r[fieldClosingDate_COLLECT]["value"]).format("YYYY-MM") === closing;
             });
@@ -140,9 +152,16 @@ export async function getAggregatedParentRecords(records) {
             const parent_record = invoice_group.reduce(returnEarlyRecord);
             const invoice_targets = await asyncFlatMap(invoice_group, convertToKintoneSubTableObject);
             const total_billed = invoice_group.reduce(sumInvoiceBills, 0);
+            const pdfDate = getPdfDate(parent_record[fieldRecordId_COLLECT]["value"], invoice_group);
+            if (!pdfDate) return null; // 外側のfilterで弾く
 
-            return getUpdateRecordObject(parent_record[fieldRecordId_COLLECT]["value"], total_billed, invoice_targets);
-        });
+            return getUpdateRecordObject(
+                parent_record[fieldRecordId_COLLECT]["value"],
+                total_billed,
+                invoice_targets,
+                pdfDate
+            );
+        })).filter((t) => Boolean(t));
 
         return update_targets_keban;
     })(records, unique_key_pairs);
@@ -281,15 +300,91 @@ const convertToKintoneSubTableObject = async (record) => {
     return for_invoice_sub_records;
 };
 
-const getUpdateRecordObject = (record_id, total_billed, invoice_targets) => {
+const getPdfDate = (parentId, invoice_group) => {
+    const records = invoice_group.map((r) => {
+        return {
+            id: r[fieldRecordId_COLLECT]["value"],
+            pdfDate: r[fieldInvoicePdfDate_COLLECT]["value"],
+        };
+    });
+
+    try {
+        return selectPdfDate({ parentId, records });
+    } catch(e) {
+        if (e instanceof UndefinedPdfDateError) {
+            alert("次のどれかのレコードについて、"
+                + `フィールド「${labelInvoicePdfDate_COLLECT}」を入力してください。\n\n`
+                + `レコード番号: ${records.map((r) => r.id).join(", ")}`);
+        } else {
+            console.error(e);
+            const additional_info = e.message ?? JSON.stringify(e);
+            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
+                + "\n追加の情報: "
+                + `\n${additional_info}`);
+        }
+        return null;
+    }
+};
+
+/**
+ * @typedef {Object} recordOfPdfDatePart
+ * @property {number} id
+ * @property {string} pdfDate - YYYY-MM-DD
+ */
+
+/**
+ * @typedef {Object} pdfDateInfo
+ * @property {number} [parentId]
+ * @property {recordOfPdfDatePart[]} records - YYYY-MM-DD
+ */
+
+/**
+* @summary 請求書としてまとめる複数の回収レコードのinvoicePdfDateの中から最終的にpdfに表示する日付を取得する。
+* @param {pdfDateInfo} group - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
+* @return {string} YYYY-MM-DD
+*/
+const selectPdfDate = (group) => {
+    // 親レコードが確定している場合、そのレコードに記入している日付を返す
+    const specifiedParentId = Boolean(group.parentId);
+    const existsParentRecord = group.records
+        .map((record) => record.id)
+        .includes(group.parentId);
+    const parentHasPdfDate = Boolean(
+        group.records.find((r) => r.id === group.parentId).pdfDate
+    );
+    if (specifiedParentId && existsParentRecord && parentHasPdfDate) {
+        // 正常系
+        return group.records.find((record) => record.id === group.parentId).pdfDate;
+    }
+
+    // 親レコードが確定していない場合、groupのうち日付を記入済みのものの中で最もレコード番号が小さいものに記入している日付を返す
+    const validRecords = group.records.filter((r) => Boolean(r.pdfDate));
+    if (validRecords.length > 0) {
+        return validRecords
+            .reduce((acc, record) => {
+                return acc.id < record.id
+                    ? acc
+                    : record;
+            })
+            .pdfDate;
+    }
+
+    // どのレコードにも日付を記入していない場合は突き返す
+    throw new UndefinedPdfDateError();
+};
+
+const getUpdateRecordObject = (parentRecordId, total_billed, invoice_targets, pdfDate) => {
     return {
-        "id": record_id,
+        "id": parentRecordId,
         "record": {
             [fieldParentCollectRecord_COLLECT]: {
                 "value": [statusParent_COLLECT] // チェックボックス型は複数選択のフィールドなので配列で値を指定
             },
             [fieldTotalBilledAmount_COLLECT]: {
                 "value": total_billed
+            },
+            [fieldInvoicePdfDate_COLLECT]: {
+                "value": pdfDate
             },
             [tableInvoiceTargets_COLLECT]: {
                 "value": invoice_targets
