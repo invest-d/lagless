@@ -72,6 +72,7 @@ const tableCloudSignApplies_COLLECT             = collectFields.cloudSignApplies
 const tableInvoiceTargets_COLLECT               = collectFields.invoiceTargets.code;
 const fieldInvoicePdf_COLLECT                   = collectFields.invoicePdf.code;
 const fieldConfirmStatusInvoice_COLLECT         = collectFields.confirmStatusInvoice.code;
+const fieldInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.code;
 
 import * as kintoneAPI from "../util/kintoneAPI";
 
@@ -169,7 +170,8 @@ function getTargetRecords() {
             fieldParentCollectRecord_COLLECT,
             fieldTotalBilledAmount_COLLECT,
             tableCloudSignApplies_COLLECT,
-            tableInvoiceTargets_COLLECT
+            tableInvoiceTargets_COLLECT,
+            fieldInvoicePdfDate_COLLECT,
         ],
         "query": `${fieldStatus_COLLECT} in ("${statusApproved_COLLECT}")`
     };
