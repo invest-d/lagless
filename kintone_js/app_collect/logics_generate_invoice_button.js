@@ -1097,7 +1097,7 @@ const getGigDoc = (parent_record) => {
     };
     doc.content.push(detail_table_title);
 
-    const detail_table = ((details, total, total_rate) => {
+    const detail_table = ((details, total) => {
         // GIG用の明細テーブルを生成する
         const detail_table = {
             table: {
@@ -1280,7 +1280,7 @@ const getGigDoc = (parent_record) => {
         detail_table.table.body.push(sum_row);
 
         return detail_table;
-    })(parent_record[tableInvoiceTargets_COLLECT]["value"], total, parent_record["rate"]);
+    })(parent_record[tableInvoiceTargets_COLLECT]["value"], total);
     doc.content.push(detail_table);
 
     doc.content.push(bar);
