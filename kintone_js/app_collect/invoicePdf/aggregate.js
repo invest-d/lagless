@@ -96,7 +96,7 @@ export async function getAggregatedParentRecords(records) {
     const target_pairs = unique_key_pairs.filter((p) => !isKeban(p.id));
 
     // 親レコード更新用のオブジェクトを作成
-    const update_targets_standard = await asyncMap(target_pairs, async (pair) => {
+    const excludeKebanTargets = await asyncMap(target_pairs, async (pair) => {
         // 振込依頼書をまとめるべき回収レコードを配列としてグループ化
         const invoice_group = records.filter((record) => {
             return record[fieldConstructionShopId_COLLECT]["value"] === pair.id
@@ -125,9 +125,11 @@ export async function getAggregatedParentRecords(records) {
         return getUpdateRecordObject(parent_record[fieldRecordId_COLLECT]["value"], total_billed, invoice_targets);
     });
 
-    let update_targets = update_targets_standard;
+    const kebanTargets = await (async (records, unique_key_pairs) => {
+        if (!shouldIncludeKebanRecords(unique_key_pairs)) {
+            return [];
+        }
 
-    if (shouldIncludeKebanRecords(unique_key_pairs)) {
         const ke_ban_records = records.filter((r) => isKeban(r[fieldConstructionShopId_COLLECT]["value"]));
 
         const closing_months = Array.from(new Set(ke_ban_records
@@ -147,10 +149,10 @@ export async function getAggregatedParentRecords(records) {
             return getUpdateRecordObject(parent_record[fieldRecordId_COLLECT]["value"], total_billed, invoice_targets);
         });
 
-        update_targets = update_targets_standard.concat(update_targets_keban);
-    }
+        return update_targets_keban;
+    })(records, unique_key_pairs);
 
-    return update_targets;
+    return excludeKebanTargets.concat(kebanTargets);
 }
 
 // 軽バン.com案件は、実行済みの回収レコードがあっても常に振込依頼書を作成するわけではない。
