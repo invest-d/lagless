@@ -127,23 +127,7 @@ export async function getAggregatedParentRecords(records) {
 
     let update_targets = update_targets_standard;
 
-    // 軽バン.com案件は、実行済みの回収レコードがあっても常に振込依頼書を作成するわけではない。
-    // 月ごとの最後の実行後に、ひと月ぶん全てまとめて振込依頼書を作成するのが基本。
-    // 月ごとの最後の実行日を厳密に計算するのは煩雑になるため、最短の申込締切日(26日)〜振込依頼書送信期日（翌月第2週……遅くとも8日）までの場合のみ振込依頼書を作成できる仕様とした。
-    let include_ke_ban_records = false;
-    // 開発版アプリの場合は今日として扱う日付を指定可能
-    const today = detectApp(kintone.app.getId()) === "dev"
-        ? dayjs(prompt("今日の日付：YYYY-MM-DD"))
-        : dayjs();
-    if (unique_key_pairs.some((p) => isKeban(p.id))
-        && (today.date() > 26 || today.date() < 8)) {
-        const message = `${KE_BAN_PRODUCT_NAME}の回収レコードについて振込依頼書を作成しますか？\n`
-            + "\n"
-            + "はい→全てのレコードの振込依頼書を作成\n"
-            + `いいえ→${KE_BAN_PRODUCT_NAME}以外の回収レコードのみ振込依頼書を作成`;
-        include_ke_ban_records = confirm(message);
-    }
-    if (include_ke_ban_records) {
+    if (shouldIncludeKebanRecords(unique_key_pairs)) {
         const ke_ban_records = records.filter((r) => isKeban(r[fieldConstructionShopId_COLLECT]["value"]));
 
         const closing_months = Array.from(new Set(ke_ban_records
@@ -168,6 +152,33 @@ export async function getAggregatedParentRecords(records) {
 
     return update_targets;
 }
+
+// 軽バン.com案件は、実行済みの回収レコードがあっても常に振込依頼書を作成するわけではない。
+// 月ごとの最後の実行後に、ひと月ぶん全てまとめて振込依頼書を作成するのが基本。
+// 月ごとの最後の実行日を厳密に計算するのは煩雑になるため、最短の申込締切日(26日)〜振込依頼書送信期日（翌月第2週……遅くとも8日）までの場合のみ振込依頼書を作成できる仕様とした。
+const shouldIncludeKebanRecords = (pairs) => {
+    // 開発版アプリの場合は今日として扱う日付を指定可能
+    const today = detectApp(kintone.app.getId()) === "dev"
+        ? dayjs(prompt("今日の日付：YYYY-MM-DD"))
+        : dayjs();
+
+    const canMakeKebanInvoiceTerm = (today) => today.date() > 26 || today.date() < 8;
+    const includedKebanRecords = pairs.some((p) => isKeban(p.id));
+
+    const shouldInclude = (canMake) => {
+        if (canMake) {
+            const message = `${KE_BAN_PRODUCT_NAME}の回収レコードについて振込依頼書を作成しますか？\n`
+                + "\n"
+                + "はい→全てのレコードの振込依頼書を作成\n"
+                + `いいえ→${KE_BAN_PRODUCT_NAME}以外の回収レコードのみ振込依頼書を作成`;
+            return confirm(message);
+        } else {
+            return false;
+        }
+    };
+
+    return shouldInclude(includedKebanRecords && canMakeKebanInvoiceTerm(today));
+};
 
 // 振込依頼書が同一となる回収レコードのグループに対する各種処理----------------------------------------
 const returnEarlyRecord = (a, b) => {
