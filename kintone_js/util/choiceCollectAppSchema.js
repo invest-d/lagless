@@ -16,10 +16,10 @@ export const getCollectAppSchema = (displayingAppId) => {
 };
 
 export const detectApp = (appId) => {
-    if (!appId || ![160, 162].includes(appId)) {
+    if (!appId || ![159, 161, 160, 162].includes(appId)) {
         throw new UnknownAppError();
     }
 
-    if (appId === 160) return "dev";
-    if (appId === 162) return "prod";
+    if ([159, 160].includes(appId)) return "dev";
+    if ([161, 162].includes(appId)) return "prod";
 };

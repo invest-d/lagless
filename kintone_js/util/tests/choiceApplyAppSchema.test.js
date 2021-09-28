@@ -9,7 +9,7 @@ test("161を渡すと本番判定になる", () => {
 });
 
 test("不明なidを渡すと例外をthrowする", () => {
-    const detectError = () => detectApp(160);
+    const detectError = () => detectApp(99);
     expect(detectError).toThrowError(UnknownAppError);
 });
 
