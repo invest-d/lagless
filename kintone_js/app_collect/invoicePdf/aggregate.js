@@ -12,7 +12,24 @@ const fieldConstructorId_CONSTRUCTOR            = schema_96.fields.properties.id
 const fieldTmpcommissionRate_CONSTRUCTOR        = schema_96.fields.properties.tmpcommissionRate.code;
 const fieldConstructorName_CONSTRUCTOR          = schema_96.fields.properties.工務店正式名称.code;
 
-import { schema_collect } from "../../162/schema";
+import { getCollectAppSchema, UnknownAppError } from "../../util/choiceCollectAppSchema";
+const collectAppSchema = (() => {
+    try {
+        return getCollectAppSchema(kintone.app.getId());
+    } catch (e) {
+        if (e instanceof UnknownAppError) {
+            alert("不明なアプリです。回収アプリで実行してください。");
+        } else {
+            console.error(e);
+            const additional_info = e.message ?? JSON.stringify(e);
+            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
+                + "\n追加の情報: "
+                + `\n${additional_info}`);
+        }
+    }
+})();
+if (!collectAppSchema) throw new Error();
+const collectFields = collectAppSchema.fields.properties;
 
 const APP_ID_DEV = {
     APPLY: 159,
@@ -43,27 +60,27 @@ const APP_ID_APPLY                              = APP_ID.APPLY;
 const fieldRecordId_APPLY                       = schema_apply.fields.properties.レコード番号.code;
 const fieldConstructorId_APPLY                  = schema_apply.fields.properties.constructionShopId.code;
 
-const fieldRecordId_COLLECT                     = schema_collect.fields.properties.レコード番号.code;
-const fieldConstructionShopId_COLLECT           = schema_collect.fields.properties.constructionShopId.code;
-const fieldClosingDate_COLLECT                  = schema_collect.fields.properties.closingDate.code;
-const fieldCollectableAmount_COLLECT            = schema_collect.fields.properties.scheduledCollectableAmount.code;
-const fieldParentCollectRecord_COLLECT          = schema_collect.fields.properties.parentCollectRecord.code;
-const statusParent_COLLECT                      = schema_collect.fields.properties.parentCollectRecord.options.true.label;
-const fieldTotalBilledAmount_COLLECT            = schema_collect.fields.properties.totalBilledAmount.code;
-const tableCloudSignApplies_COLLECT             = schema_collect.fields.properties.cloudSignApplies.code;
-const tableFieldApplyRecordNoCS_COLLECT         = schema_collect.fields.properties.cloudSignApplies.fields.applyRecordNoCS.code;
-const tableFieldPaymentTimingCS_COLLECT         = schema_collect.fields.properties.cloudSignApplies.fields.paymentTimingCS.code;
-const tableFieldApplicantOfficialNameCS_COLLECT = schema_collect.fields.properties.cloudSignApplies.fields.applicantOfficialNameCS.code;
-const tableFieldReceivableCS_COLLECT            = schema_collect.fields.properties.cloudSignApplies.fields.receivableCS.code;
-const tableFieldPaymentDateCS_COLLECT           = schema_collect.fields.properties.cloudSignApplies.fields.paymentDateCS.code;
-const tableInvoiceTargets_COLLECT               = schema_collect.fields.properties.invoiceTargets.code;
-const tableFieldApplyRecordNoIV_COLLECT         = schema_collect.fields.properties.invoiceTargets.fields.applyRecordNoIV.code;
-const tableFieldPaymentTimingIV_COLLECT         = schema_collect.fields.properties.invoiceTargets.fields.paymentTimingIV.code;
-const tableFieldApplicantOfficialNameIV_COLLECT = schema_collect.fields.properties.invoiceTargets.fields.applicantOfficialNameIV.code;
-const tableFieldReceivableIV_COLLECT            = schema_collect.fields.properties.invoiceTargets.fields.receivableIV.code;
-const tableFieldPaymentDateIV_COLLECT           = schema_collect.fields.properties.invoiceTargets.fields.paymentDateIV.code;
-const tableFieldBackRateIV_COLLECT              = schema_collect.fields.properties.invoiceTargets.fields.backRateIV.code;
-const tableFieldActuallyOrdererIV_COLLECT       = schema_collect.fields.properties.invoiceTargets.fields.actuallyOrdererIV.code;
+const fieldRecordId_COLLECT                     = collectFields.レコード番号.code;
+const fieldConstructionShopId_COLLECT           = collectFields.constructionShopId.code;
+const fieldClosingDate_COLLECT                  = collectFields.closingDate.code;
+const fieldCollectableAmount_COLLECT            = collectFields.scheduledCollectableAmount.code;
+const fieldParentCollectRecord_COLLECT          = collectFields.parentCollectRecord.code;
+const statusParent_COLLECT                      = collectFields.parentCollectRecord.options.true.label;
+const fieldTotalBilledAmount_COLLECT            = collectFields.totalBilledAmount.code;
+const tableCloudSignApplies_COLLECT             = collectFields.cloudSignApplies.code;
+const tableFieldApplyRecordNoCS_COLLECT         = collectFields.cloudSignApplies.fields.applyRecordNoCS.code;
+const tableFieldPaymentTimingCS_COLLECT         = collectFields.cloudSignApplies.fields.paymentTimingCS.code;
+const tableFieldApplicantOfficialNameCS_COLLECT = collectFields.cloudSignApplies.fields.applicantOfficialNameCS.code;
+const tableFieldReceivableCS_COLLECT            = collectFields.cloudSignApplies.fields.receivableCS.code;
+const tableFieldPaymentDateCS_COLLECT           = collectFields.cloudSignApplies.fields.paymentDateCS.code;
+const tableInvoiceTargets_COLLECT               = collectFields.invoiceTargets.code;
+const tableFieldApplyRecordNoIV_COLLECT         = collectFields.invoiceTargets.fields.applyRecordNoIV.code;
+const tableFieldPaymentTimingIV_COLLECT         = collectFields.invoiceTargets.fields.paymentTimingIV.code;
+const tableFieldApplicantOfficialNameIV_COLLECT = collectFields.invoiceTargets.fields.applicantOfficialNameIV.code;
+const tableFieldReceivableIV_COLLECT            = collectFields.invoiceTargets.fields.receivableIV.code;
+const tableFieldPaymentDateIV_COLLECT           = collectFields.invoiceTargets.fields.paymentDateIV.code;
+const tableFieldBackRateIV_COLLECT              = collectFields.invoiceTargets.fields.backRateIV.code;
+const tableFieldActuallyOrdererIV_COLLECT       = collectFields.invoiceTargets.fields.actuallyOrdererIV.code;
 
 import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "../../96/common";
 import { isGigConstructorID } from "../../util/gig_utils";

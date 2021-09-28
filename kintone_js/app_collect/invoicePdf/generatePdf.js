@@ -43,58 +43,51 @@ import { schema_96 } from "../../96/schema";
 const APP_ID_CONSTRUCTOR                        = schema_96.id.appId;
 const fieldDaysLater_CONSTRUCTOR                = schema_96.fields.properties.daysLater.code;
 
-import { schema_collect } from "../../162/schema";
-const APP_ID_DEV = {
-    APPLY: 159,
-    COLLECT: 160
-};
-
-const APP_ID_PROD = {
-    APPLY: 161,
-    COLLECT: 162
-};
-
-const APP_ID = ((app_id) => {
-    switch(app_id) {
-    // 開発版の回収アプリ
-    case 160:
-        return APP_ID_DEV;
-
-    // 本番の回収アプリ
-    case 162:
-        return APP_ID_PROD;
-    default:
-        console.warn(`Unknown app: ${  app_id}`);
+import { getCollectAppSchema, UnknownAppError } from "../../util/choiceCollectAppSchema";
+const collectAppSchema = (() => {
+    try {
+        return getCollectAppSchema(kintone.app.getId());
+    } catch (e) {
+        if (e instanceof UnknownAppError) {
+            alert("不明なアプリです。回収アプリで実行してください。");
+        } else {
+            console.error(e);
+            const additional_info = e.message ?? JSON.stringify(e);
+            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
+                + "\n追加の情報: "
+                + `\n${additional_info}`);
+        }
     }
-})(kintone.app.getId());
-
-const APP_ID_COLLECT                            = APP_ID.COLLECT;
-const fieldRecordId_COLLECT                     = schema_collect.fields.properties.レコード番号.code;
-const fieldDeadline_COLLECT                     = schema_collect.fields.properties.deadline.code;
-const fieldProductName_COLLECT                  = schema_collect.fields.properties.productName.code;
-const fieldConstructionShopId_COLLECT           = schema_collect.fields.properties.constructionShopId.code;
-const fieldConstructionShopName_COLLECT         = schema_collect.fields.properties.constructionShopName.code;
-const fieldCeoTitle_COLLECT                     = schema_collect.fields.properties.ceoTitle.code;
-const fieldCeo_COLLECT                          = schema_collect.fields.properties.ceo.code;
-const fieldMailToInvest_COLLECT                 = schema_collect.fields.properties.mailToInvest.code;
-const fieldClosingDate_COLLECT                  = schema_collect.fields.properties.closingDate.code;
-const fieldAccount_COLLECT                      = schema_collect.fields.properties.account.code;
-const fieldDaysLater_COLLECT                    = schema_collect.fields.properties.daysLater.code;
-const fieldStatus_COLLECT                       = schema_collect.fields.properties.collectStatus.code;
-const statusApproved_COLLECT                    = schema_collect.fields.properties.collectStatus.options.クラウドサイン承認済み.label;
-const fieldParentCollectRecord_COLLECT          = schema_collect.fields.properties.parentCollectRecord.code;
-const statusParent_COLLECT                      = schema_collect.fields.properties.parentCollectRecord.options.true.label;
-const fieldTotalBilledAmount_COLLECT            = schema_collect.fields.properties.totalBilledAmount.code;
-const tableInvoiceTargets_COLLECT               = schema_collect.fields.properties.invoiceTargets.code;
-const tableFieldPaymentTimingIV_COLLECT         = schema_collect.fields.properties.invoiceTargets.fields.paymentTimingIV.code;
-const tableFieldApplicantOfficialNameIV_COLLECT = schema_collect.fields.properties.invoiceTargets.fields.applicantOfficialNameIV.code;
-const tableFieldReceivableIV_COLLECT            = schema_collect.fields.properties.invoiceTargets.fields.receivableIV.code;
-const tableFieldPaymentDateIV_COLLECT           = schema_collect.fields.properties.invoiceTargets.fields.paymentDateIV.code;
-const tableFieldBackRateIV_COLLECT              = schema_collect.fields.properties.invoiceTargets.fields.backRateIV.code;
-const tableFieldBackAmountIV_COLLECT            = schema_collect.fields.properties.invoiceTargets.fields.backAmountIV.code;
-const tableFieldBackedReceivableIV_COLLECT      = schema_collect.fields.properties.invoiceTargets.fields.backedReceivableIV.code;
-const tableFieldActuallyOrdererIV_COLLECT       = schema_collect.fields.properties.invoiceTargets.fields.actuallyOrdererIV.code;
-const fieldHandleForHolidays_COLLECT            = schema_collect.fields.properties.handleForHolidays.code;
+})();
+if (!collectAppSchema) throw new Error();
+const collectFields = collectAppSchema.fields.properties;
+const APP_ID_COLLECT                            = collectAppSchema.id.appId;
+const fieldRecordId_COLLECT                     = collectFields.レコード番号.code;
+const fieldDeadline_COLLECT                     = collectFields.deadline.code;
+const fieldProductName_COLLECT                  = collectFields.productName.code;
+const fieldConstructionShopId_COLLECT           = collectFields.constructionShopId.code;
+const fieldConstructionShopName_COLLECT         = collectFields.constructionShopName.code;
+const fieldCeoTitle_COLLECT                     = collectFields.ceoTitle.code;
+const fieldCeo_COLLECT                          = collectFields.ceo.code;
+const fieldMailToInvest_COLLECT                 = collectFields.mailToInvest.code;
+const fieldClosingDate_COLLECT                  = collectFields.closingDate.code;
+const fieldAccount_COLLECT                      = collectFields.account.code;
+const fieldDaysLater_COLLECT                    = collectFields.daysLater.code;
+const fieldStatus_COLLECT                       = collectFields.collectStatus.code;
+const statusApproved_COLLECT                    = collectFields.collectStatus.options.クラウドサイン承認済み.label;
+const fieldParentCollectRecord_COLLECT          = collectFields.parentCollectRecord.code;
+const statusParent_COLLECT                      = collectFields.parentCollectRecord.options.true.label;
+const fieldTotalBilledAmount_COLLECT            = collectFields.totalBilledAmount.code;
+const tableInvoiceTargets_COLLECT               = collectFields.invoiceTargets.code;
+const tableFieldPaymentTimingIV_COLLECT         = collectFields.invoiceTargets.fields.paymentTimingIV.code;
+const tableFieldApplicantOfficialNameIV_COLLECT = collectFields.invoiceTargets.fields.applicantOfficialNameIV.code;
+const tableFieldReceivableIV_COLLECT            = collectFields.invoiceTargets.fields.receivableIV.code;
+const tableFieldPaymentDateIV_COLLECT           = collectFields.invoiceTargets.fields.paymentDateIV.code;
+const tableFieldBackRateIV_COLLECT              = collectFields.invoiceTargets.fields.backRateIV.code;
+const tableFieldBackAmountIV_COLLECT            = collectFields.invoiceTargets.fields.backAmountIV.code;
+const tableFieldBackedReceivableIV_COLLECT      = collectFields.invoiceTargets.fields.backedReceivableIV.code;
+const tableFieldActuallyOrdererIV_COLLECT       = collectFields.invoiceTargets.fields.actuallyOrdererIV.code;
+const fieldHandleForHolidays_COLLECT            = collectFields.handleForHolidays.code;
 
 const orange = "#ff9a33";
 const white = "#ffffff";
