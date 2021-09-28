@@ -141,8 +141,8 @@ export async function getAggregatedParentRecords(records) {
             });
 
             const parent_record = invoice_group.reduce(returnEarlyRecord);
-            const total_billed = invoice_group.reduce(sumInvoiceBills, 0);
             const invoice_targets = await asyncFlatMap(invoice_group, convertToKintoneSubTableObject);
+            const total_billed = invoice_group.reduce(sumInvoiceBills, 0);
 
             return getUpdateRecordObject(parent_record[fieldRecordId_COLLECT]["value"], total_billed, invoice_targets);
         });
