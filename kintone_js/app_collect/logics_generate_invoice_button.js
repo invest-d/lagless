@@ -173,7 +173,6 @@ async function clickGenerateInvoice() {
                 console.error(err);
                 throw new Error(`${statusApproved_COLLECT}の回収レコードの取得中にエラーが発生しました。`);
             });
-
         if (target.records.length === 0) {
             alert(`${statusApproved_COLLECT}のレコードはありませんでした。`);
             return;
@@ -181,13 +180,10 @@ async function clickGenerateInvoice() {
 
         // updateのための、明細や金額を集約したあとの親レコード配列を取得
         const parents = await getAggregatedParentRecords(target.records);
-
-        // Update
-        const update_body = {
-            "app": APP_ID_COLLECT,
-            "records": parents
-        };
-        await kintoneAPI.CLIENT.record.updateRecords(update_body)
+        await kintoneAPI.CLIENT.record.updateRecords({
+            app: APP_ID_COLLECT,
+            records: parents
+        })
             .catch((err) => {
                 console.error(err);
                 throw new Error("回収レコードの親を更新中にエラーが発生しました。");
