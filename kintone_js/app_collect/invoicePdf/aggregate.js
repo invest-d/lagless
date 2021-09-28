@@ -107,14 +107,9 @@ export async function getAggregatedParentRecords(records) {
         const invoice_targets = await asyncFlatMap(invoice_group, convertToKintoneSubTableObject);
         const total_billed = ((constructor_id) => {
             if (isGigConstructorID(constructor_id)) {
-                // GIGの場合、早払いの申込ごとに特定のバック金額を引いた後の金額を合計したものを振込依頼書の請求金額とする。
-                return invoice_targets.reduce((sum, sub_rec) => {
-                    const applied_amount = Number(sub_rec["value"][tableFieldReceivableIV_COLLECT]["value"]);
-                    const back_rate = Number(sub_rec["value"][tableFieldBackRateIV_COLLECT]["value"]);
-                    const back_amount = (new Decimal(applied_amount)).times(back_rate).floor().toNumber();
-                    const remain = applied_amount - back_amount;
-                    return sum + remain;
-                }, 0);
+                // GIGの場合、「早払いの申込ごとに」特定のバック金額を引いた後の金額を合計したものを振込依頼書の請求金額とする。
+                // その関係でinvoice_group ではなく invoice_targetsを元に計算する。
+                return invoice_targets.reduce(sumGigInvoiceBills, 0);
             } else {
                 // GIG以外の場合、単純にクラウドサインで送信した金額を合計して振込依頼書の請求金額とすれば良い。
                 return invoice_group.reduce(sumInvoiceBills, 0);
@@ -194,6 +189,13 @@ const returnEarlyRecord = (a, b) => {
 
 // 振込依頼書に記載する合計額
 const sumInvoiceBills = (total, record) => total + Number(record[fieldCollectableAmount_COLLECT]["value"]);
+const sumGigInvoiceBills = (total, subRecord) => {
+    const applied_amount = Number(subRecord["value"][tableFieldReceivableIV_COLLECT]["value"]);
+    const back_rate = Number(subRecord["value"][tableFieldBackRateIV_COLLECT]["value"]);
+    const back_amount = (new Decimal(applied_amount)).times(back_rate).floor().toNumber();
+    const remain = applied_amount - back_amount;
+    return total + remain;
+};
 
 const convertToKintoneSubTableObject = async (record) => {
     // グループの情報を親に集約。クラウドサイン用の情報とは別に保持するため、親の振込依頼書用サブテーブルに親自身のクラウドサイン用サブテーブルのレコードも加える。
