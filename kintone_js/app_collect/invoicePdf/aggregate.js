@@ -82,26 +82,26 @@ export async function getAggregatedParentRecords(records) {
     // まず工務店IDと締日だけ全て抜き出す
     const key_pairs = records.map((record) => {
         return {
-            [fieldConstructionShopId_COLLECT]: record[fieldConstructionShopId_COLLECT]["value"],
-            [fieldClosingDate_COLLECT]: record[fieldClosingDate_COLLECT]["value"]
+            id: record[fieldConstructionShopId_COLLECT]["value"],
+            date: record[fieldClosingDate_COLLECT]["value"]
         };
     });
 
     // 抜き出した工務店IDと締日のペアについて、重複なしのリストを作る。
     const DELIMITER = String.fromCharCode("31");
     const unique_key_pairs = Array.from(new Map(
-        key_pairs.map((p) => [`${p[fieldConstructionShopId_COLLECT]}${DELIMITER}${p[fieldClosingDate_COLLECT]}`, p])
+        key_pairs.map((p) => [`${p.id}${DELIMITER}${p.date}`, p])
     ).values());
 
     // 軽バン.com案件は別集計する
-    const target_pairs = unique_key_pairs.filter((p) => !KE_BAN_CONSTRUCTORS.includes(p[fieldConstructionShopId_COLLECT]));
+    const target_pairs = unique_key_pairs.filter((p) => !KE_BAN_CONSTRUCTORS.includes(p.id));
 
     // 親レコード更新用のオブジェクトを作成
     const update_targets_standard = await asyncMap(target_pairs, async (pair) => {
         // 振込依頼書をまとめるべき回収レコードを配列としてグループ化
         const invoice_group = records.filter((record) => {
-            return record[fieldConstructionShopId_COLLECT]["value"] === pair[fieldConstructionShopId_COLLECT]
-            && record[fieldClosingDate_COLLECT]["value"] === pair[fieldClosingDate_COLLECT];
+            return record[fieldConstructionShopId_COLLECT]["value"] === pair.id
+            && record[fieldClosingDate_COLLECT]["value"] === pair.date;
         });
 
         const parent_record = invoice_group.reduce(returnEarlyRecord);
@@ -140,7 +140,7 @@ export async function getAggregatedParentRecords(records) {
             return dayjs();
         }
     })();
-    if (unique_key_pairs.some((p) => KE_BAN_CONSTRUCTORS.includes(p[fieldConstructionShopId_COLLECT]))
+    if (unique_key_pairs.some((p) => KE_BAN_CONSTRUCTORS.includes(p.id))
         && (today.date() > 26 || today.date() < 8)) {
         const message = `${KE_BAN_PRODUCT_NAME}の回収レコードについて振込依頼書を作成しますか？\n`
             + "\n"
