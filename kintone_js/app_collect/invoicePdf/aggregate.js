@@ -12,25 +12,6 @@ const fieldConstructorId_CONSTRUCTOR            = schema_96.fields.properties.id
 const fieldTmpcommissionRate_CONSTRUCTOR        = schema_96.fields.properties.tmpcommissionRate.code;
 const fieldConstructorName_CONSTRUCTOR          = schema_96.fields.properties.工務店正式名称.code;
 
-import { getCollectAppSchema, UnknownAppError } from "../../util/choiceCollectAppSchema";
-const collectAppSchema = (() => {
-    try {
-        return getCollectAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。回収アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
-if (!collectAppSchema) throw new Error();
-const collectFields = collectAppSchema.fields.properties;
-
 const APP_ID_DEV = {
     APPLY: 159,
     COLLECT: 160
@@ -60,6 +41,24 @@ const APP_ID_APPLY                              = APP_ID.APPLY;
 const fieldRecordId_APPLY                       = schema_apply.fields.properties.レコード番号.code;
 const fieldConstructorId_APPLY                  = schema_apply.fields.properties.constructionShopId.code;
 
+import { getCollectAppSchema, UnknownAppError } from "../../util/choiceCollectAppSchema";
+const collectAppSchema = (() => {
+    try {
+        return getCollectAppSchema(kintone.app.getId());
+    } catch (e) {
+        if (e instanceof UnknownAppError) {
+            alert("不明なアプリです。回収アプリで実行してください。");
+        } else {
+            console.error(e);
+            const additional_info = e.message ?? JSON.stringify(e);
+            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
+                + "\n追加の情報: "
+                + `\n${additional_info}`);
+        }
+    }
+})();
+if (!collectAppSchema) throw new Error();
+const collectFields = collectAppSchema.fields.properties;
 const fieldRecordId_COLLECT                     = collectFields.レコード番号.code;
 const fieldConstructionShopId_COLLECT           = collectFields.constructionShopId.code;
 const fieldClosingDate_COLLECT                  = collectFields.closingDate.code;
