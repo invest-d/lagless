@@ -76,11 +76,12 @@ const tableFieldActuallyOrdererIV_COLLECT       = collectFields.invoiceTargets.f
 
 import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "../../96/common";
 import { isGigConstructorID } from "../../util/gig_utils";
+import { getUniqueCombinations } from "../../util/manipulations";
 
 export async function getAggregatedParentRecords(records) {
     console.log("振込依頼書作成対象のレコードを締日と工務店IDごとにまとめ、明細の情報を親に集約する");
     // まず工務店IDと締日だけ全て抜き出す
-    const key_pairs = records.map((record) => {
+    const pairs = records.map((record) => {
         return {
             id: record[fieldConstructionShopId_COLLECT]["value"],
             date: record[fieldClosingDate_COLLECT]["value"]
@@ -88,10 +89,7 @@ export async function getAggregatedParentRecords(records) {
     });
 
     // 抜き出した工務店IDと締日のペアについて、重複なしのリストを作る。
-    const DELIMITER = String.fromCharCode("31");
-    const unique_key_pairs = Array.from(new Map(
-        key_pairs.map((p) => [`${p.id}${DELIMITER}${p.date}`, p])
-    ).values());
+    const unique_key_pairs = getUniqueCombinations(pairs, Object.keys(pairs[0]));
 
     // 軽バン.com案件は別集計する
     const target_pairs = unique_key_pairs.filter((p) => !KE_BAN_CONSTRUCTORS.includes(p.id));
