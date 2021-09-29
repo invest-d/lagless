@@ -6,7 +6,6 @@
 "use strict";
 
 import { schema_apply } from "../161/schema";
-const builderName_APPLY             = schema_apply.fields.properties.billingCompany.code;
 const applicantName_APPLY           = schema_apply.fields.properties.company.code;
 const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
 const applicantPhone_APPLY          = schema_apply.fields.properties.phone.code;
@@ -101,18 +100,17 @@ import { replaceFullWidthNumbers } from "../util/manipulations";
 (function() {
     // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.detail.show", (event) => {
-        if (needShowButton(event.record[builderName_APPLY].value)) {
+        if (needShowButton()) {
             kintone.app.record.getHeaderMenuSpaceElement().appendChild(createButton(event.record));
         }
     });
 })();
 
-const button_id = "checkWfiUnsocial";
-const button_title = "WFI用反社チェックを開始";
-const needShowButton = (builder_name) => {
+const button_id = "checkUnsocial";
+const button_title = "反社チェックを開始";
+const needShowButton = () => {
     const exists_same_button = document.getElementById(button_id) !== null;
-    const is_Wfi_apply = builder_name.includes("ワールドフォース");
-    return !exists_same_button && is_Wfi_apply;
+    return !exists_same_button;
 };
 
 const createButton = (record) => {
