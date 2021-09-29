@@ -143,6 +143,7 @@ async function clickGenerateInvoice() {
         alert(`${completed_count}件 振込依頼書の作成が完了しました。\n\nそれぞれのレコードの添付ファイルを目視で確認したのち、\nレコード詳細画面の振込依頼書確認OKチェックボックスをオンにして保存してください。`);
 
     } catch(err) {
+        console.error(err);
         alert(err);
     } finally {
         this.innerText = text_ready;
