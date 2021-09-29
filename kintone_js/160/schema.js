@@ -410,6 +410,16 @@ export const schema_collect = {
                 "thumbnailSize": "150",
                 "type": "FILE"
             },
+            "invoicePdfDate": {
+                "code": "invoicePdfDate",
+                "defaultNowValue": true,
+                "defaultValue": "",
+                "label": "振込依頼書に表示する作成日",
+                "noLabel": false,
+                "required": false,
+                "type": "DATE",
+                "unique": false
+            },
             "invoiceTargets": {
                 "code": "invoiceTargets",
                 "fields": {
@@ -890,6 +900,11 @@ export const schema_collect = {
                         "type": "SINGLE_LINE_TEXT",
                         "code": "handleForHolidays",
                         "size": {}
+                    },
+                    {
+                        "type": "DATE",
+                        "code": "invoicePdfDate",
+                        "size": {}
                     }
                 ]
             },
@@ -1115,6 +1130,7 @@ export const schema_collect = {
                     "parentCollectRecord",
                     "collectStatus",
                     "invoicePdf",
+                    "invoicePdfDate",
                     "confirmStatusInvoice",
                     "constructionShopId",
                     "constructionShopName",
