@@ -6,7 +6,6 @@
 "use strict";
 
 import { schema_apply } from "../161/schema";
-const recordNo_APPLY                = schema_apply.fields.properties.レコード番号.code;
 const builderName_APPLY             = schema_apply.fields.properties.billingCompany.code;
 const applicantName_APPLY           = schema_apply.fields.properties.company.code;
 const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
