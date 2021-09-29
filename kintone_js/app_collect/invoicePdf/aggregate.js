@@ -105,7 +105,7 @@ export async function getAggregatedParentRecords(records) {
         // 振込依頼書をまとめるべき回収レコードを配列としてグループ化
         const invoice_group = records.filter((record) => {
             return record[fieldConstructionShopId_COLLECT]["value"] === pair.id
-            && record[fieldClosingDate_COLLECT]["value"] === pair.date;
+                && record[fieldClosingDate_COLLECT]["value"] === pair.date;
         });
 
         const parent_record = invoice_group.reduce(returnEarlyRecord);
@@ -310,7 +310,7 @@ const getPdfDate = (parentId, invoice_group) => {
 
     try {
         return selectPdfDate({ parentId, records });
-    } catch(e) {
+    } catch (e) {
         if (e instanceof UndefinedPdfDateError) {
             alert("次のどれかのレコードについて、"
                 + `フィールド「${labelInvoicePdfDate_COLLECT}」を入力してください。\n\n`
