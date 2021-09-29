@@ -88,6 +88,7 @@ const tableFieldBackAmountIV_COLLECT            = collectFields.invoiceTargets.f
 const tableFieldBackedReceivableIV_COLLECT      = collectFields.invoiceTargets.fields.backedReceivableIV.code;
 const tableFieldActuallyOrdererIV_COLLECT       = collectFields.invoiceTargets.fields.actuallyOrdererIV.code;
 const fieldHandleForHolidays_COLLECT            = collectFields.handleForHolidays.code;
+const fieldPdfDate_COLLECT                      = collectFields.invoicePdfDate.code;
 
 const orange = "#ff9a33";
 const white = "#ffffff";
@@ -114,7 +115,8 @@ export async function generateInvoices() {
             fieldAccount_COLLECT,
             fieldDaysLater_COLLECT,
             fieldMailToInvest_COLLECT,
-            fieldHandleForHolidays_COLLECT
+            fieldHandleForHolidays_COLLECT,
+            fieldPdfDate_COLLECT,
         ],
         "query": `${fieldStatus_COLLECT} in ("${statusApproved_COLLECT}") and ${fieldParentCollectRecord_COLLECT} in ("${statusParent_COLLECT}")`
     };
@@ -258,11 +260,8 @@ function generateInvoiceDocument(parent_record) {
     doc.content.push(title);
 
     // 振込依頼書に記載する日付。Y年M月D日
-    // 支払明細の申込レコードの中で、最も遅い支払日を採用する
-    const detail_payment_dates =  parent_record[tableInvoiceTargets_COLLECT]["value"].map((record) => dayjs(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]));
-    const latest_date = dayjs(Math.max(...detail_payment_dates));
     const send_date = {
-        text: latest_date.format("YYYY年M月D日"),
+        text: dayjs(parent_record[fieldPdfDate_COLLECT]["value"]).format("YYYY年M月D日"),
         alignment: "right",
         fontSize: 10
     };
@@ -545,11 +544,8 @@ const getGigDoc = (parent_record) => {
     doc.content.push(title);
 
     // 振込依頼書に記載する日付。YYYY/MM/DD
-    // 支払明細の申込レコードの中で、最も遅い支払日を採用する
-    const detail_payment_dates =  parent_record[tableInvoiceTargets_COLLECT]["value"].map((record) => dayjs(record["value"][tableFieldPaymentDateIV_COLLECT]["value"]));
-    const latest_date = dayjs(Math.max(...detail_payment_dates));
     const send_date = {
-        text: latest_date.format("YYYY/MM/DD"),
+        text: dayjs(parent_record[fieldPdfDate_COLLECT]["value"]).format("YYYY/MM/DD"),
         alignment: "right",
         fontSize: 10
     };
