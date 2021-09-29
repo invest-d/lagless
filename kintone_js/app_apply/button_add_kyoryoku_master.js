@@ -104,7 +104,7 @@ import {
     getCompanyRecord,
     selectCompanyRecordNumber,
     getSearchInfo,
-} from "./button_wfi_antisocial_check";
+} from "./button_antisocial_check";
 
 import {
     getSameKomutenKyoryokuCond,
