@@ -103,7 +103,7 @@ import { isGigConstructorID } from "../util/gig_utils";
 import {
     getCompanyRecord,
     selectCompanyRecordNumber,
-    getSearchInfo,
+    getSearchQuery,
 } from "./button_antisocial_check";
 
 import {
@@ -219,7 +219,7 @@ const getKyoryokuId = async (apply_record) => {
     } else {
         alert("レコードが見つからなかったため、新規作成します。"
             + `\n${schema_28.id.name}アプリを検索します。`);
-        const company_record = await getCompanyRecord(getSearchInfo(apply_record));
+        const company_record = await getCompanyRecord(getSearchQuery(apply_record));
         console.log(`${schema_28.id.name}アプリの取得を完了。`);
 
         const company_id = selectCompanyRecordNumber(company_record);

@@ -132,7 +132,7 @@ const clickButton = async (apply_record) => {
 
     try {
         alert(`${schema_28.id.name}アプリにレコードが既に存在するか確認します。`);
-        const company_record = await getCompanyRecord(getSearchInfo(apply_record));
+        const company_record = await getCompanyRecord(getSearchQuery(apply_record));
         console.log(`${schema_28.id.name}アプリの取得を完了。`);
 
         const company_id = await (async (company_record) => {
@@ -197,7 +197,7 @@ const confirmBeforeExec = () => {
     return window.confirm(before_process);
 };
 
-export const getSearchInfo = (record) => {
+export const getSearchQuery = (record) => {
     const info = {
         name: record[applicantName_APPLY]["value"],
         representative: record[applicantRepresentative_APPLY]["representative"],
@@ -205,21 +205,21 @@ export const getSearchInfo = (record) => {
         email: record[applicantEmail_APPLY]["value"],
         address: `${record[applicantPref_APPLY]["value"]}${record[applicantAddr_APPLY]["value"]}${record[applicantSt_APPLY]["value"]}`
     };
-    return info;
-};
 
-export const getCompanyRecord = (info) => {
     const queries = [];
     if (info.name) queries.push(`${companyName_COMPANY} = "${info.name}"`);
     if (info.representative) queries.push(`${representative_COMPANY} = "${info.representative}"`);
     if (info.phone) queries.push(`${phoneNumber_COMPANY} = "${info.phone}"`);
     if (info.email) queries.push(`${email_COMPANY} = "${info.email}"`);
     if (info.address) queries.push(`${address_COMPANY} = "${info.address}"`);
+    return queries.join(" or ");
+};
 
+export const getCompanyRecord = (query) => {
     const body = {
         app: schema_28.id.appId,
         fields: [recordNo_COMPANY],
-        query: queries.join(" or ")
+        query,
     };
     return CLIENT.record.getRecords(body);
 };
