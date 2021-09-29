@@ -121,7 +121,12 @@ export function updateStatus(records, status) {
 
 const fieldParentCollectRecord_COLLECT  = schema_collect.fields.properties.parentCollectRecord.code;
 const fieldInvoicePdf_COLLECT           = schema_collect.fields.properties.invoicePdf.code;
-const statusNotReadyToSend_COLLECT      = schema_collect.fields.properties.collectStatus.options.クラウドサイン承認済み.label;
+const statusApproved_COLLECT            = schema_collect.fields.properties.collectStatus.options.クラウドサイン承認済み.label;
+const statusPdfReady_COLLECT            = schema_collect.fields.properties.collectStatus.options.振込依頼書作成対象.label;
+const statusesNotSent = [
+    statusApproved_COLLECT,
+    statusPdfReady_COLLECT,
+];
 const statusReadyToSend_COLLECT         = schema_collect.fields.properties.collectStatus.options.振込依頼書送信可.label;
 const tableInvoiceTargets_COLLECT       = schema_collect.fields.properties.invoiceTargets.code;
 const tableFieldRecordId_COLLECT        = schema_collect.fields.properties.invoiceTargets.fields.applyRecordNoIV.code;
@@ -142,7 +147,7 @@ export function needShowButton(record) {
     // 親レコードのうち、振込依頼書作成済みで、かつ送信前のレコードの場合のみ表示
     const is_parent_not_send = ((record[fieldParentCollectRecord_COLLECT]["value"]).includes(isParent_COLLECT))
         && (record[fieldInvoicePdf_COLLECT]["value"].length > 0)
-        && (record[fieldStatus_COLLECT]["value"] === statusNotReadyToSend_COLLECT);
+        && statusesNotSent.includes(record[fieldStatus_COLLECT]["value"]);
     return is_not_displayed && is_parent_not_send;
 }
 

@@ -14,7 +14,7 @@ import { schema_collect } from "../162/schema";
 
 const APP_ID_COLLECT                    = kintone.app.getId();
 const fieldStatus_COLLECT               = schema_collect.fields.properties.collectStatus.code;
-const statusUnsend_COLLECT              = schema_collect.fields.properties.collectStatus.options.クラウドサイン承認済み.label;
+const statusUnsend_COLLECT              = schema_collect.fields.properties.collectStatus.options.振込依頼書作成対象.label;
 const unsendTarget = [
     schema_collect.fields.properties.collectStatus.options.振込依頼書送信可.label,
     schema_collect.fields.properties.collectStatus.options.振込依頼書送信済み.label
