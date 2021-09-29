@@ -132,17 +132,10 @@ const clickButton = async (apply_record) => {
 
     try {
         alert(`${schema_28.id.name}アプリにレコードが既に存在するか確認します。`);
-        const company_record = await getCompanyRecord(getSearchQuery(apply_record));
+        const company_record = await searchCompanyRecord(getSearchQuery(apply_record));
         console.log(`${schema_28.id.name}アプリの取得を完了。`);
 
-        const company_id = await (async (company_record) => {
-            if (company_record && company_record.records.length) {
-                return selectCompanyRecordNumber(company_record);
-            } else {
-                alert("レコードが見つからなかったため、新規作成します。");
-                return await createCompanyRecord(apply_record);
-            }
-        })(company_record);
+        const company_id = await getOrCreateCompanyId(company_record, apply_record);
         if (!company_id) { throw new ManualAbortProcessError(); }
 
         alert(`${schema_28.id.name}アプリのレコード番号${company_id}で反社チェックを進めます。`);
@@ -215,13 +208,22 @@ export const getSearchQuery = (record) => {
     return queries.join(" or ");
 };
 
-export const getCompanyRecord = (query) => {
+export const searchCompanyRecord = (query) => {
     const body = {
         app: schema_28.id.appId,
         fields: [recordNo_COMPANY],
         query,
     };
     return CLIENT.record.getRecords(body);
+};
+
+const getOrCreateCompanyId = async (company_record, apply_record) => {
+    if (company_record && company_record.records.length) {
+        return selectCompanyRecordNumber(company_record);
+    } else {
+        alert("レコードが見つからなかったため、新規作成します。");
+        return await createCompanyRecord(apply_record);
+    }
 };
 
 export const selectCompanyRecordNumber = (get_result) => {
