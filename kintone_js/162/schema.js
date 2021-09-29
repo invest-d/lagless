@@ -224,7 +224,7 @@ export const schema_collect = {
                         "label": "クラウドサイン作成待ち"
                     },
                     "クラウドサイン却下・再作成待ち": {
-                        "index": "8",
+                        "index": "9",
                         "label": "クラウドサイン却下・再作成待ち"
                     },
                     "クラウドサイン回付中": {
@@ -240,19 +240,23 @@ export const schema_collect = {
                         "label": "クラウドサイン発射待ち"
                     },
                     "リマインドメール済み": {
-                        "index": "6",
+                        "index": "7",
                         "label": "リマインドメール済み"
                     },
                     "回収済み": {
-                        "index": "7",
+                        "index": "8",
                         "label": "回収済み"
                     },
-                    "振込依頼書送信可": {
+                    "振込依頼書作成対象": {
                         "index": "4",
+                        "label": "振込依頼書作成対象"
+                    },
+                    "振込依頼書送信可": {
+                        "index": "5",
                         "label": "振込依頼書送信可"
                     },
                     "振込依頼書送信済み": {
-                        "index": "5",
+                        "index": "6",
                         "label": "振込依頼書送信済み"
                     }
                 },
@@ -409,6 +413,16 @@ export const schema_collect = {
                 "required": false,
                 "thumbnailSize": "150",
                 "type": "FILE"
+            },
+            "invoicePdfDate": {
+                "code": "invoicePdfDate",
+                "defaultNowValue": true,
+                "defaultValue": "",
+                "label": "振込依頼書に表示する作成日",
+                "noLabel": false,
+                "required": false,
+                "type": "DATE",
+                "unique": false
             },
             "invoiceTargets": {
                 "code": "invoiceTargets",
@@ -890,6 +904,11 @@ export const schema_collect = {
                         "type": "SINGLE_LINE_TEXT",
                         "code": "handleForHolidays",
                         "size": {}
+                    },
+                    {
+                        "type": "DATE",
+                        "code": "invoicePdfDate",
+                        "size": {}
                     }
                 ]
             },
@@ -1064,10 +1083,10 @@ export const schema_collect = {
                     "constructionShopName",
                     "collectStatus",
                     "confirmStatusInvoice",
+                    "totalBilledAmount",
                     "deadline",
                     "handleForHolidays",
                     "original",
-                    "totalBilledAmount",
                     "scheduledCollectableAmount",
                     "cloudSignUrl",
                     "cloudSignSendDate",
@@ -1092,10 +1111,10 @@ export const schema_collect = {
                     "constructionShopName",
                     "collectStatus",
                     "confirmStatusInvoice",
+                    "totalBilledAmount",
                     "deadline",
                     "handleForHolidays",
                     "original",
-                    "totalBilledAmount",
                     "scheduledCollectableAmount",
                     "cloudSignUrl",
                     "cloudSignSendDate",
@@ -1119,10 +1138,10 @@ export const schema_collect = {
                     "constructionShopName",
                     "collectStatus",
                     "confirmStatusInvoice",
+                    "totalBilledAmount",
                     "deadline",
                     "handleForHolidays",
                     "original",
-                    "totalBilledAmount",
                     "scheduledCollectableAmount",
                     "cloudSignUrl",
                     "cloudSignSendDate",
@@ -1130,10 +1149,37 @@ export const schema_collect = {
                     "cloudSignPdf",
                     "invoiceTargets"
                 ],
-                "filterCond": "collectStatus not in (\"回収済み\", \"クラウドサイン却下・再作成待ち\")",
+                "filterCond": "collectStatus not in (\"クラウドサイン却下・再作成待ち\") and deadline >= THIS_MONTH()",
                 "index": "2",
                 "name": "回収確認用（ラグレス２GK）",
                 "sort": "deadline desc",
+                "type": "LIST"
+            },
+            "当月回収先一覧": {
+                "fields": [
+                    "レコード番号",
+                    "account",
+                    "productName",
+                    "closingDate",
+                    "constructionShopName",
+                    "collectStatus",
+                    "confirmStatusInvoice",
+                    "deadline",
+                    "handleForHolidays",
+                    "original",
+                    "totalBilledAmount",
+                    "scheduledCollectableAmount",
+                    "cloudSignUrl",
+                    "cloudSignSendDate",
+                    "parentCollectRecord",
+                    "invoicePdf",
+                    "cloudSignPdf",
+                    "invoiceTargets"
+                ],
+                "filterCond": "deadline = THIS_MONTH() and collectStatus in (\"\", \"クラウドサイン作成待ち\", \"クラウドサイン発射待ち\", \"クラウドサイン回付中\", \"クラウドサイン承認済み\", \"振込依頼書送信可\", \"振込依頼書送信済み\", \"リマインドメール済み\", \"回収済み\")",
+                "index": "11",
+                "name": "当月回収先一覧",
+                "sort": "レコード番号 desc",
                 "type": "LIST"
             },
             "振込依頼書作成": {
@@ -1168,15 +1214,15 @@ export const schema_collect = {
                     "collectStatus",
                     "invoicePdf",
                     "confirmStatusInvoice",
-                    "constructionShopId",
                     "constructionShopName",
+                    "closingDate",
+                    "deadline",
+                    "totalBilledAmount",
+                    "constructionShopId",
                     "ceoTitle",
                     "ceo",
                     "productName",
-                    "totalBilledAmount",
                     "account",
-                    "deadline",
-                    "closingDate",
                     "original"
                 ],
                 "filterCond": "collectStatus in (\"振込依頼書送信可\", \"振込依頼書送信済み\") and parentCollectRecord in (\"true\")",
