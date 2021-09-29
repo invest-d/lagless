@@ -32,15 +32,21 @@ const fieldCollectableAmount_COLLECT            = collectFields.scheduledCollect
 const fieldAccount_COLLECT                      = collectFields.account.code;
 const fieldDaysLater_COLLECT                    = collectFields.daysLater.code;
 const fieldStatus_COLLECT                       = collectFields.collectStatus.code;
-const statusApproved_COLLECT                    = collectFields.collectStatus.options.クラウドサイン承認済み.label;
+const statusInvoiceTarget_COLLECT               = collectFields.collectStatus.options.振込依頼書作成対象.label;
 const fieldParentCollectRecord_COLLECT          = collectFields.parentCollectRecord.code;
 const fieldTotalBilledAmount_COLLECT            = collectFields.totalBilledAmount.code;
 const tableCloudSignApplies_COLLECT             = collectFields.cloudSignApplies.code;
 const tableInvoiceTargets_COLLECT               = collectFields.invoiceTargets.code;
 const fieldInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.code;
 
+export const getInvoiceTargetQuery = () => {
+    return `${fieldStatus_COLLECT} in ("${statusInvoiceTarget_COLLECT}")`;
+};
+
 export function getTargetRecords() {
-    console.log(`回収アプリから${statusApproved_COLLECT}のレコードを全て取得する`);
+    console.log(`回収アプリから${statusInvoiceTarget_COLLECT}のレコードを全て取得する`);
+
+    const query = getInvoiceTargetQuery();
 
     const request_body = {
         "app": APP_ID_COLLECT,
@@ -63,7 +69,7 @@ export function getTargetRecords() {
             tableInvoiceTargets_COLLECT,
             fieldInvoicePdfDate_COLLECT,
         ],
-        "query": `${fieldStatus_COLLECT} in ("${statusApproved_COLLECT}")`
+        query,
     };
 
     return kintoneAPI.CLIENT.record.getRecords(request_body);

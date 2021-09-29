@@ -52,7 +52,7 @@ const collectAppSchema = (() => {
 if (!collectAppSchema) throw new Error();
 const collectFields = collectAppSchema.fields.properties;
 const APP_ID_COLLECT                            = collectAppSchema.id.appId;
-const statusApproved_COLLECT                    = collectFields.collectStatus.options.クラウドサイン承認済み.label;
+const statusInvoiceTarget_COLLECT               = collectFields.collectStatus.options.振込依頼書作成対象.label;
 const fieldInvoicePdf_COLLECT                   = collectFields.invoicePdf.code;
 const fieldConfirmStatusInvoice_COLLECT         = collectFields.confirmStatusInvoice.code;
 
@@ -78,7 +78,7 @@ export function createGenerateInvoiceButton() {
 
 // ボタンクリック時の処理を定義
 async function clickGenerateInvoice() {
-    const clicked_ok = confirm(`${statusApproved_COLLECT}のレコードに対して、振込依頼書を作成しますか？`);
+    const clicked_ok = confirm(`${statusInvoiceTarget_COLLECT}のレコードに対して、振込依頼書を作成しますか？`);
     if (!clicked_ok) {
         alert("処理は中断されました。");
         return;
@@ -91,10 +91,10 @@ async function clickGenerateInvoice() {
         const target = await getTargetRecords()
             .catch((err) => {
                 console.error(err);
-                throw new Error(`${statusApproved_COLLECT}の回収レコードの取得中にエラーが発生しました。`);
+                throw new Error(`${statusInvoiceTarget_COLLECT}の回収レコードの取得中にエラーが発生しました。`);
             });
         if (target.records.length === 0) {
-            alert(`${statusApproved_COLLECT}のレコードはありませんでした。`);
+            alert(`${statusInvoiceTarget_COLLECT}のレコードはありませんでした。`);
             return;
         }
 
