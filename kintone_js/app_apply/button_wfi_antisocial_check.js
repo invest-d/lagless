@@ -176,9 +176,9 @@ const clickButton = async (apply_record) => {
         + "記事の検索処理が完了するまでしばらくお待ちください。");
         console.log(`記事取得タスク: ${task_id}を作成完了。`);
 
-        const task_page = `https://investdesign.cybozu.com/k/65/show#record=${task_id}`;
-        alert("作成した記事取得タスクのページに移動します。");
-        window.location.href = task_page;
+        const examPage = `https://investdesign.cybozu.com/k/${schema_79.id.appId}/show#record=${exam_id}`;
+        alert("作成した審査レコードのページに移動します。");
+        window.location.href = examPage;
     } catch (e) {
         if (e instanceof ManualAbortProcessError) {
             alert("処理を中断しました");
