@@ -97,8 +97,10 @@ const black = "#000000";
 const green = "#008080";
 const light_green = "#009999";
 
+import { getInvoiceTargetQuery } from "./selectRecords";
+
 export async function generateInvoices() {
-    // 親レコードを全て取得
+    // PDF生成対象かつ親レコードを全て取得
     const get_parents = {
         "app": APP_ID_COLLECT,
         "fields": [
@@ -118,7 +120,7 @@ export async function generateInvoices() {
             fieldHandleForHolidays_COLLECT,
             fieldPdfDate_COLLECT,
         ],
-        "query": `${fieldStatus_COLLECT} in ("${statusApproved_COLLECT}") and ${fieldParentCollectRecord_COLLECT} in ("${statusParent_COLLECT}")`
+        "query": `(${getInvoiceTargetQuery()}) and ${fieldParentCollectRecord_COLLECT} in ("${statusParent_COLLECT}")`
     };
     const target_parents = await kintoneAPI.CLIENT.record.getRecords(get_parents);
 
