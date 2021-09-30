@@ -23,7 +23,6 @@ const representativeMemo_EXAM   = schema_28.fields.properties.代表者備考.co
 const toukiGetId_EXAM           = schema_79.fields.properties.登記情報取得No_.code;
 const companyNameAuto_EXAM      = schema_79.fields.properties.取得した企業名＿HubSpotの場合.code;
 const companyNumber_EXAM        = schema_79.fields.properties.法人番号.code;
-const selectableUserIds_EXAM    = schema_79.fields.properties.審査担当者_作成者.entities.map((e) => e.code);
 const examinator_EXAM           = schema_79.fields.properties.審査担当者_作成者.code;
 const businessType_EXAM         = schema_79.fields.properties.取引区分.code;
 const typeGiver_EXAM            = schema_79.fields.properties.取引区分.options.譲渡企業.label;
@@ -70,6 +69,9 @@ import {
     searchCompanyRecord,
     getOrCreateCompanyId,
 } from "./antisocialCheck/fetchCompany";
+import {
+    getExaminator,
+} from "./antisocialCheck/createExam";
 
 // box保存。 https://github.com/allenmichael/box-javascript-sdk を使用。カスタマイズjsとして `BoxSdk.min.js` の存在を前提にする
 // const box = new BoxSdk();
@@ -172,29 +174,6 @@ const confirmBeforeExec = () => {
     const before_process = "このレコードについて、反社チェックを開始しますか？"
         + "\n※開始する前に、免許証情報の目視確認を済ませてください";
     return window.confirm(before_process);
-};
-
-const getExaminator = () => {
-    let message = `${schema_79.id.name}アプリに新規レコードを作成します。`
-        + "\n審査担当者のIDを入力してください"
-        + `\n選択可能なID: ${selectableUserIds_EXAM.map((i) => i.replace("@invest-d.com", "")).join(", ")}`;
-    let user = prompt(message);
-    // promptでキャンセルするとnull、入力なしでOKすると空文字列を返す
-    if (user === null) {
-        return null;
-    }
-
-    let userid = `${user}@invest-d.com`;
-    while (!selectableUserIds_EXAM.includes(userid)) {
-        message = `選択可能なIDではありません: ${user} もう一度入力してください。`
-            + `\n選択可能なID: ${selectableUserIds_EXAM.map((i) => i.replace("@invest-d.com", "")).join(", ")}`;
-        user = prompt(message);
-        if (user === null) {
-            return null;
-        }
-        userid = `${user}@invest-d.com`;
-    }
-    return userid;
 };
 
 // TODO: 運転免許証のファイルをboxに保存する処理もやりたいけど、box APIの仕様が難しくて頓挫してる
