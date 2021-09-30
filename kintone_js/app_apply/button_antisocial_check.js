@@ -46,7 +46,7 @@ import {
     });
 })();
 
-const button_id = "checkUnsocial";
+const button_id = "checkAntisocial";
 const button_title = "反社チェックを開始";
 const needShowButton = () => {
     const exists_same_button = document.getElementById(button_id) !== null;
