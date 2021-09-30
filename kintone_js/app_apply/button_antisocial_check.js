@@ -6,28 +6,9 @@
 "use strict";
 
 import { schema_28 } from "../28/schema";
-const recordNo_COMPANY              = schema_28.fields.properties.レコード番号.code;
-const companyName_COMPANY           = schema_28.fields.properties["法人名・屋号"].code;
-const representative_COMPANY        = schema_28.fields.properties.代表者名.code;
 
 import { schema_79 } from "../79/schema";
 // const boxUrl_EXAM               = schema_79.fields.properties.boxのURL.code;
-
-import { schema_65 } from "../65/schema";
-const examId_TASK               = schema_65.fields.properties.作成中_審査Ver2.code;
-const companyName_TASK          = schema_65.fields.properties["法人名・屋号"].code;
-const companyId_TASK            = schema_65.fields.properties.取引企業管理_No.code;
-const searchType_TASK           = schema_65.fields.properties.検索ワード種別.code;
-const typeRepresentative_TASK   = schema_65.fields.properties.検索ワード種別.options.代表者氏名.label;
-const searchValue_TASK          = schema_65.fields.properties.検索ワード.code;
-const concluder_TASK            = schema_65.fields.properties.確認者.code;
-// FIXME: もっといい感じに定義したい
-const concluders_by_user = {
-    "sawada@invest-d.com": "澤田友里",
-    "takahashi@invest-d.com": "髙橋望",
-    "inomata@invest-d.com": "猪俣和貴",
-    "imura@invest-d.com": "井村一也",
-};
 
 const ExtensibleCustomError = require("extensible-custom-error");
 class ManualAbortProcessError extends ExtensibleCustomError { }
@@ -42,6 +23,9 @@ import {
     getExaminator,
     createExamRecord,
 } from "./antisocialCheck/createExam";
+import {
+    createTask,
+} from "./antisocialCheck/generateTask";
 
 // box保存。 https://github.com/allenmichael/box-javascript-sdk を使用。カスタマイズjsとして `BoxSdk.min.js` の存在を前提にする
 // const box = new BoxSdk();
@@ -173,24 +157,3 @@ const confirmBeforeExec = () => {
 //     })();
 
 // };
-
-const createTask = async (exam_id, company_record, user) => {
-    const search_value = company_record[representative_COMPANY]["value"]
-        ? company_record[representative_COMPANY]["value"]
-        : company_record[companyName_COMPANY]["value"];
-    const new_record = {
-        [examId_TASK]: exam_id,
-        [companyName_TASK]: company_record[companyName_COMPANY]["value"],
-        [companyId_TASK]: company_record[recordNo_COMPANY]["value"],
-        [searchType_TASK]: typeRepresentative_TASK,
-        [searchValue_TASK]: search_value,
-        [concluder_TASK]: [concluders_by_user[user]],
-    };
-    Object.keys(new_record).forEach((k) => new_record[k] = { value: new_record[k] });
-    const body = {
-        app: schema_65.id.appId,
-        record: new_record
-    };
-    const result = await CLIENT.record.addRecord(body);
-    return result.id;
-};
