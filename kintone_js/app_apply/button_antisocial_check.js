@@ -86,7 +86,10 @@ class ManualAbortProcessError extends ExtensibleCustomError { }
 
 import { CLIENT } from "../util/kintoneAPI";
 import { replaceFullWidthNumbers } from "../util/manipulations";
-import { getSearchQuery } from "./antisocialCheck/fetchCompany";
+import {
+    getSearchQuery,
+    searchCompanyRecord,
+} from "./antisocialCheck/fetchCompany";
 
 // box保存。 https://github.com/allenmichael/box-javascript-sdk を使用。カスタマイズjsとして `BoxSdk.min.js` の存在を前提にする
 // const box = new BoxSdk();
@@ -189,15 +192,6 @@ const confirmBeforeExec = () => {
     const before_process = "このレコードについて、反社チェックを開始しますか？"
         + "\n※開始する前に、免許証情報の目視確認を済ませてください";
     return window.confirm(before_process);
-};
-
-export const searchCompanyRecord = (query) => {
-    const body = {
-        app: schema_28.id.appId,
-        fields: [recordNo_COMPANY],
-        query,
-    };
-    return CLIENT.record.getRecords(body);
 };
 
 const getOrCreateCompanyId = async (company_record, apply_record) => {

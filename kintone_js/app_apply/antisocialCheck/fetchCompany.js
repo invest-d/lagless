@@ -1,5 +1,7 @@
 "use strict";
 
+import { CLIENT } from "../../util/kintoneAPI";
+
 import { schema_apply } from "../../161/schema";
 const applicantName_APPLY           = schema_apply.fields.properties.company.code;
 const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
@@ -10,6 +12,7 @@ const applicantAddr_APPLY           = schema_apply.fields.properties.address.cod
 const applicantSt_APPLY             = schema_apply.fields.properties.streetAddress.code;
 
 import { schema_28 } from "../../28/schema";
+const recordNo_COMPANY              = schema_28.fields.properties.レコード番号.code;
 const companyName_COMPANY           = schema_28.fields.properties["法人名・屋号"].code;
 const representative_COMPANY        = schema_28.fields.properties.代表者名.code;
 const phoneNumber_COMPANY           = schema_28.fields.properties.TEL_本店.code;
@@ -32,4 +35,13 @@ export const getSearchQuery = (record) => {
     if (info.email) queries.push(`${email_COMPANY} = "${info.email}"`);
     if (info.address) queries.push(`${address_COMPANY} = "${info.address}"`);
     return queries.join(" or ");
+};
+
+export const searchCompanyRecord = (query) => {
+    const body = {
+        app: schema_28.id.appId,
+        fields: [recordNo_COMPANY],
+        query,
+    };
+    return CLIENT.record.getRecords(body);
 };
