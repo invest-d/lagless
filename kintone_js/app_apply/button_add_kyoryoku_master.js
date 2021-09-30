@@ -100,13 +100,11 @@ import {
     productNameMap,
 } from "../96/common";
 import { isGigConstructorID } from "../util/gig_utils";
-import {
-    selectCompanyRecordNumber,
-} from "./button_antisocial_check";
 
 import {
     getSearchQuery,
     searchCompanyRecord,
+    selectCompanyRecordNumber,
 } from "./antisocialCheck/fetchCompany";
 
 import {
