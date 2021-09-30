@@ -86,6 +86,7 @@ class ManualAbortProcessError extends ExtensibleCustomError { }
 
 import { CLIENT } from "../util/kintoneAPI";
 import { replaceFullWidthNumbers } from "../util/manipulations";
+import { getSearchQuery } from "./antisocialCheck/fetchCompany";
 
 // box保存。 https://github.com/allenmichael/box-javascript-sdk を使用。カスタマイズjsとして `BoxSdk.min.js` の存在を前提にする
 // const box = new BoxSdk();
@@ -188,24 +189,6 @@ const confirmBeforeExec = () => {
     const before_process = "このレコードについて、反社チェックを開始しますか？"
         + "\n※開始する前に、免許証情報の目視確認を済ませてください";
     return window.confirm(before_process);
-};
-
-export const getSearchQuery = (record) => {
-    const info = {
-        name: record[applicantName_APPLY]["value"],
-        representative: record[applicantRepresentative_APPLY]["representative"],
-        phone: record[applicantPhone_APPLY]["value"],
-        email: record[applicantEmail_APPLY]["value"],
-        address: `${record[applicantPref_APPLY]["value"]}${record[applicantAddr_APPLY]["value"]}${record[applicantSt_APPLY]["value"]}`
-    };
-
-    const queries = [];
-    if (info.name) queries.push(`${companyName_COMPANY} = "${info.name}"`);
-    if (info.representative) queries.push(`${representative_COMPANY} = "${info.representative}"`);
-    if (info.phone) queries.push(`${phoneNumber_COMPANY} = "${info.phone}"`);
-    if (info.email) queries.push(`${email_COMPANY} = "${info.email}"`);
-    if (info.address) queries.push(`${address_COMPANY} = "${info.address}"`);
-    return queries.join(" or ");
 };
 
 export const searchCompanyRecord = (query) => {

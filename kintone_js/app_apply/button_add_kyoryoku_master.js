@@ -103,8 +103,11 @@ import { isGigConstructorID } from "../util/gig_utils";
 import {
     searchCompanyRecord,
     selectCompanyRecordNumber,
-    getSearchQuery,
 } from "./button_antisocial_check";
+
+import {
+    getSearchQuery,
+} from "./antisocialCheck/fetchCompany";
 
 import {
     getSameKomutenKyoryokuCond,
