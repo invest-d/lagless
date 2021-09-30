@@ -82,7 +82,7 @@ const concluders_by_user = {
 };
 
 const ExtensibleCustomError = require("extensible-custom-error");
-class ManualAbortProcessError extends ExtensibleCustomError {}
+class ManualAbortProcessError extends ExtensibleCustomError { }
 
 import { CLIENT } from "../util/kintoneAPI";
 import { replaceFullWidthNumbers } from "../util/manipulations";
@@ -97,7 +97,7 @@ import { replaceFullWidthNumbers } from "../util/manipulations";
 
 // const client = new box.BasicBoxClient({accessToken: "1234554321"});
 
-(function() {
+(function () {
     // eslint-disable-next-line no-unused-vars
     kintone.events.on("app.record.detail.show", (event) => {
         if (needShowButton()) {
@@ -163,7 +163,7 @@ const clickButton = async (apply_record) => {
         if (!task_id) { throw new ManualAbortProcessError(); }
 
         alert(`記事取得タスク: ${task_id}の作成が完了しました。`
-        + "記事の検索処理が完了するまでしばらくお待ちください。");
+            + "記事の検索処理が完了するまでしばらくお待ちください。");
         console.log(`記事取得タスク: ${task_id}を作成完了。`);
 
         const examPage = `https://investdesign.cybozu.com/k/${schema_79.id.appId}/show#record=${exam_id}`;
