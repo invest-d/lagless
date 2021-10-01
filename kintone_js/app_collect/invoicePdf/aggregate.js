@@ -76,8 +76,7 @@ const tableFieldActuallyOrdererIV_COLLECT       = collectFields.invoiceTargets.f
 const fieldInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.code;
 const labelInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.label;
 
-import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "../../96/common";
-const isKeban = (constructorId) => KE_BAN_CONSTRUCTORS.includes(constructorId);
+import { isKeban, KE_BAN_PRODUCT_NAME } from "../../96/common";
 import { isGigConstructorID } from "../../util/gig_utils";
 import { getUniqueCombinations } from "../../util/manipulations";
 

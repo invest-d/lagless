@@ -10,6 +10,8 @@ export const KE_BAN_CONSTRUCTORS = [
 
 export const KE_BAN_PRODUCT_NAME = "軽バン.com";
 
+export const isKeban = (constructorId) => KE_BAN_CONSTRUCTORS.includes(constructorId);
+
 export const SHOWA_CONSTRUCTORS = [
     "201",
     "202",
