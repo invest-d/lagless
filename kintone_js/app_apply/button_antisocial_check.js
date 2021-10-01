@@ -61,6 +61,12 @@ const createButton = (record) => {
     return button;
 };
 
+const confirmBeforeExec = () => {
+    const before_process = "このレコードについて、反社チェックを開始しますか？"
+        + "\n※開始する前に、免許証情報の目視確認を済ませてください";
+    return window.confirm(before_process);
+};
+
 const clickButton = async (apply_record) => {
     if (!confirmBeforeExec()) {
         alert("処理は中断されました。");
@@ -122,12 +128,6 @@ const clickButton = async (apply_record) => {
         alert("処理を終了します。");
         document.getElementById(button_id).innerText = button_title;
     }
-};
-
-const confirmBeforeExec = () => {
-    const before_process = "このレコードについて、反社チェックを開始しますか？"
-        + "\n※開始する前に、免許証情報の目視確認を済ませてください";
-    return window.confirm(before_process);
 };
 
 // TODO: 運転免許証のファイルをboxに保存する処理もやりたいけど、box APIの仕様が難しくて頓挫してる
