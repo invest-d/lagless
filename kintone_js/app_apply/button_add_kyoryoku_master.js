@@ -105,7 +105,7 @@ import {
     getSearchQuery,
     searchCompanyRecord,
     selectCompanyRecordNumber,
-} from "./antisocialCheck/fetchCompany";
+} from "./addKyoryokuMaster/inquiry";
 
 import {
     getSameKomutenKyoryokuCond,
