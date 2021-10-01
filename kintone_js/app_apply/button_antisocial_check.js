@@ -46,46 +46,46 @@ import {
     });
 })();
 
-const button_id = "checkAntisocial";
-const button_title = "反社チェックを開始";
+const buttonId = "checkAntisocial";
+const buttonTitle = "反社チェックを開始";
 const needShowButton = () => {
-    const exists_same_button = document.getElementById(button_id) !== null;
-    return !exists_same_button;
+    const existsSameButton = document.getElementById(buttonId) !== null;
+    return !existsSameButton;
 };
 
 const createButton = (record) => {
     const button = document.createElement("button");
-    button.id = button_id;
-    button.innerText = button_title;
+    button.id = buttonId;
+    button.innerText = buttonTitle;
     button.addEventListener("click", clickButton.bind(null, record));
     return button;
 };
 
 const confirmBeforeExec = () => {
-    const before_process = "このレコードについて、反社チェックを開始しますか？"
+    const message = "このレコードについて、反社チェックを開始しますか？"
         + "\n※開始する前に、免許証情報の目視確認を済ませてください";
-    return window.confirm(before_process);
+    return window.confirm(message);
 };
 
-const clickButton = async (apply_record) => {
+const clickButton = async (applyRecord) => {
     if (!confirmBeforeExec()) {
         alert("処理は中断されました。");
         return;
     }
 
     alert("処理途中でページを更新したり、別のタブを開いたりしないように注意してください。");
-    document.getElementById(button_id).innerText = "処理中...";
+    document.getElementById(buttonId).innerText = "処理中...";
 
     try {
         alert(`${schema_28.id.name}アプリにレコードが既に存在するか確認します。`);
-        const company_record = await searchCompanyRecord(getSearchQuery(apply_record));
+        const companyRecord = await searchCompanyRecord(getSearchQuery(applyRecord));
         console.log(`${schema_28.id.name}アプリの取得を完了。`);
 
-        const company_id = await getOrCreateCompanyId(company_record, apply_record);
-        if (!company_id) { throw new ManualAbortProcessError(); }
+        const companyId = await getOrCreateCompanyId(companyRecord, applyRecord);
+        if (!companyId) { throw new ManualAbortProcessError(); }
 
-        alert(`${schema_28.id.name}アプリのレコード番号${company_id}で反社チェックを進めます。`);
-        console.log(`使用する${schema_28.id.name}アプリのレコード番号: ${company_id}を取得完了。`);
+        alert(`${schema_28.id.name}アプリのレコード番号${companyId}で反社チェックを進めます。`);
+        console.log(`使用する${schema_28.id.name}アプリのレコード番号: ${companyId}を取得完了。`);
 
         // 反社チェックの経過を記録するための審査レコードを作成する。
         // が、その前にboxへの運転免許証画像ファイルの保存処理がある。
@@ -96,23 +96,23 @@ const clickButton = async (apply_record) => {
 
         console.log(`審査担当者: ${examinator}を取得完了。`);
 
-        const company = await CLIENT.record.getRecord({ app: schema_28.id.appId, id: company_id });
-        const exam_id = await createExamRecord(company.record, examinator);
-        if (!exam_id) { throw new ManualAbortProcessError(); }
+        const company = await CLIENT.record.getRecord({ app: schema_28.id.appId, id: companyId });
+        const examId = await createExamRecord(company.record, examinator);
+        if (!examId) { throw new ManualAbortProcessError(); }
 
-        alert(`審査レコード: ${exam_id}を新規作成しました。`
+        alert(`審査レコード: ${examId}を新規作成しました。`
             + "\n運転免許証をboxにアップロードして、そのフォルダのURLを審査レコードに保存する操作は手動で行ってください。");
-        console.log(`審査レコード: ${exam_id}を作成完了。`);
+        console.log(`審査レコード: ${examId}を作成完了。`);
 
         alert("審査レコードから記事取得タスクを生成します。");
-        const task_id = await createTask(exam_id, company.record, examinator);
-        if (!task_id) { throw new ManualAbortProcessError(); }
+        const taskId = await createTask(examId, company.record, examinator);
+        if (!taskId) { throw new ManualAbortProcessError(); }
 
-        alert(`記事取得タスク: ${task_id}の作成が完了しました。`
+        alert(`記事取得タスク: ${taskId}の作成が完了しました。`
             + "記事の検索処理が完了するまでしばらくお待ちください。");
-        console.log(`記事取得タスク: ${task_id}を作成完了。`);
+        console.log(`記事取得タスク: ${taskId}を作成完了。`);
 
-        const examPage = `https://investdesign.cybozu.com/k/${schema_79.id.appId}/show#record=${exam_id}`;
+        const examPage = `https://investdesign.cybozu.com/k/${schema_79.id.appId}/show#record=${examId}`;
         alert("作成した審査レコードのページに移動します。");
         window.location.href = examPage;
     } catch (e) {
@@ -126,7 +126,7 @@ const clickButton = async (apply_record) => {
         }
     } finally {
         alert("処理を終了します。");
-        document.getElementById(button_id).innerText = button_title;
+        document.getElementById(buttonId).innerText = buttonTitle;
     }
 };
 
