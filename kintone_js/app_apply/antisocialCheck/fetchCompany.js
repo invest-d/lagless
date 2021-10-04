@@ -12,6 +12,7 @@ const applicantPref_APPLY           = schema_apply.fields.properties.prefecture.
 const applicantAddr_APPLY           = schema_apply.fields.properties.address.code;
 const applicantSt_APPLY             = schema_apply.fields.properties.streetAddress.code;
 const applicantZipcode_APPLY        = schema_apply.fields.properties.postalCode.code;
+const constructorId_APPLY           = schema_apply.fields.properties.constructionShopId.code;
 
 import { schema_28 } from "../../28/schema";
 const recordNo_COMPANY              = schema_28.fields.properties.レコード番号.code;
@@ -21,12 +22,13 @@ const phoneNumber_COMPANY           = schema_28.fields.properties.TEL_本店.cod
 const email_COMPANY                 = schema_28.fields.properties.メールアドレス_会社.code;
 const address_COMPANY               = schema_28.fields.properties.住所_本店.code;
 const addressAuto_COMPANY           = schema_28.fields.properties.住所_HubSpotより.code;
-const businessType_COMPANY          = schema_28.fields.properties.取引区分.code;
-const type_pay_COMPANY              = schema_28.fields.properties.取引区分.options.支払企業.label;
+const transactionType_COMPANY       = schema_28.fields.properties.取引区分.code;
 const companyType_COMPANY           = schema_28.fields.properties.企業形態.code;
 const type_person_COMPANY           = schema_28.fields.properties.企業形態.options.個人企業.label;
 const zipcodeNormal_COMPANY         = schema_28.fields.properties.郵便番号_本店.code;
 const zipcodeAuto_COMPANY           = schema_28.fields.properties.郵便番号_HubSpotより.code;
+
+import { getTransactionType } from "./testableLogics";
 
 export const getSearchQuery = (record) => {
     const info = {
@@ -95,9 +97,12 @@ export const selectCompanyRecordNumber = (get_result) => {
 
 const createCompanyRecord = async (apply) => {
     const address = `${apply[applicantPref_APPLY]["value"]}${apply[applicantAddr_APPLY]["value"]}${apply[applicantSt_APPLY]["value"]}`;
+    const /** @type {"譲渡企業"|"支払企業"} */ transactionType = getTransactionType({
+        constructorId: apply[constructorId_APPLY]["value"],
+    });
     const new_record = {
         [companyName_COMPANY]: apply[applicantName_APPLY]["value"],
-        [businessType_COMPANY]: [type_pay_COMPANY],
+        [transactionType_COMPANY]: [transactionType],
         [companyType_COMPANY]: type_person_COMPANY,
         [representative_COMPANY]: apply[applicantRepresentative_APPLY]["value"],
         [zipcodeNormal_COMPANY]: apply[applicantZipcode_APPLY]["value"],
