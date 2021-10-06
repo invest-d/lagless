@@ -62,3 +62,6 @@ exports.ke_ban_form = require("./ke_ban_form").ke_ban_form;
 exports.ke_ban_form_dev = require("./ke_ban_form_dev").ke_ban_form_dev;
 exports.ke_ban_check = require("./ke_ban_check.js").ke_ban_check;
 exports.ke_ban_check_dev = require("./ke_ban_check.js").ke_ban_check;
+
+// 法人番号API
+exports.searchCorporateByName = require("./corporateApi.js").searchCorporateByName;
