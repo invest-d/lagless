@@ -30,24 +30,6 @@ const zipcodeAuto_COMPANY           = schema_28.fields.properties.郵便番号_H
 
 import { getTransactionType } from "./testableLogics";
 
-export const getSearchQuery = (record) => {
-    const info = {
-        name: record[applicantName_APPLY]["value"],
-        representative: record[applicantRepresentative_APPLY]["representative"],
-        phone: record[applicantPhone_APPLY]["value"],
-        email: record[applicantEmail_APPLY]["value"],
-        address: `${record[applicantPref_APPLY]["value"]}${record[applicantAddr_APPLY]["value"]}${record[applicantSt_APPLY]["value"]}`
-    };
-
-    const queries = [];
-    if (info.name) queries.push(`${companyName_COMPANY} = "${info.name}"`);
-    if (info.representative) queries.push(`${representative_COMPANY} = "${info.representative}"`);
-    if (info.phone) queries.push(`${phoneNumber_COMPANY} = "${info.phone}"`);
-    if (info.email) queries.push(`${email_COMPANY} = "${info.email}"`);
-    if (info.address) queries.push(`${address_COMPANY} = "${info.address}"`);
-    return queries.join(" or ");
-};
-
 export const searchCompanyRecord = (query) => {
     const body = {
         app: schema_28.id.appId,

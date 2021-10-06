@@ -5,27 +5,35 @@
 
 "use strict";
 
+import { schema_apply } from "../161/schema";
 import { schema_28 } from "../28/schema";
-
 import { schema_79 } from "../79/schema";
+import { CLIENT } from "../util/kintoneAPI";
+import {
+    createExamRecord, getExaminator
+} from "./antisocialCheck/createExam";
+import {
+    getOrCreateCompanyId, searchCompanyRecord
+} from "./antisocialCheck/fetchCompany";
+import {
+    createTask
+} from "./antisocialCheck/generateTask";
+import {
+    getSearchQuery
+} from "./antisocialCheck/testableLogics";
+const applicantName_APPLY           = schema_apply.fields.properties.company.code;
+const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
+const applicantPhone_APPLY          = schema_apply.fields.properties.phone.code;
+const applicantEmail_APPLY          = schema_apply.fields.properties.mail.code;
+const applicantPref_APPLY           = schema_apply.fields.properties.prefecture.code;
+const applicantAddr_APPLY           = schema_apply.fields.properties.address.code;
+const applicantSt_APPLY             = schema_apply.fields.properties.streetAddress.code;
+
 // const boxUrl_EXAM               = schema_79.fields.properties.boxのURL.code;
 
 const ExtensibleCustomError = require("extensible-custom-error");
 class ManualAbortProcessError extends ExtensibleCustomError { }
 
-import { CLIENT } from "../util/kintoneAPI";
-import {
-    getSearchQuery,
-    searchCompanyRecord,
-    getOrCreateCompanyId,
-} from "./antisocialCheck/fetchCompany";
-import {
-    getExaminator,
-    createExamRecord,
-} from "./antisocialCheck/createExam";
-import {
-    createTask,
-} from "./antisocialCheck/generateTask";
 
 // box保存。 https://github.com/allenmichael/box-javascript-sdk を使用。カスタマイズjsとして `BoxSdk.min.js` の存在を前提にする
 // const box = new BoxSdk();
@@ -78,7 +86,13 @@ const clickButton = async (applyRecord) => {
 
     try {
         alert(`${schema_28.id.name}アプリにレコードが既に存在するか確認します。`);
-        const companyRecord = await searchCompanyRecord(getSearchQuery(applyRecord));
+        const companyRecord = await searchCompanyRecord(getSearchQuery({
+            name: applyRecord[applicantName_APPLY]["value"],
+            representative: applyRecord[applicantRepresentative_APPLY]["representative"],
+            phone: applyRecord[applicantPhone_APPLY]["value"],
+            email: applyRecord[applicantEmail_APPLY]["value"],
+            address: `${applyRecord[applicantPref_APPLY]["value"]}${applyRecord[applicantAddr_APPLY]["value"]}${applyRecord[applicantSt_APPLY]["value"]}`
+        }));
         console.log(`${schema_28.id.name}アプリの取得を完了。`);
 
         const companyId = await getOrCreateCompanyId(companyRecord, applyRecord);
