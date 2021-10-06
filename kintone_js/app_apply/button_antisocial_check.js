@@ -88,7 +88,7 @@ const clickButton = async (applyRecord) => {
         alert(`${schema_28.id.name}アプリにレコードが既に存在するか確認します。`);
         const companyRecord = await searchCompanyRecord(getSearchQuery({
             name: applyRecord[applicantName_APPLY]["value"],
-            representative: applyRecord[applicantRepresentative_APPLY]["representative"],
+            representative: applyRecord[applicantRepresentative_APPLY]["value"],
             phone: applyRecord[applicantPhone_APPLY]["value"],
             email: applyRecord[applicantEmail_APPLY]["value"],
             address: `${applyRecord[applicantPref_APPLY]["value"]}${applyRecord[applicantAddr_APPLY]["value"]}${applyRecord[applicantSt_APPLY]["value"]}`
