@@ -220,7 +220,6 @@ export const getCompanyRecord = (info) => {
 
     const body = {
         app: schema_28.id.appId,
-        fields: [recordNo_COMPANY],
         query: queries.join(" or ")
     };
     return CLIENT.record.getRecords(body);
