@@ -33,7 +33,6 @@ import { getTransactionType } from "./testableLogics";
 export const searchCompanyRecord = (query) => {
     const body = {
         app: schema_28.id.appId,
-        fields: [recordNo_COMPANY],
         query,
     };
     return CLIENT.record.getRecords(body);
