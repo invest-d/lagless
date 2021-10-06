@@ -46,12 +46,12 @@ const halvedWidth = (input_string) => {
 
     let converted_han = "";
 
-    for (let i = 0; i < input_string.length; i++){
+    for (let i = 0; i < input_string.length; i++) {
         const input_char = input_string.charAt(i);
         if (hankaku_array.includes(input_char)) {
             // 元々半角文字だったらそのまま使う
             converted_han += input_char;
-        } else if (zenkaku_array.includes(input_char)){
+        } else if (zenkaku_array.includes(input_char)) {
             // 使えるけど全角の文字は半角にして使う
             converted_han += hankaku_array[zenkaku_array.indexOf(input_char)];
         } else {
