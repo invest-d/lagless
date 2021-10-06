@@ -64,13 +64,13 @@ export const selectCompanyRecordNumber = (companyRecord) => {
         const message = "レコードが見つかりました。"
             + `\n${recordRepr(companyRecord.records[0])}`
             + "\nこのレコードを使って進めますか？";
-        if (confirm(message)) {
-            return Number(num);
-        } else {
-            const input = prompt("使用するレコード番号を手入力してください");
-            if (input) return returnAsNumber(input);
-            return null;
-        }
+
+        if (confirm(message)) return Number(num);
+
+        const input = prompt("使用するレコード番号を手入力してください");
+        if (input) return returnAsNumber(input);
+
+        return null;
     } else {
         const reprs = companyRecord.records.map((r) => recordRepr(r)).join("\n");
         const message = `複数のレコードが見つかりました。\n${reprs}`
