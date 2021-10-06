@@ -2,6 +2,7 @@ import {
     getTransactionType,
     getSearchQuery,
     parsed,
+    cleansedPref,
 } from "../testableLogics";
 
 test("WFIの場合に支払企業を返す", () => {
@@ -70,4 +71,10 @@ test("parse csv", () => {
         フリガナ: "インベストデザイン",
         検索対象除外: "0",
     });
+});
+
+test("都道府県クレンジング", () => {
+    for (const rawPref of ["群馬県", "東京都", "京都府", "北海道"]) {
+        expect(cleansedPref(rawPref)).toBe(rawPref.slice(0, rawPref.length-1));
+    }
 });

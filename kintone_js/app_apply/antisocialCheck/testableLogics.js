@@ -60,3 +60,9 @@ export const parsed = (csvString) => {
     console.log(data);
     return { summary, data };
 };
+
+export const cleansedPref = (/** @type {string} */ rawPref) => {
+    if (!rawPref) return "";
+
+    return rawPref.replace(/都$|道$|府$|県$/g, "");
+};
