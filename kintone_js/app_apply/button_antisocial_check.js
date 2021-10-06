@@ -13,7 +13,7 @@ import {
     createExamRecord, getExaminator
 } from "./antisocialCheck/createExam";
 import {
-    getOrCreateCompanyId, searchCompanyRecord
+    getOrCreateCompanyId, searchCompanyRecord, getFullAddress,
 } from "./antisocialCheck/fetchCompany";
 import {
     createTask
@@ -25,9 +25,6 @@ const applicantName_APPLY           = schema_apply.fields.properties.company.cod
 const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
 const applicantPhone_APPLY          = schema_apply.fields.properties.phone.code;
 const applicantEmail_APPLY          = schema_apply.fields.properties.mail.code;
-const applicantPref_APPLY           = schema_apply.fields.properties.prefecture.code;
-const applicantAddr_APPLY           = schema_apply.fields.properties.address.code;
-const applicantSt_APPLY             = schema_apply.fields.properties.streetAddress.code;
 
 // const boxUrl_EXAM               = schema_79.fields.properties.boxのURL.code;
 
@@ -91,7 +88,7 @@ const clickButton = async (applyRecord) => {
             representative: applyRecord[applicantRepresentative_APPLY]["value"],
             phone: applyRecord[applicantPhone_APPLY]["value"],
             email: applyRecord[applicantEmail_APPLY]["value"],
-            address: `${applyRecord[applicantPref_APPLY]["value"]}${applyRecord[applicantAddr_APPLY]["value"]}${applyRecord[applicantSt_APPLY]["value"]}`
+            address: getFullAddress(applyRecord),
         }));
         console.log(`${schema_28.id.name}アプリの取得を完了。`);
 

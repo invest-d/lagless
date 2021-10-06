@@ -30,6 +30,11 @@ const zipcodeAuto_COMPANY           = schema_28.fields.properties.郵便番号_H
 
 import { getTransactionType } from "./testableLogics";
 
+export const getFullAddress = (applyRecord) =>
+    applyRecord[applicantPref_APPLY]["value"]
+    + applyRecord[applicantAddr_APPLY]["value"]
+    + applyRecord[applicantSt_APPLY]["value"];
+
 export const searchCompanyRecord = (query) => {
     const body = {
         app: schema_28.id.appId,
@@ -77,7 +82,6 @@ export const selectCompanyRecordNumber = (companyRecord) => {
 };
 
 const createCompanyRecord = async (apply) => {
-    const address = `${apply[applicantPref_APPLY]["value"]}${apply[applicantAddr_APPLY]["value"]}${apply[applicantSt_APPLY]["value"]}`;
     const /** @type {"譲渡企業"|"支払企業"} */ transactionType = getTransactionType({
         constructorId: apply[constructorId_APPLY]["value"],
     });
@@ -88,8 +92,8 @@ const createCompanyRecord = async (apply) => {
         [representative_COMPANY]: apply[applicantRepresentative_APPLY]["value"],
         [zipcodeNormal_COMPANY]: apply[applicantZipcode_APPLY]["value"],
         [zipcodeAuto_COMPANY]: apply[applicantZipcode_APPLY]["value"],
-        [address_COMPANY]: address,
-        [addressAuto_COMPANY]: address,
+        [address_COMPANY]: getFullAddress(apply),
+        [addressAuto_COMPANY]: getFullAddress(apply),
         [phoneNumber_COMPANY]: apply[applicantPhone_APPLY]["value"],
         [email_COMPANY]: apply[applicantEmail_APPLY]["value"]
     };
