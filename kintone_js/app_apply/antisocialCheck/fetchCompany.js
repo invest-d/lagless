@@ -43,12 +43,12 @@ export const searchCompanyRecord = (query) => {
     return CLIENT.record.getRecords(body);
 };
 
-export const getOrCreateCompanyId = async (company_record, apply_record) => {
-    if (company_record && company_record.records.length) {
-        return selectCompanyRecordNumber(company_record);
+export const getOrCreateCompanyId = async (companyRecord, applyRecord) => {
+    if (companyRecord && companyRecord.records.length) {
+        return selectCompanyRecordNumber(companyRecord);
     } else {
         alert("レコードが見つからなかったため、新規作成します。");
-        return await createCompanyRecord(apply_record);
+        return await createCompanyRecord(applyRecord);
     }
 };
 
