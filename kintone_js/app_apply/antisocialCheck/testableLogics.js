@@ -105,6 +105,30 @@ export const parsed = (csvString) => {
     return { summary, data };
 };
 
+export const reprData = (/** @type {Data} */ data) => {
+    const corporateTypes = {
+        "101": "国の機関",
+        "201": "地方公共団体",
+        "301": "株式会社",
+        "302": "有限会社",
+        "303": "合名会社",
+        "304": "合資会社",
+        "305": "合同会社",
+        "399": "その他の設立登記法人",
+        "401": "外国会社等",
+        "499": "その他",
+    };
+    const corporateType = ((t) => {
+        if (corporateTypes[t]) return corporateTypes[t];
+        return `不明(コード: ${t})`;
+    })(data.法人種別);
+
+    return `結果番号: ${data.連番}
+会社名: ${data.商号又は名称}
+法人種別: ${corporateType}
+所在地: ${data.国内所在地_都道府県}${data.国内所在地_市区町村}`;
+};
+
 export const cleansedPref = (/** @type {string} */ rawPref) => {
     if (!rawPref) return "";
 
