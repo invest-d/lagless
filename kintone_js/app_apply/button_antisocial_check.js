@@ -13,6 +13,7 @@ import {
     createExamRecord, getExaminator
 } from "./antisocialCheck/createExam";
 import { getFullAddress, getOrCreateCompanyId, searchCompanyRecord } from "./antisocialCheck/fetchCompany";
+import { addToukiRecord, buildToukiRecord } from "./antisocialCheck/fetchTouki";
 import {
     createTask
 } from "./antisocialCheck/generateTask";
@@ -23,6 +24,12 @@ const applicantName_APPLY = schema_apply.fields.properties.company.code;
 const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
 const applicantPhone_APPLY = schema_apply.fields.properties.phone.code;
 const applicantEmail_APPLY = schema_apply.fields.properties.mail.code;
+
+const companyApp = {
+    fields: {
+        corpNum: schema_28.fields.properties.法人番号.code,
+    }
+};
 
 // const boxUrl_EXAM               = schema_79.fields.properties.boxのURL.code;
 
@@ -120,6 +127,17 @@ const clickButton = async (applyRecord) => {
         alert(`記事取得タスク: ${taskId}の作成が完了しました。`
             + "記事の検索処理が完了するまでしばらくお待ちください。");
         console.log(`記事取得タスク: ${taskId}を作成完了。`);
+
+        const isCorporate = Boolean(company.record[companyApp.fields.corpNum].value);
+        if (isCorporate) {
+            alert("法人企業のため、登記情報を取得します。");
+            const exam = await CLIENT.record.getRecord({ app: schema_79.id.appId, id: examId });
+            const newToukiRecord = buildToukiRecord(company.record, exam.record);
+            const toukiId = await addToukiRecord(newToukiRecord);
+            if (!toukiId) { throw new ManualAbortProcessError(); }
+            alert("登記情報取得タスクをシステムに登録しました。\n"
+                + "完了後、チャットアプリにて通知します。");
+        }
 
         const examPage = `https://investdesign.cybozu.com/k/${schema_79.id.appId}/show#record=${examId}`;
         alert("作成した審査レコードのページに移動します。");
