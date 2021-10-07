@@ -1,9 +1,10 @@
 "use strict";
 
+import { schema_apply } from "../../161/schema";
+import { schema_28 } from "../../28/schema";
 import { CLIENT } from "../../util/kintoneAPI";
 import { replaceFullWidthNumbers } from "../../util/manipulations";
 
-import { schema_apply } from "../../161/schema";
 const applicantName_APPLY = schema_apply.fields.properties.company.code;
 const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
 const applicantPhone_APPLY = schema_apply.fields.properties.phone.code;
@@ -14,7 +15,6 @@ const applicantSt_APPLY = schema_apply.fields.properties.streetAddress.code;
 const applicantZipcode_APPLY = schema_apply.fields.properties.postalCode.code;
 const constructorId_APPLY = schema_apply.fields.properties.constructionShopId.code;
 
-import { schema_28 } from "../../28/schema";
 const recordNo_COMPANY = schema_28.fields.properties.レコード番号.code;
 const companyName_COMPANY = schema_28.fields.properties["法人名・屋号"].code;
 const representative_COMPANY = schema_28.fields.properties.代表者名.code;
