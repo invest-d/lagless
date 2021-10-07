@@ -1,4 +1,5 @@
 import parse from "csv-parse/lib/sync";
+import { replaceFullWidthNumbers } from "../../util/manipulations";
 import { schema_28 } from "../../28/schema";
 import { isKeban } from "../../96/common";
 
@@ -133,4 +134,52 @@ export const cleansedPref = (/** @type {string} */ rawPref) => {
     if (!rawPref) return "";
 
     return rawPref.replace(/(?<=東京)都$|道$|府$|県$/g, "");
+};
+
+/**
+* @summary 法人番号APIの検索結果から、処理に使用する法人番号13桁を選ぶ
+* @param {Summary} summary
+* @param {Data[]} data
+* @return {string|undefined} - 13桁の数字列か、もしくはundefined
+*/
+export const choiceCorporateNumber = (summary, data) => {
+    if (Number(summary.総件数) === 0) {
+        const noCorporatesMessage = "法人データが見つかりませんでした。"
+            + "個人事業主として取引企業管理アプリにレコードを作成します。\n"
+            + "法人の場合はレコード作成後に手動でレコードを修正してください。";
+        alert(noCorporatesMessage);
+        return undefined;
+    } else if (Number(summary.総件数) === 1) {
+        const num = data[0].法人番号13桁;
+        const message = "データが見つかりました。このデータで進めてよろしいですか？"
+            + `${reprData(data[0])}`;
+        if (confirm(message)) alert(`法人番号: ${num}で確定しました。`);
+        return num;
+    } else if (Number(summary.総件数) > 1) {
+        const resultNum = ((data) => {
+            let providedValidNumber = false;
+            while (!providedValidNumber) {
+                const choiceMessage = "複数のデータが見つかりました。使用するデータの「結果番号」を入力してください。\n"
+                    + `${data.map((d) => reprData(d)).join("\n\n")}`;
+                const num = Number(replaceFullWidthNumbers(prompt(choiceMessage)));
+                providedValidNumber = Number.isInteger(num)
+                    && data.map((d) => Number(d.連番)).includes(num);
+
+                if (providedValidNumber) {
+                    const confirmMessage = "次のデータでよろしいですか？\n\n"
+                        + `${reprData(data[num-1])}`;
+                    if (!confirm(confirmMessage)) providedValidNumber = false;
+                }
+
+                if (providedValidNumber) return num;
+                alert("正しい数字を入力してください");
+            }
+        })(data);
+
+        alert(`結果番号: ${resultNum}の法人番号: ${data[resultNum-1].法人番号13桁}で確定しました。`);
+        return data[resultNum-1].法人番号13桁;
+    } else {
+        alert("不明なエラーが発生しました");
+        return undefined;
+    }
 };

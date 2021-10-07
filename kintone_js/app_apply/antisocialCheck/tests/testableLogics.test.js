@@ -5,6 +5,7 @@ import {
     parsed,
     cleansedPref,
     reprData,
+    choiceCorporateNumber,
 } from "../testableLogics";
 
 test("WFIの場合に支払企業を返す", () => {
@@ -126,4 +127,69 @@ test("都道府県クレンジング", () => {
     ]) {
         expect(cleansedPref(rawPref)).toBe(rawPref.slice(0, 2));
     }
+});
+
+test("no api results", () => {
+    global.alert = jest.fn();
+
+    expect(choiceCorporateNumber(
+        { 総件数: "0" },
+        []
+    )).toBe(undefined);
+
+    global.alert.mockRestore();
+});
+
+test("single api result", () => {
+    global.alert = jest.fn();
+    global.confirm = jest.fn().mockImplementation(() => true);
+
+    expect(choiceCorporateNumber(
+        { 総件数: "1" },
+        [{ 法人番号13桁: "1234567890123" }]
+    )).toBe("1234567890123");
+
+    global.confirm.mockRestore();
+    global.alert.mockRestore();
+});
+
+test("multiple api results", () => {
+    global.prompt = jest.fn().mockImplementation(() => "3");
+    global.confirm = jest.fn().mockImplementation(() => true);
+
+    expect(choiceCorporateNumber(
+        { 総件数: "3" },
+        [
+            { 連番: "1", 法人番号13桁: "1234567890123" },
+            { 連番: "2", 法人番号13桁: "2345678901231" },
+            { 連番: "3", 法人番号13桁: "3456789012312" },
+        ]
+    )).toBe("3456789012312");
+
+    global.confirm.mockRestore();
+    global.prompt.mockRestore();
+});
+
+test("prompt returns full-width number string", () => {
+    global.prompt = jest.fn().mockImplementation(() => "３");
+    global.confirm = jest.fn().mockImplementation(() => true);
+
+    expect(choiceCorporateNumber(
+        { 総件数: "3" },
+        [
+            { 連番: "1", 法人番号13桁: "1234567890123" },
+            { 連番: "2", 法人番号13桁: "2345678901231" },
+            { 連番: "3", 法人番号13桁: "3456789012312" },
+        ]
+    )).toBe("3456789012312");
+
+    global.confirm.mockRestore();
+    global.prompt.mockRestore();
+});
+
+test("unknown api error", () => {
+    expect(choiceCorporateNumber(
+        {},
+        []
+    )).toBe(undefined);
 });
