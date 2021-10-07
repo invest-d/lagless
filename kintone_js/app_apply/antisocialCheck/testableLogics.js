@@ -144,8 +144,7 @@ export const cleansedPref = (/** @type {string} */ rawPref) => {
 */
 export const choiceCorporateNumber = (summary, data) => {
     if (Number(summary.総件数) === 0) {
-        const noCorporatesMessage = "法人データが見つかりませんでした。"
-            + "個人事業主として取引企業管理アプリにレコードを作成します。\n"
+        const noCorporatesMessage = "法人データが見つかりませんでした。\n"
             + "法人の場合はレコード作成後に手動でレコードを修正してください。";
         alert(noCorporatesMessage);
         return undefined;
@@ -179,7 +178,7 @@ export const choiceCorporateNumber = (summary, data) => {
         alert(`結果番号: ${resultNum}の法人番号: ${data[resultNum-1].法人番号13桁}で確定しました。`);
         return data[resultNum-1].法人番号13桁;
     } else {
-        alert("不明なエラーが発生しました");
+        alert("法人番号APIの実行中に不明なエラーが発生しました");
         return undefined;
     }
 };
