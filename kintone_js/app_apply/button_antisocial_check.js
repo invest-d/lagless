@@ -12,19 +12,17 @@ import { CLIENT } from "../util/kintoneAPI";
 import {
     createExamRecord, getExaminator
 } from "./antisocialCheck/createExam";
-import {
-    getOrCreateCompanyId, searchCompanyRecord, getFullAddress,
-} from "./antisocialCheck/fetchCompany";
+import { getFullAddress, getOrCreateCompanyId, searchCompanyRecord } from "./antisocialCheck/fetchCompany";
 import {
     createTask
 } from "./antisocialCheck/generateTask";
 import {
     getSearchQuery
 } from "./antisocialCheck/testableLogics";
-const applicantName_APPLY           = schema_apply.fields.properties.company.code;
+const applicantName_APPLY = schema_apply.fields.properties.company.code;
 const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
-const applicantPhone_APPLY          = schema_apply.fields.properties.phone.code;
-const applicantEmail_APPLY          = schema_apply.fields.properties.mail.code;
+const applicantPhone_APPLY = schema_apply.fields.properties.phone.code;
+const applicantEmail_APPLY = schema_apply.fields.properties.mail.code;
 
 // const boxUrl_EXAM               = schema_79.fields.properties.boxのURL.code;
 
