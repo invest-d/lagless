@@ -92,7 +92,7 @@ export const parsed = (csvString) => {
     const summaryHeader = "最終更新年月日,総件数,分割番号,分割数";
     const summaryString =  `${summaryHeader}\n${csvString.split("\n")[0]}`;
     /** @type {Summary} */
-    const summary = parse(summaryString, { columns: true });
+    const summary = parse(summaryString, { columns: true })[0];
     console.log(summary);
 
     // 2行目からがデータ
