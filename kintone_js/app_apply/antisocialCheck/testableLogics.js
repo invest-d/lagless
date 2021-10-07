@@ -123,7 +123,7 @@ export const reprData = (/** @type {Data} */ data) => {
         return `不明(コード: ${t})`;
     })(data.法人種別);
 
-    return `結果番号: ${data.連番}
+    return `-----結果番号: ${data.連番}----------
 会社名: ${data.商号又は名称}
 法人種別: ${corporateType}
 所在地: ${data.国内所在地_都道府県}${data.国内所在地_市区町村}`;
