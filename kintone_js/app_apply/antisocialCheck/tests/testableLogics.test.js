@@ -114,6 +114,6 @@ test("株式会社 representation", () => {
 
 test("都道府県クレンジング", () => {
     for (const rawPref of ["群馬県", "東京都", "京都府", "北海道"]) {
-        expect(cleansedPref(rawPref)).toBe(rawPref.slice(0, rawPref.length-1));
+        expect(cleansedPref(rawPref)).toBe(rawPref.slice(0, rawPref.length - 1));
     }
 });
