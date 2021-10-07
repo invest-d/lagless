@@ -2,8 +2,11 @@
 
 import { schema_apply } from "../../161/schema";
 import { schema_28 } from "../../28/schema";
+import { schema_61 } from "../../61/schema";
 import { CLIENT } from "../../util/kintoneAPI";
 import { replaceFullWidthNumbers } from "../../util/manipulations";
+import { request } from "./corporateApi";
+import { choiceCorporateNumber, cleansedPref, getTransactionType } from "./testableLogics";
 
 const applicantName_APPLY = schema_apply.fields.properties.company.code;
 const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
@@ -17,6 +20,7 @@ const constructorId_APPLY = schema_apply.fields.properties.constructionShopId.co
 
 const recordNo_COMPANY = schema_28.fields.properties.レコード番号.code;
 const companyName_COMPANY = schema_28.fields.properties["法人名・屋号"].code;
+const corporateNum_COMPANY = schema_28.fields.properties.法人番号.code;
 const representative_COMPANY = schema_28.fields.properties.代表者名.code;
 const phoneNumber_COMPANY = schema_28.fields.properties.TEL_本店.code;
 const email_COMPANY = schema_28.fields.properties.メールアドレス_会社.code;
@@ -25,10 +29,13 @@ const addressAuto_COMPANY = schema_28.fields.properties.住所_HubSpotより.cod
 const transactionType_COMPANY = schema_28.fields.properties.取引区分.code;
 const companyType_COMPANY = schema_28.fields.properties.企業形態.code;
 const type_person_COMPANY = schema_28.fields.properties.企業形態.options.個人企業.label;
+const type_corporate_COMPANY = schema_28.fields.properties.企業形態.options.法人企業.label;
 const zipcodeNormal_COMPANY = schema_28.fields.properties.郵便番号_本店.code;
 const zipcodeAuto_COMPANY = schema_28.fields.properties.郵便番号_HubSpotより.code;
 
-import { getTransactionType } from "./testableLogics";
+const corporateWebApi = "97";
+const idField_CREDS = schema_61.fields.properties.ID.code;
+
 
 export const getFullAddress = (applyRecord) =>
     applyRecord[applicantPref_APPLY]["value"]
@@ -48,8 +55,83 @@ export const getOrCreateCompanyId = async (companyRecord, applyRecord) => {
         return selectCompanyRecordNumber(companyRecord);
     } else {
         alert("レコードが見つからなかったため、新規作成します。");
-        return await createCompanyRecord(applyRecord);
+        const corporateNum = await (async () => {
+            const cred = await CLIENT.record.getRecord({
+                app: schema_61.id.appId,
+                id: corporateWebApi
+            });
+            const conds = {
+                "id": cred.record[idField_CREDS].value,
+                "name": applyRecord[applicantName_APPLY].value,
+                "type": "02",
+                "mode": "2",
+                "target": "1",
+            };
+
+            // 末尾の/(都|道|府|県)$/が省略されている可能性を考慮して、予め取り除く
+            const pref = cleansedPref(applyRecord[applicantPref_APPLY].value);
+            if (pref) conds.address = jisx0401[pref];
+
+            const { summary, data } = await request(conds);
+            return choiceCorporateNumber(summary, data);
+        })();
+
+        if (!corporateNum) {
+            alert("個人事業主として取引企業管理アプリにレコードを作成します。");
+        }
+
+        return await createCompanyRecord(applyRecord, corporateNum);
     }
+};
+
+const jisx0401 = {
+    "群馬": "10",
+    "埼玉": "11",
+    "千葉": "12",
+    "東京": "13",
+    "神奈川": "14",
+    "新潟": "15",
+    "富山": "16",
+    "石川": "17",
+    "福井": "18",
+    "山梨": "19",
+    "長野": "20",
+    "岐阜": "21",
+    "静岡": "22",
+    "愛知": "23",
+    "三重": "24",
+    "滋賀": "25",
+    "京都": "26",
+    "大阪": "27",
+    "兵庫": "28",
+    "奈良": "29",
+    "和歌山": "30",
+    "鳥取": "31",
+    "島根": "32",
+    "岡山": "33",
+    "広島": "34",
+    "山口": "35",
+    "徳島": "36",
+    "香川": "37",
+    "愛媛": "38",
+    "高知": "39",
+    "福岡": "40",
+    "佐賀": "41",
+    "長崎": "42",
+    "熊本": "43",
+    "大分": "44",
+    "宮崎": "45",
+    "鹿児島": "46",
+    "沖縄": "47",
+    "北海": "01",
+    "青森": "02",
+    "岩手": "03",
+    "宮城": "04",
+    "秋田": "05",
+    "山形": "06",
+    "福島": "07",
+    "茨城": "08",
+    "栃木": "09",
 };
 
 export const selectCompanyRecordNumber = (companyRecord) => {
@@ -81,14 +163,17 @@ export const selectCompanyRecordNumber = (companyRecord) => {
     }
 };
 
-const createCompanyRecord = async (apply) => {
+const createCompanyRecord = async (apply, corporateNum) => {
     const /** @type {"譲渡企業"|"支払企業"} */ transactionType = getTransactionType({
         constructorId: apply[constructorId_APPLY]["value"],
     });
+
+    const companyType = corporateNum ? type_corporate_COMPANY : type_person_COMPANY;
+
     const new_record = {
         [companyName_COMPANY]: apply[applicantName_APPLY]["value"],
         [transactionType_COMPANY]: [transactionType],
-        [companyType_COMPANY]: type_person_COMPANY,
+        [companyType_COMPANY]: companyType,
         [representative_COMPANY]: apply[applicantRepresentative_APPLY]["value"],
         [zipcodeNormal_COMPANY]: apply[applicantZipcode_APPLY]["value"],
         [zipcodeAuto_COMPANY]: apply[applicantZipcode_APPLY]["value"],
@@ -97,6 +182,10 @@ const createCompanyRecord = async (apply) => {
         [phoneNumber_COMPANY]: apply[applicantPhone_APPLY]["value"],
         [email_COMPANY]: apply[applicantEmail_APPLY]["value"]
     };
+
+    // 取引企業管理アプリに登録する法人番号は、上一桁のチェックデジットを除く12桁
+    if (corporateNum) new_record[corporateNum_COMPANY] = corporateNum.slice(-12);
+
     Object.keys(new_record).forEach((k) => new_record[k] = { value: new_record[k] });
     const body = {
         app: schema_28.id.appId,
