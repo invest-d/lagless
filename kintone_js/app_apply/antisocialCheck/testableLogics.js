@@ -132,5 +132,5 @@ export const reprData = (/** @type {Data} */ data) => {
 export const cleansedPref = (/** @type {string} */ rawPref) => {
     if (!rawPref) return "";
 
-    return rawPref.replace(/都$|道$|府$|県$/g, "");
+    return rawPref.replace(/(?<=東京)都$|道$|府$|県$/g, "");
 };
