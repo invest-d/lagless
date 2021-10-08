@@ -34,6 +34,7 @@ const examConclusion_EXAM       = schema_79.fields.properties.意見_審査担�
 const conclusionUnexam_EXAM     = schema_79.fields.properties.意見_審査担当者.options.審査待ち.label;
 const toukiIntegrity_EXAM       = schema_79.fields.properties.取得情報と登記情報の一致確認.code;
 const toukiNone_EXAM            = schema_79.fields.properties.取得情報と登記情報の一致確認.options["登記無し(個人事業主)"].label;
+const toukiPending_EXAM         = schema_79.fields.properties.取得情報と登記情報の一致確認.options.確認中.label;
 const examineeSource_EXAM       = schema_79.fields.properties.取得経路.code;
 const sourceForm_EXAM           = schema_79.fields.properties.取得経路.options["早払い・遅払い申込フォーム（協力会社）"].label;
 const telStatus_EXAM            = schema_79.fields.properties.架電状況_1回目.code;
@@ -84,6 +85,10 @@ export const createExamRecord = async (company_record, examinator, payerCompanyI
         [examineeSource_EXAM]: [sourceForm_EXAM],
         [telStatus_EXAM]: [telNotNeed_EXAM],
     };
+    if (company_record[companyNumber_COMPANY]["value"]) {
+        new_record[toukiIntegrity_EXAM] = [toukiPending_EXAM];
+        alert("申込内容と登記情報の一致を確認した後、審査アプリの「取得情報と登記情報の一致確認」を更新してください。");
+    }
     Object.keys(new_record).forEach((k) => new_record[k] = { value: new_record[k] });
     const body = {
         app: schema_79.id.appId,
