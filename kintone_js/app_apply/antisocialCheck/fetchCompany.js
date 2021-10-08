@@ -3,10 +3,13 @@
 import { schema_apply } from "../../161/schema";
 import { schema_28 } from "../../28/schema";
 import { schema_61 } from "../../61/schema";
+import { schema_96 } from "../../96/schema";
 import { CLIENT } from "../../util/kintoneAPI";
 import { replaceFullWidthNumbers } from "../../util/manipulations";
+import { isKeban } from "../../96/common";
 import { request } from "./corporateApi";
 import { choiceCorporateNumber, cleansedPref, getTransactionType } from "./testableLogics";
+import { isGigConstructorID } from "../../util/gig_utils";
 
 const applicantName_APPLY = schema_apply.fields.properties.company.code;
 const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
@@ -17,6 +20,7 @@ const applicantAddr_APPLY = schema_apply.fields.properties.address.code;
 const applicantSt_APPLY = schema_apply.fields.properties.streetAddress.code;
 const applicantZipcode_APPLY = schema_apply.fields.properties.postalCode.code;
 const constructorId_APPLY = schema_apply.fields.properties.constructionShopId.code;
+const gigOrdererName_APPLY = schema_apply.fields.properties.ordererGig.code;
 
 const recordNo_COMPANY = schema_28.fields.properties.レコード番号.code;
 const companyName_COMPANY = schema_28.fields.properties["法人名・屋号"].code;
@@ -27,12 +31,21 @@ const email_COMPANY = schema_28.fields.properties.メールアドレス_会社.c
 const address_COMPANY = schema_28.fields.properties.住所_本店.code;
 const addressAuto_COMPANY = schema_28.fields.properties.住所_HubSpotより.code;
 const transactionType_COMPANY = schema_28.fields.properties.取引区分.code;
+const payerCompany = schema_28.fields.properties.取引区分.options.支払企業.label;
 const companyType_COMPANY = schema_28.fields.properties.企業形態.code;
 const type_person_COMPANY = schema_28.fields.properties.企業形態.options.個人企業.label;
 const type_corporate_COMPANY = schema_28.fields.properties.企業形態.options.法人企業.label;
 const zipcodeNormal_COMPANY = schema_28.fields.properties.郵便番号_本店.code;
 const zipcodeAuto_COMPANY = schema_28.fields.properties.郵便番号_HubSpotより.code;
 
+const constructorApp = {
+    fields: {
+        constructorId: schema_96.fields.properties.id.code,
+        companyId: schema_96.fields.properties.customerCode.code,
+    }
+};
+
+const WFI_COMPANY_ID = "4736";
 const corporateWebApi = "97";
 const idField_CREDS = schema_61.fields.properties.ID.code;
 
@@ -194,4 +207,41 @@ const createCompanyRecord = async (apply, corporateNum) => {
     const result = await CLIENT.record.addRecord(body);
     alert(`レコード(${result.id})を新規作成しました。`);
     return result.id;
+};
+
+/**
+* @summary 工務店IDを元にして、ファクタリングをしない場合にお金を支払う本来の企業の取引企業管理アプリにおけるレコード番号を取得する
+* @param {string} constructorId
+* @return {string|undefined}
+*/
+export const getPayerCompanyId = async (applyRecord) => {
+    const constructorId = applyRecord[constructorId_APPLY].value;
+
+    // 既知の工務店はAPIを利用せずにそのまま返す
+    if (isKeban(constructorId)) return WFI_COMPANY_ID;
+
+    if (isGigConstructorID(constructorId)) {
+        // 工務店IDを手がかりに当たるのではなく、発注企業名から当たる
+        const ordererName = applyRecord[gigOrdererName_APPLY].value;
+        const conds = {
+            app: schema_28.id.appId,
+            query: `${companyName_COMPANY} like "${ordererName}"
+            and ${transactionType_COMPANY} = "${payerCompany}"`,
+        };
+        const company = await CLIENT.record.getRecords(conds);
+        if (company.records.length === 0) alert(`${ordererName} が取引企業管理アプリに存在しません`);
+        // 1件だけが引っかかる前提
+        return company.records[0][recordNo_COMPANY].value;
+    } else {
+        // 一般の工務店の場合は工務店マスタ→取引企業管理アプリで辿れる
+        const conds = {
+            app: schema_96.id.appId,
+            query: `${constructorApp.fields.constructorId} = "${constructorId}"`,
+        };
+        const constructor = await CLIENT.record.getRecords(conds);
+        // 存在する前提
+        const companyId = constructor.records[0][constructorApp.fields.companyId].value;
+        if (!companyId) alert("工務店マスタに取引企業管理Noを入力していません。");
+        return companyId;
+    }
 };

@@ -12,7 +12,12 @@ import { CLIENT } from "../util/kintoneAPI";
 import {
     createExamRecord, getExaminator
 } from "./antisocialCheck/createExam";
-import { getFullAddress, getOrCreateCompanyId, searchCompanyRecord } from "./antisocialCheck/fetchCompany";
+import {
+    getFullAddress,
+    getOrCreateCompanyId,
+    searchCompanyRecord,
+    getPayerCompanyId,
+} from "./antisocialCheck/fetchCompany";
 import { addToukiRecord, buildToukiRecord } from "./antisocialCheck/fetchTouki";
 import {
     createTask
@@ -117,7 +122,9 @@ const clickButton = async (applyRecord) => {
         console.log(`審査担当者: ${examinator}を取得完了。`);
 
         const company = await CLIENT.record.getRecord({ app: schema_28.id.appId, id: companyId });
-        const examId = await createExamRecord(company.record, examinator);
+        const payerCompanyId = await getPayerCompanyId(applyRecord);
+        if (!payerCompanyId) { throw new ManualAbortProcessError(); }
+        const examId = await createExamRecord(company.record, examinator, payerCompanyId);
         if (!examId) { throw new ManualAbortProcessError(); }
 
         alert(`審査レコード: ${examId}を新規作成しました。`

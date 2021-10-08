@@ -24,7 +24,6 @@ const examinator_EXAM           = schema_79.fields.properties.審査担当者_�
 const businessType_EXAM         = schema_79.fields.properties.取引区分.code;
 const typeGiver_EXAM            = schema_79.fields.properties.取引区分.options.譲渡企業.label;
 const payerCompany_EXAM         = schema_79.fields.properties.取引企業管理_No_支払企業2.code;
-const WFI_COMPANY_ID            = "4736";
 const examType_EXAM             = schema_79.fields.properties.審査種類.code;
 const typePreExam_EXAM          = schema_79.fields.properties.審査種類.options.事前審査.label;
 const examOrderer_EXAM          = schema_79.fields.properties.審査依頼者.code;
@@ -64,7 +63,7 @@ export const getExaminator = () => {
     return userid;
 };
 
-export const createExamRecord = async (company_record, examinator) => {
+export const createExamRecord = async (company_record, examinator, payerCompanyId) => {
     const new_record = {
         [companyId_EXAM]: company_record[recordNo_COMPANY]["value"],
         [companyName_EXAM]: company_record[companyName_COMPANY]["value"],
@@ -76,7 +75,7 @@ export const createExamRecord = async (company_record, examinator) => {
         [examinator_EXAM]: [{ code: examinator }],
         [businessType_EXAM]: [typeGiver_EXAM],
         // [boxUrl_EXAM]: box_URL,
-        [payerCompany_EXAM]: WFI_COMPANY_ID,
+        [payerCompany_EXAM]: payerCompanyId,
         [examType_EXAM]: typePreExam_EXAM,
         [examOrderer_EXAM]: ordererLagless_EXAM,
         [examPurpose_EXAM]: purposeGiver_EXAM,
