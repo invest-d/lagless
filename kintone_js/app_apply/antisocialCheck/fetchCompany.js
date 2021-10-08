@@ -192,7 +192,6 @@ const createCompanyRecord = async (apply, corporateNum) => {
         record: new_record
     };
     const result = await CLIENT.record.addRecord(body);
-    alert(`レコード(${result.id})を新規作成しました。`
-        + "個人企業扱いで登録しています。法人企業の場合はレコード内容を修正してください。");
+    alert(`レコード(${result.id})を新規作成しました。`);
     return result.id;
 };
