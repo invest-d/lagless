@@ -131,14 +131,6 @@ const clickButton = async (applyRecord) => {
             + "\n運転免許証をboxにアップロードして、そのフォルダのURLを審査レコードに保存する操作は手動で行ってください。");
         console.log(`審査レコード: ${examId}を作成完了。`);
 
-        alert("審査レコードから記事取得タスクを生成します。");
-        const taskId = await createTask(examId, company.record, examinator);
-        if (!taskId) { throw new ManualAbortProcessError(); }
-
-        alert(`記事取得タスク: ${taskId}の作成が完了しました。`
-            + "記事の検索処理が完了するまでしばらくお待ちください。");
-        console.log(`記事取得タスク: ${taskId}を作成完了。`);
-
         const isCorporate = Boolean(company.record[companyApp.fields.corpNum].value);
         if (isCorporate) {
             alert("法人企業のため、登記情報を取得します。");
@@ -149,6 +141,14 @@ const clickButton = async (applyRecord) => {
             alert("登記情報取得タスクをシステムに登録しました。\n"
                 + "完了後、チャットアプリにて通知します。");
         }
+
+        alert("審査レコードから記事取得タスクを生成します。");
+        const taskId = await createTask(examId, company.record, examinator);
+        if (!taskId) { throw new ManualAbortProcessError(); }
+
+        alert(`記事取得タスク: ${taskId}の作成が完了しました。`
+            + "記事の検索処理が完了するまでしばらくお待ちください。");
+        console.log(`記事取得タスク: ${taskId}を作成完了。`);
 
         const examPage = `https://investdesign.cybozu.com/k/${schema_79.id.appId}/show#record=${examId}`;
         alert("作成した審査レコードのページに移動します。");
