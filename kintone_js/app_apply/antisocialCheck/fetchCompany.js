@@ -229,7 +229,10 @@ export const getPayerCompanyId = async (applyRecord) => {
             and ${transactionType_COMPANY} = "${payerCompany}"`,
         };
         const company = await CLIENT.record.getRecords(conds);
-        if (company.records.length === 0) alert(`${ordererName} が取引企業管理アプリに存在しません`);
+        if (company.records.length === 0) {
+            alert(`${ordererName} が取引企業管理アプリに存在しません`);
+            return undefined;
+        }
         // 1件だけが引っかかる前提
         return company.records[0][recordNo_COMPANY].value;
     } else {
