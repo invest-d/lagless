@@ -1273,24 +1273,28 @@ export const schema_79 = {
                 "noLabel": false,
                 "options": {
                     "一致": {
-                        "index": "0",
+                        "index": "1",
                         "label": "一致"
                     },
                     "不一致あるもHP等で解消済": {
-                        "index": "1",
+                        "index": "2",
                         "label": "不一致あるもHP等で解消済"
                     },
                     "不一致（未解消）": {
-                        "index": "2",
+                        "index": "3",
                         "label": "不一致（未解消）"
                     },
                     "取得情報無し(ﾓﾆﾀﾘﾝｸﾞ)": {
-                        "index": "4",
+                        "index": "5",
                         "label": "取得情報無し(ﾓﾆﾀﾘﾝｸﾞ)"
                     },
                     "登記無し(個人事業主)": {
-                        "index": "3",
+                        "index": "4",
                         "label": "登記無し(個人事業主)"
+                    },
+                    "確認中": {
+                        "index": "0",
+                        "label": "確認中"
                     }
                 },
                 "required": true,
@@ -2707,7 +2711,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "与信付与条件",
                         "size": {
-                            "innerHeight": "90"
+                            "innerHeight": "91"
                         }
                     }
                 ]
@@ -2799,7 +2803,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "コメント_審査管理者",
                         "size": {
-                            "innerHeight": "90"
+                            "innerHeight": "91"
                         }
                     }
                 ]
@@ -2826,7 +2830,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "コメント_確認者2",
                         "size": {
-                            "innerHeight": "90"
+                            "innerHeight": "91"
                         }
                     }
                 ]
@@ -2853,7 +2857,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "コメント_確認者1",
                         "size": {
-                            "innerHeight": "90"
+                            "innerHeight": "91"
                         }
                     }
                 ]
@@ -2880,7 +2884,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "コメント_審査リーダー",
                         "size": {
-                            "innerHeight": "90"
+                            "innerHeight": "91"
                         }
                     }
                 ]
@@ -2907,7 +2911,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "コメント_審査担当者",
                         "size": {
-                            "innerHeight": "90"
+                            "innerHeight": "91"
                         }
                     }
                 ]
@@ -3204,7 +3208,7 @@ export const schema_79 = {
                         "type": "MULTI_LINE_TEXT",
                         "code": "目的",
                         "size": {
-                            "innerHeight": "134"
+                            "innerHeight": "132"
                         }
                     }
                 ]
