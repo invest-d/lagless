@@ -20,10 +20,14 @@ import {
 import {
     getSearchQuery
 } from "./antisocialCheck/testableLogics";
-const applicantName_APPLY = schema_apply.fields.properties.company.code;
-const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
-const applicantPhone_APPLY = schema_apply.fields.properties.phone.code;
-const applicantEmail_APPLY = schema_apply.fields.properties.mail.code;
+const applyApp = {
+    fields: {
+        applicantName: schema_apply.fields.properties.company.code,
+        representative: schema_apply.fields.properties.representative.code,
+        phone: schema_apply.fields.properties.phone.code,
+        email: schema_apply.fields.properties.mail.code,
+    }
+};
 
 const companyApp = {
     fields: {
@@ -89,10 +93,10 @@ const clickButton = async (applyRecord) => {
     try {
         alert(`${schema_28.id.name}アプリにレコードが既に存在するか確認します。`);
         const companyRecord = await searchCompanyRecord(getSearchQuery({
-            name: applyRecord[applicantName_APPLY]["value"],
-            representative: applyRecord[applicantRepresentative_APPLY]["value"],
-            phone: applyRecord[applicantPhone_APPLY]["value"],
-            email: applyRecord[applicantEmail_APPLY]["value"],
+            name: applyRecord[applyApp.fields.applicantName]["value"],
+            representative: applyRecord[applyApp.fields.representative]["value"],
+            phone: applyRecord[applyApp.fields.phone]["value"],
+            email: applyRecord[applyApp.fields.email]["value"],
             address: getFullAddress(applyRecord),
         }));
         console.log(`${schema_28.id.name}アプリの取得を完了。`);
