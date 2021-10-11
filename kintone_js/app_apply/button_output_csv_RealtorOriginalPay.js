@@ -29,8 +29,8 @@ import {
     downloadFile
 } from "../util/output_csv";
 
-import * as common_logics from "./logics_output_csv";
-import * as realtor_logics from "./logics_output_csv_RealtorOriginalPay";
+import * as common_logics from "./outputTransferCsv/logics_output_csv";
+import * as realtor_logics from "./outputTransferCsv/logics_output_csv_RealtorOriginalPay";
 
 (function() {
     "use strict";

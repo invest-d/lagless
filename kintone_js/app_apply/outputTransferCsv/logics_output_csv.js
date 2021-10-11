@@ -2,9 +2,9 @@
 
 export const CLIENT = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 
-import { schema_apply as schema_apply_dev } from "../159/schema";
-import { schema_apply as schema_apply_prod } from "../161/schema";
-import { zenkakuToHankaku } from "../util/characterWidth";
+import { schema_apply as schema_apply_dev } from "../../159/schema";
+import { schema_apply as schema_apply_prod } from "../../161/schema";
+import { zenkakuToHankaku } from "../../util/characterWidth";
 
 export const APP_ID_APPLY = kintone.app.getId();
 

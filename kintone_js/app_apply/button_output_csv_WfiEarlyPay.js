@@ -8,8 +8,8 @@ import {
     downloadFile
 } from "../util/output_csv";
 
-import * as common_logics from "./logics_output_csv";
-import * as wfi_logics from "./logics_output_csv_WfiEarlyPay";
+import * as common_logics from "./outputTransferCsv/logics_output_csv";
+import * as wfi_logics from "./outputTransferCsv/logics_output_csv_WfiEarlyPay";
 
 (function() {
     "use strict";
