@@ -459,6 +459,20 @@ export const schema_apply = {
                 "type": "DATETIME",
                 "unique": false
             },
+            "docDateAffirmationStatus": {
+                "code": "docDateAffirmationStatus",
+                "defaultValue": "",
+                "label": "確定日付",
+                "noLabel": false,
+                "options": {
+                    "取得済": {
+                        "index": "0",
+                        "label": "取得済"
+                    }
+                },
+                "required": false,
+                "type": "DROP_DOWN"
+            },
             "driverLicenseBack": {
                 "code": "driverLicenseBack",
                 "label": "運転免許証裏",
@@ -802,6 +816,24 @@ export const schema_apply = {
                 "unit": "円",
                 "unitPosition": "AFTER"
             },
+            "transferStatus": {
+                "code": "transferStatus",
+                "defaultValue": "",
+                "label": "振込予約",
+                "noLabel": false,
+                "options": {
+                    "承認済": {
+                        "index": "1",
+                        "label": "承認済"
+                    },
+                    "振込登録済": {
+                        "index": "0",
+                        "label": "振込登録済"
+                    }
+                },
+                "required": false,
+                "type": "DROP_DOWN"
+            },
             "workedDaysWFI": {
                 "code": "workedDaysWFI",
                 "defaultValue": "0",
@@ -994,24 +1026,6 @@ export const schema_apply = {
                 "type": "SINGLE_LINE_TEXT",
                 "unique": false
             },
-            "振込": {
-                "code": "振込",
-                "defaultValue": "",
-                "label": "振込予約",
-                "noLabel": false,
-                "options": {
-                    "承認済": {
-                        "index": "1",
-                        "label": "承認済"
-                    },
-                    "振込登録済": {
-                        "index": "0",
-                        "label": "振込登録済"
-                    }
-                },
-                "required": false,
-                "type": "DROP_DOWN"
-            },
             "支払先正式名称": {
                 "code": "支払先正式名称",
                 "defaultValue": "",
@@ -1117,20 +1131,6 @@ export const schema_apply = {
                 },
                 "required": false,
                 "type": "CHECK_BOX"
-            },
-            "確定日付": {
-                "code": "確定日付",
-                "defaultValue": "",
-                "label": "確定日付",
-                "noLabel": false,
-                "options": {
-                    "取得済": {
-                        "index": "0",
-                        "label": "取得済"
-                    }
-                },
-                "required": false,
-                "type": "DROP_DOWN"
             }
         }
     },
@@ -1240,12 +1240,12 @@ export const schema_apply = {
                     },
                     {
                         "type": "DROP_DOWN",
-                        "code": "確定日付",
+                        "code": "docDateAffirmationStatus",
                         "size": {}
                     },
                     {
                         "type": "DROP_DOWN",
-                        "code": "振込",
+                        "code": "transferStatus",
                         "size": {}
                     },
                     {
@@ -1906,8 +1906,8 @@ export const schema_apply = {
                     "paymentTiming",
                     "closingDay",
                     "登記の取得",
-                    "確定日付",
-                    "振込",
+                    "docDateAffirmationStatus",
+                    "transferStatus",
                     "paymentDate",
                     "paymentAccount",
                     "productName",
@@ -1940,8 +1940,8 @@ export const schema_apply = {
                     "paymentTiming",
                     "closingDay",
                     "登記の取得",
-                    "確定日付",
-                    "振込",
+                    "docDateAffirmationStatus",
+                    "transferStatus",
                     "paymentDate",
                     "paymentAccount",
                     "productName",
@@ -2057,8 +2057,8 @@ export const schema_apply = {
                     "collectId",
                     "paymentTiming",
                     "paymentDate",
-                    "振込",
-                    "確定日付",
+                    "transferStatus",
+                    "docDateAffirmationStatus",
                     "登記の取得",
                     "closingDay",
                     "paymentAccount",
@@ -2182,8 +2182,8 @@ export const schema_apply = {
                     "detailSendDateTime",
                     "paymentDetail",
                     "支払先正式名称",
-                    "振込",
-                    "確定日付",
+                    "transferStatus",
+                    "docDateAffirmationStatus",
                     "productName",
                     "closingDay",
                     "paymentDate",
