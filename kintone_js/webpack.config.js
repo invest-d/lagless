@@ -48,6 +48,7 @@ module.exports = (env, argv) => {
             button_make_all_payment_detail_checked: "./app_apply/button_make_all_payment_detail_checked.js",
             button_make_records_ready_to_pay: "./app_apply/button_make_records_ready_to_pay.js",
             buttonMakeRecordsPaid: "./app_apply/buttonMakeRecordsPaid.js",
+            buttonMakeApplyDocDateAffirmed: "./app_apply/buttonMakeApplyDocDateAffirmed.js",
             app_collect: "./app_collect.js",
             sandbox: "./app_apply/antisocialCheck/sandbox.js",
         },

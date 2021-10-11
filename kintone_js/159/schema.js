@@ -459,6 +459,20 @@ export const schema_apply = {
                 "type": "DATETIME",
                 "unique": false
             },
+            "docDateAffirmationStatus": {
+                "code": "docDateAffirmationStatus",
+                "defaultValue": "",
+                "label": "確定日付",
+                "noLabel": false,
+                "options": {
+                    "取得済": {
+                        "index": "0",
+                        "label": "取得済"
+                    }
+                },
+                "required": false,
+                "type": "DROP_DOWN"
+            },
             "driverLicenseBack": {
                 "code": "driverLicenseBack",
                 "label": "運転免許証裏",
@@ -801,6 +815,24 @@ export const schema_apply = {
                 "type": "CALC",
                 "unit": "円",
                 "unitPosition": "AFTER"
+            },
+            "transferStatus": {
+                "code": "transferStatus",
+                "defaultValue": "",
+                "label": "振込予約",
+                "noLabel": false,
+                "options": {
+                    "承認済": {
+                        "index": "1",
+                        "label": "承認済"
+                    },
+                    "振込登録済": {
+                        "index": "0",
+                        "label": "振込登録済"
+                    }
+                },
+                "required": false,
+                "type": "DROP_DOWN"
             },
             "workedDaysWFI": {
                 "code": "workedDaysWFI",
@@ -1187,8 +1219,8 @@ export const schema_apply = {
                         "size": {}
                     },
                     {
-                        "type": "SPACER",
-                        "elementId": "",
+                        "type": "DATE",
+                        "code": "closingDay",
                         "size": {}
                     },
                     {
@@ -1208,17 +1240,17 @@ export const schema_apply = {
                     },
                     {
                         "type": "DATE",
-                        "code": "closingDay",
-                        "size": {}
-                    },
-                    {
-                        "type": "DATE",
                         "code": "paymentDate",
                         "size": {}
                     },
                     {
-                        "type": "SPACER",
-                        "elementId": "",
+                        "type": "DROP_DOWN",
+                        "code": "docDateAffirmationStatus",
+                        "size": {}
+                    },
+                    {
+                        "type": "DROP_DOWN",
+                        "code": "transferStatus",
                         "size": {}
                     },
                     {
