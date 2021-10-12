@@ -13,6 +13,19 @@ import * as wfi_logics from "./outputTransferCsv/logics_output_csv_WfiEarlyPay";
 /** @type { import("./outputTransferCsv/logics_output_csv").TransFerType } */
 export const transferType = "advanceKeban";
 
+const exec_target_message = "本機能は軽バン.comの早払い専用です。\n"
+    + `従って、工務店IDが${Object.values(wfi_logics.AVAILABLE_CONSTRUCTORS).map((c) => c.ID).join(", ")}のいずれかの申込レコードのみを対象とします。`;
+
+/**
+* @param {string} payment_date
+* @param {string} account
+* @return {string}
+*/
+const getFileName = (payment_date, account) =>
+    `軽バン.com早払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`;
+
+const completedMessage = "軽バン.com早払い用振込データのダウンロードを完了しました。";
+
 export const createButton = () => {
     return common_logics.createButton({
         transferType,
@@ -37,8 +50,6 @@ const clickButton = async () => {
     const target_conditions = common_logics.getTargetConditions();
     alert(`${common_logics.fieldStatus_APPLY}フィールドが${target_conditions.join(", ")}のレコードを対象に処理します。`);
 
-    const exec_target_message = "本機能は軽バン.comの早払い専用です。\n"
-        + `従って、工務店IDが${Object.values(wfi_logics.AVAILABLE_CONSTRUCTORS).map((c) => c.ID).join(", ")}のいずれかの申込レコードのみを対象とします。`;
     alert(exec_target_message);
 
     const account = "ID"; // GMOあおぞらから振込できるのはIDの口座のみ
@@ -61,15 +72,12 @@ const clickButton = async () => {
         const csv_data = common_logics.generateCsvData(applies_fixed_amount);
         const sjis_list = encodeToSjis(csv_data);
 
-        const file_name = `軽バン.com早払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`;
-        downloadFile(sjis_list, file_name);
+        downloadFile(sjis_list, getFileName(payment_date, account));
 
         await common_logics.updateToDone(target_records);
 
-        alert("軽バン.com早払い用振込データのダウンロードを完了しました。");
-        alert("ページを更新します。");
-        window.location.reload();
+        alert(completedMessage);
     } catch (err) {
-        alert (err);
+        alert(err);
     }
 };
