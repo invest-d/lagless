@@ -56,21 +56,6 @@ const TRANSFER = {
 
 /**
 * @summary クリックすると総合振込用のCSVファイルをダウンロードできるbuttonエレメントを返す
-* @param {Object} params
-* @param {TransFerType} params.transferType
-* @param {any} params.eventListener - ボタンクリック時の処理
-* @return {HTMLButtonElement}
-*/
-export const createButton = ({ transferType, eventListener }) => {
-    const button = document.createElement("button");
-    button.id = TRANSFER[transferType].button.id;
-    button.innerText = TRANSFER[transferType].button.innerText;
-    button.addEventListener("click", eventListener);
-    return button;
-};
-
-/**
-* @summary クリックすると総合振込用のCSVファイルをダウンロードできるbuttonエレメントを返す
 * @param {any} event
 * @param {TransFerType} transferType
 * @param {string} view_name
@@ -85,6 +70,21 @@ export const needToShow = (event, transferType, view_name) => {
         document.getElementById(TRANSFER[transferType].button.id) === null;
 
     return is_selected_available_list && not_displayed;
+};
+
+/**
+* @summary クリックすると総合振込用のCSVファイルをダウンロードできるbuttonエレメントを返す
+* @param {Object} params
+* @param {TransFerType} params.transferType
+* @param {any} params.eventListener - ボタンクリック時の処理
+* @return {HTMLButtonElement}
+*/
+export const createButton = ({ transferType, eventListener }) => {
+    const button = document.createElement("button");
+    button.id = TRANSFER[transferType].button.id;
+    button.innerText = TRANSFER[transferType].button.innerText;
+    button.addEventListener("click", eventListener);
+    return button;
 };
 
 export const confirmBeforeExec = () => {
