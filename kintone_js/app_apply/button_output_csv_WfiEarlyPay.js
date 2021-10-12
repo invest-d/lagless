@@ -16,6 +16,9 @@ export const transferType = "advanceKeban";
 const exec_target_message = "本機能は軽バン.comの早払い専用です。\n"
     + `従って、工務店IDが${Object.values(wfi_logics.AVAILABLE_CONSTRUCTORS).map((c) => c.ID).join(", ")}のいずれかの申込レコードのみを対象とします。`;
 
+const getRecords = wfi_logics.getKintoneRecords;
+const getAmount = common_logics.getEarlyPaymentAmount;
+
 /**
 * @param {string} payment_date
 * @param {string} account
@@ -53,7 +56,7 @@ const clickButton = async () => {
     alert(exec_target_message);
 
     const account = "ID"; // GMOあおぞらから振込できるのはIDの口座のみ
-    const target_records = await wfi_logics.getKintoneRecords(account, payment_date, target_conditions)
+    const target_records = await getRecords(account, payment_date, target_conditions)
         .catch((err) => {
             alert(`支払元口座：${account}のデータを取得中にエラーが発生しました。\n${err.message}`);
             throw new Error(err);
@@ -66,7 +69,7 @@ const clickButton = async () => {
 
     try {
         const applies_fixed_amount = target_records.map((r) => {
-            r.transfer_amount = common_logics.getEarlyPaymentAmount(r);
+            r.transfer_amount = getAmount(r);
             return r;
         });
         const csv_data = common_logics.generateCsvData(applies_fixed_amount);

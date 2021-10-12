@@ -37,6 +37,9 @@ export const transferType = "usualRealtor";
 const exec_target_message = "本機能はリライト通常払い専用です。\n"
     + `従って、工務店が${Object.values(realtor_logics.AVAILABLE_CONSTRUCTORS).map((c) => c.NAME).join(", ")}の申込レコードのみを対象とします。`;
 
+const getRecords = realtor_logics.getKintoneRecords;
+const getAmount = realtor_logics.getOriginalPaymentAmount;
+
 /**
 * @param {string} payment_date
 * @param {string} account
@@ -74,7 +77,7 @@ const clickButton = async () => {
     alert(exec_target_message);
 
     const account = "ID"; // GMOあおぞらから振込できるのはIDの口座のみ
-    const target_records = await realtor_logics.getKintoneRecords(account, payment_date, target_conditions)
+    const target_records = await getRecords(account, payment_date, target_conditions)
         .catch((err) => {
             alert(`支払元口座：${account}のデータを取得中にエラーが発生しました。\n${err.message}`);
             throw new Error(err);
@@ -87,7 +90,7 @@ const clickButton = async () => {
 
     try {
         const applies_fixed_amount = target_records.map((r) => {
-            r.transfer_amount = realtor_logics.getOriginalPaymentAmount(r);
+            r.transfer_amount = getAmount(r);
             return r;
         });
         const csv_data = common_logics.generateCsvData(applies_fixed_amount);
