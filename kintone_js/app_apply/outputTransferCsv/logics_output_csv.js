@@ -1,9 +1,6 @@
 // @ts-check
 "use strict";
 
-// @ts-ignore
-export const CLIENT = new KintoneRestAPIClient({ baseUrl: "https://investdesign.cybozu.com" });
-
 import { zenkakuToHankaku } from "../../util/characterWidth";
 import { getApplyAppSchema, UnknownAppError } from "../../util/choiceApplyAppSchema";
 import {
@@ -51,7 +48,7 @@ const applyApp = {
     }
 };
 
-export const getEarlyPaymentAmount = (record) => {
+const getEarlyPaymentAmount = (record) => {
     return record[applyApp.fields.transferAmount]["value"];
 };
 
@@ -141,7 +138,7 @@ export const createButton = ({ transferType }) => {
     return button;
 };
 
-export const confirmBeforeExec = () => {
+const confirmBeforeExec = () => {
     const message = "振込用のcsvデータをダウンロードします。よろしいですか？\n\n"
         + "※このあとに支払日を指定し、\n"
         + "未出力のものだけ出力 OR 出力済みも含めて全て出力 のどちらかを選択できます。";
@@ -204,11 +201,11 @@ const clickButtonFunc = (transferType) => {
     };
 };
 
-export const inputPaymentDate = () => {
+const inputPaymentDate = () => {
     return prompt("YYYY-MM-DDの形式で支払日を入力してください。\n例：2020-01-23");
 };
 
-export const getTargetConditions = () => {
+const getTargetConditions = () => {
     const message = "未出力の振込データだけを出力しますか？\n"
         + "OK：未出力のものは出力し、出力済みのものは出力しない\n"
         + "キャンセル：未出力のものも、出力済みのものも、全て出力する";
@@ -225,7 +222,7 @@ export const getTargetConditions = () => {
     return conditions;
 };
 
-export const generateCsvData = (applies) => {
+const generateCsvData = (applies) => {
     // 申込レコード1つを1行のCSV文字列に変換
     const csv_rows = applies.map((apply) =>
         getAozoraCsvRow(apply, apply.transfer_amount)
@@ -258,7 +255,7 @@ const getAozoraCsvRow = (record, transfer_amount) => {
     return fields.join(",");
 };
 
-export const updateToDone = (outputted_records) => {
+const updateToDone = (outputted_records) => {
     const request_body = {
         "app": applyApp.id,
         "records": outputted_records.map((record) => {
