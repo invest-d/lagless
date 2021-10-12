@@ -65,7 +65,6 @@ const getEarlyPaymentAmount = (record) => {
 /**
  * @typedef {Object} TransferParameters
  * @property {ButtonParams} button
- * @property {string} targetNotation - 処理対象についての注意
  * @property {Function} getRecords - 申込アプリから対象レコードを取得する
  * @property {Function} getAmount - 申込アプリのレコードに対して振込金額を算出する
  * @property {Function} getFileName - 出力するCSVファイルのファイル名を得る
@@ -85,7 +84,6 @@ const TRANSFER = {
             id: "outputRealtorCsv",
             innerText: "総合振込データ（リライト通常払い）",
         },
-        targetNotation: "本機能はリライト通常払い専用です。\n" + `従って、工務店が${Object.values(realtor.AVAILABLE_CONSTRUCTORS).map((c) => c.NAME).join(", ")}の申込レコードのみを対象とします。`,
         getRecords: realtor.getKintoneRecords,
         getAmount: realtor.getOriginalPaymentAmount,
         getFileName: (/** @type {string} */ payment_date, /** @type {string} */ account) => `リライト通常払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`,
@@ -96,7 +94,6 @@ const TRANSFER = {
             id: "outputWfiEarlyCsv",
             innerText: "総合振込データ（WFI早払い）",
         },
-        targetNotation: "本機能は軽バン.comの早払い専用です。\n" + `従って、工務店IDが${Object.values(keban.AVAILABLE_CONSTRUCTORS).map((c) => c.ID).join(", ")}のいずれかの申込レコードのみを対象とします。`,
         getRecords: keban.getKintoneRecords,
         getAmount: getEarlyPaymentAmount,
         getFileName: (/** @type {string} */ payment_date, /** @type {string} */ account) => `軽バン.com早払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`,
@@ -166,8 +163,6 @@ const clickButtonFunc = (transferType) => {
 
         const target_conditions = getTargetConditions();
         alert(`${applyApp.fields.status.code}フィールドが${target_conditions.join(", ")}のレコードを対象に処理します。`);
-
-        alert(TRANSFER[transferType].targetNotation);
 
         const account = "ID"; // GMOあおぞらから振込できるのはIDの口座のみ
         const target_records = await TRANSFER[transferType].getRecords(account, payment_date, target_conditions)
