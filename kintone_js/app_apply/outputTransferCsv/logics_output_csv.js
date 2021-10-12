@@ -4,9 +4,16 @@
 // @ts-ignore
 export const CLIENT = new KintoneRestAPIClient({ baseUrl: "https://investdesign.cybozu.com" });
 
+import { zenkakuToHankaku } from "../../util/characterWidth";
 import { getApplyAppSchema, UnknownAppError } from "../../util/choiceApplyAppSchema";
+import {
+    downloadFile, encodeToSjis
+} from "../../util/output_csv";
+import * as realtor from "./logics_output_csv_RealtorOriginalPay";
+import * as keban from "./logics_output_csv_WfiEarlyPay";
 const applyAppSchema = (() => {
     try {
+        // @ts-ignore
         return getApplyAppSchema(kintone.app.getId());
     } catch (e) {
         if (e instanceof UnknownAppError) {
@@ -21,12 +28,6 @@ const applyAppSchema = (() => {
     }
 })();
 if (!applyAppSchema) throw new Error();
-import { zenkakuToHankaku } from "../../util/characterWidth";
-import {
-    downloadFile, encodeToSjis
-} from "../../util/output_csv";
-import * as realtor from "./logics_output_csv_RealtorOriginalPay";
-import * as keban from "./logics_output_csv_WfiEarlyPay";
 
 
 const applyApp = {
