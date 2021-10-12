@@ -1,3 +1,4 @@
+// @ts-check
 /*
     Version 3.1
     リライト通常払いのデータを出力するための専用ボタンとして定義。
@@ -30,17 +31,16 @@ import {
 import * as common_logics from "./outputTransferCsv/logics_output_csv";
 import * as realtor_logics from "./outputTransferCsv/logics_output_csv_RealtorOriginalPay";
 
-export const buttonName = "outputRealtorCsv";
+/** @type { import("./outputTransferCsv/logics_output_csv").TransFerType } */
+export const transferType = "usualRealtor";
 
 export const createButton = () => {
-    const button = document.createElement("button");
-    button.id = buttonName;
-    button.innerText = "総合振込データ（リライト通常払い）";
-    button.addEventListener("click", clickButton);
-    return button;
+    return common_logics.createButton({
+        transferType,
+        eventListener: clickButton,
+    });
 };
 
-// CSV出力ボタンクリック時の処理を定義
 const clickButton = async () => {
     const do_download = common_logics.confirmBeforeExec();
     if (!do_download) {

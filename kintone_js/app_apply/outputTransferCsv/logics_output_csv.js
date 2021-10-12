@@ -35,12 +35,54 @@ export const fieldPaymentTiming_APPLY       = schema_apply.fields.properties.pay
 export const fieldConstructionShopId_APPLY  = schema_apply.fields.properties.constructionShopId.code;
 export const fieldKyoryokuId_APPLY          = schema_apply.fields.properties.ルックアップ.code;
 
-export const needToShow = (event, button_name, view_name) => {
+const TRANSFER = {
+    usualRealtor: {
+        button: {
+            id: "outputRealtorCsv",
+            innerText: "総合振込データ（リライト通常払い）",
+        },
+    },
+    advanceKeban: {
+        button: {
+            id: "outputWfiEarlyCsv",
+            innerText: "総合振込データ（WFI早払い）",
+        },
+    },
+};
+
+/**
+ * @typedef {"usualRealtor"|"advanceKeban"} TransFerType - リライトの通常払いか、軽バン.comの早払いにのみ対応
+*/
+
+/**
+* @summary クリックすると総合振込用のCSVファイルをダウンロードできるbuttonエレメントを返す
+* @param {Object} params
+* @param {TransFerType} params.transferType
+* @param {any} params.eventListener - ボタンクリック時の処理
+* @return {HTMLButtonElement}
+*/
+export const createButton = ({ transferType, eventListener }) => {
+    const button = document.createElement("button");
+    button.id = TRANSFER[transferType].button.id;
+    button.innerText = TRANSFER[transferType].button.innerText;
+    button.addEventListener("click", eventListener);
+    return button;
+};
+
+/**
+* @summary クリックすると総合振込用のCSVファイルをダウンロードできるbuttonエレメントを返す
+* @param {any} event
+* @param {TransFerType} transferType
+* @param {string} view_name
+* @return {HTMLButtonElement}
+*/
+export const needToShow = (event, transferType, view_name) => {
     // 一覧機能で特定の一覧を選んでいる場合のみ表示
     const is_selected_available_list = event.viewName === view_name;
 
     // 同一ボタンの重複作成防止
-    const not_displayed = document.getElementById(button_name) === null;
+    const not_displayed =
+        document.getElementById(TRANSFER[transferType].button.id) === null;
 
     return is_selected_available_list && not_displayed;
 };

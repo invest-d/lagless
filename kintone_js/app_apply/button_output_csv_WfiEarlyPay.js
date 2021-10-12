@@ -1,3 +1,4 @@
+// @ts-check
 /*
     Version 1
     WFIの軽バン.com案件の早払い用CSVデータを出力する。
@@ -9,14 +10,14 @@ import {
 import * as common_logics from "./outputTransferCsv/logics_output_csv";
 import * as wfi_logics from "./outputTransferCsv/logics_output_csv_WfiEarlyPay";
 
-export const buttonName = "outputWfiEarlyCsv";
+/** @type { import("./outputTransferCsv/logics_output_csv").TransFerType } */
+export const transferType = "advanceKeban";
 
 export const createButton = () => {
-    const button = document.createElement("button");
-    button.id = buttonName;
-    button.innerText = "総合振込データ（WFI早払い）";
-    button.addEventListener("click", clickButton);
-    return button;
+    return common_logics.createButton({
+        transferType,
+        eventListener: clickButton,
+    });
 };
 
 const clickButton = async () => {
