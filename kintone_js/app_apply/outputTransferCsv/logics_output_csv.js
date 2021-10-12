@@ -18,22 +18,22 @@ export const schema_apply = ((app_id) => {
     }
 })(APP_ID_APPLY);
 
-export const fieldRecordId_APPLY            = schema_apply.fields.properties.レコード番号.code;
-export const fieldBankCode_APPLY            = schema_apply.fields.properties.bankCode.code;
-export const fieldBranchCode_APPLY          = schema_apply.fields.properties.branchCode.code;
-export const fieldDepositType_APPLY         = schema_apply.fields.properties.deposit.code;
-export const fieldAccountNumber_APPLY       = schema_apply.fields.properties.accountNumber.code;
-export const fieldAccountName_APPLY         = schema_apply.fields.properties.accountName.code;
-export const fieldTotalReceivables_APPLY    = schema_apply.fields.properties.totalReceivables.code;
-export const fieldTransferAmount_APPLY      = schema_apply.fields.properties.transferAmount.code;
-export const fieldStatus_APPLY              = schema_apply.fields.properties.状態.code;
-const statusReady_APPLY                     = schema_apply.fields.properties.状態.options.振込前確認完了.label;
-const statusDone_APPLY                      = schema_apply.fields.properties.状態.options.振込データ出力済.label;
-export const fieldPaymentDate_APPLY         = schema_apply.fields.properties.paymentDate.code;
-export const fieldPaymentAccount_APPLY      = schema_apply.fields.properties.paymentAccount.code;
-export const fieldPaymentTiming_APPLY       = schema_apply.fields.properties.paymentTiming.code;
-export const fieldConstructionShopId_APPLY  = schema_apply.fields.properties.constructionShopId.code;
-export const fieldKyoryokuId_APPLY          = schema_apply.fields.properties.ルックアップ.code;
+export const fieldRecordId_APPLY = schema_apply.fields.properties.レコード番号.code;
+export const fieldBankCode_APPLY = schema_apply.fields.properties.bankCode.code;
+export const fieldBranchCode_APPLY = schema_apply.fields.properties.branchCode.code;
+export const fieldDepositType_APPLY = schema_apply.fields.properties.deposit.code;
+export const fieldAccountNumber_APPLY = schema_apply.fields.properties.accountNumber.code;
+export const fieldAccountName_APPLY = schema_apply.fields.properties.accountName.code;
+export const fieldTotalReceivables_APPLY = schema_apply.fields.properties.totalReceivables.code;
+export const fieldTransferAmount_APPLY = schema_apply.fields.properties.transferAmount.code;
+export const fieldStatus_APPLY = schema_apply.fields.properties.状態.code;
+const statusReady_APPLY = schema_apply.fields.properties.状態.options.振込前確認完了.label;
+const statusDone_APPLY = schema_apply.fields.properties.状態.options.振込データ出力済.label;
+export const fieldPaymentDate_APPLY = schema_apply.fields.properties.paymentDate.code;
+export const fieldPaymentAccount_APPLY = schema_apply.fields.properties.paymentAccount.code;
+export const fieldPaymentTiming_APPLY = schema_apply.fields.properties.paymentTiming.code;
+export const fieldConstructionShopId_APPLY = schema_apply.fields.properties.constructionShopId.code;
+export const fieldKyoryokuId_APPLY = schema_apply.fields.properties.ルックアップ.code;
 
 const TRANSFER = {
     usualRealtor: {
@@ -133,9 +133,9 @@ const getAozoraCsvRow = (record, transfer_amount) => {
     const fields = [];
 
     // 先にレコードのデータをゼロ埋めした値で上書きしておく
-    record[fieldBankCode_APPLY]["value"]        = (`0000${record[fieldBankCode_APPLY]["value"]}`).slice(-4);
-    record[fieldBranchCode_APPLY]["value"]      = (`000${record[fieldBranchCode_APPLY]["value"]}`).slice(-3);
-    record[fieldAccountNumber_APPLY]["value"]   = (`0000000${record[fieldAccountNumber_APPLY]["value"]}`).slice(-7);
+    record[fieldBankCode_APPLY]["value"] = (`0000${record[fieldBankCode_APPLY]["value"]}`).slice(-4);
+    record[fieldBranchCode_APPLY]["value"] = (`000${record[fieldBranchCode_APPLY]["value"]}`).slice(-3);
+    record[fieldAccountNumber_APPLY]["value"] = (`0000000${record[fieldAccountNumber_APPLY]["value"]}`).slice(-7);
 
     fields.push(record[fieldBankCode_APPLY]["value"]);
     fields.push(record[fieldBranchCode_APPLY]["value"]);
