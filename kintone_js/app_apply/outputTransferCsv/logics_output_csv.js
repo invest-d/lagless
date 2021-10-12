@@ -4,8 +4,23 @@
 // @ts-ignore
 export const CLIENT = new KintoneRestAPIClient({ baseUrl: "https://investdesign.cybozu.com" });
 
-import { schema_apply as schema_apply_dev } from "../../159/schema";
-import { schema_apply as schema_apply_prod } from "../../161/schema";
+import { getApplyAppSchema, UnknownAppError } from "../../util/choiceApplyAppSchema";
+const applyAppSchema = (() => {
+    try {
+        return getApplyAppSchema(kintone.app.getId());
+    } catch (e) {
+        if (e instanceof UnknownAppError) {
+            alert("不明なアプリです。申込アプリで実行してください。");
+        } else {
+            console.error(e);
+            const additional_info = e.message ?? JSON.stringify(e);
+            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
+                + "\n追加の情報: "
+                + `\n${additional_info}`);
+        }
+    }
+})();
+if (!applyAppSchema) throw new Error();
 import { zenkakuToHankaku } from "../../util/characterWidth";
 import {
     downloadFile, encodeToSjis
@@ -14,38 +29,29 @@ import * as realtor from "./logics_output_csv_RealtorOriginalPay";
 import * as keban from "./logics_output_csv_WfiEarlyPay";
 
 
-// @ts-ignore
-export const APP_ID_APPLY = kintone.app.getId();
-
-export const schema_apply = ((app_id) => {
-    if (app_id === 159) {
-        return schema_apply_dev;
-    } else if (app_id === 161) {
-        return schema_apply_prod;
-    } else {
-        throw new Error(`Invalid app: ${app_id}`);
+const applyApp = {
+    id: applyAppSchema.id.appId,
+    fields: {
+        recordId: applyAppSchema.fields.properties.レコード番号.code,
+        bankCode: applyAppSchema.fields.properties.bankCode.code,
+        branchCode: applyAppSchema.fields.properties.branchCode.code,
+        depositType: applyAppSchema.fields.properties.deposit.code,
+        accountNumber: applyAppSchema.fields.properties.accountNumber.code,
+        accountName: applyAppSchema.fields.properties.accountName.code,
+        status: {
+            code: applyAppSchema.fields.properties.状態.code,
+            options: {
+                ready: applyAppSchema.fields.properties.状態.options.振込前確認完了.label,
+                done: applyAppSchema.fields.properties.状態.options.振込データ出力済.label
+            },
+        },
+        kyoryokuId: applyAppSchema.fields.properties.ルックアップ.code,
+        transferAmount: applyAppSchema.fields.properties.transferAmount.code,
     }
-})(APP_ID_APPLY);
-
-export const fieldRecordId_APPLY = schema_apply.fields.properties.レコード番号.code;
-export const fieldBankCode_APPLY = schema_apply.fields.properties.bankCode.code;
-export const fieldBranchCode_APPLY = schema_apply.fields.properties.branchCode.code;
-export const fieldDepositType_APPLY = schema_apply.fields.properties.deposit.code;
-export const fieldAccountNumber_APPLY = schema_apply.fields.properties.accountNumber.code;
-export const fieldAccountName_APPLY = schema_apply.fields.properties.accountName.code;
-export const fieldTotalReceivables_APPLY = schema_apply.fields.properties.totalReceivables.code;
-export const fieldTransferAmount_APPLY = schema_apply.fields.properties.transferAmount.code;
-export const fieldStatus_APPLY = schema_apply.fields.properties.状態.code;
-const statusReady_APPLY = schema_apply.fields.properties.状態.options.振込前確認完了.label;
-const statusDone_APPLY = schema_apply.fields.properties.状態.options.振込データ出力済.label;
-export const fieldPaymentDate_APPLY = schema_apply.fields.properties.paymentDate.code;
-export const fieldPaymentAccount_APPLY = schema_apply.fields.properties.paymentAccount.code;
-export const fieldPaymentTiming_APPLY = schema_apply.fields.properties.paymentTiming.code;
-export const fieldConstructionShopId_APPLY = schema_apply.fields.properties.constructionShopId.code;
-export const fieldKyoryokuId_APPLY = schema_apply.fields.properties.ルックアップ.code;
+};
 
 export const getEarlyPaymentAmount = (record) => {
-    return record[fieldTransferAmount_APPLY]["value"];
+    return record[applyApp.fields.transferAmount]["value"];
 };
 
 /**
@@ -129,6 +135,7 @@ export const createButton = ({ transferType }) => {
     button.id = TRANSFER[transferType].button.id;
     button.innerText = TRANSFER[transferType].button.innerText;
     const eventListener = clickButtonFunc(transferType);
+    // @ts-ignore
     button.addEventListener("click", eventListener);
     return button;
 };
@@ -160,7 +167,7 @@ const clickButtonFunc = (transferType) => {
         }
 
         const target_conditions = getTargetConditions();
-        alert(`${fieldStatus_APPLY}フィールドが${target_conditions.join(", ")}のレコードを対象に処理します。`);
+        alert(`${applyApp.fields.status.code}フィールドが${target_conditions.join(", ")}のレコードを対象に処理します。`);
 
         alert(TRANSFER[transferType].targetNotation);
 
@@ -190,6 +197,7 @@ const clickButtonFunc = (transferType) => {
 
             alert(TRANSFER[transferType].completedMessage);
         } catch (err) {
+            console.error(err);
             alert(err);
         }
     };
@@ -206,11 +214,11 @@ export const getTargetConditions = () => {
     const only_undownloaded = confirm(message);
 
     const conditions = [
-        statusReady_APPLY
+        applyApp.fields.status.options.ready
     ];
 
     if (!only_undownloaded) {
-        conditions.push(statusDone_APPLY);
+        conditions.push(applyApp.fields.status.options.done);
     }
 
     return conditions;
@@ -230,20 +238,20 @@ const getAozoraCsvRow = (record, transfer_amount) => {
     const fields = [];
 
     // 先にレコードのデータをゼロ埋めした値で上書きしておく
-    record[fieldBankCode_APPLY]["value"] = (`0000${record[fieldBankCode_APPLY]["value"]}`).slice(-4);
-    record[fieldBranchCode_APPLY]["value"] = (`000${record[fieldBranchCode_APPLY]["value"]}`).slice(-3);
-    record[fieldAccountNumber_APPLY]["value"] = (`0000000${record[fieldAccountNumber_APPLY]["value"]}`).slice(-7);
+    record[applyApp.fields.bankCode]["value"] = (`0000${record[applyApp.fields.bankCode]["value"]}`).slice(-4);
+    record[applyApp.fields.branchCode]["value"] = (`000${record[applyApp.fields.branchCode]["value"]}`).slice(-3);
+    record[applyApp.fields.accountNumber]["value"] = (`0000000${record[applyApp.fields.accountNumber]["value"]}`).slice(-7);
 
-    fields.push(record[fieldBankCode_APPLY]["value"]);
-    fields.push(record[fieldBranchCode_APPLY]["value"]);
-    const deposit_type = (record[fieldDepositType_APPLY]["value"] === "普通")
+    fields.push(record[applyApp.fields.bankCode]["value"]);
+    fields.push(record[applyApp.fields.branchCode]["value"]);
+    const deposit_type = (record[applyApp.fields.depositType]["value"] === "普通")
         ? "1"
         : "2";
     fields.push(deposit_type);
-    fields.push(record[fieldAccountNumber_APPLY]["value"]);
-    fields.push(zenkakuToHankaku(record[fieldAccountName_APPLY]["value"]));
+    fields.push(record[applyApp.fields.accountNumber]["value"]);
+    fields.push(zenkakuToHankaku(record[applyApp.fields.accountName]["value"]));
     fields.push(transfer_amount);
-    fields.push(record[fieldKyoryokuId_APPLY]["value"]); // 顧客情報フィールド。任意入力フィールドであり、協力会社IDを記入する。
+    fields.push(record[applyApp.fields.kyoryokuId]["value"]); // 顧客情報フィールド。任意入力フィールドであり、協力会社IDを記入する。
     fields.push(" "); // 識別表示フィールド。不使用
 
     return fields.join(",");
@@ -251,18 +259,19 @@ const getAozoraCsvRow = (record, transfer_amount) => {
 
 export const updateToDone = (outputted_records) => {
     const request_body = {
-        "app": APP_ID_APPLY,
+        "app": applyApp.id,
         "records": outputted_records.map((record) => {
             return {
-                "id": record[fieldRecordId_APPLY]["value"],
+                "id": record[applyApp.fields.recordId]["value"],
                 "record": {
-                    [fieldStatus_APPLY]: {
-                        "value": statusDone_APPLY
+                    [applyApp.fields.status.code]: {
+                        "value": applyApp.fields.status.options.done
                     }
                 }
             };
         })
     };
 
+    // @ts-ignore
     return kintone.api(kintone.api.url("/k/v1/records", true), "PUT", request_body);
 };
