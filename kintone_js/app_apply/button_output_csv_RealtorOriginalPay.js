@@ -35,12 +35,10 @@ const buttonName = "outputRealtorCsv";
 (function() {
     "use strict";
     kintone.events.on("app.record.index.show", (event) => {
-        if (!common_logics.needToShow(event, buttonName, realtor_logics.AVAILABLE_VIEW)) {
-            return;
+        if (common_logics.needToShow(event, buttonName, realtor_logics.AVAILABLE_VIEW)) {
+            const button = createButton();
+            kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
-
-        const button = createButton();
-        kintone.app.getHeaderMenuSpaceElement().appendChild(button);
     });
 })();
 
