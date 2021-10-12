@@ -30,19 +30,9 @@ import {
 import * as common_logics from "./outputTransferCsv/logics_output_csv";
 import * as realtor_logics from "./outputTransferCsv/logics_output_csv_RealtorOriginalPay";
 
-const buttonName = "outputRealtorCsv";
+export const buttonName = "outputRealtorCsv";
 
-(function() {
-    "use strict";
-    kintone.events.on("app.record.index.show", (event) => {
-        if (common_logics.needToShow(event, buttonName, realtor_logics.AVAILABLE_VIEW)) {
-            const button = createButton();
-            kintone.app.getHeaderMenuSpaceElement().appendChild(button);
-        }
-    });
-})();
-
-const createButton = () => {
+export const createButton = () => {
     const button = document.createElement("button");
     button.id = buttonName;
     button.innerText = "総合振込データ（リライト通常払い）";
