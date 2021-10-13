@@ -1875,7 +1875,7 @@ export const schema_apply = {
                     "applicationAmount"
                 ],
                 "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"未処理\", \"ID確認済\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
-                "index": "9",
+                "index": "10",
                 "name": "WFIドライバー一覧作成用",
                 "sort": "paymentDate desc",
                 "type": "LIST"
@@ -1895,7 +1895,7 @@ export const schema_apply = {
                     "applicationAmount"
                 ],
                 "filterCond": "company not like \"テスト\" and company not like \"test\" and 状態 in (\"未処理\", \"ID確認済\", \"工務店確認済\", \"支払予定明細FAX送信待ち\", \"支払予定明細確認中\", \"支払予定明細送信前確認完了\", \"支払予定明細送付済\", \"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\", \"保留中\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
-                "index": "10",
+                "index": "11",
                 "name": "WFI一覧（実行完了・取下げ以外）",
                 "sort": "paymentDate desc",
                 "type": "LIST"
@@ -2036,7 +2036,7 @@ export const schema_apply = {
                     "dandoriID"
                 ],
                 "filterCond": "状態 in (\"未処理\", \"ID確認済\") and collectId = \"\"",
-                "index": "11",
+                "index": "12",
                 "name": "協力会費を自動計算",
                 "sort": "レコード番号 desc",
                 "type": "LIST"
@@ -2122,6 +2122,37 @@ export const schema_apply = {
                 "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\") and constructionShopId in (\"400\", \"401\", \"402\", \"403\", \"404\")",
                 "index": "7",
                 "name": "振込データ出力（WFI早払い）",
+                "sort": "paymentDate asc, paymentAccount asc",
+                "type": "LIST"
+            },
+            "振込データ出力（Workship前払い）": {
+                "fields": [
+                    "レコード番号",
+                    "状態",
+                    "constructionShopId",
+                    "billingCompanyOfficialName",
+                    "ルックアップ",
+                    "支払先正式名称",
+                    "closingDay",
+                    "paymentDate",
+                    "totalReceivables",
+                    "commissionRate",
+                    "commissionAmount",
+                    "transferFeeTaxIncl",
+                    "transferAmount",
+                    "paymentTiming",
+                    "paymentAccount",
+                    "bankCode",
+                    "bankName",
+                    "branchCode",
+                    "branchName",
+                    "deposit",
+                    "accountNumber",
+                    "accountName"
+                ],
+                "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\") and productName = \"Workship前払い\"",
+                "index": "8",
+                "name": "振込データ出力（Workship前払い）",
                 "sort": "paymentDate asc, paymentAccount asc",
                 "type": "LIST"
             },
@@ -2232,7 +2263,7 @@ export const schema_apply = {
                     "transferFeeTaxIncl"
                 ],
                 "filterCond": "ルックアップ != \"\" and 状態 in (\"実行完了\") and paymentTiming not in (\"通常払い\") and closingDay >= FROM_TODAY(-1, YEARS)",
-                "index": "8",
+                "index": "9",
                 "name": "申込回数カウント対象（概算）",
                 "sort": "constructionShopId asc, ルックアップ asc, paymentTiming asc, closingDay desc",
                 "type": "LIST"
