@@ -1,6 +1,39 @@
 "use strict";
 
-import * as common_logics from "./logics_output_csv";
+import { CLIENT } from "../../util/kintoneAPI";
+import { getApplyAppSchema, UnknownAppError } from "../../util/choiceApplyAppSchema";
+const applyAppSchema = (() => {
+    try {
+        return getApplyAppSchema(kintone.app.getId());
+    } catch (e) {
+        if (e instanceof UnknownAppError) {
+            alert("不明なアプリです。申込アプリで実行してください。");
+        } else {
+            console.error(e);
+            const additional_info = e.message ?? JSON.stringify(e);
+            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
+                + "\n追加の情報: "
+                + `\n${additional_info}`);
+        }
+    }
+})();
+if (!applyAppSchema) throw new Error();
+const applyApp = {
+    id: applyAppSchema.id.appId,
+    fields: {
+        status: {
+            code: applyAppSchema.fields.properties.状態.code,
+        },
+        paymentDate: applyAppSchema.fields.properties.paymentDate.code,
+        paymentAccount: applyAppSchema.fields.properties.paymentAccount.code,
+        constructorId: applyAppSchema.fields.properties.constructionShopId.code,
+        bankCode: applyAppSchema.fields.properties.bankCode.code,
+        branchCode: applyAppSchema.fields.properties.branchCode.code,
+        totalReceivables: applyAppSchema.fields.properties.totalReceivables.code,
+    },
+};
+
+export const AVAILABLE_VIEW = applyAppSchema.views.views["振込データ出力（リライト通常払い）"].name;
 
 export const AVAILABLE_CONSTRUCTORS = {
     REALTOR_SOLUTIONS: {
@@ -11,8 +44,6 @@ export const AVAILABLE_CONSTRUCTORS = {
     }
 };
 
-export const AVAILABLE_VIEW = common_logics.schema_apply.views.views["振込データ出力（リライト通常払い）"].name;
-
 export const getKintoneRecords = (account, target_date, conditions) => {
     console.log(`申込レコード一覧から、CSVファイルへの出力対象レコードを取得する。対象口座：${account}`);
 
@@ -22,27 +53,14 @@ export const getKintoneRecords = (account, target_date, conditions) => {
 
     // 債権譲渡登記の取得が必要な申込についてもCSV出力する。GMOあおぞらの振込であれば当日着金が可能なため。
     const request_body = {
-        "app": common_logics.APP_ID_APPLY,
-        "fields": [
-            common_logics.fieldPaymentTiming_APPLY,
-            common_logics.fieldRecordId_APPLY,
-            common_logics.fieldBankCode_APPLY,
-            common_logics.fieldBranchCode_APPLY,
-            common_logics.fieldDepositType_APPLY,
-            common_logics.fieldAccountNumber_APPLY,
-            common_logics.fieldAccountName_APPLY,
-            common_logics.fieldTransferAmount_APPLY,
-            common_logics.fieldTotalReceivables_APPLY,
-            common_logics.fieldConstructionShopId_APPLY,
-            common_logics.fieldKyoryokuId_APPLY
-        ],
-        "condition": `${common_logics.fieldStatus_APPLY} in (${in_query})
-                and ${common_logics.fieldPaymentDate_APPLY} = "${target_date}"
-                and ${common_logics.fieldPaymentAccount_APPLY} = "${account}"
-                and ${common_logics.fieldConstructionShopId_APPLY} in (${test_constructors})`
+        "app": applyApp.id,
+        "condition": `${applyApp.fields.status.code} in (${in_query})
+                and ${applyApp.fields.paymentDate} = "${target_date}"
+                and ${applyApp.fields.paymentAccount} = "${account}"
+                and ${applyApp.fields.constructorId} in (${test_constructors})`
     };
 
-    return common_logics.CLIENT.record.getAllRecords(request_body);
+    return CLIENT.record.getAllRecords(request_body);
 };
 
 export const getOriginalPaymentAmount = (record) => {
@@ -51,10 +69,10 @@ export const getOriginalPaymentAmount = (record) => {
     // ②工務店が支払する場合と同額の振込手数料を差し引く
     const receiver_account = {
         // ゼロ埋めして比較する
-        bank_code: (`0000${record[common_logics.fieldBankCode_APPLY]["value"]}`).slice(-4),
-        branch_code: (`000${record[common_logics.fieldBranchCode_APPLY]["value"]}`).slice(-3),
+        bank_code: (`0000${record[applyApp.fields.bankCode]["value"]}`).slice(-4),
+        branch_code: (`000${record[applyApp.fields.branchCode]["value"]}`).slice(-3),
     };
-    const receivable_amount = Number(record[common_logics.fieldTotalReceivables_APPLY]["value"]);
+    const receivable_amount = Number(record[applyApp.fields.totalReceivables]["value"]);
 
     const transfer_fee_original = ((receiver_account, transfer_amount) => {
         const LOWER_FEE_BORDER = 30000;

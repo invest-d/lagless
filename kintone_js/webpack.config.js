@@ -34,8 +34,7 @@ module.exports = (env, argv) => {
         },
 
         entry: {
-            output_csv_RealtorOriginal: "./app_apply/button_output_csv_RealtorOriginalPay.js",
-            output_csv_WfiEarly: "./app_apply/button_output_csv_WfiEarlyPay.js",
+            buttonOutputTransferCsv: "./app_apply/buttonOutputTransferCsv.js",
             color_exceeding_payment: "./app_apply/color_exceeding_payment.js",
             color_unhighlight_record: "./app_apply/color_unhighlight_record.js",
             96: "./96.js",
