@@ -9,6 +9,7 @@ import {
 import * as realtor from "./logics_output_csv_RealtorOriginalPay";
 import * as keban from "./logics_output_csv_WfiEarlyPay";
 import * as workship from "./logicsAdvanceWorkship";
+import * as lagless2gk from "./logicsAdvanceLagless2gk";
 const applyAppSchema = (() => {
     try {
         // @ts-ignore
@@ -54,7 +55,7 @@ const getEarlyPaymentAmount = (record) => {
 };
 
 /**
- * @typedef {"usualRealtor"|"advanceKeban"|"advanceWorkship"} TransferType
+ * @typedef {"usualRealtor"|"advanceKeban"|"advanceWorkship"|"advanceLagless"} TransferType
 */
 
 /**
@@ -77,6 +78,7 @@ const getEarlyPaymentAmount = (record) => {
 * @property {TransferParameters} usualRealtor
 * @property {TransferParameters} advanceKeban
 * @property {TransferParameters} advanceWorkship
+* @property {TransferParameters} advanceLagless
 */
 
 /** @type {Transfer} */
@@ -110,6 +112,16 @@ const TRANSFER = {
         getAmount: getEarlyPaymentAmount,
         getFileName: (/** @type {string} */ payment_date, /** @type {string} */ account) => `Workship前払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`,
         completedMessage: "Workship前払い用振込データのダウンロードを完了しました。",
+    },
+    advanceLagless: {
+        button: {
+            id: "outputAdvanceLaglessCsv",
+            innerText: "総合振込データ（LagLess2GK）",
+        },
+        getRecords: lagless2gk.getKintoneRecords,
+        getAmount: getEarlyPaymentAmount,
+        getFileName: (/** @type {string} */ payment_date, /** @type {string} */ account) => `Lagless2GK早払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`,
+        completedMessage: "Lagless2GK早払い用振込データのダウンロードを完了しました。",
     },
 };
 

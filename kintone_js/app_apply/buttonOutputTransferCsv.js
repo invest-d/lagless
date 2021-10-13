@@ -3,6 +3,7 @@ import * as common from "./outputTransferCsv/logics_output_csv";
 import * as realtor from "./outputTransferCsv/logics_output_csv_RealtorOriginalPay";
 import * as keban from "./outputTransferCsv/logics_output_csv_WfiEarlyPay";
 import * as workship from "./outputTransferCsv/logicsAdvanceWorkship";
+import * as lagless2gk from "./outputTransferCsv/logicsAdvanceLagless2gk";
 
 (function() {
     "use strict";
@@ -22,6 +23,12 @@ import * as workship from "./outputTransferCsv/logicsAdvanceWorkship";
 
         if (common.needToShow(event, "advanceWorkship", workship.AVAILABLE_VIEW)) {
             const button = common.createButton({ transferType: "advanceWorkship" });
+            // @ts-ignore
+            kintone.app.getHeaderMenuSpaceElement().appendChild(button);
+        }
+
+        if (common.needToShow(event, "advanceLagless", lagless2gk.AVAILABLE_VIEW)) {
+            const button = common.createButton({ transferType: "advanceLagless" });
             // @ts-ignore
             kintone.app.getHeaderMenuSpaceElement().appendChild(button);
         }
