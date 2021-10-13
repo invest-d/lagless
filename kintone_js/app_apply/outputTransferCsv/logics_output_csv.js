@@ -8,6 +8,7 @@ import {
 } from "../../util/output_csv";
 import * as realtor from "./logics_output_csv_RealtorOriginalPay";
 import * as keban from "./logics_output_csv_WfiEarlyPay";
+import * as workship from "./logicsAdvanceWorkship";
 const applyAppSchema = (() => {
     try {
         // @ts-ignore
@@ -53,7 +54,7 @@ const getEarlyPaymentAmount = (record) => {
 };
 
 /**
- * @typedef {"usualRealtor"|"advanceKeban"} TransferType - リライトの通常払いか、軽バン.comの早払いにのみ対応
+ * @typedef {"usualRealtor"|"advanceKeban"|"advanceWorkship"} TransferType
 */
 
 /**
@@ -75,6 +76,7 @@ const getEarlyPaymentAmount = (record) => {
 * @typedef {Object} Transfer
 * @property {TransferParameters} usualRealtor
 * @property {TransferParameters} advanceKeban
+* @property {TransferParameters} advanceWorkship
 */
 
 /** @type {Transfer} */
@@ -98,6 +100,16 @@ const TRANSFER = {
         getAmount: getEarlyPaymentAmount,
         getFileName: (/** @type {string} */ payment_date, /** @type {string} */ account) => `軽バン.com早払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`,
         completedMessage: "軽バン.com早払い用振込データのダウンロードを完了しました。",
+    },
+    advanceWorkship: {
+        button: {
+            id: "outputAdvanceWorkshipCsv",
+            innerText: "総合振込データ（Workship早払い）",
+        },
+        getRecords: workship.getKintoneRecords,
+        getAmount: getEarlyPaymentAmount,
+        getFileName: (/** @type {string} */ payment_date, /** @type {string} */ account) => `Workship前払い振込データ（支払日：${payment_date}、振込元：${account}）.csv`,
+        completedMessage: "Workship前払い用振込データのダウンロードを完了しました。",
     },
 };
 
