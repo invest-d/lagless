@@ -2171,7 +2171,7 @@ export const schema_apply = {
                     "accountNumber",
                     "accountName"
                 ],
-                "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"通常払い確認待ち\", \"振込前確認完了\", \"振込データ出力済\") and productName in (\"ラグレス\", \"ダンドリペイメント\", \"リノベ不動産Payment\", \"ロジデリペイ\")",
+                "filterCond": "状態 in (\"債権譲渡登記取得待ち\", \"振込前確認完了\", \"振込データ出力済\") and productName in (\"ラグレス\", \"ダンドリペイメント\", \"リノベ不動産Payment\", \"ロジデリペイ\") and paymentTiming not in (\"通常払い\")",
                 "index": "10",
                 "name": "振込データ出力（その他L2GK）",
                 "sort": "paymentDate asc, paymentAccount asc",
