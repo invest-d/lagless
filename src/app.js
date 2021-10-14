@@ -90,7 +90,12 @@ const format_date = function(str) {
 
 export const show = function(client, params) {
     $(".service").text(client.service);
-    const mode = { "ラグレス": "lagless", "ダンドリペイメント": "dandori", "リノベ不動産Payment": "renove" }[client.service];
+    const mode = {
+        "ラグレス": "lagless",
+        "ダンドリペイメント": "dandori",
+        "リノベ不動産Payment": "renove",
+        "ロジデリペイ": "logidelipay",
+    }[client.service];
 
     $(".工務店正式名称").text(client.工務店正式名称);
     $(".cost").text(client.cost);
