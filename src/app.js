@@ -94,18 +94,22 @@ export const show = function (client, params) {
         const products = {
             "ラグレス": {
                 name: "lagless",
+                labor: "協力会社",
                 memberFee: true,
             },
             "ダンドリペイメント": {
                 name: "dandori",
+                labor: "協力会社",
                 memberFee: true,
             },
             "リノベ不動産Payment": {
                 name: "renove",
+                labor: "協力会社",
                 memberFee: true,
             },
             "ロジデリペイ": {
                 name: "logidelipay",
+                labor: "オーナードライバー",
                 memberFee: false,
             },
         };
@@ -186,6 +190,8 @@ export const show = function (client, params) {
     if (product.memberFee) {
         $(".memberFee").removeClass("d-none");
     }
+
+    $(".labor").text(product.labor);
 };
 
 export const get_schedule = (schedules, now) => {
