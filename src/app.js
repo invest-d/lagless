@@ -9,7 +9,7 @@ defineIncludesPolyfill();
 * @return {object} データベースのデータ内容を返す。もし存在しない場合、【空オブジェクト】を返す。
 */
 export const getConstructorData = async (constructor_id) => {
-    if(location.protocol == "file:") {
+    if (location.protocol == "file:") {
         const sample = {
             "cost": "9.99%",
             "yield": "1.11%",
@@ -70,7 +70,7 @@ export const getConstructorData = async (constructor_id) => {
     }
 
     const resp = await get_kintone_data();
-    if(resp[constructor_id]) {
+    if (resp[constructor_id]) {
         return resp[constructor_id];
     } else {
         return {};
@@ -82,13 +82,13 @@ export const get_kintone_data = () => {
     return $.ajax({ url: target });
 };
 
-const format_date = function(str) {
+const format_date = function (str) {
     const t = new Date(str);
-    const wod = [ "日", "月", "火", "水", "木", "金", "土" ];
-    return `${t.getFullYear()}年${t.getMonth()+1}月${t.getDate()}日 (${wod[t.getDay()]})`;
+    const wod = ["日", "月", "火", "水", "木", "金", "土"];
+    return `${t.getFullYear()}年${t.getMonth() + 1}月${t.getDate()}日 (${wod[t.getDay()]})`;
 };
 
-export const show = function(client, params) {
+export const show = function (client, params) {
     $(".service").text(client.service);
     const mode = {
         "ラグレス": "lagless",
@@ -113,7 +113,7 @@ export const show = function(client, params) {
     // 遅払い用
     $(".form_3").attr("href", `./apply.html?user=new&c=${params.get("c")}&a=${params.get("a")}&product=${mode}&t=late`);
     $(".form_4").attr("href", `./apply.html?user=existing&c=${params.get("c")}&a=${params.get("a")}&product=${mode}&t=late`);
-    if(client.link) {
+    if (client.link) {
         $(".link").attr("href", client.link).text(client.link);
         $(".link").parents("div").show();
     }
@@ -132,7 +132,7 @@ export const show = function(client, params) {
 
     $("#schedule-closing-payment-same").hide();
 
-    if(schedule) {
+    if (schedule) {
         $(".schedule_closing").text(format_date(schedule.closing));
         $(".schedule_early").text(format_date(schedule.early));
         $(".schedule_deadline").text(format_date(schedule.deadline));
@@ -149,7 +149,7 @@ export const show = function(client, params) {
         }
 
         client.default_pay_date_list.find((pair) => {
-            if(pair.closing_date == schedule.closing) {
+            if (pair.closing_date == schedule.closing) {
                 $(".schedule_default").text(format_date(pair.default_pay_date));
                 return true;
             } else {
@@ -158,7 +158,7 @@ export const show = function(client, params) {
         });
     }
 
-    if(params.get("f")) {
+    if (params.get("f")) {
         $(".first").show();
     }
 };
@@ -166,7 +166,7 @@ export const show = function(client, params) {
 export const get_schedule = (schedules, now) => {
     return schedules.find((s) => {
         const ymd = s.deadline.split(/\D/);
-        const t = new Date(ymd[0], parseInt(ymd[1])-1, ymd[2]);
+        const t = new Date(ymd[0], parseInt(ymd[1]) - 1, ymd[2]);
         return now.getTime() <= t.getTime();
     });
 };
