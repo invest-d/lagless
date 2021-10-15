@@ -26,7 +26,8 @@ import { getBase64Strings } from "exif-rotate-js/lib";
 import {
     getConstructorData,
     get_kintone_data,
-    get_schedule
+    get_schedule,
+    show
 } from "./app";
 
 // パラメータが不正の場合は操作させない
@@ -37,6 +38,9 @@ $(async () => {
         return;
     }
     $("#content").removeClass("d-none");
+
+    // パラメータに応じた表示を行う
+    show(data, params);
 });
 
 // URLパラメータを引き継いでkintoneに送信できるようにする
