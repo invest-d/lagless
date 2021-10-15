@@ -90,12 +90,33 @@ const format_date = function (str) {
 
 export const show = function (client, params) {
     $(".service").text(client.service);
-    const mode = {
-        "ラグレス": "lagless",
-        "ダンドリペイメント": "dandori",
-        "リノベ不動産Payment": "renove",
-        "ロジデリペイ": "logidelipay",
-    }[client.service];
+    const product = ((service) => {
+        const products = {
+            "ラグレス": {
+                name: "lagless",
+                memberFee: true,
+            },
+            "ダンドリペイメント": {
+                name: "dandori",
+                memberFee: true,
+            },
+            "リノベ不動産Payment": {
+                name: "renove",
+                memberFee: true,
+            },
+            "ロジデリペイ": {
+                name: "logidelipay",
+                memberFee: false,
+            },
+        };
+        const product = products[service];
+
+        if (product) return product;
+
+        // 不明なサービス名の場合はとりあえずラグレスを返しておく
+        return products["ラグレス"];
+    })(client.service);
+    const mode = product.name;
 
     $(".工務店正式名称").text(client.工務店正式名称);
     $(".cost").text(client.cost);
@@ -160,6 +181,10 @@ export const show = function (client, params) {
 
     if (params.get("f")) {
         $(".first").show();
+    }
+
+    if (product.memberFee) {
+        $(".memberFee").removeClass("d-none");
     }
 };
 
