@@ -5,12 +5,29 @@
 
 "use strict";
 
+import { schema_28 } from "../28/schema";
+import { schema_88 } from "../88/schema";
+import {
+    KE_BAN_CONSTRUCTORS,
+    normalizedConstructorId,
+    productNameMap
+} from "../96/common";
+import { schema_96 } from "../96/schema";
+import { getApplyAppSchema, UnknownAppError } from "../util/choiceApplyAppSchema";
+import { isGigConstructorID } from "../util/gig_utils";
 import { CLIENT } from "../util/kintoneAPI";
+import {
+    getSearchQuery,
+    searchCompanyRecord,
+    selectCompanyRecordNumber
+} from "./addKyoryokuMaster/inquiry";
+import {
+    choiceNotifyMethod, getSameKomutenKyoryokuCond
+} from "./logics_add_kyoryoku_master";
 
 const ExtensibleCustomError = require("extensible-custom-error");
 class ManualAbortProcessError extends ExtensibleCustomError { }
 
-import { getApplyAppSchema, UnknownAppError } from "../util/choiceApplyAppSchema";
 const schema = (() => {
     try {
         return getApplyAppSchema(kintone.app.getId());
@@ -52,7 +69,6 @@ const accountNumber_APPLY_D         = applyFields.accountNumber_Form.label;
 const accountName_APPLY             = applyFields.accountName_Form.code;
 const accountName_APPLY_D           = applyFields.accountName_Form.label;
 
-import { schema_88 } from "../88/schema";
 const customerFields = schema_88.fields.properties;
 const recordNo_KYORYOKU                 = customerFields.レコード番号.code;
 const kyoryokuId_KYORYOKU               = customerFields.支払企業No_.code;
@@ -86,31 +102,14 @@ const accountName_KYORYOKU_D            = customerFields.口座名義.label;
 const notifyDate_KYORYOKU               = customerFields.申込メール送付日.code;
 const notifyMethod_KYORYOKU             = customerFields.送付方法.code;
 
-import { schema_28 } from "../28/schema";
 
-import { schema_96 } from "../96/schema";
 const komutenFields = schema_96.fields.properties;
 const komutenId_KOMUTEN     = komutenFields.id.code;
 const komutenName_KOMUTEN   = komutenFields.工務店正式名称.code;
 const productName_KOMUTEN   = komutenFields.service.code;
 
-import {
-    KE_BAN_CONSTRUCTORS,
-    normalizedConstructorId,
-    productNameMap,
-} from "../96/common";
-import { isGigConstructorID } from "../util/gig_utils";
 
-import {
-    getSearchQuery,
-    searchCompanyRecord,
-    selectCompanyRecordNumber,
-} from "./addKyoryokuMaster/inquiry";
 
-import {
-    getSameKomutenKyoryokuCond,
-    choiceNotifyMethod
-} from "./logics_add_kyoryoku_master";
 
 (function () {
     // eslint-disable-next-line no-unused-vars
