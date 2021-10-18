@@ -343,7 +343,6 @@ const getMasterRecord = ({ conds }) => {
     // 検索フィールド：支払先, 支払先正式名称, 担当者名, メールアドレス, 電話番号(携帯/固定)
     const body = {
         app: laborApp.id,
-        fields: [laborApp.fields.id],
         query: `${conds.join(" or ")}`,
     };
     return CLIENT.record.getRecords(body);
@@ -359,7 +358,6 @@ const createKyoryokuRecord = async (apply, company_id) => {
             and ${laborApp.fields.orderer.name} not like "test"`;
         // 連番で新たな協力会社IDを取得する。
         const allKyoryoku = {
-            fields: [laborApp.fields.id],
             app: laborApp.id,
             condition: `(${has_same_komuten}) and (${is_not_test})`,
             orderBy: `${laborApp.fields.id} desc`
@@ -371,11 +369,6 @@ const createKyoryokuRecord = async (apply, company_id) => {
 
     const komuten = await CLIENT.record.getRecords({
         app: schema_96.id.appId,
-        fields: [
-            ordererApp.fields.id,
-            ordererApp.fields.name,
-            ordererApp.fields.service,
-        ],
         query: `${ordererApp.fields.id} = "${normalizedConstructorId(apply[applyApp.fields.orderer.id]["value"])}"`
     });
 
