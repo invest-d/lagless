@@ -65,6 +65,9 @@ export const selectCompanyRecordNumber = (get_result) => {
             if (input) return returnAsNumber(input);
             return null;
         }
+    } else if (get_result.records.length === 0) {
+        const message = "レコードが見つかりませんでした。空欄のまま続行しますか？";
+        if (confirm(message)) return "";
     } else {
         const reprs = get_result.records.map((r) => recordRepr(r)).join("\n");
         const message = `複数のレコードが見つかりました。\n${reprs}`
