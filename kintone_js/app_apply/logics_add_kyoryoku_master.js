@@ -54,4 +54,4 @@ export const choiceNotifyMethod = ({ emailAddress, phoneNumber }) => {
     if (emailAddress && isCellPhoneNumber) method = method_both_KYORYOKU;
     if (!emailAddress && !isCellPhoneNumber) method = method_none_KYORYOKU;
     return method;
-}
+};
