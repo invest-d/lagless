@@ -9,6 +9,12 @@ export const getNewLaborId = (laborIds) => {
     const first2Digits = laborIds
         .map((laborId) => laborId.substring(0, 2))
         .map((first2Digit) => Number(first2Digit));
-    const maxDigit = Math.max(...first2Digits);
-    return `${String(maxDigit + 1)}000`;
+
+    if (first2Digits.length > 0) {
+        const maxDigit = Math.max(...first2Digits);
+        return `${String(maxDigit + 1)}000`;
+    } else {
+        // 本当に何もレコードが登録されていない場合は最初の番号として10000を返す
+        return "10000";
+    }
 };
