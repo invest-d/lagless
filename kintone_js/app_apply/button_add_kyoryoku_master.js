@@ -24,6 +24,7 @@ import {
 import {
     choiceNotifyMethod, getSameKomutenKyoryokuCond
 } from "./logics_add_kyoryoku_master";
+import { getNewLaborId } from "./addKyoryokuMaster/logics";
 
 const ExtensibleCustomError = require("extensible-custom-error");
 class ManualAbortProcessError extends ExtensibleCustomError { }
@@ -363,8 +364,20 @@ const createKyoryokuRecord = async (apply, company_id) => {
             orderBy: `${laborApp.fields.id} desc`
         };
         const result = await CLIENT.record.getAllRecords(allKyoryoku);
-        const latest_id = Number(result[0][laborApp.fields.id]["value"]);
-        return latest_id + 1;
+
+        if (result.length > 0) {
+            const latest_id = Number(result[0][laborApp.fields.id]["value"]);
+            return latest_id + 1;
+        } else {
+            // 新規採番
+            const allRecords = await CLIENT.record.getAllRecords({
+                app: laborApp.id,
+                condition: is_not_test,
+            });
+            const laborIds = allRecords
+                .map((record) => String(record[laborApp.fields.id].value));
+            return Number(getNewLaborId(laborIds));
+        }
     })();
 
     const komuten = await CLIENT.record.getRecords({
