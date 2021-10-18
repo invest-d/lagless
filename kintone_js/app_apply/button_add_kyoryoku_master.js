@@ -44,30 +44,59 @@ const schema = (() => {
     }
 })();
 if (!schema) throw new Error();
-const applyFields = schema.fields.properties;
-const recordNo_APPLY                = applyFields.レコード番号.code;
-const applicantName_APPLY           = applyFields.company.code;
-const applicantName_APPLY_D         = applyFields.company.label;
-const applicantPhone_APPLY          = applyFields.phone.code;
-const applicantPhone_APPLY_D        = applyFields.phone.label;
-const applicantEmail_APPLY          = applyFields.mail.code;
-const applicantEmail_APPLY_D        = applyFields.mail.label;
-const komutenId_APPLY               = applyFields.constructionShopId.code;
-const kyoryokuId_APPLY              = applyFields.ルックアップ.code;
-const bankName_APPLY                = applyFields.bankName_Form.code;
-const bankName_APPLY_D              = applyFields.bankName_Form.label;
-const bankCode_APPLY                = applyFields.bankCode_Form.code;
-const bankCode_APPLY_D              = applyFields.bankCode_Form.label;
-const branchName_APPLY              = applyFields.branchName_Form.code;
-const branchName_APPLY_D            = applyFields.branchName_Form.label;
-const branchCode_APPLY              = applyFields.branchCode_Form.code;
-const branchCode_APPLY_D            = applyFields.branchCode_Form.label;
-const depositType_APPLY             = applyFields.deposit_Form.code;
-const depositType_APPLY_D           = applyFields.deposit_Form.label;
-const accountNumber_APPLY           = applyFields.accountNumber_Form.code;
-const accountNumber_APPLY_D         = applyFields.accountNumber_Form.label;
-const accountName_APPLY             = applyFields.accountName_Form.code;
-const accountName_APPLY_D           = applyFields.accountName_Form.label;
+const applyApp = {
+    fields: {
+        recordNo: schema.fields.properties.レコード番号.code,
+        applicant: {
+            id: schema.fields.properties.ルックアップ.code,
+            name: {
+                code: schema.fields.properties.company.code,
+                label: schema.fields.properties.company.label,
+            },
+            phone: {
+                code: schema.fields.properties.phone.code,
+                label: schema.fields.properties.phone.label,
+            },
+            email: {
+                code: schema.fields.properties.mail.code,
+                label: schema.fields.properties.mail.label,
+            },
+            bankAccount: {
+                bankCode: {
+                    code: schema.fields.properties.bankCode_Form.code,
+                    label: schema.fields.properties.bankCode_Form.label,
+                },
+                bankName: {
+                    code: schema.fields.properties.bankName_Form.code,
+                    label: schema.fields.properties.bankName_Form.label,
+                },
+                branchCode: {
+                    code: schema.fields.properties.branchCode_Form.code,
+                    label: schema.fields.properties.branchCode_Form.label,
+                },
+                branchName: {
+                    code: schema.fields.properties.branchName_Form.code,
+                    label: schema.fields.properties.branchName_Form.label,
+                },
+                depositType: {
+                    code: schema.fields.properties.deposit_Form.code,
+                    label: schema.fields.properties.deposit_Form.label,
+                },
+                number: {
+                    code: schema.fields.properties.accountNumber_Form.code,
+                    label: schema.fields.properties.accountNumber_Form.label,
+                },
+                name: {
+                    code: schema.fields.properties.accountName_Form.code,
+                    label: schema.fields.properties.accountName_Form.label,
+                },
+            },
+        },
+        orderer: {
+            id: schema.fields.properties.constructionShopId.code,
+        },
+    },
+};
 
 const customerFields = schema_88.fields.properties;
 const recordNo_KYORYOKU                 = customerFields.レコード番号.code;
@@ -152,7 +181,7 @@ const clickButton = async (apply_record) => {
         // 本スクリプトは協力会社マスタのレコードの新規作成を目的としている。
         // 従って協力会社IDも新規に決定するが、そのためには工務店IDが必須となる。
         // よって工務店IDが未入力のレコードは処理できない
-        if (!apply_record[komutenId_APPLY]["value"]) {
+        if (!apply_record[applyApp.fields.orderer.id]["value"]) {
             alert("工務店IDが空欄です。\n工務店IDを入力してからもう一度実行してください。");
             throw new ManualAbortProcessError();
         }
@@ -167,7 +196,7 @@ const clickButton = async (apply_record) => {
         console.log("協力会社マスタとの比較および更新を完了");
 
         alert(`申込レコードに協力会社ID: ${kyoryoku_id} を入力して、マスタの内容を反映します。`);
-        await updateApply(apply_record[recordNo_APPLY]["value"], kyoryoku_id);
+        await updateApply(apply_record[applyApp.fields.recordNo]["value"], kyoryoku_id);
         alert("完了しました。");
         window.location.reload();
     } catch (e) {
@@ -190,7 +219,7 @@ const clickButton = async (apply_record) => {
 
 const getKyoryokuId = async (apply_record) => {
     // 最初から協力会社IDが申込レコードに入っている場合はそれを信用する
-    const default_id = apply_record[kyoryokuId_APPLY]["value"];
+    const default_id = apply_record[applyApp.fields.applicant.id]["value"];
     if (default_id) {
         alert(`申込レコードに協力会社ID: ${default_id}が入力されているため、このIDを使用します。`);
         return default_id;
@@ -198,9 +227,9 @@ const getKyoryokuId = async (apply_record) => {
 
     alert(`${schema_88.id.name}アプリにレコードが既に存在するか確認します。`);
     const conds = getCustomerMasterConditions({
-        customerName: apply_record[applicantName_APPLY]["value"],
-        customerPhone: apply_record[applicantPhone_APPLY]["value"],
-        customerEmail: apply_record[applicantEmail_APPLY]["value"],
+        customerName: apply_record[applyApp.fields.applicant.name.code]["value"],
+        customerPhone: apply_record[applyApp.fields.applicant.phone.code]["value"],
+        customerEmail: apply_record[applyApp.fields.applicant.email.code]["value"],
     });
     const kyoryoku_record = await getMasterRecord({ conds });
     console.log(`${schema_88.id.name}アプリの取得を完了。`);
@@ -266,7 +295,7 @@ const getMasterRecord = ({ conds }) => {
 };
 
 const createKyoryokuRecord = async (apply, company_id) => {
-    const komutenId = apply[komutenId_APPLY]["value"];
+    const komutenId = apply[applyApp.fields.orderer.id]["value"];
     const new_kyoryoku_id = await (async () => {
         const has_same_komuten = getSameKomutenKyoryokuCond(komutenId);
         const is_not_test = `${kyoryokuGeneralName_KYORYOKU} not like "テスト"\
@@ -292,34 +321,34 @@ const createKyoryokuRecord = async (apply, company_id) => {
             komutenName_KOMUTEN,
             productName_KOMUTEN,
         ],
-        query: `${komutenId_KOMUTEN} = "${normalizedConstructorId(apply[komutenId_APPLY]["value"])}"`
+        query: `${komutenId_KOMUTEN} = "${normalizedConstructorId(apply[applyApp.fields.orderer.id]["value"])}"`
     });
 
     const new_record = {
         [kyoryokuId_KYORYOKU]: new_kyoryoku_id,
-        [komutenId_KYORYOKU]: normalizedConstructorId(apply[komutenId_APPLY]["value"]),
+        [komutenId_KYORYOKU]: normalizedConstructorId(apply[applyApp.fields.orderer.id]["value"]),
         [companyId_KYORYOKU]: company_id,
-        [kyoryokuName_KYORYOKU]: apply[applicantName_APPLY]["value"],
-        [kyoryokuGeneralName_KYORYOKU]: apply[applicantName_APPLY]["value"],
+        [kyoryokuName_KYORYOKU]: apply[applyApp.fields.applicant.name.code]["value"],
+        [kyoryokuGeneralName_KYORYOKU]: apply[applyApp.fields.applicant.name.code]["value"],
         [komutenName_KYORYOKU]: komuten.records[0][komutenName_KOMUTEN].value,
         [productName_KYORYOKU]: productNameMap.fromKomuten[komuten.records[0][productName_KOMUTEN].value],
-        [bankName_KYORYOKU]: apply[bankName_APPLY]["value"],
-        [bankCode_KYORYOKU]: apply[bankCode_APPLY]["value"],
-        [branchName_KYORYOKU]: apply[branchName_APPLY]["value"],
-        [branchCode_KYORYOKU]: apply[branchCode_APPLY]["value"],
-        [depositType_KYORYOKU]: apply[depositType_APPLY]["value"],
-        [accountNumber_KYORYOKU]: apply[accountNumber_APPLY]["value"],
-        [accountName_KYORYOKU]: apply[accountName_APPLY]["value"],
-        [email_KYORYOKU]: apply[applicantEmail_APPLY]["value"],
-        [phoneNumber_KYORYOKU]: apply[applicantPhone_APPLY]["value"],
+        [bankName_KYORYOKU]: apply[applyApp.fields.applicant.bankAccount.bankName.code]["value"],
+        [bankCode_KYORYOKU]: apply[applyApp.fields.applicant.bankAccount.bankCode.code]["value"],
+        [branchName_KYORYOKU]: apply[applyApp.fields.applicant.bankAccount.branchName.code]["value"],
+        [branchCode_KYORYOKU]: apply[applyApp.fields.applicant.bankAccount.branchCode.code]["value"],
+        [depositType_KYORYOKU]: apply[applyApp.fields.applicant.bankAccount.depositType.code]["value"],
+        [accountNumber_KYORYOKU]: apply[applyApp.fields.applicant.bankAccount.number.code]["value"],
+        [accountName_KYORYOKU]: apply[applyApp.fields.applicant.bankAccount.name.code]["value"],
+        [email_KYORYOKU]: apply[applyApp.fields.applicant.email.code]["value"],
+        [phoneNumber_KYORYOKU]: apply[applyApp.fields.applicant.phone.code]["value"],
     };
 
     if (!KE_BAN_CONSTRUCTORS.includes(komutenId) && !isGigConstructorID(komutenId)) {
         // 案内メールの送付設定を行う
         new_record[notifyDate_KYORYOKU] = 20;
         const method = choiceNotifyMethod({
-            emailAddress: apply[applicantEmail_APPLY].value,
-            phoneNumber: apply[applicantPhone_APPLY].value
+            emailAddress: apply[applyApp.fields.applicant.email.code].value,
+            phoneNumber: apply[applyApp.fields.applicant.phone.code].value
         });
         new_record[notifyMethod_KYORYOKU] = method;
     }
@@ -343,17 +372,17 @@ const updateKyoryokuMaster = async (kyoryoku_id, apply_record) => {
     const kyoryoku = resp.records[0];
 
     const compare_fields = [
-        { apply: applicantName_APPLY,   a_dsp: applicantName_APPLY_D,   kyoryoku: kyoryokuName_KYORYOKU,        k_dsp: kyoryokuName_KYORYOKU_D,         do_update: false },
-        { apply: applicantName_APPLY,   a_dsp: applicantName_APPLY_D,   kyoryoku: kyoryokuGeneralName_KYORYOKU, k_dsp: kyoryokuGeneralName_KYORYOKU_D,  do_update: false },
-        { apply: bankName_APPLY,        a_dsp: bankName_APPLY_D,        kyoryoku: bankName_KYORYOKU,            k_dsp: bankName_KYORYOKU_D,             do_update: false },
-        { apply: bankCode_APPLY,        a_dsp: bankCode_APPLY_D,        kyoryoku: bankCode_KYORYOKU,            k_dsp: bankCode_KYORYOKU_D,             do_update: false },
-        { apply: branchName_APPLY,      a_dsp: branchName_APPLY_D,      kyoryoku: branchName_KYORYOKU,          k_dsp: branchName_KYORYOKU_D,           do_update: false },
-        { apply: branchCode_APPLY,      a_dsp: branchCode_APPLY_D,      kyoryoku: branchCode_KYORYOKU,          k_dsp: branchCode_KYORYOKU_D,           do_update: false },
-        { apply: depositType_APPLY,     a_dsp: depositType_APPLY_D,     kyoryoku: depositType_KYORYOKU,         k_dsp: depositType_KYORYOKU_D,          do_update: false },
-        { apply: accountNumber_APPLY,   a_dsp: accountNumber_APPLY_D,   kyoryoku: accountNumber_KYORYOKU,       k_dsp: accountNumber_KYORYOKU_D,        do_update: false },
-        { apply: accountName_APPLY,     a_dsp: accountName_APPLY_D,     kyoryoku: accountName_KYORYOKU,         k_dsp: accountName_KYORYOKU_D,          do_update: false },
-        { apply: applicantEmail_APPLY,  a_dsp: applicantEmail_APPLY_D,  kyoryoku: email_KYORYOKU,               k_dsp: email_KYORYOKU_D,                do_update: false },
-        { apply: applicantPhone_APPLY,  a_dsp: applicantPhone_APPLY_D,  kyoryoku: phoneNumber_KYORYOKU,         k_dsp: phoneNumber_KYORYOKU_D,          do_update: false },
+        { apply: applyApp.fields.applicant.name.code,                   a_dsp: applyApp.fields.applicant.name.label,                    kyoryoku: kyoryokuName_KYORYOKU,        k_dsp: kyoryokuName_KYORYOKU_D,         do_update: false },
+        { apply: applyApp.fields.applicant.name.code,                   a_dsp: applyApp.fields.applicant.name.label,                    kyoryoku: kyoryokuGeneralName_KYORYOKU, k_dsp: kyoryokuGeneralName_KYORYOKU_D,  do_update: false },
+        { apply: applyApp.fields.applicant.bankAccount.bankName.code,   a_dsp: applyApp.fields.applicant.bankAccount.bankName.label,    kyoryoku: bankName_KYORYOKU,            k_dsp: bankName_KYORYOKU_D,             do_update: false },
+        { apply: applyApp.fields.applicant.bankAccount.bankCode.code,   a_dsp: applyApp.fields.applicant.bankAccount.bankCode.label,    kyoryoku: bankCode_KYORYOKU,            k_dsp: bankCode_KYORYOKU_D,             do_update: false },
+        { apply: applyApp.fields.applicant.bankAccount.branchName.code, a_dsp: applyApp.fields.applicant.bankAccount.branchName.label,  kyoryoku: branchName_KYORYOKU,          k_dsp: branchName_KYORYOKU_D,           do_update: false },
+        { apply: applyApp.fields.applicant.bankAccount.branchCode.code, a_dsp: applyApp.fields.applicant.bankAccount.branchCode.label,  kyoryoku: branchCode_KYORYOKU,          k_dsp: branchCode_KYORYOKU_D,           do_update: false },
+        { apply: applyApp.fields.applicant.bankAccount.depositType.code,a_dsp: applyApp.fields.applicant.bankAccount.depositType.label, kyoryoku: depositType_KYORYOKU,         k_dsp: depositType_KYORYOKU_D,          do_update: false },
+        { apply: applyApp.fields.applicant.bankAccount.number.code,     a_dsp: applyApp.fields.applicant.bankAccount.number.label,      kyoryoku: accountNumber_KYORYOKU,       k_dsp: accountNumber_KYORYOKU_D,        do_update: false },
+        { apply: applyApp.fields.applicant.bankAccount.name.code,       a_dsp: applyApp.fields.applicant.bankAccount.name.label,        kyoryoku: accountName_KYORYOKU,         k_dsp: accountName_KYORYOKU_D,          do_update: false },
+        { apply: applyApp.fields.applicant.email.code,                  a_dsp: applyApp.fields.applicant.email.label,                   kyoryoku: email_KYORYOKU,               k_dsp: email_KYORYOKU_D,                do_update: false },
+        { apply: applyApp.fields.applicant.phone.code,                  a_dsp: applyApp.fields.applicant.phone.label,                   kyoryoku: phoneNumber_KYORYOKU,         k_dsp: phoneNumber_KYORYOKU_D,          do_update: false },
     ];
     for (const fields of compare_fields) {
         const apply_val = apply_record[fields.apply]["value"];
@@ -389,7 +418,7 @@ const updateApply = (apply_id, kyoryoku_id) => {
     const body = {
         app: kintone.app.getId(),
         id: apply_id,
-        record: { [kyoryokuId_APPLY]: { value: kyoryoku_id } }
+        record: { [applyApp.fields.applicant.id]: { value: kyoryoku_id } }
     };
     return CLIENT.record.updateRecord(body);
 };
