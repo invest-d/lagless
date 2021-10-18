@@ -9,7 +9,7 @@ import { schema_96 as laborAppSchemaProd } from "../96/schema";
 * @param {number | null} displayingAppId - kintone.app.getId() の返り値。既知のアプリのID以外の場合、UnknownAppError を throw
 * @return {Object} スキーマファイルに定義したスキーマ
 */
-export const getApplyAppSchema = (displayingAppId) => {
+export const getLaborAppSchema = (displayingAppId) => {
     const app = detectApp(displayingAppId);
     if (app === "dev") return laborAppSchemaDev;
     if (app === "prod") return laborAppSchemaProd;
