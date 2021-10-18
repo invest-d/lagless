@@ -5,7 +5,7 @@
 
 "use strict";
 
-import { schema_28 } from "../28/schema";
+// import { schema_28 } from "../28/schema";
 // import { schema_88 } from "../88/schema";
 import {
     KE_BAN_CONSTRUCTORS,
@@ -194,6 +194,25 @@ const ordererApp = {
         service: schema_96.fields.properties.service.code,
     },
 };
+
+
+import { getCompanyAppSchema } from "../util/choiceCompanyAppSchema";
+const schema_28 = (() => {
+    try {
+        return getCompanyAppSchema(kintone.app.getId());
+    } catch (e) {
+        if (e instanceof UnknownAppError) {
+            alert("不明なアプリです。申込アプリで実行してください。");
+        } else {
+            console.error(e);
+            const additional_info = e.message ?? JSON.stringify(e);
+            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
+                + "\n追加の情報: "
+                + `\n${additional_info}`);
+        }
+    }
+})();
+if (!schema_28) throw new Error();
 
 
 (function () {
