@@ -400,7 +400,6 @@ const getLaglessPaymentDetail = async (record, constructors) => {
 
     const kyoryoku_master = await CLIENT.record.getRecords({
         app: appId_KYORYOKU,
-        fields: [appliedCountField_KYORYOKU],
         query: `${kyoryokuIdField_KYORYOKU} = ${Number(record[fieldCustomerId_APPLY]["value"])}`
     });
     const applied_count = Number(kyoryoku_master.records[0][appliedCountField_KYORYOKU]["value"]);
