@@ -116,6 +116,7 @@ const schema_88 = (() => {
 })();
 if (!schema_88) throw new Error();
 const laborApp = {
+    id: schema_88.id.appId,
     fields: {
         recordNo: schema_88.fields.properties.レコード番号.code,
         id: schema_88.fields.properties.支払企業No_.code,
@@ -341,7 +342,7 @@ const getMasterRecord = ({ conds }) => {
     // 申込アプリのレコードの申込者が既に協力会社マスタの中に存在するか検索する。
     // 検索フィールド：支払先, 支払先正式名称, 担当者名, メールアドレス, 電話番号(携帯/固定)
     const body = {
-        app: schema_88.id.appId,
+        app: laborApp.id,
         fields: [laborApp.fields.id],
         query: `${conds.join(" or ")}`,
     };
@@ -358,8 +359,8 @@ const createKyoryokuRecord = async (apply, company_id) => {
             and ${laborApp.fields.orderer.name} not like "test"`;
         // 連番で新たな協力会社IDを取得する。
         const allKyoryoku = {
-            app: schema_88.id.appId,
             fields: [laborApp.fields.id],
+            app: laborApp.id,
             condition: `(${has_same_komuten}) and (${is_not_test})`,
             orderBy: `${laborApp.fields.id} desc`
         };
@@ -409,7 +410,7 @@ const createKyoryokuRecord = async (apply, company_id) => {
 
     Object.keys(new_record).forEach((k) => new_record[k] = { value: new_record[k] });
     const body = {
-        app: schema_88.id.appId,
+        app: laborApp.id,
         record: new_record
     };
     const result = await CLIENT.record.addRecord(body);
@@ -420,7 +421,7 @@ const createKyoryokuRecord = async (apply, company_id) => {
 const updateKyoryokuMaster = async (kyoryoku_id, apply_record) => {
     // 申込レコードとマスタの情報が異なる場合、それぞれのフィールドについて上書きするかどうか尋ねる
     const resp = await CLIENT.record.getRecords({
-        app: schema_88.id.appId,
+        app: laborApp.id,
         query: `${laborApp.fields.id} = ${kyoryoku_id}`
     });
     const kyoryoku = resp.records[0];
@@ -459,7 +460,7 @@ const updateKyoryokuMaster = async (kyoryoku_id, apply_record) => {
             });
 
         await CLIENT.record.updateRecord({
-            app: schema_88.id.appId,
+            app: laborApp.id,
             id: kyoryoku[laborApp.fields.recordNo]["value"],
             record: record
         });
