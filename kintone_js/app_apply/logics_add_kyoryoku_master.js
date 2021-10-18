@@ -7,6 +7,7 @@ import { isGigConstructorID } from "../util/gig_utils";
 import {
     KE_BAN_CONSTRUCTORS,
     SHOWA_CONSTRUCTORS,
+    FROM_KOBE_CONSTRUCTORS,
 } from "../96/common";
 
 import { schema_88 } from "../88/schema";
@@ -26,6 +27,9 @@ export const getSameKomutenKyoryokuCond = (komutenId) => {
         return `${komutenId_KYORYOKU} in (${in_query})`;
     } else if (KE_BAN_CONSTRUCTORS.includes(komutenId)) {
         const in_query = KE_BAN_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
+        return `${komutenId_KYORYOKU} in (${in_query})`;
+    } else if (FROM_KOBE_CONSTRUCTORS.includes(komutenId)) {
+        const in_query = FROM_KOBE_CONSTRUCTORS.map((c) => `"${c}"`).join(",");
         return `${komutenId_KYORYOKU} in (${in_query})`;
     } else if (isGigConstructorID(komutenId)) {
         // workshipの工務店IDは 5\d{3,4} だが、komutenId like "5\d+" のような指定はできない。
