@@ -93,6 +93,7 @@ const resetLimitField_CONSTRUCTOR           = schema_96.fields.properties.monthR
 const fieldDaysLater_APPLY                  = schema_96.fields.properties.daysLater.code; //申込レコードには存在しないが、特定の場合に限り申込レコードに必要なフィールドとして擬似的に定義する
 
 import { schema_88 } from "../88/schema";
+import { getNotationText } from "./createPaymentDetail/logics";
 const appId_KYORYOKU                        = schema_88.id.appId;
 const kyoryokuIdField_KYORYOKU              = schema_88.fields.properties.支払企業No_.code;
 const appliedCountField_KYORYOKU            = schema_88.fields.properties.numberOfApplication.code;
@@ -442,8 +443,7 @@ async function generateLaglessDetailText(apply_info, should_discount_for_first, 
         service_fee = service_fee.concat(" ※【初回申込限定】利用手数料半額キャンペーンが適用されました");
     }
 
-    // 行ごとに配列で格納し、最後に改行コードでjoinする
-    const former_part = [
+    const summary = [
         `${apply_info.addressee_name}様`,
         "",
         `この度は、${apply_info.product_name}のお申込みありがとうございます。`,
@@ -462,9 +462,15 @@ async function generateLaglessDetailText(apply_info, should_discount_for_first, 
         "",
         // eslint-disable-next-line no-irregular-whitespace
         `${apply_info.construction_shop_name}宛 請求金額（税込）①　${apply_info.billing_amount_comma}円`,
-        "",
-        // eslint-disable-next-line no-irregular-whitespace
-        `差引額（協力会費・立替金等）②　-${apply_info.membership_fee_comma}円`, //ゼロ円であっても -0円 表記
+    ];
+
+    const withMemberFeeNotation = summary.concat(getNotationText(
+        apply_info.product_name,
+        apply_info.membership_fee_comma
+    ));
+
+    // 行ごとに配列で格納し、最後に改行コードでjoinする
+    const former_part = withMemberFeeNotation.concat([
         "",
         service_fee,
         "",
@@ -474,7 +480,7 @@ async function generateLaglessDetailText(apply_info, should_discount_for_first, 
         // eslint-disable-next-line no-irregular-whitespace
         `当社から貴社へのお振込み予定金額　${apply_info.transfer_amount_of_money_comma}円`,
         "",
-    ];
+    ]);
 
     const getFactoringLimitText = async (apply_info, constructor, applied_count) => {
         const limit = constructor[earlyPayLimitField_CONSTRUCTOR]["value"]
