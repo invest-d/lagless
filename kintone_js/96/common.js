@@ -18,6 +18,11 @@ export const SHOWA_CONSTRUCTORS = [
     "203",
 ];
 
+export const FROM_KOBE_CONSTRUCTORS = [
+    "800",
+    "801",
+];
+
 export const normalizedConstructorId = (constructorId) => {
     if (KE_BAN_CONSTRUCTORS.includes(constructorId)) {
         return "400";
