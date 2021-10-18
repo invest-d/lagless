@@ -245,8 +245,8 @@ const clickButton = async (apply_record) => {
         const kyoryoku_id = await getKyoryokuId(apply_record)
             .catch((err) => { throw new Error(err); });
         if (!kyoryoku_id) { throw new ManualAbortProcessError(); }
-
         console.log(`協力会社ID${kyoryoku_id}の取得を完了`);
+        console.log(kyoryoku_id);
 
         await updateKyoryokuMaster(kyoryoku_id, apply_record);
         console.log("協力会社マスタとの比較および更新を完了");
@@ -289,6 +289,7 @@ const getKyoryokuId = async (apply_record) => {
     });
     const kyoryoku_record = await getMasterRecord({ conds });
     console.log(`${schema_88.id.name}アプリの取得を完了。`);
+    console.log(kyoryoku_record);
 
     if (kyoryoku_record && kyoryoku_record.records.length === 1) {
         const num = kyoryoku_record.records[0][laborApp.fields.id]["value"];
@@ -306,9 +307,11 @@ const getKyoryokuId = async (apply_record) => {
             + `\n${schema_28.id.name}アプリを検索します。`);
         const company_record = await searchCompanyRecord(getSearchQuery(apply_record));
         console.log(`${schema_28.id.name}アプリの取得を完了。`);
+        console.log(company_record);
 
         const company_id = selectCompanyRecordNumber(company_record);
         console.log(`レコード番号${company_id}を取得完了`);
+        console.log(company_id);
 
         return await createKyoryokuRecord(apply_record, company_id);
     }
