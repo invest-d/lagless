@@ -168,12 +168,13 @@ const laborApp = {
 };
 
 
-const komutenFields = schema_96.fields.properties;
-const komutenId_KOMUTEN     = komutenFields.id.code;
-const komutenName_KOMUTEN   = komutenFields.工務店正式名称.code;
-const productName_KOMUTEN   = komutenFields.service.code;
-
-
+const ordererApp = {
+    fields: {
+        id: schema_96.fields.properties.id.code,
+        name: schema_96.fields.properties.工務店正式名称.code,
+        service: schema_96.fields.properties.service.code,
+    },
+};
 
 
 (function () {
@@ -353,11 +354,11 @@ const createKyoryokuRecord = async (apply, company_id) => {
     const komuten = await CLIENT.record.getRecords({
         app: schema_96.id.appId,
         fields: [
-            komutenId_KOMUTEN,
-            komutenName_KOMUTEN,
-            productName_KOMUTEN,
+            ordererApp.fields.id,
+            ordererApp.fields.name,
+            ordererApp.fields.service,
         ],
-        query: `${komutenId_KOMUTEN} = "${normalizedConstructorId(apply[applyApp.fields.orderer.id]["value"])}"`
+        query: `${ordererApp.fields.id} = "${normalizedConstructorId(apply[applyApp.fields.orderer.id]["value"])}"`
     });
 
     const new_record = {
@@ -366,8 +367,8 @@ const createKyoryokuRecord = async (apply, company_id) => {
         [laborApp.fields.corporateId]: company_id,
         [laborApp.fields.name.code]: apply[applyApp.fields.applicant.name.code]["value"],
         [laborApp.fields.generalName.code]: apply[applyApp.fields.applicant.name.code]["value"],
-        [laborApp.fields.orderer.name]: komuten.records[0][komutenName_KOMUTEN].value,
-        [laborApp.fields.service]: productNameMap.fromKomuten[komuten.records[0][productName_KOMUTEN].value],
+        [laborApp.fields.orderer.name]: komuten.records[0][ordererApp.fields.name].value,
+        [laborApp.fields.service]: productNameMap.fromKomuten[komuten.records[0][ordererApp.fields.service].value],
         [laborApp.fields.bankAccount.bankName.code]: apply[applyApp.fields.applicant.bankAccount.bankName.code]["value"],
         [laborApp.fields.bankAccount.bankCode.code]: apply[applyApp.fields.applicant.bankAccount.bankCode.code]["value"],
         [laborApp.fields.bankAccount.branchName.code]: apply[applyApp.fields.applicant.bankAccount.branchName.code]["value"],
