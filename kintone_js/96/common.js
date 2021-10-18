@@ -26,6 +26,8 @@ export const FROM_KOBE_CONSTRUCTORS = [
 export const normalizedConstructorId = (constructorId) => {
     if (KE_BAN_CONSTRUCTORS.includes(constructorId)) {
         return "400";
+    } else if (FROM_KOBE_CONSTRUCTORS.includes(constructorId)) {
+        return "800";
     } else if (isGigConstructorID(constructorId)) {
         return "500";
     } else {
