@@ -426,17 +426,17 @@ const updateKyoryokuMaster = async (kyoryoku_id, apply_record) => {
     const kyoryoku = resp.records[0];
 
     const compare_fields = [
-        { apply: applyApp.fields.applicant.name.code,                   a_dsp: applyApp.fields.applicant.name.label,                    kyoryoku: laborApp.fields.name.code,        k_dsp: laborApp.fields.name.label,          do_update: false },
-        { apply: applyApp.fields.applicant.name.code,                   a_dsp: applyApp.fields.applicant.name.label,                    kyoryoku: laborApp.fields.generalName.code, k_dsp: laborApp.fields.generalName.label,   do_update: false },
-        { apply: applyApp.fields.applicant.bankAccount.bankName.code,   a_dsp: applyApp.fields.applicant.bankAccount.bankName.label,    kyoryoku: laborApp.fields.bankAccount.bankName.code,    k_dsp: laborApp.fields.bankAccount.bankName.label,  do_update: false },
-        { apply: applyApp.fields.applicant.bankAccount.bankCode.code,   a_dsp: applyApp.fields.applicant.bankAccount.bankCode.label,    kyoryoku: laborApp.fields.bankAccount.bankCode.code,    k_dsp: laborApp.fields.bankAccount.bankCode.label,  do_update: false },
+        { apply: applyApp.fields.applicant.name.code,                   a_dsp: applyApp.fields.applicant.name.label,                    kyoryoku: laborApp.fields.name.code,                    k_dsp: laborApp.fields.name.label,                      do_update: false },
+        { apply: applyApp.fields.applicant.name.code,                   a_dsp: applyApp.fields.applicant.name.label,                    kyoryoku: laborApp.fields.generalName.code,             k_dsp: laborApp.fields.generalName.label,               do_update: false },
+        { apply: applyApp.fields.applicant.bankAccount.bankName.code,   a_dsp: applyApp.fields.applicant.bankAccount.bankName.label,    kyoryoku: laborApp.fields.bankAccount.bankName.code,    k_dsp: laborApp.fields.bankAccount.bankName.label,      do_update: false },
+        { apply: applyApp.fields.applicant.bankAccount.bankCode.code,   a_dsp: applyApp.fields.applicant.bankAccount.bankCode.label,    kyoryoku: laborApp.fields.bankAccount.bankCode.code,    k_dsp: laborApp.fields.bankAccount.bankCode.label,      do_update: false },
         { apply: applyApp.fields.applicant.bankAccount.branchName.code, a_dsp: applyApp.fields.applicant.bankAccount.branchName.label,  kyoryoku: laborApp.fields.bankAccount.branchName.code,  k_dsp: laborApp.fields.bankAccount.branchName.label,    do_update: false },
         { apply: applyApp.fields.applicant.bankAccount.branchCode.code, a_dsp: applyApp.fields.applicant.bankAccount.branchCode.label,  kyoryoku: laborApp.fields.bankAccount.branchCode.code,  k_dsp: laborApp.fields.bankAccount.branchCode.label,    do_update: false },
         { apply: applyApp.fields.applicant.bankAccount.depositType.code,a_dsp: applyApp.fields.applicant.bankAccount.depositType.label, kyoryoku: laborApp.fields.bankAccount.depositType.code, k_dsp: laborApp.fields.bankAccount.depositType.label,   do_update: false },
         { apply: applyApp.fields.applicant.bankAccount.number.code,     a_dsp: applyApp.fields.applicant.bankAccount.number.label,      kyoryoku: laborApp.fields.bankAccount.number.code,      k_dsp: laborApp.fields.bankAccount.number.label,        do_update: false },
         { apply: applyApp.fields.applicant.bankAccount.name.code,       a_dsp: applyApp.fields.applicant.bankAccount.name.label,        kyoryoku: laborApp.fields.bankAccount.name.code,        k_dsp: laborApp.fields.bankAccount.name.label,          do_update: false },
-        { apply: applyApp.fields.applicant.email.code,                  a_dsp: applyApp.fields.applicant.email.label,                   kyoryoku: laborApp.fields.email.code,           k_dsp: laborApp.fields.email.label,         do_update: false },
-        { apply: applyApp.fields.applicant.phone.code,                  a_dsp: applyApp.fields.applicant.phone.label,                   kyoryoku: laborApp.fields.phone.primary.code,   k_dsp: laborApp.fields.phone.primary.label, do_update: false },
+        { apply: applyApp.fields.applicant.email.code,                  a_dsp: applyApp.fields.applicant.email.label,                   kyoryoku: laborApp.fields.email.code,                   k_dsp: laborApp.fields.email.label,                     do_update: false },
+        { apply: applyApp.fields.applicant.phone.code,                  a_dsp: applyApp.fields.applicant.phone.label,                   kyoryoku: laborApp.fields.phone.primary.code,           k_dsp: laborApp.fields.phone.primary.label,             do_update: false },
     ];
     for (const fields of compare_fields) {
         const apply_val = apply_record[fields.apply]["value"];
