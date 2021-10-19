@@ -1,5 +1,20 @@
 "use strict";
 
+const products = {
+    "ラグレス": {
+        memberFee: true,
+    },
+    "ダンドリペイメント": {
+        memberFee: true,
+    },
+    "リノベ不動産Payment": {
+        memberFee: true,
+    },
+    "ロジデリペイ": {
+        memberFee: false,
+    },
+};
+
 /**
 * @summary ファクタリングサービスそれ自体の手数料を示すテキストを返す
 * @param {Object} param - description
@@ -38,21 +53,6 @@ export const getServiceFeeText = ({
 * @return {string[]}
 */
 export const getNotationText = (productName, memberFee) => {
-    const products = {
-        "ラグレス": {
-            memberFee: true,
-        },
-        "ダンドリペイメント": {
-            memberFee: true,
-        },
-        "リノベ不動産Payment": {
-            memberFee: true,
-        },
-        "ロジデリペイ": {
-            memberFee: false,
-        },
-    };
-
     if (products[productName].memberFee) {
         return [
             "",
