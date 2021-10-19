@@ -112,7 +112,7 @@ const schema_88 = (() => {
     }
 })();
 if (!schema_88) throw new Error();
-import { getNotationText } from "./createPaymentDetail/logics";
+import { getNotationText, getServiceFeeText } from "./createPaymentDetail/logics";
 const appId_KYORYOKU                        = schema_88.id.appId;
 const kyoryokuIdField_KYORYOKU              = schema_88.fields.properties.支払企業No_.code;
 const appliedCountField_KYORYOKU            = schema_88.fields.properties.numberOfApplication.code;
@@ -452,15 +452,13 @@ const getAddresseeName = (company, title, name) => {
 };
 
 async function generateLaglessDetailText(apply_info, should_discount_for_first, constructor, applied_count) {
-    const fee_sign = apply_info.timing === statusLatePayment_APPLY
-        ? "+"
-        : "-";
-
-    // eslint-disable-next-line no-irregular-whitespace
-    let service_fee = `${apply_info.product_name}　利用手数料【（①+②）×${apply_info.commission_percentage}％】　${fee_sign}${apply_info.commission_amount_comma}円`;
-    if (should_discount_for_first) {
-        service_fee = service_fee.concat(" ※【初回申込限定】利用手数料半額キャンペーンが適用されました");
-    }
+    const service_fee = getServiceFeeText({
+        productName: apply_info.product_name,
+        commissionPercentage: apply_info.commission_percentage,
+        paymentTiming: apply_info.timing,
+        commissionAmountComma: apply_info.commission_amount_comma,
+        shouldDiscountForFirst: should_discount_for_first,
+    });
 
     const summary = [
         `${apply_info.addressee_name}様`,
@@ -491,7 +489,7 @@ async function generateLaglessDetailText(apply_info, should_discount_for_first, 
     // 行ごとに配列で格納し、最後に改行コードでjoinする
     const former_part = withMemberFeeNotation.concat([
         "",
-        service_fee,
+        service_fee.join(""),
         "",
         // eslint-disable-next-line no-irregular-whitespace
         `振込手数料（貴社負担）　-${apply_info.transfer_fee_tax_incl_comma}円`,
