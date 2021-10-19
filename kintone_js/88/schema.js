@@ -280,7 +280,7 @@ export const schema_88 = {
                         "label": "ダンドリペイメント"
                     },
                     "テスト商品": {
-                        "index": "6",
+                        "index": "7",
                         "label": "テスト商品"
                     },
                     "ネクステージペイメント": {
@@ -294,6 +294,10 @@ export const schema_88 = {
                     "リノベ不動産Payment": {
                         "index": "2",
                         "label": "リノベ不動産Payment"
+                    },
+                    "ロジデリペイ": {
+                        "index": "6",
+                        "label": "ロジデリペイ"
                     },
                     "軽バン.com": {
                         "index": "5",
