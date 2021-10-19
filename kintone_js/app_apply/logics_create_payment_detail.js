@@ -452,14 +452,6 @@ const getAddresseeName = (company, title, name) => {
 };
 
 async function generateLaglessDetailText(apply_info, should_discount_for_first, constructor, applied_count) {
-    const service_fee = getServiceFeeText({
-        productName: apply_info.product_name,
-        commissionPercentage: apply_info.commission_percentage,
-        paymentTiming: apply_info.timing,
-        commissionAmountComma: apply_info.commission_amount_comma,
-        shouldDiscountForFirst: should_discount_for_first,
-    });
-
     const summary = [
         `${apply_info.addressee_name}様`,
         "",
@@ -480,6 +472,14 @@ async function generateLaglessDetailText(apply_info, should_discount_for_first, 
         // eslint-disable-next-line no-irregular-whitespace
         `${apply_info.construction_shop_name}宛 請求金額（税込）①　${apply_info.billing_amount_comma}円`,
     ];
+
+    const service_fee = getServiceFeeText({
+        productName: apply_info.product_name,
+        commissionPercentage: apply_info.commission_percentage,
+        paymentTiming: apply_info.timing,
+        commissionAmountComma: apply_info.commission_amount_comma,
+        shouldDiscountForFirst: should_discount_for_first,
+    });
 
     const withMemberFeeNotation = summary.concat(getNotationText(
         apply_info.product_name,
