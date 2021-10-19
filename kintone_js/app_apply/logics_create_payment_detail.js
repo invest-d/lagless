@@ -56,6 +56,7 @@ const fieldProductName_APPLY                = schema_apply.fields.properties.pro
 const statusProductName_Lagless_APPLY       = "ラグレス";
 const statusProductName_Dandori_APPLY       = "ダンドリペイメント";
 const statusProductName_Renove_APPLY        = "リノベ不動産Payment";
+const statusProductName_LogideliPay_APPLY   = "ロジデリペイ";
 const fieldClosingDate_APPLY                = schema_apply.fields.properties.closingDay.code;
 const fieldPaymentDate_APPLY                = schema_apply.fields.properties.paymentDate.code;
 const fieldBillingCompanyName_APPLY         = schema_apply.fields.properties.billingCompanyOfficialName.code;
@@ -85,6 +86,7 @@ const fieldFactorableTotalAmountWFI_APPLY   = schema_apply.fields.properties.fac
 const contractor_mail_lagless               = "lagless@invest-d.com";
 const contractor_mail_dandori               = "d-p@invest-d.com";
 const contractor_mail_renove                = "lagless@invest-d.com"; // ラグレスと同じ
+const contractor_mail_logidelipay           = "lagless+logidelipay@invest-d.com";
 
 import { schema_96 } from "../96/schema";
 const APP_ID_CONSTRUCTOR                    = schema_96.id.appId;
@@ -370,7 +372,8 @@ const getLaglessPaymentDetail = async (record, constructors) => {
     const sender_mail = {
         [statusProductName_Lagless_APPLY]: contractor_mail_lagless,
         [statusProductName_Dandori_APPLY]: contractor_mail_dandori,
-        [statusProductName_Renove_APPLY]: contractor_mail_renove
+        [statusProductName_Renove_APPLY]: contractor_mail_renove,
+        [statusProductName_LogideliPay_APPLY]: contractor_mail_logidelipay,
     }[product_name];
 
     if (!sender_mail) {
