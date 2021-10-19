@@ -34,11 +34,16 @@ export const getServiceFeeText = ({
 }) => {
     const lines = [];
 
+    // 協力会費の差引が存在する場合はそもそもの債権金額が減少する
+    const creditAmount = products[productName].memberFee
+        ? "（①+②）"
+        : "①";
+
     const feeSign = paymentTiming === "遅払い"
         ? "+"
         : "-";
     // eslint-disable-next-line no-irregular-whitespace
-    lines.push(`${productName}　利用手数料【（①+②）×${commissionPercentage}％】　${feeSign}${commissionAmountComma}円`);
+    lines.push(`${productName}　利用手数料【${creditAmount}×${commissionPercentage}％】　${feeSign}${commissionAmountComma}円`);
     if (shouldDiscountForFirst) {
         lines.push("※【初回申込限定】利用手数料半額キャンペーンが適用されました");
     }
