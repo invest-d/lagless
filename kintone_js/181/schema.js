@@ -323,7 +323,7 @@ export const schema_181 = {
                         "工務店名"
                     ],
                     "relatedApp": {
-                        "app": "96",
+                        "app": "182",
                         "code": ""
                     },
                     "relatedKeyField": "id",
