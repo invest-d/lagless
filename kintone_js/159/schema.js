@@ -371,7 +371,7 @@ export const schema_apply = {
                         "支払元口座"
                     ],
                     "relatedApp": {
-                        "app": "96",
+                        "app": "182",
                         "code": ""
                     },
                     "relatedKeyField": "id",
