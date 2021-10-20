@@ -59,7 +59,26 @@ const getAppSchema = (displayingAppId, app) => {
         },
     };
 
-    const env = detectApp(displayingAppId);
+    const env = ((displayingAppId) => {
+        try {
+            return detectApp(displayingAppId);
+        } catch (e) {
+            if (e instanceof UnknownAppError) {
+                alert("不明なアプリです。申込アプリで実行してください。");
+            } else {
+                console.error(e);
+                const additional_info = e.message ?? JSON.stringify(e);
+                alert("途中で処理に失敗しました。システム管理者に連絡してください。"
+                    + "\n追加の情報: "
+                    + `\n${additional_info}`);
+            }
+
+            return undefined;
+        }
+    })(displayingAppId);
+
+    if (!env) return undefined;
+
     return apps[env][app];
 };
 

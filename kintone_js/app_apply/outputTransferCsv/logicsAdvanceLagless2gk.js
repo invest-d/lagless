@@ -2,24 +2,10 @@
 "use strict";
 
 // import { schema_apply as applyAppSchema } from "../../161/schema";
-import { getApplyAppSchema, UnknownAppError } from "../../util/environments";
+import { getApplyAppSchema } from "../../util/environments";
 import { CLIENT } from "../../util/kintoneAPI";
-const applyAppSchema = (() => {
-    try {
-        // @ts-ignore
-        return getApplyAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。申込アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+// @ts-ignore
+const applyAppSchema = getApplyAppSchema(kintone.app.getId());
 if (!applyAppSchema) throw new Error();
 
 const applyApp = {

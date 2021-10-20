@@ -2,7 +2,7 @@
 "use strict";
 
 import { zenkakuToHankaku } from "../../util/characterWidth";
-import { getApplyAppSchema, UnknownAppError } from "../../util/environments";
+import { getApplyAppSchema } from "../../util/environments";
 import {
     downloadFile, encodeToSjis
 } from "../../util/output_csv";
@@ -10,22 +10,8 @@ import * as lagless2gk from "./logicsAdvanceLagless2gk";
 import * as workship from "./logicsAdvanceWorkship";
 import * as realtor from "./logics_output_csv_RealtorOriginalPay";
 import * as keban from "./logics_output_csv_WfiEarlyPay";
-const applyAppSchema = (() => {
-    try {
-        // @ts-ignore
-        return getApplyAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。申込アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+// @ts-ignore
+const applyAppSchema = getApplyAppSchema(kintone.app.getId());
 if (!applyAppSchema) throw new Error();
 
 

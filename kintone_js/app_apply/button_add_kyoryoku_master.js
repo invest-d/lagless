@@ -13,7 +13,7 @@ import {
     productNameMap
 } from "../96/common";
 import { schema_96 } from "../96/schema";
-import { getApplyAppSchema, getCompanyAppSchema, getLaborAppSchema, UnknownAppError } from "../util/environments";
+import { getApplyAppSchema, getCompanyAppSchema, getLaborAppSchema } from "../util/environments";
 import { isGigConstructorID } from "../util/gig_utils";
 import { CLIENT } from "../util/kintoneAPI";
 import {
@@ -29,21 +29,7 @@ import {
 const ExtensibleCustomError = require("extensible-custom-error");
 class ManualAbortProcessError extends ExtensibleCustomError { }
 
-const schema = (() => {
-    try {
-        return getApplyAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。申込アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+const schema = getApplyAppSchema(kintone.app.getId());
 if (!schema) throw new Error();
 const applyApp = {
     fields: {
@@ -99,21 +85,7 @@ const applyApp = {
     },
 };
 
-const schema_88 = (() => {
-    try {
-        return getLaborAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。申込アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+const schema_88 = getLaborAppSchema(kintone.app.getId());
 if (!schema_88) throw new Error();
 const laborApp = {
     id: schema_88.id.appId,
@@ -195,21 +167,7 @@ const ordererApp = {
 };
 
 
-const schema_28 = (() => {
-    try {
-        return getCompanyAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。申込アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+const schema_28 = getCompanyAppSchema(kintone.app.getId());
 if (!schema_28) throw new Error();
 
 

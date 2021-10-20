@@ -27,7 +27,7 @@ import { schema_apply } from "../161/schema";
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
 import { schema_96 } from "../96/schema";
 // import { schema_88 } from "../88/schema";
-import { getLaborAppSchema, UnknownAppError } from "../util/environments";
+import { getLaborAppSchema } from "../util/environments";
 import { isGigConstructorID } from "../util/gig_utils";
 import { CLIENT } from "../util/kintoneAPI";
 import { get_contractor_name } from "../util/util_forms";
@@ -97,21 +97,7 @@ const earlyPayLimitField_CONSTRUCTOR        = schema_96.fields.properties.applic
 const resetLimitField_CONSTRUCTOR           = schema_96.fields.properties.monthResetCount.code;
 const fieldDaysLater_APPLY                  = schema_96.fields.properties.daysLater.code; //申込レコードには存在しないが、特定の場合に限り申込レコードに必要なフィールドとして擬似的に定義する
 
-const schema_88 = (() => {
-    try {
-        return getLaborAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。申込アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+const schema_88 = getLaborAppSchema(kintone.app.getId());
 if (!schema_88) throw new Error();
 const appId_KYORYOKU                        = schema_88.id.appId;
 const kyoryokuIdField_KYORYOKU              = schema_88.fields.properties.支払企業No_.code;
