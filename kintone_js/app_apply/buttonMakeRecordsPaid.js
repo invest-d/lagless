@@ -5,9 +5,9 @@
 "use strict";
 
 // import { schema_apply as applyAppSchema } from "../161/schema";
+import { getApplyAppSchema, UnknownAppError } from "../util/environments";
 import { CLIENT } from "../util/kintoneAPI";
 import { confirmBeforeExec, getBody, putBody } from "./makeRecordsPaid/logic";
-import { getApplyAppSchema, UnknownAppError } from "../util/choiceApplyAppSchema";
 const applyAppSchema = (() => {
     try {
         return getApplyAppSchema(kintone.app.getId());

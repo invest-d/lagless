@@ -1,7 +1,7 @@
 "use strict";
 
+import { getApplyAppSchema, UnknownAppError } from "../../util/environments";
 import { CLIENT } from "../../util/kintoneAPI";
-import { getApplyAppSchema, UnknownAppError } from "../../util/choiceApplyAppSchema";
 const applyAppSchema = (() => {
     try {
         return getApplyAppSchema(kintone.app.getId());

@@ -33,7 +33,11 @@
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
-import { getCollectAppSchema, UnknownAppError } from "../util/choiceCollectAppSchema";
+import { getCollectAppSchema, UnknownAppError } from "../util/environments";
+import * as kintoneAPI from "../util/kintoneAPI";
+import { getAggregatedParentRecords } from "./invoicePdf/aggregate";
+import { generateInvoices } from "./invoicePdf/generatePdf";
+import { getTargetRecords } from "./invoicePdf/selectRecords";
 const collectAppSchema = (() => {
     try {
         return getCollectAppSchema(kintone.app.getId());
@@ -56,11 +60,7 @@ const statusInvoiceTarget_COLLECT               = collectFields.collectStatus.op
 const fieldInvoicePdf_COLLECT                   = collectFields.invoicePdf.code;
 const fieldConfirmStatusInvoice_COLLECT         = collectFields.confirmStatusInvoice.code;
 
-import * as kintoneAPI from "../util/kintoneAPI";
 
-import { getTargetRecords } from "./invoicePdf/selectRecords";
-import { getAggregatedParentRecords } from "./invoicePdf/aggregate";
-import { generateInvoices } from "./invoicePdf/generatePdf";
 
 const button_id = "generateInvoice";
 export function needShowButton() {

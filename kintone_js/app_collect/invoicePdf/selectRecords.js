@@ -1,6 +1,6 @@
+import { getCollectAppSchema, UnknownAppError } from "../../util/environments";
 import * as kintoneAPI from "../../util/kintoneAPI";
 
-import { getCollectAppSchema, UnknownAppError } from "../../util/choiceCollectAppSchema";
 const collectAppSchema = (() => {
     try {
         return getCollectAppSchema(kintone.app.getId());

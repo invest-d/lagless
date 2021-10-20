@@ -1,9 +1,15 @@
 // PDF生成ライブラリ
-import { createPdf } from "../../util/pdfMake_util";
-
 import { Decimal } from "decimal.js";
+import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "../../96/common";
+import { schema_96 } from "../../96/schema";
+import { getCollectAppSchema, UnknownAppError } from "../../util/environments";
+import { isGigConstructorID } from "../../util/gig_utils";
+import * as kintoneAPI from "../../util/kintoneAPI";
+import { createPdf } from "../../util/pdfMake_util";
+import { addComma, formatYMD, get_contractor_name, get_display_payment_timing } from "../../util/util_forms";
+import { getInvoiceTargetQuery } from "./selectRecords";
 
-import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "../../util/util_forms";
+
 
 // 祝日判定ライブラリ
 const holiday_jp = require("@holiday-jp/holiday_jp");
@@ -12,8 +18,6 @@ const dateFns = require("date-fns");
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
-import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "../../96/common";
-import { isGigConstructorID } from "../../util/gig_utils";
 
 const ACCOUNTS = {
     "株式会社NID": {
@@ -37,13 +41,10 @@ const getAccount = (contractor, constructor_id) => {
     return ACCOUNTS[contractor].smbc;
 };
 
-import * as kintoneAPI from "../../util/kintoneAPI";
 
-import { schema_96 } from "../../96/schema";
 const APP_ID_CONSTRUCTOR                        = schema_96.id.appId;
 const fieldDaysLater_CONSTRUCTOR                = schema_96.fields.properties.daysLater.code;
 
-import { getCollectAppSchema, UnknownAppError } from "../../util/choiceCollectAppSchema";
 const collectAppSchema = (() => {
     try {
         return getCollectAppSchema(kintone.app.getId());
@@ -97,7 +98,6 @@ const black = "#000000";
 const green = "#008080";
 const light_green = "#009999";
 
-import { getInvoiceTargetQuery } from "./selectRecords";
 
 export async function generateInvoices() {
     // PDF生成対象かつ親レコードを全て取得

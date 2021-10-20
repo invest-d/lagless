@@ -1,9 +1,9 @@
 // @ts-check
 "use strict";
 
-import { CLIENT } from "../../util/kintoneAPI";
 // import { schema_apply as applyAppSchema } from "../../161/schema";
-import { getApplyAppSchema, UnknownAppError } from "../../util/choiceApplyAppSchema";
+import { getApplyAppSchema, UnknownAppError } from "../../util/environments";
+import { CLIENT } from "../../util/kintoneAPI";
 const applyAppSchema = (() => {
     try {
         // @ts-ignore

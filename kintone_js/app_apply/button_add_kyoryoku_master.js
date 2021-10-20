@@ -13,7 +13,7 @@ import {
     productNameMap
 } from "../96/common";
 import { schema_96 } from "../96/schema";
-import { getApplyAppSchema, UnknownAppError } from "../util/choiceApplyAppSchema";
+import { getApplyAppSchema, getCompanyAppSchema, getLaborAppSchema, UnknownAppError } from "../util/environments";
 import { isGigConstructorID } from "../util/gig_utils";
 import { CLIENT } from "../util/kintoneAPI";
 import {
@@ -21,10 +21,10 @@ import {
     searchCompanyRecord,
     selectCompanyRecordNumber
 } from "./addKyoryokuMaster/inquiry";
+import { getNewLaborId } from "./addKyoryokuMaster/logics";
 import {
     choiceNotifyMethod, getSameKomutenKyoryokuCond
 } from "./logics_add_kyoryoku_master";
-import { getNewLaborId } from "./addKyoryokuMaster/logics";
 
 const ExtensibleCustomError = require("extensible-custom-error");
 class ManualAbortProcessError extends ExtensibleCustomError { }
@@ -99,7 +99,6 @@ const applyApp = {
     },
 };
 
-import { getLaborAppSchema } from "../util/choiceLaborAppSchema";
 const schema_88 = (() => {
     try {
         return getLaborAppSchema(kintone.app.getId());
@@ -196,7 +195,6 @@ const ordererApp = {
 };
 
 
-import { getCompanyAppSchema } from "../util/choiceCompanyAppSchema";
 const schema_28 = (() => {
     try {
         return getCompanyAppSchema(kintone.app.getId());

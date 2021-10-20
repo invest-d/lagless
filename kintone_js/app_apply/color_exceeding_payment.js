@@ -4,10 +4,10 @@
 
 import dayjs, { extend, locale } from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import { getApplyAppSchema, UnknownAppError } from "../util/environments";
 extend(isSameOrAfter);
 locale("ja");
 
-import { getApplyAppSchema, UnknownAppError } from "../util/choiceApplyAppSchema";
 const schema = (() => {
     try {
         return getApplyAppSchema(kintone.app.getId());

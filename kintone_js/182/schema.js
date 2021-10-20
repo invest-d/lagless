@@ -1,4 +1,4 @@
-export const schema = {
+export const schema_182 = {
     "fields": {
         "properties": {
             "applicationLimit": {

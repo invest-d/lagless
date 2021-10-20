@@ -2,8 +2,8 @@
     申込アプリにおいて、実行完了|取下げレコードを見た目上グレーアウトする
 */
 
+import { getApplyAppSchema, UnknownAppError } from "../util/environments";
 import { CLIENT } from "../util/kintoneAPI";
-import { getApplyAppSchema, UnknownAppError } from "../util/choiceApplyAppSchema";
 
 const schema = (() => {
     try {

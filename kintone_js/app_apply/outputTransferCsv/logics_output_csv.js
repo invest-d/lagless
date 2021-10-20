@@ -2,14 +2,14 @@
 "use strict";
 
 import { zenkakuToHankaku } from "../../util/characterWidth";
-import { getApplyAppSchema, UnknownAppError } from "../../util/choiceApplyAppSchema";
+import { getApplyAppSchema, UnknownAppError } from "../../util/environments";
 import {
     downloadFile, encodeToSjis
 } from "../../util/output_csv";
+import * as lagless2gk from "./logicsAdvanceLagless2gk";
+import * as workship from "./logicsAdvanceWorkship";
 import * as realtor from "./logics_output_csv_RealtorOriginalPay";
 import * as keban from "./logics_output_csv_WfiEarlyPay";
-import * as workship from "./logicsAdvanceWorkship";
-import * as lagless2gk from "./logicsAdvanceLagless2gk";
 const applyAppSchema = (() => {
     try {
         // @ts-ignore

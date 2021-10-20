@@ -1,18 +1,21 @@
 
-import { asyncMap, asyncFlatMap } from "../../util/async-flat-map";
 import { Decimal } from "decimal.js";
+import { isKeban, KE_BAN_PRODUCT_NAME } from "../../96/common";
+import { schema_96 } from "../../96/schema";
+import { asyncFlatMap, asyncMap } from "../../util/async-flat-map";
+import { detectApp, getApplyAppSchema, getCollectAppSchema, UnknownAppError } from "../../util/environments";
+import { isGigConstructorID } from "../../util/gig_utils";
+import * as kintoneAPI from "../../util/kintoneAPI";
+import { getUniqueCombinations } from "../../util/manipulations";
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
-import * as kintoneAPI from "../../util/kintoneAPI";
 
-import { schema_96 } from "../../96/schema";
 const APP_ID_CONSTRUCTOR                        = schema_96.id.appId;
 const fieldConstructorId_CONSTRUCTOR            = schema_96.fields.properties.id.code;
 const fieldTmpcommissionRate_CONSTRUCTOR        = schema_96.fields.properties.tmpcommissionRate.code;
 const fieldConstructorName_CONSTRUCTOR          = schema_96.fields.properties.工務店正式名称.code;
 
-import { getApplyAppSchema, UnknownAppError } from "../../util/choiceApplyAppSchema";
 const applyAppSchema = (() => {
     try {
         return getApplyAppSchema(kintone.app.getId());
@@ -34,8 +37,6 @@ const APP_ID_APPLY             = applyAppSchema.id.appId;
 const fieldRecordId_APPLY      = applyFields.レコード番号.code;
 const fieldConstructorId_APPLY = applyFields.constructionShopId.code;
 
-import { getCollectAppSchema } from "../../util/choiceCollectAppSchema";
-import { detectApp } from "../../util/environments";
 const collectAppSchema = (() => {
     try {
         return getCollectAppSchema(kintone.app.getId());
@@ -77,9 +78,6 @@ const tableFieldActuallyOrdererIV_COLLECT       = collectFields.invoiceTargets.f
 const fieldInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.code;
 const labelInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.label;
 
-import { isKeban, KE_BAN_PRODUCT_NAME } from "../../96/common";
-import { isGigConstructorID } from "../../util/gig_utils";
-import { getUniqueCombinations } from "../../util/manipulations";
 
 const ExtensibleCustomError = require("extensible-custom-error");
 export class UndefinedPdfDateError extends ExtensibleCustomError { }
