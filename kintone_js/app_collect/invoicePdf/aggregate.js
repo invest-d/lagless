@@ -1,16 +1,17 @@
 
 import { Decimal } from "decimal.js";
 import { isKeban, KE_BAN_PRODUCT_NAME } from "../../96/common";
-import { schema_96 } from "../../96/schema";
 import { asyncFlatMap, asyncMap } from "../../util/async-flat-map";
-import { detectApp, getApplyAppSchema, getCollectAppSchema } from "../../util/environments";
+import { detectApp, getApplyAppSchema, getCollectAppSchema, getOrdererAppSchema } from "../../util/environments";
 import { isGigConstructorID } from "../../util/gig_utils";
 import * as kintoneAPI from "../../util/kintoneAPI";
 import { getUniqueCombinations } from "../../util/manipulations";
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
-
+// import { schema_96 } from "../../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_CONSTRUCTOR                        = schema_96.id.appId;
 const fieldConstructorId_CONSTRUCTOR            = schema_96.fields.properties.id.code;
 const fieldTmpcommissionRate_CONSTRUCTOR        = schema_96.fields.properties.tmpcommissionRate.code;

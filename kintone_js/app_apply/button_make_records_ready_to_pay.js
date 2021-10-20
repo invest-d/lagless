@@ -7,8 +7,10 @@ import { CLIENT } from "../util/kintoneAPI";
 const ExtensibleCustomError = require("extensible-custom-error");
 class CheckReadyToPayError extends ExtensibleCustomError {}
 
-import { schema_apply } from "../161/schema.js";
-
+import { getApplyAppSchema } from "../util/environments";
+// import { schema_apply } from "../161/schema";
+const schema_apply = getApplyAppSchema(kintone.app.getId());
+if (!schema_apply) throw new Error();
 const executable_view_name  = schema_apply.views.views.支払予定明細送信状況.name;
 const target_status         = schema_apply.fields.properties.状態.options.支払予定明細送付済.label;
 const new_status            = schema_apply.fields.properties.状態.options.振込前確認完了.label;

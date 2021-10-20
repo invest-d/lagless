@@ -22,7 +22,6 @@
 */
 
 import { schema_79 } from "../79/schema";
-import { schema_96 } from "../96/schema";
 
 const APP_ID_EXAM                   = schema_79.id.appId;
 const recordNo_EXAM                 = schema_79.fields.properties.レコード番号.code;
@@ -32,6 +31,10 @@ const creditAmountManual_EXAM       = schema_79.fields.properties.付与与信�
 const creditAmountAuto_EXAM         = schema_79.fields.properties.付与与信枠_自動算出.code;
 const examinedDay_EXAM              = schema_79.fields.properties.審査完了日.code;
 
+import { getOrdererAppSchema } from "../util/environments";
+// import { schema_96 } from "../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_KOMUTEN                = schema_96.id.appId;
 const recordNo_KOMUTEN              = schema_96.fields.properties.レコード番号.code;
 const customerCode_KOMUTEN          = schema_96.fields.properties.customerCode.code;

@@ -1,8 +1,10 @@
 "use strict";
 
 import { CLIENT } from "../../util/kintoneAPI";
-
-import { schema_28 } from "../../28/schema";
+import { getCompanyAppSchema } from "../../util/environments";
+// import { schema_28 } from "../../28/schema";
+const schema_28 = getCompanyAppSchema(kintone.app.getId());
+if (!schema_28) throw new Error();
 const recordNo_COMPANY              = schema_28.fields.properties.レコード番号.code;
 const companyName_COMPANY           = schema_28.fields.properties["法人名・屋号"].code;
 const representative_COMPANY        = schema_28.fields.properties.代表者名.code;

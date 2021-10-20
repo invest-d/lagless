@@ -11,7 +11,10 @@ import { CLIENT } from "../util/kintoneAPI";
 import { Decimal } from "decimal.js";
 
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
-import { schema_96 } from "../96/schema";
+import { getOrdererAppSchema, getCollectAppSchema } from "../util/environments";
+// import { schema_96 } from "../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const appId_CONSTRUCTOR = schema_96.id.appId;
 const constructorIdField_CONSTRUCTOR = schema_96.fields.properties.id.code;
 const transferFeeField_CONSTRUCTOR = schema_96.fields.properties.tmptransferFee.code;
@@ -19,7 +22,9 @@ const factoringFeeField_CONSTRUCTOR = schema_96.fields.properties.tmpcommissionR
 
 import { addComma } from "../util/util_forms";
 
-import { schema_collect } from "../162/schema";
+// import { schema_collect } from "../162/schema";
+const schema_collect = getCollectAppSchema(kintone.app.getId());
+if (!schema_collect) throw new Error();
 const constructorIdField_COLLECT = schema_collect.fields.properties.constructionShopId.code;
 // FIXME: スキーマからスペースIDを取得したいけど、良いやり方が思いつかなかった
 const sumSpaceId_COLLECT = "sumOfCloudSignSpace";
@@ -39,7 +44,7 @@ export const displaySum = async (record) => {
 
 const generateText = async (record) => {
     const cloudSignRecords = record[csRecordsField_COLLECT]["value"];
-    const fees = await getConstructorFees(record[constructorIdField_COLLECT]["value"])
+    const fees = await getConstructorFees(record[constructorIdField_COLLECT]["value"]);
     const { len, amount } = sumTransferAmounts(cloudSignRecords, fees);
     return `合計件数: ${addComma(len)}件、合計金額: ${addComma(amount)}円`;
 };

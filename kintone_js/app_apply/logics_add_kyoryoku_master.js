@@ -10,7 +10,11 @@ import {
     FROM_KOBE_CONSTRUCTORS,
 } from "../96/common";
 
-import { schema_88 } from "../88/schema";
+
+import { getLaborAppSchema } from "../util/environments";
+// import { schema_88 } from "../88/schema";
+const schema_88 = getLaborAppSchema(kintone.app.getId());
+if (!schema_88) throw new Error();
 const customerFields = schema_88.fields.properties;
 const komutenId_KYORYOKU        = customerFields.工務店ID.code;
 const productName_KYORYOKU      = customerFields.商品名.code;

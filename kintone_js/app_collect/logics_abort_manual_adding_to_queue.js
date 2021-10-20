@@ -7,8 +7,10 @@
     1. レコード一覧画面において、インライン編集時にエラーを表示。
     2. レコード詳細画面において、手動での編集時にエラーを表示。
 */
-import { schema_collect } from "../162/schema";
-
+import { getCollectAppSchema } from "../util/environments";
+// import { schema_collect } from "../162/schema";
+const schema_collect = getCollectAppSchema(kintone.app.getId());
+if (!schema_collect) throw new Error();
 export const STATUS_FIELD = schema_collect.fields.properties.collectStatus.code;
 const STATUS_DICT = {
     "ReadyToSend": schema_collect.fields.properties.collectStatus.options.振込依頼書送信可.label

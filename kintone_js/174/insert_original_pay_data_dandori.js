@@ -35,7 +35,10 @@ const fieldMemberFeeSum_DANDORI         = schema_174.fields.properties.memberShi
 const fieldReceivableSum_DANDORI        = schema_174.fields.properties.receivableAmountSum.code;
 const fieldDandoriID_DANDORI            = schema_174.fields.properties.kyoryokuID.code;
 
-import { schema_apply } from "../161/schema";
+import { getApplyAppSchema, getOrdererAppSchema, getLaborAppSchema } from "../util/environments";
+// import { schema_apply } from "../161/schema";
+const schema_apply = getApplyAppSchema(kintone.app.getId());
+if (!schema_apply) throw new Error();
 const APP_ID_APPLY = ((dandori_app_id) => {
     if (dandori_app_id === 174) {
         // 本番
@@ -78,12 +81,16 @@ const APP_ID_EXCLUDE = ((dandori_app_id) => {
 })(APP_ID_DANDORI);
 const fieldDandoriId_EXCLUDE            = schema_177.fields.properties.dandoriID.code;
 
-import { schema_96 } from "../96/schema";
+// import { schema_96 } from "../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_CONSTRUCTOR                = schema_96.id.appId;
 const fieldConstructorID_CONSTRUCTOR    = schema_96.fields.properties.id.code;
 const fieldConstructorName_CONSTRUCTOR  = schema_96.fields.properties.工務店正式名称.code;
 
-import { schema_88 } from "../88/schema";
+// import { schema_88 } from "../88/schema";
+const schema_88 = getLaborAppSchema(kintone.app.getId());
+if (!schema_88) throw new Error();
 const APP_ID_KYORYOKU                   = schema_88.id.appId;
 const fieldKyoryokuID_KYORYOKU          = schema_88.fields.properties.支払企業No_.code;
 const fieldConstructorID_KYORYOKU       = schema_88.fields.properties.工務店ID.code;

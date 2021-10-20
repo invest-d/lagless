@@ -1,8 +1,11 @@
 import parse from "csv-parse/lib/sync";
 import { replaceFullWidthNumbers } from "../../util/manipulations";
-import { schema_28 } from "../../28/schema";
+import { getCompanyAppSchema } from "../../util/environments";
 import { isKeban } from "../../96/common";
 
+// import { schema_28 } from "../../28/schema";
+const schema_28 = getCompanyAppSchema(kintone.app.getId());
+if (!schema_28) throw new Error();
 const payerCompany = schema_28.fields.properties.取引区分.options.支払企業.label;
 const assignorCompany = schema_28.fields.properties.取引区分.options.譲渡企業.label;
 const companyName_COMPANY = schema_28.fields.properties["法人名・屋号"].code;

@@ -1,5 +1,8 @@
 import { CLIENT } from "../../util/kintoneAPI";
-import { schema_28 } from "../../28/schema";
+import { getCompanyAppSchema } from "../../util/environments";
+// import { schema_28 } from "../../28/schema";
+const schema_28 = getCompanyAppSchema(kintone.app.getId());
+if (!schema_28) throw new Error();
 import { schema_79 } from "../../79/schema";
 import { addToukiRecord, buildToukiRecord } from "./fetchTouki";
 

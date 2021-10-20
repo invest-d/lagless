@@ -14,9 +14,7 @@ import { get_contractor_name } from "../util/util_forms";
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
 
 import { schema_61 } from "../61/schema";
-import { schema_collect } from "../162/schema";
-import { schema_96 } from "../96/schema";
-import { schema_28 } from "../28/schema";
+import { getCompanyAppSchema, getOrdererAppSchema, getCollectAppSchema } from "../util/environments";
 
 const CLOUDSIGN_API_SERVER  = "https://api.cloudsign.jp";
 const GET_TOKEN_API         = "https://us-central1-lagless.cloudfunctions.net/fetch_cloudSign_token";
@@ -25,7 +23,10 @@ const APP_ID_LOGIN          = schema_61.id.appId;
 const cloud_sign_record_id  = "54";
 const fieldClientId_LOGIN   = schema_61.fields.properties.パスワード.code;
 
-const APP_ID_COLLECT                            = kintone.app.getId();
+// import { schema_collect } from "../162/schema";
+const schema_collect = getCollectAppSchema(kintone.app.getId());
+if (!schema_collect) throw new Error();
+const APP_ID_COLLECT                            = schema_collect.id.appId;
 const fieldRecordId_COLLECT                     = schema_collect.fields.properties.レコード番号.code;
 const fieldCollectStatus_COLLECT                = schema_collect.fields.properties.collectStatus.code;
 const statusReady_COLLECT                       = schema_collect.fields.properties.collectStatus.options.クラウドサイン作成待ち.label;
@@ -42,6 +43,9 @@ const fieldCloudSignUrl_COLLECT                 = schema_collect.fields.properti
 const fieldAccount_COLLECT                      = schema_collect.fields.properties.account.code;
 const fieldDaysLater_COLLECT                    = schema_collect.fields.properties.daysLater.code;
 
+// import { schema_96 } from "../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_CONSTRUCTOR                        = schema_96.id.appId;
 const fieldConstructorId_CONSTRUCTOR            = schema_96.fields.properties.id.code;
 const fieldCustomerId_CONSTRUCTOR               = schema_96.fields.properties.customerCode.code;
@@ -58,6 +62,9 @@ const tableFieldReporteeCompany_CONSTRUCTOR     = schema_96.fields.properties.re
 const tableFieldReporteeTitle_CONSTRUCTOR       = schema_96.fields.properties.reportees.fields.reporteeTitle.code;
 const tableFieldReporteeName_CONSTRUCTOR        = schema_96.fields.properties.reportees.fields.reporteeName.code;
 
+// import { schema_28 } from "../28/schema";
+const schema_28 = getCompanyAppSchema(kintone.app.getId());
+if (!schema_28) throw new Error();
 const APP_ID_CUSTOMER               = schema_28.id.appId;
 const fieldCustomerId_CUSTOMER      = schema_28.fields.properties.レコード番号.code;
 const fieldCustomerName_CUSTOMER    = schema_28.fields.properties["法人名・屋号"].code;

@@ -23,11 +23,7 @@ const dayjs = require("dayjs");
 dayjs.locale("ja");
 import isBetween from "dayjs/plugin/isBetween";
 import { Decimal } from "decimal.js";
-import { schema_apply } from "../161/schema";
 import { KE_BAN_CONSTRUCTORS } from "../96/common";
-import { schema_96 } from "../96/schema";
-// import { schema_88 } from "../88/schema";
-import { getLaborAppSchema } from "../util/environments";
 import { isGigConstructorID } from "../util/gig_utils";
 import { CLIENT } from "../util/kintoneAPI";
 import { get_contractor_name } from "../util/util_forms";
@@ -44,6 +40,10 @@ const HALF_COMMISION_END_DATE = dayjs("2021-06-29");
 
 const fieldRecordId_COMMON = "$id";
 
+import { getApplyAppSchema, getOrdererAppSchema, getLaborAppSchema } from "../util/environments";
+// import { schema_apply } from "../161/schema";
+const schema_apply = getApplyAppSchema(kintone.app.getId());
+if (!schema_apply) throw new Error();
 const appId_APPLY                           = kintone.app.getId();
 const devApp_APPLY                          = 159;
 const fieldDetail_APPLY                     = schema_apply.fields.properties.paymentDetail.code;
@@ -92,11 +92,15 @@ const contractor_mail_dandori               = "d-p@invest-d.com";
 const contractor_mail_renove                = "lagless@invest-d.com"; // ラグレスと同じ
 const contractor_mail_logidelipay           = "lagless+logidelipay@invest-d.com";
 
+// import { schema_96 } from "../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_CONSTRUCTOR                    = schema_96.id.appId;
 const earlyPayLimitField_CONSTRUCTOR        = schema_96.fields.properties.applicationLimit.code;
 const resetLimitField_CONSTRUCTOR           = schema_96.fields.properties.monthResetCount.code;
 const fieldDaysLater_APPLY                  = schema_96.fields.properties.daysLater.code; //申込レコードには存在しないが、特定の場合に限り申込レコードに必要なフィールドとして擬似的に定義する
 
+// import { schema_88 } from "../88/schema";
 const schema_88 = getLaborAppSchema(kintone.app.getId());
 if (!schema_88) throw new Error();
 const appId_KYORYOKU                        = schema_88.id.appId;

@@ -5,8 +5,7 @@
 
 "use strict";
 
-import { schema_apply } from "../161/schema";
-import { schema_28 } from "../28/schema";
+import { getApplyAppSchema, getCompanyAppSchema } from "../util/environments";
 import { schema_79 } from "../79/schema";
 import { CLIENT } from "../util/kintoneAPI";
 import {
@@ -25,6 +24,10 @@ import {
 import {
     getSearchQuery
 } from "./antisocialCheck/testableLogics";
+
+// import { schema_apply } from "../161/schema";
+const schema_apply = getApplyAppSchema(kintone.app.getId());
+if (!schema_apply) throw new Error();
 const applyApp = {
     fields: {
         applicantName: schema_apply.fields.properties.company.code,
@@ -34,6 +37,9 @@ const applyApp = {
     }
 };
 
+// import { schema_28 } from "../28/schema";
+const schema_28 = getCompanyAppSchema(kintone.app.getId());
+if (!schema_28) throw new Error();
 const companyApp = {
     fields: {
         corpNum: schema_28.fields.properties.法人番号.code,

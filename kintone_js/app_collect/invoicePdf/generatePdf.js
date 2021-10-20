@@ -1,8 +1,7 @@
 // PDF生成ライブラリ
 import { Decimal } from "decimal.js";
 import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "../../96/common";
-import { schema_96 } from "../../96/schema";
-import { getCollectAppSchema } from "../../util/environments";
+import { getCollectAppSchema, getOrdererAppSchema } from "../../util/environments";
 import { isGigConstructorID } from "../../util/gig_utils";
 import * as kintoneAPI from "../../util/kintoneAPI";
 import { createPdf } from "../../util/pdfMake_util";
@@ -42,6 +41,9 @@ const getAccount = (contractor, constructor_id) => {
 };
 
 
+// import { schema_96 } from "../../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_CONSTRUCTOR                        = schema_96.id.appId;
 const fieldDaysLater_CONSTRUCTOR                = schema_96.fields.properties.daysLater.code;
 

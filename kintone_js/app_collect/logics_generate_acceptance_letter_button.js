@@ -16,31 +16,12 @@ import { KE_BAN_CONSTRUCTORS } from "../96/common";
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
-import { schema_collect } from "../162/schema";
-import { schema_96 } from "../96/schema";
-import { schema_28 } from "../28/schema";
+import { getCollectAppSchema, getOrdererAppSchema, getCompanyAppSchema } from "../util/environments";
 
-const APP_ID = ((app_id) => {
-    switch(app_id) {
-    // 開発版の回収アプリ
-    case 160:
-        return {
-            APPLY: 159,
-            COLLECT: 160
-        };
-
-    // 本番の回収アプリ
-    case 162:
-        return {
-            APPLY: 161,
-            COLLECT: 162
-        };
-    default:
-        console.warn(`Unknown app: ${ app_id }`);
-    }
-})(kintone.app.getId());
-
-const APP_ID_COLLECT                        = APP_ID.COLLECT;
+// import { schema_collect } from "../162/schema";
+const schema_collect = getCollectAppSchema(kintone.app.getId());
+if (!schema_collect) throw new Error();
+const APP_ID_COLLECT                        = schema_collect.id.appId;
 const fieldRecordId_COLLECT                 = schema_collect.fields.properties.レコード番号.code;
 const fieldStatus_COLLECT                   = schema_collect.fields.properties.collectStatus.code;
 const statusReadyToGenerate_COLLECT         = schema_collect.fields.properties.collectStatus.options.クラウドサイン作成待ち.label;
@@ -61,10 +42,16 @@ const tableFieldReceivableAmount_COLLECT    = schema_collect.fields.properties.c
 const fieldTotalAmount_COLLECT              = schema_collect.fields.properties.scheduledCollectableAmount.code;
 const fieldAcceptanceLetterPdf_COLLECT      = schema_collect.fields.properties.cloudSignPdf.code;
 
+// import { schema_96 } from "../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_CONSTRUCTOR                    = schema_96.id.appId;
 const fieldConstructorId_CONSTRUCTOR        = schema_96.fields.properties.id.code;
 const fieldCorporateId_CONSTRUCTOR          = schema_96.fields.properties.customerCode.code;
 
+// import { schema_28 } from "../28/schema";
+const schema_28 = getCompanyAppSchema(kintone.app.getId());
+if (!schema_28) throw new Error();
 const APP_ID_CORPORATE                      = schema_28.id.appId;
 const fieldRecordId_CORPORATE               = schema_28.fields.properties.レコード番号.code;
 const fieldCorporateName_CORPORATE          = schema_28.fields.properties["法人名・屋号"].code;

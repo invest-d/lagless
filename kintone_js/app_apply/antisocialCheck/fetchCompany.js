@@ -1,9 +1,7 @@
 "use strict";
 
-import { schema_apply } from "../../161/schema";
-import { schema_28 } from "../../28/schema";
+import { getApplyAppSchema, getCompanyAppSchema, getOrdererAppSchema } from "../../util/environments";
 import { schema_61 } from "../../61/schema";
-import { schema_96 } from "../../96/schema";
 import { CLIENT } from "../../util/kintoneAPI";
 import { replaceFullWidthNumbers } from "../../util/manipulations";
 import { isKeban } from "../../96/common";
@@ -11,6 +9,9 @@ import { request } from "./corporateApi";
 import { choiceCorporateNumber, cleansedPref, getTransactionType } from "./testableLogics";
 import { isGigConstructorID } from "../../util/gig_utils";
 
+// import { schema_apply } from "../161/schema";
+const schema_apply = getApplyAppSchema(kintone.app.getId());
+if (!schema_apply) throw new Error();
 const applicantName_APPLY = schema_apply.fields.properties.company.code;
 const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
 const applicantPhone_APPLY = schema_apply.fields.properties.phone.code;
@@ -22,6 +23,9 @@ const applicantZipcode_APPLY = schema_apply.fields.properties.postalCode.code;
 const constructorId_APPLY = schema_apply.fields.properties.constructionShopId.code;
 const gigOrdererName_APPLY = schema_apply.fields.properties.ordererGig.code;
 
+// import { schema_28 } from "../../28/schema";
+const schema_28 = getCompanyAppSchema(kintone.app.getId());
+if (!schema_28) throw new Error();
 const recordNo_COMPANY = schema_28.fields.properties.レコード番号.code;
 const companyName_COMPANY = schema_28.fields.properties["法人名・屋号"].code;
 const corporateNum_COMPANY = schema_28.fields.properties.法人番号.code;
@@ -38,6 +42,9 @@ const type_corporate_COMPANY = schema_28.fields.properties.企業形態.options.
 const zipcodeNormal_COMPANY = schema_28.fields.properties.郵便番号_本店.code;
 const zipcodeAuto_COMPANY = schema_28.fields.properties.郵便番号_HubSpotより.code;
 
+// import { schema_96 } from "../../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const constructorApp = {
     fields: {
         constructorId: schema_96.fields.properties.id.code,

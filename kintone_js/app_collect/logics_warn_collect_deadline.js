@@ -2,8 +2,6 @@
     回収アプリで回収期限日が間近のレコードの回収期限フィールドに色を付ける。
 */
 
-import { schema_collect } from "../162/schema";
-
 // 1週間以内に回収期限が来る：黄色
 const bg_within_one_week = "#ffff99";
 // 明日～今日回収期限が来る：ピンク
@@ -11,6 +9,10 @@ const bg_within_one_day = "#f5a9f2";
 // 回収期限日を過ぎている：赤
 const bg_passed_deadline = "#ea5549";
 
+import { getCollectAppSchema } from "../util/environments";
+// import { schema_collect } from "../162/schema";
+const schema_collect = getCollectAppSchema(kintone.app.getId());
+if (!schema_collect) throw new Error();
 const fieldDeadline     = schema_collect.fields.properties.deadline.code;
 const fieldStatus       = schema_collect.fields.properties.collectStatus.code;
 const statusCollected   = schema_collect.fields.properties.collectStatus.options.回収済み.label;

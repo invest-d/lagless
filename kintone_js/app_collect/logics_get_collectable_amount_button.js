@@ -9,21 +9,27 @@
     回収アプリのレコードのうち、回収予定のレコードを取得し、
     取引企業Noごとに回収予定金額を合計し、工務店マスタの未回収金額にセットする。
 */
+import { getApplyAppSchema, getOrdererAppSchema, getCollectAppSchema } from "../util/environments";
 
-import { schema_apply } from "../161/schema";
-import { schema_96 } from "../96/schema";
-import { schema_collect } from "../162/schema";
-
+// import { schema_apply } from "../161/schema";
+const schema_apply = getApplyAppSchema(kintone.app.getId());
+if (!schema_apply) throw new Error();
 const statusPaymentTimingUndefined_APPLY    = schema_apply.fields.properties.paymentTiming.options.未設定.label;
 const statusPaymentTimingEarly_APPLY        = schema_apply.fields.properties.paymentTiming.options.早払い.label;
 const statusPaymentTimingLate_APPLY         = schema_apply.fields.properties.paymentTiming.options.遅払い.label;
 
+// import { schema_96 } from "../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_KOMUTEN                        = schema_96.id.appId;
 const fieldConstructionShopId_KOMUTEN       = schema_96.fields.properties.id.code;
 const fieldCustomerCode_KOMUTEN             = schema_96.fields.properties.customerCode.code;
 const fieldCollectableAmount_KOMUTEN        = schema_96.fields.properties.uncollectedAmount.code;
 const fieldCollectableAmount_late_KOMUTEN   = schema_96.fields.properties.uncollectedAmount_late.code;
 
+// import { schema_collect } from "../162/schema";
+const schema_collect = getCollectAppSchema(kintone.app.getId());
+if (!schema_collect) throw new Error();
 const APP_ID_COLLECT                        = kintone.app.getId();
 const fieldConstructionShopId_COLLECT       = schema_collect.fields.properties.constructionShopId.code;
 const fieldCustomerCode_COLLECT             = schema_collect.fields.properties.customerCode.code;

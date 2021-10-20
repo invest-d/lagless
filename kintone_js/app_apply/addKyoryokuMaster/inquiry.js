@@ -3,7 +3,10 @@
 import { CLIENT } from "../../util/kintoneAPI";
 import { replaceFullWidthNumbers } from "../../util/manipulations";
 
-import { schema_apply } from "../../161/schema";
+import { getApplyAppSchema, getCompanyAppSchema } from "../../util/environments";
+// import { schema_apply } from "../161/schema";
+const schema_apply = getApplyAppSchema(kintone.app.getId());
+if (!schema_apply) throw new Error();
 const applicantName_APPLY           = schema_apply.fields.properties.company.code;
 const applicantRepresentative_APPLY = schema_apply.fields.properties.representative.code;
 const applicantPhone_APPLY          = schema_apply.fields.properties.phone.code;
@@ -12,7 +15,9 @@ const applicantPref_APPLY           = schema_apply.fields.properties.prefecture.
 const applicantAddr_APPLY           = schema_apply.fields.properties.address.code;
 const applicantSt_APPLY             = schema_apply.fields.properties.streetAddress.code;
 
-import { schema_28 } from "../../28/schema";
+// import { schema_28 } from "../../28/schema";
+const schema_28 = getCompanyAppSchema(kintone.app.getId());
+if (!schema_28) throw new Error();
 const recordNo_COMPANY              = schema_28.fields.properties.レコード番号.code;
 const companyName_COMPANY           = schema_28.fields.properties["法人名・屋号"].code;
 const representative_COMPANY        = schema_28.fields.properties.代表者名.code;

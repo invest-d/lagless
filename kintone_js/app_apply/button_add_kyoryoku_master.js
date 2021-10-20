@@ -5,15 +5,12 @@
 
 "use strict";
 
-// import { schema_28 } from "../28/schema";
-// import { schema_88 } from "../88/schema";
 import {
     KE_BAN_CONSTRUCTORS,
     normalizedConstructorId,
     productNameMap
 } from "../96/common";
-import { schema_96 } from "../96/schema";
-import { getApplyAppSchema, getCompanyAppSchema, getLaborAppSchema } from "../util/environments";
+import { getApplyAppSchema, getCompanyAppSchema, getLaborAppSchema, getOrdererAppSchema } from "../util/environments";
 import { isGigConstructorID } from "../util/gig_utils";
 import { CLIENT } from "../util/kintoneAPI";
 import {
@@ -85,6 +82,7 @@ const applyApp = {
     },
 };
 
+// import { schema_88 } from "../88/schema";
 const schema_88 = getLaborAppSchema(kintone.app.getId());
 if (!schema_88) throw new Error();
 const laborApp = {
@@ -158,6 +156,9 @@ const laborApp = {
 };
 
 
+// import { schema_96 } from "../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const ordererApp = {
     fields: {
         id: schema_96.fields.properties.id.code,
@@ -167,6 +168,7 @@ const ordererApp = {
 };
 
 
+// import { schema_28 } from "../28/schema";
 const schema_28 = getCompanyAppSchema(kintone.app.getId());
 if (!schema_28) throw new Error();
 
