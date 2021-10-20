@@ -416,7 +416,7 @@ export const schema_collect = {
             },
             "invoicePdfDate": {
                 "code": "invoicePdfDate",
-                "defaultNowValue": true,
+                "defaultNowValue": false,
                 "defaultValue": "",
                 "label": "振込依頼書に表示する作成日",
                 "noLabel": false,
@@ -1148,7 +1148,7 @@ export const schema_collect = {
                     "closingDate",
                     "original"
                 ],
-                "filterCond": "collectStatus in (\"クラウドサイン承認済み\")",
+                "filterCond": "collectStatus in (\"クラウドサイン承認済み\", \"振込依頼書作成対象\")",
                 "index": "7",
                 "name": "振込依頼書作成",
                 "sort": "deadline asc, constructionShopId desc",
