@@ -330,7 +330,7 @@ export const schema_collect = {
                         "工務店正式名称"
                     ],
                     "relatedApp": {
-                        "app": "96",
+                        "app": "182",
                         "code": ""
                     },
                     "relatedKeyField": "id",
