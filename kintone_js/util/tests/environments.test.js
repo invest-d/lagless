@@ -1,4 +1,4 @@
-import { detectApp, UnknownAppError } from "../choiceApplyAppSchema";
+import { detectApp, UnknownAppError } from "../environments";
 
 test("159を渡すと開発判定になる", () => {
     expect(detectApp(159)).toBe("dev");

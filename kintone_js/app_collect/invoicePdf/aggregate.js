@@ -34,7 +34,8 @@ const APP_ID_APPLY             = applyAppSchema.id.appId;
 const fieldRecordId_APPLY      = applyFields.レコード番号.code;
 const fieldConstructorId_APPLY = applyFields.constructionShopId.code;
 
-import { getCollectAppSchema, detectApp } from "../../util/choiceCollectAppSchema";
+import { getCollectAppSchema } from "../../util/choiceCollectAppSchema";
+import { detectApp } from "../../util/environments";
 const collectAppSchema = (() => {
     try {
         return getCollectAppSchema(kintone.app.getId());
