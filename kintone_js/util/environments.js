@@ -1,5 +1,15 @@
 const ExtensibleCustomError = require("extensible-custom-error");
 export class UnknownAppError extends ExtensibleCustomError { }
+import { schema_apply as applyAppSchemaDev } from "../159/schema";
+import { schema_collect as collectAppSchemaDev } from "../160/schema";
+import { schema_apply as applyAppSchemaProd } from "../161/schema";
+import { schema_collect as collectAppSchemaProd } from "../162/schema";
+import { schema_180 as companyAppSchemaDev } from "../180/schema";
+import { schema_181 as laborAppSchemaDev } from "../181/schema";
+import { schema_182 as ordererAppSchemaDev } from "../182/schema";
+import { schema_28 as companyAppSchemaProd } from "../28/schema";
+import { schema_88 as laborAppSchemaProd } from "../88/schema";
+import { schema_96 as ordererAppSchemaProd } from "../96/schema";
 
 
 const developAppIds = [
@@ -31,71 +41,64 @@ export const detectApp = (appId) => {
 };
 
 
-import { schema_apply as applyAppSchemaDev } from "../159/schema";
-import { schema_apply as applyAppSchemaProd } from "../161/schema";
+const getAppSchema = (displayingAppId, app) => {
+    const apps = {
+        dev: {
+            apply: applyAppSchemaDev,
+            collect: collectAppSchemaDev,
+            company: companyAppSchemaDev,
+            orderer: ordererAppSchemaDev,
+            labor: laborAppSchemaDev,
+        },
+        prod: {
+            apply: applyAppSchemaProd,
+            collect: collectAppSchemaProd,
+            company: companyAppSchemaProd,
+            orderer: ordererAppSchemaProd,
+            labor: laborAppSchemaProd,
+        },
+    };
+
+    const env = detectApp(displayingAppId);
+    return apps[env][app];
+};
+
+
 /**
 * @summary 開発版および本番に応じて、適切なアプリスキーマを返す
 * @param {number | null} displayingAppId - kintone.app.getId() の返り値。既知のアプリのID以外の場合、UnknownAppError を throw
 * @return {Object} スキーマファイルに定義した申込アプリのスキーマ
 */
-export const getApplyAppSchema = (displayingAppId) => {
-    const app = detectApp(displayingAppId);
-    if (app === "dev") return applyAppSchemaDev;
-    if (app === "prod") return applyAppSchemaProd;
-};
+export const getApplyAppSchema = (displayingAppId) => getAppSchema(displayingAppId, "apply");
 
 
-import { schema_collect as collectAppSchemaDev } from "../160/schema";
-import { schema_collect as collectAppSchemaProd } from "../162/schema";
 /**
 * @summary 開発版および本番に応じて、適切なアプリスキーマを返す
 * @param {number | null} displayingAppId - kintone.app.getId() の返り値。既知のアプリのID以外の場合、UnknownAppError を throw
 * @return {Object} スキーマファイルに定義した回収アプリのスキーマ
 */
-export const getCollectAppSchema = (displayingAppId) => {
-    const app = detectApp(displayingAppId);
-    if (app === "dev") return collectAppSchemaDev;
-    if (app === "prod") return collectAppSchemaProd;
-};
+export const getCollectAppSchema = (displayingAppId) => getAppSchema(displayingAppId, "collect");
 
 
-import { schema_180 as companyAppSchemaDev } from "../180/schema";
-import { schema_28 as companyAppSchemaProd } from "../28/schema";
 /**
 * @summary 開発版および本番に応じて、適切なアプリスキーマを返す
 * @param {number | null} displayingAppId - kintone.app.getId() の返り値。既知のアプリのID以外の場合、UnknownAppError を throw
 * @return {Object} スキーマファイルに定義した取引企業管理アプリのスキーマ
 */
-export const getCompanyAppSchema = (displayingAppId) => {
-    const app = detectApp(displayingAppId);
-    if (app === "dev") return companyAppSchemaDev;
-    if (app === "prod") return companyAppSchemaProd;
-};
+export const getCompanyAppSchema = (displayingAppId) => getAppSchema(displayingAppId, "company");
 
 
-import { schema_182 as ordererAppSchemaDev } from "../182/schema";
-import { schema_96 as ordererAppSchemaProd } from "../96/schema";
 /**
 * @summary 開発版および本番に応じて、適切なアプリスキーマを返す
 * @param {number | null} displayingAppId - kintone.app.getId() の返り値。既知のアプリのID以外の場合、UnknownAppError を throw
 * @return {Object} スキーマファイルに定義した工務店マスタアプリのスキーマ
 */
-export const getOrdererAppSchema = (displayingAppId) => {
-    const app = detectApp(displayingAppId);
-    if (app === "dev") return ordererAppSchemaDev;
-    if (app === "prod") return ordererAppSchemaProd;
-};
+export const getOrdererAppSchema = (displayingAppId) => getAppSchema(displayingAppId, "orderer");
 
 
-import { schema_181 as laborAppSchemaDev } from "../181/schema";
-import { schema_88 as laborAppSchemaProd } from "../88/schema";
 /**
 * @summary 開発版および本番に応じて、適切なアプリスキーマを返す
 * @param {number | null} displayingAppId - kintone.app.getId() の返り値。既知のアプリのID以外の場合、UnknownAppError を throw
 * @return {Object} スキーマファイルに定義した協力会社マスタアプリのスキーマ
 */
-export const getLaborAppSchema = (displayingAppId) => {
-    const app = detectApp(displayingAppId);
-    if (app === "dev") return laborAppSchemaDev;
-    if (app === "prod") return laborAppSchemaProd;
-};
+export const getLaborAppSchema = (displayingAppId) => getAppSchema(displayingAppId, "labor");
