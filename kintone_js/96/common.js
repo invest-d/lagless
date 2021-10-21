@@ -18,9 +18,16 @@ export const SHOWA_CONSTRUCTORS = [
     "203",
 ];
 
+export const FROM_KOBE_CONSTRUCTORS = [
+    "800",
+    "801",
+];
+
 export const normalizedConstructorId = (constructorId) => {
     if (KE_BAN_CONSTRUCTORS.includes(constructorId)) {
         return "400";
+    } else if (FROM_KOBE_CONSTRUCTORS.includes(constructorId)) {
+        return "800";
     } else if (isGigConstructorID(constructorId)) {
         return "500";
     } else {
@@ -37,6 +44,7 @@ export const productNameMap = {
         "ラグレス": "ラグレス",
         "リノベ不動産Payment": "リノベ不動産Payment",
         "軽バン.com": "軽バン.com",
+        "ロジデリペイ": "ロジデリペイ",
     },
     fromKomuten: {
         "Workship前払い": "Workship",
@@ -45,5 +53,6 @@ export const productNameMap = {
         "ラグレス": "ラグレス",
         "リノベ不動産Payment": "リノベ不動産Payment",
         "軽バン.com": "軽バン.com",
+        "ロジデリペイ": "ロジデリペイ",
     }
 };

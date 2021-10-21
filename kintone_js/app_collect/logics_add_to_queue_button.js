@@ -22,30 +22,11 @@ import * as kintoneAPI from "../util/kintoneAPI";
 
 const client = kintoneAPI.CLIENT;
 
-const APP_ID = ((app_id) => {
-    switch(app_id) {
-    // 今開いてるのが開発版の回収アプリの場合
-    case 160:
-        return {
-            APPLY: 159,
-            COLLECT: 160
-        };
-
-    // 本番の回収アプリの場合
-    case 162:
-        return {
-            APPLY: 161,
-            COLLECT: 162
-        };
-    default:
-        console.warn(`Unknown app: ${app_id}`);
-    }
-})(kintone.app.getId());
-
-import { schema_collect } from "../162/schema";
-import { schema_apply } from "../161/schema";
-
-const APP_ID_COLLECT                = APP_ID.COLLECT;
+import { getApplyAppSchema, getCollectAppSchema } from "../util/environments";
+// import { schema_collect } from "../162/schema";
+const schema_collect = getCollectAppSchema(kintone.app.getId());
+if (!schema_collect) throw new Error();
+const APP_ID_COLLECT                = schema_collect.id.appId;
 const fieldStatus_COLLECT           = schema_collect.fields.properties.collectStatus.code;
 const fieldRecordId_COLLECT         = schema_collect.fields.properties.レコード番号.code;
 const fieldConstructorId_COLLECT    = schema_collect.fields.properties.constructionShopId.code;
@@ -134,7 +115,10 @@ const fieldConfirmStatus_COLLECT        = schema_collect.fields.properties.confi
 const statusConfirmedInvoice_COLLECT    = schema_collect.fields.properties.confirmStatusInvoice.options.確認OK.label;
 const isParent_COLLECT                  = schema_collect.fields.properties.parentCollectRecord.options.true.label;
 
-const APP_ID_APPLY                      = APP_ID.APPLY;
+// import { schema_apply } from "../161/schema";
+const schema_apply = getApplyAppSchema(kintone.app.getId());
+if (!schema_apply) throw new Error();
+const APP_ID_APPLY                      = schema_apply.id.appId;
 const fieldRecordId_APPLY               = schema_apply.fields.properties.レコード番号.code;
 const fieldStatus_APPLY                 = schema_apply.fields.properties.状態.code;
 const statusPaid_APPLY                  = schema_apply.fields.properties.状態.options.実行完了.label;

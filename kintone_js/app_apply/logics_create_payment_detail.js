@@ -22,14 +22,15 @@
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 import isBetween from "dayjs/plugin/isBetween";
+import { Decimal } from "decimal.js";
+import { KE_BAN_CONSTRUCTORS } from "../96/common";
+import { isGigConstructorID } from "../util/gig_utils";
+import { CLIENT } from "../util/kintoneAPI";
+import { get_contractor_name } from "../util/util_forms";
+import { getNotationText, getServiceFeeText } from "./createPaymentDetail/logics";
 dayjs.extend(isBetween);
 
-import { Decimal } from "decimal.js";
 
-import { get_contractor_name } from "../util/util_forms";
-import { isGigConstructorID } from "../util/gig_utils";
-import { KE_BAN_CONSTRUCTORS } from "../96/common";
-import { CLIENT } from "../util/kintoneAPI";
 
 // 本キャンペーンを打ち出してから最初に案内メールを送信する日
 const HALF_COMMISION_START_DATE = dayjs("2020-12-17");
@@ -39,7 +40,10 @@ const HALF_COMMISION_END_DATE = dayjs("2021-06-29");
 
 const fieldRecordId_COMMON = "$id";
 
-import { schema_apply } from "../161/schema";
+import { getApplyAppSchema, getOrdererAppSchema, getLaborAppSchema } from "../util/environments";
+// import { schema_apply } from "../161/schema";
+const schema_apply = getApplyAppSchema(kintone.app.getId());
+if (!schema_apply) throw new Error();
 const appId_APPLY                           = kintone.app.getId();
 const devApp_APPLY                          = 159;
 const fieldDetail_APPLY                     = schema_apply.fields.properties.paymentDetail.code;
@@ -56,6 +60,7 @@ const fieldProductName_APPLY                = schema_apply.fields.properties.pro
 const statusProductName_Lagless_APPLY       = "ラグレス";
 const statusProductName_Dandori_APPLY       = "ダンドリペイメント";
 const statusProductName_Renove_APPLY        = "リノベ不動産Payment";
+const statusProductName_LogideliPay_APPLY   = "ロジデリペイ";
 const fieldClosingDate_APPLY                = schema_apply.fields.properties.closingDay.code;
 const fieldPaymentDate_APPLY                = schema_apply.fields.properties.paymentDate.code;
 const fieldBillingCompanyName_APPLY         = schema_apply.fields.properties.billingCompanyOfficialName.code;
@@ -85,14 +90,19 @@ const fieldFactorableTotalAmountWFI_APPLY   = schema_apply.fields.properties.fac
 const contractor_mail_lagless               = "lagless@invest-d.com";
 const contractor_mail_dandori               = "d-p@invest-d.com";
 const contractor_mail_renove                = "lagless@invest-d.com"; // ラグレスと同じ
+const contractor_mail_logidelipay           = "lagless+logidelipay@invest-d.com";
 
-import { schema_96 } from "../96/schema";
+// import { schema_96 } from "../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_CONSTRUCTOR                    = schema_96.id.appId;
 const earlyPayLimitField_CONSTRUCTOR        = schema_96.fields.properties.applicationLimit.code;
 const resetLimitField_CONSTRUCTOR           = schema_96.fields.properties.monthResetCount.code;
 const fieldDaysLater_APPLY                  = schema_96.fields.properties.daysLater.code; //申込レコードには存在しないが、特定の場合に限り申込レコードに必要なフィールドとして擬似的に定義する
 
-import { schema_88 } from "../88/schema";
+// import { schema_88 } from "../88/schema";
+const schema_88 = getLaborAppSchema(kintone.app.getId());
+if (!schema_88) throw new Error();
 const appId_KYORYOKU                        = schema_88.id.appId;
 const kyoryokuIdField_KYORYOKU              = schema_88.fields.properties.支払企業No_.code;
 const appliedCountField_KYORYOKU            = schema_88.fields.properties.numberOfApplication.code;
@@ -352,7 +362,8 @@ const getLaglessPaymentDetail = async (record, constructors) => {
     const sender_mail = {
         [statusProductName_Lagless_APPLY]: contractor_mail_lagless,
         [statusProductName_Dandori_APPLY]: contractor_mail_dandori,
-        [statusProductName_Renove_APPLY]: contractor_mail_renove
+        [statusProductName_Renove_APPLY]: contractor_mail_renove,
+        [statusProductName_LogideliPay_APPLY]: contractor_mail_logidelipay,
     }[product_name];
 
     if (!sender_mail) {
@@ -399,7 +410,6 @@ const getLaglessPaymentDetail = async (record, constructors) => {
 
     const kyoryoku_master = await CLIENT.record.getRecords({
         app: appId_KYORYOKU,
-        fields: [appliedCountField_KYORYOKU],
         query: `${kyoryokuIdField_KYORYOKU} = ${Number(record[fieldCustomerId_APPLY]["value"])}`
     });
     const applied_count = Number(kyoryoku_master.records[0][appliedCountField_KYORYOKU]["value"]);
@@ -432,18 +442,7 @@ const getAddresseeName = (company, title, name) => {
 };
 
 async function generateLaglessDetailText(apply_info, should_discount_for_first, constructor, applied_count) {
-    const fee_sign = apply_info.timing === statusLatePayment_APPLY
-        ? "+"
-        : "-";
-
-    // eslint-disable-next-line no-irregular-whitespace
-    let service_fee = `${apply_info.product_name}　利用手数料【（①+②）×${apply_info.commission_percentage}％】　${fee_sign}${apply_info.commission_amount_comma}円`;
-    if (should_discount_for_first) {
-        service_fee = service_fee.concat(" ※【初回申込限定】利用手数料半額キャンペーンが適用されました");
-    }
-
-    // 行ごとに配列で格納し、最後に改行コードでjoinする
-    const former_part = [
+    const summary = [
         `${apply_info.addressee_name}様`,
         "",
         `この度は、${apply_info.product_name}のお申込みありがとうございます。`,
@@ -462,11 +461,25 @@ async function generateLaglessDetailText(apply_info, should_discount_for_first, 
         "",
         // eslint-disable-next-line no-irregular-whitespace
         `${apply_info.construction_shop_name}宛 請求金額（税込）①　${apply_info.billing_amount_comma}円`,
+    ];
+
+    const service_fee = getServiceFeeText({
+        productName: apply_info.product_name,
+        commissionPercentage: apply_info.commission_percentage,
+        paymentTiming: apply_info.timing,
+        commissionAmountComma: apply_info.commission_amount_comma,
+        shouldDiscountForFirst: should_discount_for_first,
+    });
+
+    const withMemberFeeNotation = summary.concat(getNotationText(
+        apply_info.product_name,
+        apply_info.membership_fee_comma
+    ));
+
+    // 行ごとに配列で格納し、最後に改行コードでjoinする
+    const former_part = withMemberFeeNotation.concat([
         "",
-        // eslint-disable-next-line no-irregular-whitespace
-        `差引額（協力会費・立替金等）②　-${apply_info.membership_fee_comma}円`, //ゼロ円であっても -0円 表記
-        "",
-        service_fee,
+        service_fee.join(""),
         "",
         // eslint-disable-next-line no-irregular-whitespace
         `振込手数料（貴社負担）　-${apply_info.transfer_fee_tax_incl_comma}円`,
@@ -474,7 +487,7 @@ async function generateLaglessDetailText(apply_info, should_discount_for_first, 
         // eslint-disable-next-line no-irregular-whitespace
         `当社から貴社へのお振込み予定金額　${apply_info.transfer_amount_of_money_comma}円`,
         "",
-    ];
+    ]);
 
     const getFactoringLimitText = async (apply_info, constructor, applied_count) => {
         const limit = constructor[earlyPayLimitField_CONSTRUCTOR]["value"]

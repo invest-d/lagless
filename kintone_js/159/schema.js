@@ -371,7 +371,7 @@ export const schema_apply = {
                         "支払元口座"
                     ],
                     "relatedApp": {
-                        "app": "96",
+                        "app": "182",
                         "code": ""
                     },
                     "relatedKeyField": "id",
@@ -922,10 +922,12 @@ export const schema_apply = {
                     "filterCond": "",
                     "lookupPickerFields": [
                         "支払企業No_",
-                        "支払先正式名称"
+                        "支払先正式名称",
+                        "工務店ID",
+                        "工務店名"
                     ],
                     "relatedApp": {
-                        "app": "88",
+                        "app": "181",
                         "code": ""
                     },
                     "relatedKeyField": "支払企業No_",
@@ -2225,6 +2227,7 @@ export const schema_apply = {
                     "支払先正式名称",
                     "担当者名",
                     "役職名",
+                    "constructionShopId",
                     "productName",
                     "closingDay",
                     "paymentDate",

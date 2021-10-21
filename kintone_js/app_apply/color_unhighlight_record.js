@@ -2,24 +2,10 @@
     申込アプリにおいて、実行完了|取下げレコードを見た目上グレーアウトする
 */
 
+import { getApplyAppSchema } from "../util/environments";
 import { CLIENT } from "../util/kintoneAPI";
-import { getApplyAppSchema, UnknownAppError } from "../util/choiceApplyAppSchema";
 
-const schema = (() => {
-    try {
-        return getApplyAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。申込アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+const schema = getApplyAppSchema(kintone.app.getId());
 if (!schema) throw new Error();
 const applyFields = schema.fields.properties;
 const recordNoApply = applyFields.レコード番号.code;

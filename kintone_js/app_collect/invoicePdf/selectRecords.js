@@ -1,21 +1,7 @@
+import { getCollectAppSchema } from "../../util/environments";
 import * as kintoneAPI from "../../util/kintoneAPI";
 
-import { getCollectAppSchema, UnknownAppError } from "../../util/choiceCollectAppSchema";
-const collectAppSchema = (() => {
-    try {
-        return getCollectAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。回収アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+const collectAppSchema = getCollectAppSchema(kintone.app.getId());
 if (!collectAppSchema) throw new Error();
 const collectFields = collectAppSchema.fields.properties;
 const APP_ID_COLLECT                            = collectAppSchema.id.appId;

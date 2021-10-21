@@ -1,55 +1,30 @@
 
-import { asyncMap, asyncFlatMap } from "../../util/async-flat-map";
 import { Decimal } from "decimal.js";
+import { isKeban, KE_BAN_PRODUCT_NAME } from "../../96/common";
+import { asyncFlatMap, asyncMap } from "../../util/async-flat-map";
+import { detectApp, getApplyAppSchema, getCollectAppSchema, getOrdererAppSchema } from "../../util/environments";
+import { isGigConstructorID } from "../../util/gig_utils";
+import * as kintoneAPI from "../../util/kintoneAPI";
+import { getUniqueCombinations } from "../../util/manipulations";
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
-import * as kintoneAPI from "../../util/kintoneAPI";
-
-import { schema_96 } from "../../96/schema";
+// import { schema_96 } from "../../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_CONSTRUCTOR                        = schema_96.id.appId;
 const fieldConstructorId_CONSTRUCTOR            = schema_96.fields.properties.id.code;
 const fieldTmpcommissionRate_CONSTRUCTOR        = schema_96.fields.properties.tmpcommissionRate.code;
 const fieldConstructorName_CONSTRUCTOR          = schema_96.fields.properties.工務店正式名称.code;
 
-import { getApplyAppSchema, UnknownAppError } from "../../util/choiceApplyAppSchema";
-const applyAppSchema = (() => {
-    try {
-        return getApplyAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。申込アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+const applyAppSchema = getApplyAppSchema(kintone.app.getId());
 if (!applyAppSchema) throw new Error();
 const applyFields = applyAppSchema.fields.properties;
 const APP_ID_APPLY             = applyAppSchema.id.appId;
 const fieldRecordId_APPLY      = applyFields.レコード番号.code;
 const fieldConstructorId_APPLY = applyFields.constructionShopId.code;
 
-import { getCollectAppSchema, detectApp } from "../../util/choiceCollectAppSchema";
-const collectAppSchema = (() => {
-    try {
-        return getCollectAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。回収アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+const collectAppSchema = getCollectAppSchema(kintone.app.getId());
 if (!collectAppSchema) throw new Error();
 const collectFields = collectAppSchema.fields.properties;
 const fieldRecordId_COLLECT                     = collectFields.レコード番号.code;
@@ -76,9 +51,6 @@ const tableFieldActuallyOrdererIV_COLLECT       = collectFields.invoiceTargets.f
 const fieldInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.code;
 const labelInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.label;
 
-import { isKeban, KE_BAN_PRODUCT_NAME } from "../../96/common";
-import { isGigConstructorID } from "../../util/gig_utils";
-import { getUniqueCombinations } from "../../util/manipulations";
 
 const ExtensibleCustomError = require("extensible-custom-error");
 export class UndefinedPdfDateError extends ExtensibleCustomError { }

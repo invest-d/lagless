@@ -1,9 +1,14 @@
 // PDF生成ライブラリ
-import { createPdf } from "../../util/pdfMake_util";
-
 import { Decimal } from "decimal.js";
+import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "../../96/common";
+import { getCollectAppSchema, getOrdererAppSchema } from "../../util/environments";
+import { isGigConstructorID } from "../../util/gig_utils";
+import * as kintoneAPI from "../../util/kintoneAPI";
+import { createPdf } from "../../util/pdfMake_util";
+import { addComma, formatYMD, get_contractor_name, get_display_payment_timing } from "../../util/util_forms";
+import { getInvoiceTargetQuery } from "./selectRecords";
 
-import { formatYMD, addComma, get_contractor_name, get_display_payment_timing } from "../../util/util_forms";
+
 
 // 祝日判定ライブラリ
 const holiday_jp = require("@holiday-jp/holiday_jp");
@@ -12,8 +17,6 @@ const dateFns = require("date-fns");
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
-import { KE_BAN_CONSTRUCTORS, KE_BAN_PRODUCT_NAME } from "../../96/common";
-import { isGigConstructorID } from "../../util/gig_utils";
 
 const ACCOUNTS = {
     "株式会社NID": {
@@ -37,28 +40,14 @@ const getAccount = (contractor, constructor_id) => {
     return ACCOUNTS[contractor].smbc;
 };
 
-import * as kintoneAPI from "../../util/kintoneAPI";
 
-import { schema_96 } from "../../96/schema";
+// import { schema_96 } from "../../96/schema";
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_CONSTRUCTOR                        = schema_96.id.appId;
 const fieldDaysLater_CONSTRUCTOR                = schema_96.fields.properties.daysLater.code;
 
-import { getCollectAppSchema, UnknownAppError } from "../../util/choiceCollectAppSchema";
-const collectAppSchema = (() => {
-    try {
-        return getCollectAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。回収アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+const collectAppSchema = getCollectAppSchema(kintone.app.getId());
 if (!collectAppSchema) throw new Error();
 const collectFields = collectAppSchema.fields.properties;
 const APP_ID_COLLECT                            = collectAppSchema.id.appId;
@@ -73,8 +62,6 @@ const fieldMailToInvest_COLLECT                 = collectFields.mailToInvest.cod
 const fieldClosingDate_COLLECT                  = collectFields.closingDate.code;
 const fieldAccount_COLLECT                      = collectFields.account.code;
 const fieldDaysLater_COLLECT                    = collectFields.daysLater.code;
-const fieldStatus_COLLECT                       = collectFields.collectStatus.code;
-const statusApproved_COLLECT                    = collectFields.collectStatus.options.クラウドサイン承認済み.label;
 const fieldParentCollectRecord_COLLECT          = collectFields.parentCollectRecord.code;
 const statusParent_COLLECT                      = collectFields.parentCollectRecord.options.true.label;
 const fieldTotalBilledAmount_COLLECT            = collectFields.totalBilledAmount.code;
@@ -97,7 +84,6 @@ const black = "#000000";
 const green = "#008080";
 const light_green = "#009999";
 
-import { getInvoiceTargetQuery } from "./selectRecords";
 
 export async function generateInvoices() {
     // PDF生成対象かつ親レコードを全て取得

@@ -10,9 +10,12 @@
 */
 
 import { getParentAndChildCollectRecords, updateStatus } from "./logics_add_to_queue_button";
-import { schema_collect } from "../162/schema";
 
-const APP_ID_COLLECT                    = kintone.app.getId();
+import { getCollectAppSchema } from "../util/environments";
+// import { schema_collect } from "../162/schema";
+const schema_collect = getCollectAppSchema(kintone.app.getId());
+if (!schema_collect) throw new Error();
+const APP_ID_COLLECT                    = schema_collect.id.appId;
 const fieldStatus_COLLECT               = schema_collect.fields.properties.collectStatus.code;
 const statusUnsend_COLLECT              = schema_collect.fields.properties.collectStatus.options.振込依頼書作成対象.label;
 const unsendTarget = [

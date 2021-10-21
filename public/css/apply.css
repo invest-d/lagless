@@ -30,6 +30,14 @@ img.renove-v2-logo {
     content: url("../images/renove-v2.png");
 }
 
+img.logidelipay-v1-logo {
+    content: url("../images/logidelipay.png");
+}
+
+img.logidelipay-v2-logo {
+    content: url("../images/logidelipay-v2.png");
+}
+
 @media (min-width: 800px) {
     .container {
     max-width: 750px;

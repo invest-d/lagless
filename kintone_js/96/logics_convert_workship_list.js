@@ -6,18 +6,24 @@
 
 "use strict";
 
+// @ts-ignore
 const client = new KintoneRestAPIClient({baseUrl: "https://investdesign.cybozu.com"});
 import { Decimal } from "decimal.js";
 
 const commonRecordIdDisplay = "レコード番号";
 const commonRecordId        = "$id";
 
-import { schema_28 } from "../28/schema";
+import { getCompanyAppSchema, getOrdererAppSchema } from "../util/environments";
+// @ts-ignore
+const schema_28 = getCompanyAppSchema(kintone.app.getId());
+if (!schema_28) throw new Error();
 const APP_ID_CUSTOMER                   = schema_28.id.appId;
 const fieldcodeCustomerName_Customer    = schema_28.fields.properties["法人名・屋号"].code;
 const fieldcodeCustomerNameAlt_Customer = schema_28.fields.properties["法人名・屋号_HubSpotより"].code;
 
-import { schema_96 } from "./schema";
+// @ts-ignore
+const schema_96 = getOrdererAppSchema(kintone.app.getId());
+if (!schema_96) throw new Error();
 const APP_ID_CONSTRUCTOR                            = schema_96.id.appId;
 const fieldcodeConstructorId_CONSTRUCTOR            = schema_96.fields.properties.id.code;
 const fielddspConstructorId_CONSTRUCTOR             = schema_96.fields.properties.id.label;

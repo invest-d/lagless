@@ -33,22 +33,12 @@
 const dayjs = require("dayjs");
 dayjs.locale("ja");
 
-import { getCollectAppSchema, UnknownAppError } from "../util/choiceCollectAppSchema";
-const collectAppSchema = (() => {
-    try {
-        return getCollectAppSchema(kintone.app.getId());
-    } catch (e) {
-        if (e instanceof UnknownAppError) {
-            alert("不明なアプリです。回収アプリで実行してください。");
-        } else {
-            console.error(e);
-            const additional_info = e.message ?? JSON.stringify(e);
-            alert("途中で処理に失敗しました。システム管理者に連絡してください。"
-                + "\n追加の情報: "
-                + `\n${additional_info}`);
-        }
-    }
-})();
+import { getCollectAppSchema } from "../util/environments";
+import * as kintoneAPI from "../util/kintoneAPI";
+import { getAggregatedParentRecords } from "./invoicePdf/aggregate";
+import { generateInvoices } from "./invoicePdf/generatePdf";
+import { getTargetRecords } from "./invoicePdf/selectRecords";
+const collectAppSchema = getCollectAppSchema(kintone.app.getId());
 if (!collectAppSchema) throw new Error();
 const collectFields = collectAppSchema.fields.properties;
 const APP_ID_COLLECT                            = collectAppSchema.id.appId;
@@ -56,11 +46,7 @@ const statusInvoiceTarget_COLLECT               = collectFields.collectStatus.op
 const fieldInvoicePdf_COLLECT                   = collectFields.invoicePdf.code;
 const fieldConfirmStatusInvoice_COLLECT         = collectFields.confirmStatusInvoice.code;
 
-import * as kintoneAPI from "../util/kintoneAPI";
 
-import { getTargetRecords } from "./invoicePdf/selectRecords";
-import { getAggregatedParentRecords } from "./invoicePdf/aggregate";
-import { generateInvoices } from "./invoicePdf/generatePdf";
 
 const button_id = "generateInvoice";
 export function needShowButton() {

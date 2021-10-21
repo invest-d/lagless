@@ -1,4 +1,4 @@
-export const schema_88 = {
+export const schema_181 = {
     "fields": {
         "properties": {
             "applicationLimit": {
@@ -323,7 +323,7 @@ export const schema_88 = {
                         "工務店名"
                     ],
                     "relatedApp": {
-                        "app": "96",
+                        "app": "182",
                         "code": ""
                     },
                     "relatedKeyField": "id",
@@ -616,8 +616,8 @@ export const schema_88 = {
         }
     },
     "id": {
-        "appId": "88",
-        "name": "協力会社マスタ"
+        "appId": "181",
+        "name": "DEV_協力会社マスタ"
     },
     "layout": {
         "layout": [

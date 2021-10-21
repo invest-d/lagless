@@ -4,35 +4,20 @@
     具体的には、表示中の回収レコードのレコード番号を、申込レコードの回収IDフィールドにセットしている申込について、回収IDフィールドをブランクで上書きする。
 */
 
-import { schema_collect } from "../162/schema";
-import { schema_apply } from "../161/schema";
+import { getApplyAppSchema, getCollectAppSchema } from "../util/environments";
 
-const APP_ID = ((app_id) => {
-    switch(app_id) {
-    // 開発版の回収アプリ
-    case 160:
-        return {
-            APPLY: 159,
-            COLLECT: 160
-        };
-
-    // 本番の回収アプリ
-    case 162:
-        return {
-            APPLY: 161,
-            COLLECT: 162
-        };
-    default:
-        console.warn(`Unknown app: ${  app_id}`);
-    }
-})(kintone.app.getId());
-
-const APP_ID_COLLECT            = APP_ID.COLLECT;
+// import { schema_collect } from "../162/schema";
+const schema_collect = getCollectAppSchema(kintone.app.getId());
+if (!schema_collect) throw new Error();
+const APP_ID_COLLECT            = schema_collect.id.appId;
 const fieldRecordNo_COLLECT     = schema_collect.fields.properties.レコード番号.code;
 const fieldStatus_COLLECT       = schema_collect.fields.properties.collectStatus.code;
 const statusRejected_COLLECT    = schema_collect.fields.properties.collectStatus.options["クラウドサイン却下・再作成待ち"].label;
 
-const APP_ID_APPLY          = APP_ID.APPLY;
+// import { schema_apply } from "../161/schema";
+const schema_apply = getApplyAppSchema(kintone.app.getId());
+if (!schema_apply) throw new Error();
+const APP_ID_APPLY          = schema_apply.id.appId;
 const fieldRecordNo_APPLY   = schema_apply.fields.properties.レコード番号.code;
 const fieldCollectId_APPLY  = schema_apply.fields.properties.collectId.code;
 

@@ -84,8 +84,23 @@
 
 .cond-lagless,
 .cond-dandori,
-.cond-renove {
+.cond-renove,
+.cond-logidelipay {
     display: none;
+}
+
+img.contain {
+    width: 100%;
+    object-fit: contain;
+}
+
+/* ちょっとデカくなっちゃうロゴをpaddingで調整 */
+div.cond-lagless {
+    margin: 0% 30%;
+}
+
+div.cond-dandori {
+    margin: 0% 15%;
 }
 
 a.act_button {
