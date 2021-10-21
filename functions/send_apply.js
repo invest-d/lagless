@@ -93,13 +93,13 @@ exports.send_apply = functions.https.onRequest((req, res) => {
 
                 // 申込受付メールを送信
                 const payload = {
-                    "app": 96,
+                    "app": env.appIdKomuten,
                     "fields": ["支払元口座", "service"],
                     "query": `id = "${post_succeed.record.constructionShopId.value}"`,
                 };
                 const token = process.env.api_token_komuten_sendauto;
                 const headers = {
-                    "Host": "investdesign.cybozu.com:96",
+                    "Host": `investdesign.cybozu.com:${env.appIdKomuten}`,
                     "X-Cybozu-API-Token": token,
                     "Authorization": `Basic ${token}`,
                     "Content-Type": "application/json",
@@ -318,6 +318,7 @@ class Environ {
             this.api_token_record = process.env.api_token_apply_record_dev;
             this.api_token_files = process.env.api_token_apply_files_dev;
             this.api_token_put = process.env.api_token_apply_put_dev;
+            this.appIdKomuten = 182;
             this.success_redirect_to = `${this.host}/apply_complete.html`;
         } else if (this.host === process.env.form_prod) {
             // 本番環境
@@ -325,6 +326,7 @@ class Environ {
             this.api_token_record = process.env.api_token_apply_record_prod;
             this.api_token_files = process.env.api_token_apply_files_prod;
             this.api_token_put = process.env.api_token_apply_put_prod;
+            this.appIdKomuten = 96;
             this.success_redirect_to = `${this.host}/apply_complete.html`;
         } else {
             // それ以外
