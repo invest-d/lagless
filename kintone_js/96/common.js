@@ -44,6 +44,7 @@ export const productNameMap = {
         "ラグレス": "ラグレス",
         "リノベ不動産Payment": "リノベ不動産Payment",
         "軽バン.com": "軽バン.com",
+        "ロジデリペイ": "ロジデリペイ",
     },
     fromKomuten: {
         "Workship前払い": "Workship",
@@ -52,5 +53,6 @@ export const productNameMap = {
         "ラグレス": "ラグレス",
         "リノベ不動産Payment": "リノベ不動産Payment",
         "軽バン.com": "軽バン.com",
+        "ロジデリペイ": "ロジデリペイ",
     }
 };
