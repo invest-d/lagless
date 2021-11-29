@@ -8,6 +8,23 @@
   height: 258px;
 }
 
+.grid {
+  display: grid;
+}
+
+/* 表示したい文字数が9文字+余裕を持たせて0.8 */
+.wfi-campaign-grid-outer {
+  grid-template-columns: 9.8rem 1fr;
+}
+
+.wfi-campaign-grid-inner {
+  grid-template-columns: 9.8rem 1fr;
+}
+
+.grid-title {
+  text-align: right;
+}
+
 .contact-card {
   width: 24rem;
 }
@@ -126,6 +143,14 @@ div#unavailable > div {
 
 .emphasize.blue {
   color: #0055c4;
+}
+
+.emphasize.red {
+  color: #dc3545;
+}
+
+.emphasize.bold {
+  font-weight: bold;
 }
 
 span.wrap-block {
