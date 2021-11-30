@@ -1,18 +1,35 @@
-import "../public/rollbar/rollbar";
-
-import $ from "jquery";
 import dayjs from "dayjs";
 import "dayjs/locale/ja";
-dayjs.locale("ja");
+import $ from "jquery";
+import "../public/rollbar/rollbar";
+import { defineIncludesPolyfill } from "./defineIncludesPolyfill";
 import {
-    TODAY,
-    get_terms_prev_now_next,
-    get_available_terms,
-    SERVICE_START_DATE
+    getUrlParam
+} from "./logics/common";
+import {
+    get_available_terms, get_terms_prev_now_next, SERVICE_START_DATE, TODAY
 } from "./logics/ke_ban";
 
-import { defineIncludesPolyfill } from "./defineIncludesPolyfill";
+dayjs.locale("ja");
+
+
 defineIncludesPolyfill();
+
+const isCampaign = (today) => {
+    const CAMPAIGN_START = dayjs("2021-12-01");
+    const CAMPAIGN_END = dayjs("2021-12-31");
+
+    const debugFlag = getUrlParam("campaign");
+    if (debugFlag && debugFlag.startsWith("t")) {
+        // expect "true"
+        return true;
+    } else if (debugFlag && debugFlag.startsWith("f")) {
+        // expect "false";
+        return false;
+    }
+
+    return today.isValid() && today.isBetween(CAMPAIGN_START, CAMPAIGN_END, null, "[]");
+};
 
 $(() => {
     const terms = get_terms_prev_now_next(TODAY);
@@ -38,5 +55,16 @@ $(() => {
         document.getElementById("available_term").innerText = message;
     } else {
         document.getElementById("available_term").innerText = `${display_terms.join("\r\n")}`;
+    }
+
+    // キャンペーン期間かどうかに応じて、対応する要素の表示を切り替える
+    if (isCampaign(TODAY)) {
+        console.log("campaign goes on");
+        $(".usual").hide();
+        $(".campaign").show();
+    } else {
+        console.log("no campaigns");
+        $(".usual").show();
+        $(".campaign").hide();
     }
 });
