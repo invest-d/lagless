@@ -31,9 +31,9 @@ const ACCOUNTS = {
     },
 };
 
-const getAccount = (contractor, constructor_id) => {
-    // 一部の工務店ではGMOあおぞらネット銀行を利用する
-    if (KE_BAN_CONSTRUCTORS.includes(constructor_id)) {
+const getAccount = (contractor) => {
+    // L2GKの振込は全てgmoあおぞらを優先して使う
+    if (contractor === "ラグレス2合同会社") {
         return ACCOUNTS[contractor].gmo_aozora;
     }
 
@@ -411,7 +411,7 @@ function generateInvoiceDocument(parent_record) {
     account_title.margin = [0, 30, 0, 0];
 
     const account_value = JSON.parse(JSON.stringify(billing_value_template));
-    account_value.text = getAccount(contact_company, parent_record[fieldConstructionShopId_COLLECT]["value"]);
+    account_value.text = getAccount(contact_company);
     account_value.rowSpan = 3;
     account_value.fontSize = 8;
     account_value.margin = ((text) => {
@@ -662,7 +662,7 @@ const getGigDoc = (parent_record) => {
     account_title.margin = [0, 30, 0, 0];
 
     const account_value = JSON.parse(JSON.stringify(billing_value_template));
-    account_value.text = getAccount(contact_company, parent_record[fieldConstructionShopId_COLLECT]["value"]);
+    account_value.text = getAccount(contact_company);
     account_value.rowSpan = 3;
     account_value.fontSize = 8;
     account_value.margin = ((text) => {
