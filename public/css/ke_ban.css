@@ -76,19 +76,6 @@ tbody td.border-none {
 tbody td.focus {
   background-color: #fcc;
 }
-button.act {
-  background-color: #f00;
-  color: #fff;
-  border-radius: 4px;
-  width: 260px;
-  height: 44px;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-}
-button.act:hover {
-  background-color: #fcc;
-}
 .small {
   font-size: 0.8rem;
 }
@@ -102,13 +89,22 @@ a {
   text-decoration: none;
 }
 button.act {
-  width: 160px;
   display: block;
   margin-bottom: 20px;
   margin-left: auto;
   margin-right: auto;
+  background-color: #f00;
+  color: #fff;
+  border-radius: 4px;
+  width: 260px;
+  height: 44px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
 }
-
+button.act:hover {
+  background-color: #fcc;
+}
 div#unavailable {
   background-color: #ddd;
   position: absolute;
