@@ -98,25 +98,10 @@ button.act:hover {
 .block {
   margin-bottom: 2rem;
 }
-#float_act {
-  position: fixed;
-  top: 400px;
-  right: 40px;
-  width: 200px;
-  box-shadow: 0px 0px 6px 3px #666;
-  padding: 0px;
-  padding-top: 24px;
-  background-color: #fff;
-}
-#float_act div {
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 20px;
-}
-#float_act a {
+a {
   text-decoration: none;
 }
-#float_act button.act {
+button.act {
   width: 160px;
   display: block;
   margin-bottom: 20px;
