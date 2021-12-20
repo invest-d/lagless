@@ -85,6 +85,21 @@ tbody td.focus {
 .block {
   margin-bottom: 2rem;
 }
+div.flex {
+  display: flex;
+}
+
+div.flex.align.stretch {
+  align-items: stretch;
+}
+
+div.flex.justify.center {
+  justify-content: center;
+}
+
+div.flex.gap {
+  gap: 1.5rem;
+}
 a {
   text-decoration: none;
 }
@@ -96,8 +111,8 @@ button.act {
   background-color: #f00;
   color: #fff;
   border-radius: 4px;
-  width: 260px;
-  height: 44px;
+  width: 280px;
+  height: 100%;
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
@@ -136,4 +151,7 @@ div#unavailable > div {
 
 span.wrap-block {
   display: inline-block;
+}
+p.wrap-lines {
+  margin: 0.2rem;
 }
