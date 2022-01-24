@@ -315,8 +315,8 @@ function generateInvoiceDocument(parent_record) {
                 text: `${contact_company}\n`,
                 bold: true
             },
-            "東京都千代田区神田神保町三丁目\n",
-            "5番地 住友不動産九段下ビル7F\n",
+            "東京都千代田区麹町二丁目2番22号\n",
+            "ACN半蔵門ビル10階\n",
             `Mail:${mail}\n`,
             `TEL:${tel}\n`
         ],
