@@ -139,15 +139,25 @@ exports.send_apply = functions.https.onRequest((req, res) => {
 
                 if (post_succeed.record["mail"]["value"]) {
                     // reference: https://sendgrid.kke.co.jp/docs/API_Reference/SMTP_API/integrating_with_the_smtp_api.html
-                    const options = {
-                        host: "smtp.sendgrid.net",
-                        port: 465,
-                        requiresAuth: true,
-                        auth: {
-                            user: "apikey",
-                            pass: process.env.SENDGRID_APIKEY,
-                        },
-                    };
+                    const options = (() =>
+                        // 開発環境ではmailtrapを使用
+                        env.app_id === process.env.app_id_apply_dev ? ({
+                            host: "smtp.mailtrap.io",
+                            port: 2525,
+                            requiresAuth: true,
+                            auth: {
+                                user: process.env.MAILTRAP_USER,
+                                pass: process.env.MAILTRAP_PASS,
+                            },
+                        }) : ({
+                            host: "smtp.sendgrid.net",
+                            port: 465,
+                            requiresAuth: true,
+                            auth: {
+                                user: "apikey",
+                                pass: process.env.SENDGRID_APIKEY,
+                            },
+                        }))();
 
                     const mail = {
                         from: "lagless@invest-d.com",
