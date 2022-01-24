@@ -5,6 +5,7 @@ const Busboy = require("busboy");
 const axios = require("axios");
 
 const sendgrid = require("@sendgrid/mail");
+sendgrid.setApiKey(process.env.wfi_sendgrid_api_key);
 
 const fs = require("fs");
 const path = require("path");
@@ -224,9 +225,8 @@ exports.ke_ban_form = functions.https.onRequest(async (req, res) => {
                     delete internal_message.attachments;
                 }
 
-                sendgrid.setApiKey(process.env.wfi_sendgrid_api_key);
                 console.log(`sending internal notification... To: ${internal_message.to}`);
-                await sendgrid.send(internal_message)
+                await sendMail(internal_message)
                     .catch((error) => {
                         console.error(`KE-BAN:社内通知メール送信エラー：${JSON.stringify(error)}`);
                         respond_error(res, error);
@@ -245,7 +245,7 @@ exports.ke_ban_form = functions.https.onRequest(async (req, res) => {
                     delete auto_reply_message.attachments;
                 }
                 console.log(`sending auto reply... To: ${auto_reply_message.to}`);
-                await sendgrid.send(auto_reply_message)
+                await sendMail(auto_reply_message)
                     .catch((error) => {
                         // このメールは最悪届かなくてもオペレーションを続行できるため、フロントにはエラーを返さない
                         console.error(`KE-BAN:申込受付自動返信メール送信エラー：${JSON.stringify(error)}`);
@@ -285,6 +285,8 @@ exports.ke_ban_form = functions.https.onRequest(async (req, res) => {
     }
 
 });
+
+const sendMail = async (message) => sendgrid.send(message);
 
 function uploadToKintone(token, attachment, filename) {
     const form = new FormData();
