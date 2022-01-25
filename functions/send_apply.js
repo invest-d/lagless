@@ -1,7 +1,7 @@
 const functions = require("firebase-functions");
-const {Storage} = require("@google-cloud/storage");
+const { Storage } = require("@google-cloud/storage");
 
-const {PubSub} = require("@google-cloud/pubsub");
+const { PubSub } = require("@google-cloud/pubsub");
 const file_process_topic = "attach_apply_files";
 
 const axios = require("axios");
@@ -10,7 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const auto_text = fs.readFileSync(path.join(__dirname, "autoMail_template.txt"), "utf8");
 const SMS_text = fs.readFileSync(path.join(__dirname, "autoSMS_template.txt"), "utf8");
-const date = new Date ();
+const date = new Date();
 
 // sms送信用
 const AWS = require("aws-sdk");
@@ -125,29 +125,39 @@ exports.send_apply = functions.https.onRequest((req, res) => {
 
                 // 支払い元口座によって変化する会社名、また商品名と申し込み時の日付をrecordに追加
                 if (accountFrom === "ID") {
-                    post_succeed.record["contractor"] = {"value": "ラグレス２合同会社"};
+                    post_succeed.record["contractor"] = { "value": "ラグレス２合同会社" };
                 } else if (accountFrom === "LAGLESS") {
-                    post_succeed.record["contractor"] = {"value": "ラグレス合同会社"};
+                    post_succeed.record["contractor"] = { "value": "ラグレス合同会社" };
                 }
-                post_succeed.record["product_name"] = {"value": productName};
-                post_succeed.record["date_now"] = {"value": dateNow};
+                post_succeed.record["product_name"] = { "value": productName };
+                post_succeed.record["date_now"] = { "value": dateNow };
 
                 // 既存の顧客の場合、預金項目のkeyがrecordに存在しないため空欄で追加する
                 if (!isNewUser(post_succeed.record)) {
-                    post_succeed.record["deposit_Form"] = {"value": ""};
+                    post_succeed.record["deposit_Form"] = { "value": "" };
                 }
 
                 if (post_succeed.record["mail"]["value"]) {
                     // reference: https://sendgrid.kke.co.jp/docs/API_Reference/SMTP_API/integrating_with_the_smtp_api.html
-                    const options = {
-                        host: "smtp.sendgrid.net",
-                        port: 465,
-                        requiresAuth: true,
-                        auth: {
-                            user: "apikey",
-                            pass: process.env.SENDGRID_APIKEY,
-                        },
-                    };
+                    const options = (() =>
+                        // 開発環境ではmailtrapを使用
+                        env.app_id === process.env.app_id_apply_dev ? ({
+                            host: "smtp.mailtrap.io",
+                            port: 2525,
+                            requiresAuth: true,
+                            auth: {
+                                user: process.env.MAILTRAP_USER,
+                                pass: process.env.MAILTRAP_PASS,
+                            },
+                        }) : ({
+                            host: "smtp.sendgrid.net",
+                            port: 465,
+                            requiresAuth: true,
+                            auth: {
+                                user: "apikey",
+                                pass: process.env.SENDGRID_APIKEY,
+                            },
+                        }))();
 
                     const mail = {
                         from: "lagless@invest-d.com",
@@ -162,12 +172,12 @@ exports.send_apply = functions.https.onRequest((req, res) => {
                 } else {
                     const number = post_succeed.record["phone"]["value"].replace(0, "+81");
                     let subject = "dandoliPay";
-                    if (productName=="リノベ不動産Payment") subject = "renovePay";
-                    if (productName=="ラグレス") subject = "lagless";
+                    if (productName == "リノベ不動産Payment") subject = "renovePay";
+                    if (productName == "ラグレス") subject = "lagless";
 
                     // 登録情報のメールアドレスが空欄の時のみ、SMSを送信
                     sendSMS(number, subject, replaceMail(SMS_text, post_succeed.record), (err, result) => {
-                        console.log("RESULTS: ",err,result);
+                        console.log("RESULTS: ", err, result);
                     });
                 }
 
@@ -211,7 +221,7 @@ async function post_apply_record(form_text_data, env) {
 
         // フォームの入力内容を読み取る
         for (const key of Object.keys(form_data)) {
-            record[key]= {"value": form_data[key]};
+            record[key] = { "value": form_data[key] };
         }
 
         // 預金種目を日本語に変換。この情報をサーバに送信しない場合（＝既存ユーザの場合）もあるので、そのときは変換もなし
@@ -220,7 +230,7 @@ async function post_apply_record(form_text_data, env) {
                 ? "普通"
                 : "当座";
 
-            record["deposit_Form"] = {"value": ja_deposit_type};
+            record["deposit_Form"] = { "value": ja_deposit_type };
         }
 
         // 支払タイミングを日本語に変換
@@ -229,7 +239,7 @@ async function post_apply_record(form_text_data, env) {
                 ? "遅払い"
                 : "早払い";
 
-            record["paymentTiming"] = {"value": ja_payment_timing};
+            record["paymentTiming"] = { "value": ja_payment_timing };
         }
 
         // 申込アプリに書き込み不要な項目を削除
@@ -299,14 +309,14 @@ function respond_error(res, err) {
         res_msg = "サーバーエラーが発生しました。";
     }
 
-    res.status(res_status).json({message: res_msg});
+    res.status(res_status).json({ message: res_msg });
 }
 
 // reqのhostをCORSに設定する。固定値にしないのは、開発・本番 複数ドメインのCORSを設定するため
 // 開発or本番以外のドメインからのリクエストはそもそもenvをインスタンス化出来ないのでチェックしない
-function setCORS(env, res){
+function setCORS(env, res) {
     // リクエスト元が開発版のフォームなら開発版のドメインを、本番のフォームなら本番のドメインを設定。
-    res.set("Access-Control-Allow-Origin",`${env.host}`);
+    res.set("Access-Control-Allow-Origin", `${env.host}`);
 }
 
 class Environ {
@@ -356,8 +366,8 @@ function sendSMS(to_number, subject, message, cb) {
         PhoneNumber: to_number,
         Message: message,
         MessageAttributes: {
-            "AWS.SNS.SMS.SenderID" : {
-                DataType : "String",
+            "AWS.SNS.SMS.SenderID": {
+                DataType: "String",
                 StringValue: subject
             }
         }
