@@ -50,7 +50,7 @@ exports.helloWorld = functions.https.onRequest(async (req, res) => {
 //申込みフォームから送信されたデータをfirebaseで受け取り、kintoneに送信する
 exports.send_apply = require("./send_apply").send_apply;
 
-exports.send_apply_dev = require("./send_apply_dev").send_apply_dev;
+exports.send_apply_dev = require("./send_apply").send_apply;
 
 exports.attach_apply_files = require("./attach_apply_files").attach_apply_files;
 
@@ -59,7 +59,7 @@ exports.fetch_cloudSign_token = require("./fetch_cloudSign_token").fetch_cloudSi
 
 // WFIの申し込みフォームからの送信
 exports.ke_ban_form = require("./ke_ban_form").ke_ban_form;
-exports.ke_ban_form_dev = require("./ke_ban_form_dev").ke_ban_form_dev;
+exports.ke_ban_form_dev = require("./ke_ban_form").ke_ban_form;
 exports.ke_ban_check = require("./ke_ban_check.js").ke_ban_check;
 exports.ke_ban_check_dev = require("./ke_ban_check.js").ke_ban_check;
 

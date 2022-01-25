@@ -1,5 +1,5 @@
 このSMSはシステムからの自動返信です。
-                
+
 {company} 様
 
 {product_name}事務局です。
@@ -15,7 +15,7 @@
 貴社名： {company}
 電話番号： {phone}
 メールアドレス： {mail}
-郵便番号： {postalCode} 
+郵便番号： {postalCode}
 都道府県： {prefecture}
 住所： {address}
 番地等： {streetAddress}
