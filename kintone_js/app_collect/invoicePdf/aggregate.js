@@ -50,6 +50,7 @@ const tableFieldBackRateIV_COLLECT              = collectFields.invoiceTargets.f
 const tableFieldActuallyOrdererIV_COLLECT       = collectFields.invoiceTargets.fields.actuallyOrdererIV.code;
 const fieldInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.code;
 const labelInvoicePdfDate_COLLECT               = collectFields.invoicePdfDate.label;
+const statusInvoiceTarget_COLLECT = collectFields.collectStatus.options.振込依頼書作成対象.label;
 
 
 const ExtensibleCustomError = require("extensible-custom-error");
@@ -119,6 +120,17 @@ export async function getAggregatedParentRecords(records) {
             const invoice_group = ke_ban_records.filter((r) => {
                 return dayjs(r[fieldClosingDate_COLLECT]["value"]).format("YYYY-MM") === closing;
             });
+
+            if (invoice_group.length <= 3) {
+                // 同月内の回収レコードが3つ以下は操作ミスの可能性が高い
+                const msg = `WFIの${closing.slice(-2)}月の振込依頼書作成対象レコードが${invoice_group.length}つしかありません。\n`
+                    + `（締め日: ${invoice_group.map((r) => r[fieldClosingDate_COLLECT]["value"]).join(", ")}）\n`
+                    + "このまま振込依頼書を作成してよろしいですか？\n\n"
+                    + `振込依頼書の作成対象レコードを追加する場合、①キャンセルを押して、②レコードの状態を${statusInvoiceTarget_COLLECT}に更新してください`;
+                const resume = confirm(msg);
+
+                if (!resume) return false;
+            }
 
             const parent_record = invoice_group.reduce(returnEarlyRecord);
             const invoice_targets = await asyncFlatMap(invoice_group, convertToKintoneSubTableObject);
