@@ -74,8 +74,7 @@ exports.send_apply = functions.https.onRequest((req, res) => {
             .then(async (post_succeed) => {
                 // 添付ファイルに対する残処理をpubsubに投げる
                 const pubsub = new PubSub();
-                const file_process_topic = "attach_apply_files";
-                const topic = pubsub.topic(file_process_topic);
+                const topic = pubsub.topic(env.process_file_topic_name);
                 const message = Buffer.from(JSON.stringify({
                     env: env,
                     files: req_body.files,
@@ -336,6 +335,7 @@ class Environ {
             this.api_token_files = process.env.api_token_apply_files_dev;
             this.api_token_put = process.env.api_token_apply_put_dev;
             this.appIdKomuten = 182;
+            this.process_file_topic_name = process.env.process_file_topic_name_dev;
             this.success_redirect_to = `${this.host}/apply_complete.html`;
         } else if (this.host === process.env.form_prod) {
             // 本番環境
@@ -344,6 +344,7 @@ class Environ {
             this.api_token_files = process.env.api_token_apply_files_prod;
             this.api_token_put = process.env.api_token_apply_put_prod;
             this.appIdKomuten = 96;
+            this.process_file_topic_name = process.env.process_file_topic_name;
             this.success_redirect_to = `${this.host}/apply_complete.html`;
         } else {
             // それ以外
