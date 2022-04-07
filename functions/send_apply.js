@@ -2,7 +2,6 @@ const functions = require("firebase-functions");
 const { Storage } = require("@google-cloud/storage");
 
 const { PubSub } = require("@google-cloud/pubsub");
-const file_process_topic = "attach_apply_files";
 
 const axios = require("axios");
 const sendMail = require("./sendmail_frame.js");
@@ -74,6 +73,7 @@ exports.send_apply = functions.https.onRequest((req, res) => {
             .then(async (post_succeed) => {
                 // 添付ファイルに対する残処理をpubsubに投げる
                 const pubsub = new PubSub();
+                const file_process_topic = "attach_apply_files";
                 const topic = pubsub.topic(file_process_topic);
                 const message = Buffer.from(JSON.stringify({
                     env: env,
