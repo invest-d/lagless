@@ -31,6 +31,7 @@ exports.send_apply = functions.https.onRequest((req, res) => {
     console.log(`requested from ${String(req.headers.origin)}`);
 
     // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
+    /** @type {Environ} */
     let env;
     try {
         env = new Environ(req.headers.origin);
@@ -319,7 +320,13 @@ function setCORS(env, res) {
     res.set("Access-Control-Allow-Origin", `${env.host}`);
 }
 
+/**
+* 開発環境・本番環境それぞれで使用する環境変数を取得する
+*/
 class Environ {
+    /**
+    * @param {string} host - 申し込みフォームのorigin
+    */
     constructor(host) {
         this.host = host;
         if (this.host === process.env.form_dev) {
