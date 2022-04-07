@@ -1,6 +1,6 @@
 const functions = require("firebase-functions");
 const {Storage} = require("@google-cloud/storage");
-const file_process_topic = "attach_apply_files";
+const file_process_topic = process.env.attach_files_topic_name;
 // const file_process_sub = "attach_apply_files_sub";
 
 const { PDFDocument, PageSizes } = require("pdf-lib");
