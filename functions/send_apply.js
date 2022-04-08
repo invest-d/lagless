@@ -2,7 +2,6 @@ const functions = require("firebase-functions");
 const { Storage } = require("@google-cloud/storage");
 
 const { PubSub } = require("@google-cloud/pubsub");
-const file_process_topic = "attach_apply_files";
 
 const axios = require("axios");
 const sendMail = require("./sendmail_frame.js");
@@ -32,6 +31,7 @@ exports.send_apply = functions.https.onRequest((req, res) => {
     console.log(`requested from ${String(req.headers.origin)}`);
 
     // 開発環境か、もしくは本番環境のトークン等の各種データを取得。それ以外のドメインの場合は例外をthrow
+    /** @type {Environ} */
     let env;
     try {
         env = new Environ(req.headers.origin);
@@ -74,7 +74,7 @@ exports.send_apply = functions.https.onRequest((req, res) => {
             .then(async (post_succeed) => {
                 // 添付ファイルに対する残処理をpubsubに投げる
                 const pubsub = new PubSub();
-                const topic = pubsub.topic(file_process_topic);
+                const topic = pubsub.topic(env.process_file_topic_name);
                 const message = Buffer.from(JSON.stringify({
                     env: env,
                     files: req_body.files,
@@ -319,7 +319,13 @@ function setCORS(env, res) {
     res.set("Access-Control-Allow-Origin", `${env.host}`);
 }
 
+/**
+* 開発環境・本番環境それぞれで使用する環境変数を取得する
+*/
 class Environ {
+    /**
+    * @param {string} host - 申し込みフォームのorigin
+    */
     constructor(host) {
         this.host = host;
         if (this.host === process.env.form_dev) {
@@ -329,6 +335,7 @@ class Environ {
             this.api_token_files = process.env.api_token_apply_files_dev;
             this.api_token_put = process.env.api_token_apply_put_dev;
             this.appIdKomuten = 182;
+            this.process_file_topic_name = process.env.process_file_topic_name_dev;
             this.success_redirect_to = `${this.host}/apply_complete.html`;
         } else if (this.host === process.env.form_prod) {
             // 本番環境
@@ -337,6 +344,7 @@ class Environ {
             this.api_token_files = process.env.api_token_apply_files_prod;
             this.api_token_put = process.env.api_token_apply_put_prod;
             this.appIdKomuten = 96;
+            this.process_file_topic_name = process.env.process_file_topic_name;
             this.success_redirect_to = `${this.host}/apply_complete.html`;
         } else {
             // それ以外

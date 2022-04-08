@@ -381,7 +381,26 @@ $(() => {
     });
 });
 
+/**
+* @typedef FileUploadResult
+* @property {string} name - file name
+* @property {string} mime_type
+*/
+/**
+* 申し込みフォームに添付されたファイルをCloud Storageにアップロードする
+* @async
+* @param {HTMLInputElement[]} inputs - 申し込みフォームの添付ファイル入力element
+* @returns {Promise<FileUploadResult[]>}
+*/
 const upload_attachment_files = async (inputs) => {
+    /**
+    * Cloud Functionsから署名つきURLを取得する
+    * @async
+    * @param {string} file_name - アップロード予定のファイル名
+    * @param {string} mime_type
+    * @param {string} url - Cloud Functionsのエンドポイント
+    * @return {Promise<string>}
+    */
     const get_signed_url = (file_name, mime_type, url) => {
         return new Promise((resolve, reject) => {
             $.ajax({
@@ -402,7 +421,24 @@ const upload_attachment_files = async (inputs) => {
         });
     };
 
+    /**
+    * 署名つきURLにファイルをpostする
+    * @async
+    * @param {string} signed_url
+    * @param {File} file
+    * @returns {Promise<void>}
+    */
     const upload_file = async (signed_url, file) => {
+        /**
+        * @typedef Dimensions
+        * @property {number} height
+        * @property {number} width
+        */
+        /**
+        * @async
+        * @param {string} dataURL
+        * @returns {Promise<Dimensions>}
+        */
         const getHeightAndWidthFromDataUrl = (dataURL) => new Promise((resolve) => {
             const img = new Image();
             img.onload = () => {
@@ -414,6 +450,12 @@ const upload_attachment_files = async (inputs) => {
             img.src = dataURL;
         });
 
+        /**
+        * 画像の回転を補正して返す
+        * @async
+        * @param {File} file
+        * @returns {Promise<Blob>} result
+        */
         const getFixedFile = async (file) => {
             if (file.type === "image/jpeg" || file.type === "image/png") {
                 // 画像の場合はfileの回転を補正する
@@ -457,8 +499,12 @@ const upload_attachment_files = async (inputs) => {
 
     const timestamp = new Date().getTime();
     const upload_processes = inputs.map(async (input) => {
+        /** @type {string} */
         const ext = VALID_MIME_TYPES[input.files[0].type];
+
+        /** @type {string} */
         const field_name = input.attributes.name.value;
+
         // 同じファイル名だと上書きするので、タイムスタンプで上書きを回避
         const file_name = `${field_name}_${timestamp}${ENV.filename_suffix}.${ext}`;
 
@@ -481,6 +527,18 @@ const upload_attachment_files = async (inputs) => {
         });
 };
 
+/**
+ * @typedef PostRecordResponse
+ * @property {string} redirect - 申し込み完了ページのURL
+ * */
+
+/**
+* Cloud Functionsにリクエストして、kintoneへのレコード追加を処理する
+* @async
+* @param {FormData} form_data
+* @param {FileUploadResult[]} files
+* @return {Promise<PostRecordResponse>} `firebase-functions`のResponse型
+*/
 const post_to_kintone = async (form_data, files) => {
     return new Promise((resolve, reject) => {
         // json形式で送信する
