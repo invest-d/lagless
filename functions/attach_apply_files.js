@@ -6,10 +6,34 @@ const file_process_topic = process.env.attach_files_topic_name;
 const { PDFDocument, PageSizes } = require("pdf-lib");
 const FormData = require("form-data");
 const axios = require("axios");
+/**
+* @typedef KintonePutRecordResponse
+* @property {string} revision
+*/
+
+/**
+* @typedef FileUploadResult
+* @property {string} name - file name
+* @property {string} mime_type
+*/
 
 // Publishされたメッセージを読み取り、ファイルの変換とkintoneへのアップロードを行う
 exports.attach_apply_files = functions.pubsub.topic(file_process_topic).onPublish(async (raw_message) => {
+    /**
+    * @typedef {Object} Message
+    * @property {Object} env - envinronment variables initialized in send_apply.js
+    * @property {FileUploadResult[]} files
+    * @property {string} record_id - the target record id in kintone to attach files
+    */
+    /** @type {Message} */
     const message = JSON.parse(Buffer.from(raw_message.data, "base64").toString());
+
+    /**
+    * @typedef {Object} Tokens
+    * @property {string} file - kintoneへのファイルアップロードAPIトークン
+    * @property {string} put - kintoneへのPUTレコードAPIトークン
+    */
+    /** @type {Tokens} */
     const tokens = {
         file: message.env.api_token_files,
         put: message.env.api_token_put,
@@ -40,6 +64,14 @@ exports.attach_apply_files = functions.pubsub.topic(file_process_topic).onPublis
         });
 });
 
+/**
+* 申込フォームで送信された請求書ファイルをkintoneのレコードに添付する
+* @param {Tokens} tokens
+* @param {FileUploadResult[]} target_files
+* @param {string} app_id - kintone application id storing LagLess applies
+* @param {string} target_record_id
+* @return {Promise<KintonePutRecordResponse>}
+*/
 async function attach_invoices(tokens, target_files, app_id, target_record_id) {
     const invoice_files = await Promise.all(target_files.map(async (target) => {
         const file = await get_file_from_storage(target.name);
@@ -104,12 +136,29 @@ async function attach_invoices(tokens, target_files, app_id, target_record_id) {
     return attach_to_kintone(tokens, merged_invoice, app_id, target_record_id);
 }
 
+/**
+* @typedef {Object} UploadFileInfo
+* @property {string} name
+* @property {string} type
+* @property {Buffer} content
+*/
+
+/**
+* 本人確認書類をkintoneにアップロードする
+* @async
+* @param {Tokens} tokens
+* @param {FileUploadResult[]} target_files
+* @param {string} app_id
+* @param {string} target_record_id
+* @return {Promise<KintonePutRecordResponse[]>}
+*/
 async function attach_identifications(tokens, target_files, app_id, target_record_id) {
     if (target_files.length === 0) {
         // ファイルがアップロードされていない場合もある
         return;
     }
 
+    /** @type {UploadFileInfo} */
     const identification_files = await Promise.all(target_files.map(async (target) => {
         const file = await get_file_from_storage(target.name);
         return {
@@ -130,8 +179,28 @@ function get_file_from_storage(file_name) {
     return bucket.file(file_name).download();
 }
 
+/**
+ * @typedef {Object} UploadToKintoneResult
+ * @property {string} field_name
+ * @property {string} fileKey
+*/
+
+/**
+* kintoneへのアップロードと、アップロードしたファイルのレコードへの紐付けを行う。
+* @async
+* @summary If the description is long, write your summary here. Otherwise, feel free to remove this.
+* @param {ParamDataTypeHere} parameterNameHere - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
+* @param {UploadFileInfo} file
+* @return {Promise<KintonePutRecordResponse>}
+*/
 async function attach_to_kintone(tokens, file, app_id, record_id) {
-    // kintoneへのアップロードと、アップロードしたファイルのレコードへの紐付けを行う。
+    /**
+    * ファイルをkintoneサーバーにアップロードする
+    * @async
+    * @param {string} token_file - api token that is used to uploading files
+    * @param {UploadFileInfo} file
+    * @return {Promise<UploadToKintoneResult>}
+    */
     const upload_to_kintone = async (token_file, file) => {
         const form = new FormData();
         form.append("file", file.content, file.name);
@@ -156,6 +225,15 @@ async function attach_to_kintone(tokens, file, app_id, record_id) {
     };
     const upload_result = await upload_to_kintone(tokens.file, file);
 
+    /**
+    * kintoneサーバーにアップロードしたファイルのfileKeyを、特定レコードの添付ファイルフィールドにPUTする
+    * @async
+    * @param {string} token_put
+    * @param {string} app_id
+    * @param {string} record_id
+    * @param {UploadToKintoneResult} upload_result
+    * @return {KintonePutRecordResponse}
+    */
     const add_file_key_to_record = async (token_put, app_id, record_id, upload_result) => {
         const headers = {
             "Host": `investdesign.cybozu.com:${app_id}`,
