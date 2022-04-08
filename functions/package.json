@@ -26,7 +26,7 @@
     "heic-convert": "^1.2.4",
     "node-fetch": "^2.6.7",
     "nodemailer": "^6.6.1",
-    "pdf-lib": "^1.11.2",
+    "pdf-lib": "^1.17.1",
     "zengin-code": "^1.0.0-p20200331"
   },
   "devDependencies": {

@@ -16,7 +16,7 @@
     "encoding-japanese": "^1.0.30",
     "es6-promise": "^4.2.8",
     "exif-rotate-js": "^1.3.0",
-    "firebase": "^7.8.2",
+    "firebase": "^9.6.10",
     "flatpickr": "^4.6.3",
     "form-data": "^3.0.0",
     "formdata-polyfill": "^3.0.20",
@@ -43,6 +43,8 @@
     "deploy-d-k": "npm run deploy-dev-keban",
     "deploy-dev-lagless-apply": "npm run deploy-func -- -f send_apply_dev -e send_apply",
     "deploy-d-a": "npm run deploy-dev-lagless-apply",
+    "deploy-dev-attach-apply-files": "npm run deploy-func -- -f attach_apply_files_dev -e attach_apply_files -t undefine_trigger",
+    "deploy-d-f": "npm run deploy-dev-attach-apply-files",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
