@@ -269,7 +269,7 @@ const post_document_participants = async (token, document_id, record) => {
         }
         if (contractor === "ラグレス合同会社") {
             offerers.push({
-                "email": "h.kanemoto@shine-artist.com",
+                "email": "k.hanashiro@shine-artist.com",
                 "name": "田口勝富",
                 "organization": "ラグレス合同会社　代表社員　ラグレス一般社団法人　職務執行者",
                 "language_code": "ja"
