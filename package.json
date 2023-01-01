@@ -10,7 +10,7 @@
     "axios": "^0.21.2",
     "bootstrap": "^4.4.1",
     "busboy": "^0.3.1",
-    "copy-webpack-plugin": "^5.1.2",
+    "copy-webpack-plugin": "^11.0.0",
     "date-with-offset": "^1.0.1",
     "dayjs": "^1.9.6",
     "encoding-japanese": "^1.0.30",
@@ -28,11 +28,11 @@
     "@babel/core": "^7.10.1",
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@babel/preset-env": "^7.10.1",
-    "babel-loader": "^8.1.0",
+    "babel-loader": "^8.3.0",
     "babel-plugin-add-module-exports": "^1.0.4",
     "eslint": "^7.2.0",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   },
   "scripts": {
     "build": "webpack --mode production --config webpack.config.js",
