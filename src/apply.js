@@ -135,8 +135,8 @@ $(async () => {
 });
 
 // ナサホームの場合に限り、申込フォームに追加の文言を表示する
+const nasa_home_id = "210";
 $(() => {
-    const nasa_home_id = "210";
     const komuten_id = params.get("c");
     if (komuten_id !== nasa_home_id) {
         return;
@@ -203,6 +203,11 @@ $(() => {
     $(".pattern-required-on-modified").blur(function() {
         pattern_validate($(this), params.get("user") === "existing");
     });
+
+    const komuten_id = params.get("c");
+    if (komuten_id == nasa_home_id) {
+	$('#applicationAmount').attr('min', 100000);
+    }
 });
 
 function blank_validate() {
@@ -211,20 +216,24 @@ function blank_validate() {
             .addClass("border border-success");
         $(this).nextAll(".valid-input").show();
         $(this).nextAll(".invalid-input").hide();
-        $(this).nextAll(".invalid-feedback").hide();
+        $(this).nextAll(".invalid-feedback").filter(':not(.opt)').hide();
     } else {
         $(this).removeClass("border border-success")
             .addClass("border border-danger");
         $(this).nextAll(".valid-input").hide();
         $(this).nextAll(".invalid-input").show();
-        $(this).nextAll(".invalid-feedback").show();
+        $(this).nextAll(".invalid-feedback").filter(':not(.opt)').show();
     }
 }
 
 function pattern_validate(obj, blank_allowed) {
     const pattern = new RegExp(obj.attr("pattern"));
 
-    const input_is_valid = pattern.test(obj.val());
+    const in_range = () => {
+	const min_value = obj.attr('min');
+	return !min_value || min_value <= parseInt(obj.val());
+    };
+    const input_is_valid = pattern.test(obj.val()) && in_range();
     const input_is_blank = (obj.val() == "");
     if (input_is_valid
         || (blank_allowed && input_is_blank)) {
@@ -238,7 +247,13 @@ function pattern_validate(obj, blank_allowed) {
         obj.removeClass("valid-pattern").addClass("invalid-pattern");
         obj.nextAll(".valid-input").hide();
         obj.nextAll(".invalid-input").show();
-        obj.nextAll(".invalid-feedback").show();
+	if(pattern.test(obj.val())) {
+            obj.nextAll(".invalid-feedback").filter(':not(.opt)').hide();
+            obj.nextAll(".invalid-feedback.opt").show();
+	} else {
+            obj.nextAll(".invalid-feedback").filter(':not(.opt)').show();
+            obj.nextAll(".invalid-feedback.opt").hide();
+	}
     }
 }
 
@@ -309,6 +324,11 @@ $(() => {
             $("#report-validity").show();
             return;
         }
+
+	if(0 < $('.invalid-feedback.opt:visible').length) {
+            $("#report-validity").show();
+            return;
+	}
 
         $("#report-validity").hide();
 
