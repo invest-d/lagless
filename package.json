@@ -16,7 +16,7 @@
     "encoding-japanese": "^1.0.30",
     "es6-promise": "^4.2.8",
     "exif-rotate-js": "^1.3.0",
-    "firebase": "^7.8.2",
+    "firebase": "^7.24.0",
     "flatpickr": "^4.6.3",
     "form-data": "^3.0.0",
     "formdata-polyfill": "^3.0.20",
