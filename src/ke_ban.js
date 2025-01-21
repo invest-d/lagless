@@ -337,9 +337,6 @@ $(() => {
                 alert(messages.join("\n"));
             });
     });
-
-    console.log("フォームデータ:", form_data);
-    console.log("ファイルチェック対象:", inputs);
 });
 
 function isSafari() {
