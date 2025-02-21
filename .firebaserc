@@ -1,5 +1,9 @@
 {
   "projects": {
-    "default": "lagless"
-  }
+    "default": "lagless",
+    "prod": "lagless",
+    "firebase use": "lagless"
+  },
+  "targets": {},
+  "etags": {}
 }

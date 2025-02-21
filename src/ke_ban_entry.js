@@ -68,3 +68,8 @@ $(() => {
         $(".campaign").hide();
     }
 });
+
+
+console.log("TODAY:", TODAY.format("YYYY-MM-DD"));
+console.log("isCampaign:", isCampaign(TODAY));
+
